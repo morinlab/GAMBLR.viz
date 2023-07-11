@@ -1,11 +1,13 @@
-Package: packageName
 Type: Package
-Title: What the Package Does (Title Case)
+Package: GAMBLR.viz
+Title: Make Plots for Genomic Analysis of Mature B-cell Lymphomas in R
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R:
+    person("Vladimir", "Souza", , "vsouza@bcgsc.ca", role = c("aut", "cre"))
+Description: This package is part of the Genomic Analysis of Mature B-cell
+    Lymphomas (GAMBL) project developed by the Morin Lab.
+License: MIT
+Depends:
+    R (>= 4.1)
 Encoding: UTF-8
 LazyData: true
