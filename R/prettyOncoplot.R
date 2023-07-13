@@ -22,7 +22,7 @@
 #' @param sortByColumns A vector containing the column names you want to sort columns (patients) on.
 #' @param arrange_descending A Boolean parameter. Set to TRUE to sort metadata in descending fashion. Default is FALSE.
 #' @param removeNonMutated Set to TRUE to drop unmutated cases.
-#' @param minMutationPercent Only genes mutated in more than minMutationPercent % patients will be included.
+#' @param minMutationPercent Only genes mutated in more than minMutationPercent \% patients will be included.
 #' @param fontSizeGene Font size for gene labels (default 6).
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #' @param mutAlpha Optional alpha to apply to mutation colours.

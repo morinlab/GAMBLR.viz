@@ -82,7 +82,7 @@ prettyOncoplot(
 
 \item{removeNonMutated}{Set to TRUE to drop unmutated cases.}
 
-\item{minMutationPercent}{Only genes mutated in more than minMutationPercent % patients will be included.}
+\item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included.}
 
 \item{mutAlpha}{Optional alpha to apply to mutation colours.}
 
