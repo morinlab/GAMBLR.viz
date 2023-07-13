@@ -6,7 +6,7 @@ Authors@R:
     person("Vladimir", "Souza", , "vsouza@bcgsc.ca", role = c("aut", "cre"))
 Description: This package is part of the Genomic Analysis of Mature B-cell
     Lymphomas (GAMBL) project developed by the Morin Lab.
-License: MIT
+License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Encoding: UTF-8
