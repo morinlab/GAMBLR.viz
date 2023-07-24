@@ -24,17 +24,25 @@ Imports:
     ggrepel,
     ggsci,
     ggthemes,
+    graphics,
+    grDevices,
     gridExtra,
     maftools,
+    methods,
     plotly,
     purrr,
     RCircos,
     RColorBrewer,
     readr,
+    stats,
     stringr,
     tibble,
     tidyr,
+    utils,
     wordcloud
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
+Suggests: 
+    config,
+    GAMBLR.data
