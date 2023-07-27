@@ -17,6 +17,7 @@
 #' @importFrom GAMBLR get_ssm_by_region
 #' @importFrom GAMBLR get_ssm_by_sample
 #' @importFrom GAMBLR.helpers check_config_value
+#' @importFrom GAMBLR.helpers coding_vc
 #' @importFrom GAMBLR.helpers collate_qc_results
 #' @importFrom GAMBLR.helpers map_metadata_to_colours
 #' @importFrom GAMBLR.helpers region_to_chunks
