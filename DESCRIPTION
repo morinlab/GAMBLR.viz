@@ -13,12 +13,14 @@ Imports:
     broom,
     circlize,
     ComplexHeatmap,
+    config,
     cowplot,
     data.table,
     dplyr,
     forcats,
     g3viz,
     GAMBLR,
+    GAMBLR.data,
     GAMBLR.helpers,
     ggbeeswarm,
     ggplot2,
@@ -43,9 +45,6 @@ Imports:
     tidyr,
     utils,
     wordcloud
-Suggests: 
-    config,
-    GAMBLR.data
 Remotes:
     morinLab/GAMBLR,
     morinLab/GAMBLR.data,
