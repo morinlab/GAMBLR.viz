@@ -20,6 +20,7 @@
 #' @importFrom GAMBLR.helpers coding_vc
 #' @importFrom GAMBLR.helpers collate_qc_results
 #' @importFrom GAMBLR.helpers map_metadata_to_colours
+#' @importFrom GAMBLR.helpers rainfall_conv
 #' @importFrom GAMBLR.helpers region_to_chunks
 #' @importFrom GAMBLR.helpers standardize_chr_prefix
 #' @importFrom GAMBLR.helpers subset_cnstates
