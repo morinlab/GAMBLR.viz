@@ -37,7 +37,7 @@ prettyGeneCloud = function(maf_df,
                            other_genes_colour="#bc42f5",
                            colour_index){
   if(missing(these_genes)){
-    these_genes = pull(lymphoma_genes, Gene)
+    these_genes = pull(GAMBLR.data::lymphoma_genes, Gene)
   }
   #drop genes not in the list then tally only coding variants (by default).
   # TODO: eventually allow an option to collapse samples from the same patient

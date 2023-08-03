@@ -60,7 +60,7 @@ prettyChromoplot = function(scores,
 
   #if no file is provided, annotate with oncogenes in GAMBLR package
   if(missing(genes_to_label)){
-    genes_to_label = GAMBLR::grch37_oncogene %>%
+    genes_to_label = GAMBLR.data::grch37_oncogene %>%
       dplyr::mutate(across(c(chrom, start, end), as.integer)) %>%
       data.table::as.data.table()
   }else{

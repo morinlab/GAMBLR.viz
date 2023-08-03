@@ -64,13 +64,13 @@ prettyRainfallPlot = function(this_sample_id,
 
   if (label_ashm_genes) {
     if (projection == "grch37") {
-      ashm_regions = grch37_ashm_regions %>%
+      ashm_regions = GAMBLR.data::grch37_ashm_regions %>%
         dplyr::rename("start" = "hg19_start",
                       "end" = "hg19_end",
                       "Chromosome" = "chr_name") %>%
         dplyr::mutate(Chromosome = str_remove(Chromosome, pattern = "chr"))
     } else if (projection == "hg38") {
-      ashm_regions = hg38_ashm_regions %>%
+      ashm_regions = GAMBLR.data::hg38_ashm_regions %>%
         rename("start" = "hg38_start",
                "end" = "hg38_end",
                "Chromosome" = "chr_name")

@@ -89,7 +89,7 @@ plot_sample_circos = function(this_sample_id,
    chrom_list = paste0("chr", c(1:22,"X"))
   }
   if(!missing(label_genes)){
-    gene_bed = grch37_gene_coordinates %>%
+    gene_bed = GAMBLR.data::grch37_gene_coordinates %>%
       dplyr::filter(gene_name %in% label_genes) %>%
       dplyr::select(chromosome, start, end, gene_name) %>%
       dplyr::mutate(chromosome = paste0("chr", chromosome))
@@ -134,11 +134,11 @@ plot_sample_circos = function(this_sample_id,
     colnames(anno_bed1) = c("chrom", "start", "end", "sample_id")
     colnames(anno_bed2) = c("chrom", "start", "end", "sample_id")
 
-    bed_mut_partner = grch37_partners %>%
+    bed_mut_partner = GAMBLR.data::grch37_partners %>%
       dplyr::filter(gene %in% these_partners) %>%
       mutate(chrom = paste0("chr", chrom))
 
-    bed_mut_onco = grch37_oncogene %>%
+    bed_mut_onco = GAMBLR.data::grch37_oncogene %>%
       dplyr::filter(gene %in% these_oncogenes) %>%
       mutate(chrom = paste0("chr", chrom))
 
