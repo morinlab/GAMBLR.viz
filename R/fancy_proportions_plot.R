@@ -13,8 +13,8 @@
 #' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column.
 #' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
 #' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the cohort supplied in this parameter.
-#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the pathology supplied in this parameter.
+#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the cohort supplied in this parameter.
+#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the pathology supplied in this parameter.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
@@ -26,7 +26,7 @@
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' metadata = get_gambl_metadata() %>%
+#' metadata = GAMBLR.data::gambl_metadata
 #' kridel_fl = dplyr::filter(metadata, pathology == "FL",
 #'                cohort == "FL_Kridel")
 #' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
@@ -50,7 +50,7 @@ fancy_proportions_plot = function(these_sample_ids,
 
   #get gambl metadata (if not supplied)
   if(missing(metadata)){
-    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
+    this_meta = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type)
   }else{
     this_meta = metadata
   }

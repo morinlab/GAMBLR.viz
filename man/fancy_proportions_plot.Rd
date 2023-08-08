@@ -21,9 +21,9 @@ fancy_proportions_plot(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the cohort supplied in this parameter.}
 
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls [GAMBLR::get_gambl_metadata] and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
@@ -47,7 +47,7 @@ Visualize proportional metrics for selected samples.
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata() \%>\%
+metadata = GAMBLR.data::gambl_metadata
 kridel_fl = dplyr::filter(metadata, pathology == "FL",
                cohort == "FL_Kridel")
 kridel_fl_samples = dplyr::select(kridel_fl, sample_id)

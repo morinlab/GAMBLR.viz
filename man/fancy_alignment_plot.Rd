@@ -34,9 +34,9 @@ fancy_alignment_plot(
 
 \item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
 
-\item{keep_cohort}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohorts.}
+\item{keep_cohort}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function returns metadata and subsets on selected cohorts.}
 
-\item{keep_pathology}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
+\item{keep_pathology}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function returns metadata and subsets on selected pathology.}
 
 \item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
 
@@ -60,7 +60,7 @@ mean values for all plotted metrics and corrected coverage. To enable these feat
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
+metadata = GAMBLR.data::gambl_metadata
 kridel_fl = dplyr::filter(metadata, pathology == "FL",
                cohort == "FL_Kridel")
 

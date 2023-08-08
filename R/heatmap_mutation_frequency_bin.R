@@ -9,36 +9,36 @@
 #' @param regions_bed Data frame of regions with four columns (chrom, start, end, name).
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
-#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type. 
+#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.
 #' @param maf_data Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
 #' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_bin_regions].
-#' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37. 
+#' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37.
 #' @param region_padding Amount to pad the start and end coordinates by. Default 1000
 #' @param drop_unmutated Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.
 #' @param skip_regions Optional character vector of genes to exclude from the default aSHM regions.
 #' @param only_regions Optional character vector of genes to include from the default aSHM regions.
 #' @param slide_by Slide size for sliding window. Default 100.
-#' @param window_size Size of sliding window. Default 500. 
+#' @param window_size Size of sliding window. Default 500.
 #' @param metadataColumns Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").
-#' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology"). 
-#' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation. 
-#' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows. 
-#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.  
-#' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90. 
-#' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0. 
-#' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5. 
-#' @param min_mut_tumour Specify how many bins a tumour must be mutated in to be displayed. Default 0. 
-#' @param region_fontsize Fontsize of region labels on the heatmap. Default 8. 
-#' @param cluster_rows_heatmap Boolean. Default FALSE. 
+#' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").
+#' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.
+#' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.
+#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.
+#' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.
+#' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.
+#' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.
+#' @param min_mut_tumour Specify how many bins a tumour must be mutated in to be displayed. Default 0.
+#' @param region_fontsize Fontsize of region labels on the heatmap. Default 8.
+#' @param cluster_rows_heatmap Boolean. Default FALSE.
 #' @param cluster_cols_heatmap Boolean.  Default FALSE.
-#' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE. 
-#' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name. 
-#' @param legend_row Control aesthetics of the heatmap legend. Default 3. 
+#' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.
+#' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.
+#' @param legend_row Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_col Control aesthetics of the heatmap legend. Default 3.
-#' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal". 
-#' @param legendFontSize Control aesthetics of the heatmap legend. Default 10. 
+#' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal".
+#' @param legendFontSize Control aesthetics of the heatmap legend. Default 10.
 #' @param legend_side Control aesthetics of the heatmap legend. Default "bottom".
-#' @param return_heatmap_obj Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE. 
+#' @param return_heatmap_obj Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
 #'
@@ -51,7 +51,7 @@
 #'
 #' @examples
 #' #load metadata.
-#' metadata = get_gambl_metadata()
+#' metadata = GAMBLR.data::gambl_metadata
 #' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))
 #'
 #' #bring together all derived sample-level results from many GAMBL pipelines.

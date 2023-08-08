@@ -36,7 +36,7 @@ The plot can also be exported in a variety of file formats inside the interactiv
 }
 \examples{
 #get metadata (Fl and DLBCL)
-metadata = get_gambl_metadata()
+metadata = GAMBLR.data::gambl_metadata
 this_metadata = dplyr::filter(metadata, consensus_pathology \%in\% c("FL", "DLBCL"))
 
 #get maf data for returned samples

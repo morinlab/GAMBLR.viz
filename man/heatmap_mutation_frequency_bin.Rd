@@ -128,7 +128,7 @@ to retrieve mutation counts for sliding windows across one or more regions and g
 }
 \examples{
 #load metadata.
-metadata = get_gambl_metadata()
+metadata = GAMBLR.data::gambl_metadata
 dlbcl_bl_meta = dplyr::filter(metadata, pathology \%in\% c("DLBCL", "BL"))
 
 #bring together all derived sample-level results from many GAMBL pipelines.

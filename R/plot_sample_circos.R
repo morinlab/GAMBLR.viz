@@ -166,7 +166,7 @@ plot_sample_circos = function(this_sample_id,
   }
   text(c(0.75, 0.75), this_sample_id, cex = 0.8)
   if(!missing(legend_metadata_columns)){
-    samp_meta = get_gambl_metadata() %>%
+    samp_meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>%
       dplyr::filter(sample_id == this_sample_id)
 
     these_meta = samp_meta[legend_metadata_columns]

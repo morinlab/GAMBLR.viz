@@ -17,8 +17,8 @@
 #' @param seq_type Subset qc metrics to a specific seq_type, default is genome.
 #' @param add_mean Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.
 #' @param add_corrected_coverage Set to TRUE to add corrected coverage for selected samples.
-#' @param keep_cohort If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohorts.
-#' @param keep_pathology If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.
+#' @param keep_cohort If no df with sample IDs is supplied (these_sample_ids = NULL) the function returns metadata and subsets on selected cohorts.
+#' @param keep_pathology If no df with sample IDs is supplied (these_sample_ids = NULL) the function returns metadata and subsets on selected pathology.
 #' @param this_color_palette Optional parameter that holds the selected colours for the plotted bars.
 #' @param plot_sub Optional parameter, add a subtitle to the alignment metric plot.
 #'
@@ -31,7 +31,7 @@
 #' @examples
 #' #Example 1 - using these_sample_ids parameter
 #' #subset on FL cases with QC metrics available and plot
-#' metadata = get_gambl_metadata()
+#' metadata = GAMBLR.data::gambl_metadata
 #' kridel_fl = dplyr::filter(metadata, pathology == "FL",
 #'                cohort == "FL_Kridel")
 #'
@@ -62,7 +62,7 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #get gambl metadata (if not supplied)
   if(missing(metadata)){
-    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
+    this_meta = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type)
   }else{
     this_meta = metadata
   }
@@ -100,7 +100,7 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #subset alignment metrics
   melt_align = dplyr::select(qc_metrics, c(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads)) %>%
-    as.data.table() %>% 
+    as.data.table() %>%
     melt(id.var = "sample_id") %>%
     arrange(sample_id)
 
@@ -112,7 +112,7 @@ fancy_alignment_plot = function(these_sample_ids,
   if(!missing(comparison_group)){
     comp_data = collate_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
-      as.data.table() %>% 
+      as.data.table() %>%
       melt(id.var = "sample_id") %>%
       arrange(sample_id)
 
@@ -124,7 +124,7 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #corrected mean coverage
   melt_cov = dplyr::select(qc_metrics, c(sample_id, MeanCorrectedCoverage)) %>%
-    as.data.table() %>% 
+    as.data.table() %>%
     melt(id.var = "sample_id") %>%
     arrange(sample_id)
 

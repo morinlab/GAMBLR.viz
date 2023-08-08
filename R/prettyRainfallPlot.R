@@ -1,7 +1,6 @@
 #' @title Rainfall Plot
 #'
 #' @description Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
-#' If non are specified, the SSM will be obtained through GAMBLR directly (with [GAMBLR::get_ssm_by_region]).
 #'
 #' @details Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 #'
