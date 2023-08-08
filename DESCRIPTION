@@ -1,0 +1,54 @@
+Type: Package
+Package: GAMBLR.viz
+Title: Make Plots for Genomic Analysis of Mature B-cell Lymphomas in R
+Version: 0.1.0
+Authors@R:
+    person("Vladimir", "Souza", , "vsouza@bcgsc.ca", role = c("aut", "cre"))
+Description: This package is part of the Genomic Analysis of Mature B-cell
+    Lymphomas (GAMBL) project developed by the Morin Lab.
+License: MIT + file LICENSE
+Depends:
+    R (>= 4.1)
+Imports: 
+    broom,
+    circlize,
+    ComplexHeatmap,
+    config,
+    cowplot,
+    data.table,
+    dplyr,
+    forcats,
+    g3viz,
+    GAMBLR,
+    GAMBLR.data,
+    GAMBLR.helpers,
+    ggbeeswarm,
+    ggplot2,
+    ggpubr,
+    ggrepel,
+    ggsci,
+    ggthemes,
+    graphics,
+    grDevices,
+    grid,
+    gridExtra,
+    maftools,
+    methods,
+    plotly,
+    purrr,
+    RCircos,
+    RColorBrewer,
+    readr,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    utils,
+    wordcloud
+Remotes:
+    morinLab/GAMBLR,
+    morinLab/GAMBLR.data,
+    morinLab/GAMBLR.helpers
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
