@@ -49,7 +49,7 @@ Sample IDs are specified along the y-axis and the genomic position is visualized
 }
 \examples{
 #get metadata
-this_metadata = get_gambl_metadata()
+this_metadata = GAMBLR.data::gambl_metadata
 
 #get myc region
 myc_region = gene_to_region(gene_symbol = "MYC",

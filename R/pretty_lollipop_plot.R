@@ -23,8 +23,8 @@
 #' this_metadata = dplyr::filter(metadata, consensus_pathology %in% c("FL", "DLBCL"))
 #'
 #' #get maf data for returned samples
-#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
-#'                      seq_type = "genome")
+#' maf = GAMBLR.data::sample_data$grch37$maf %>%
+#' 	filter(Tumor_Sample_Barcode %in% this_metadata$sample_id)
 #'
 #' #construct pretty_lollipop_plot.
 #' pretty_lollipop_plot(maf_df = maf,
