@@ -51,7 +51,7 @@ Refer to the parameter descriptions, examples as well as the vignettes for more 
 \examples{
 #basic usage
 this_region = "chr6:90975034-91066134"
-this_metadata = get_gambl_metadata()
+this_metadata = GAMBLR.data::gambl_metadata
 
 ashm_rainbow_plot(metadata = this_metadata,
                   region = this_region)

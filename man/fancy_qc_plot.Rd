@@ -24,9 +24,9 @@ fancy_qc_plot(
 \arguments{
 \item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
 
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the cohort supplied in this parameter.}
 
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Returns metadata and filters on the pathology supplied in this parameter.}
 
 \item{seq_type}{Selected seq type for incoming QC metrics.}
 
@@ -71,7 +71,7 @@ lastly, the plot can also be configured with custom plot title and axis labels (
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
+metadata = GAMBLR.data::gambl_metadata
 kridel_fl = dplyr::filter(metadata, pathology == "FL",
                cohort == "FL_Kridel")
 kridel_fl_samples = dplyr::select(kridel_fl, sample_id)

@@ -31,13 +31,12 @@
 #' @export
 #'
 #' @examples
-#' metadata = get_gambl_metadata(case_set = "tFL-study")
+#' metadata = GAMBLR.data::gambl_metadata
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
-#' this_meta = dplyr::filter(this_meta, consensus_pathology %in% c("FL", "DLBCL"))
+#' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
-#'                      basic_columns = TRUE,
-#'                      seq_type = "genome")
+#' maf = GAMBLR.data::sample_data$grch37$maf %>%
+#' 	filter(Tumor_Sample_Barcode %in% this_meta$sample_id)
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = this_metadata,

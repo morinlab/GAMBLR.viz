@@ -28,10 +28,11 @@
 #'
 #' @examples
 #' #get data for plotting
-#' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
-#' ssm = maftools::read.maf(ssm)
-#' meta = get_gambl_metadata()
+#' meta = GAMBLR.data::gambl_metadata
 #' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
+#' ssm = GAMBLR.data::sample_data$grch37$maf %>%
+#' 	filter(Tumor_Sample_Barcode %in% meta$sample_id)
+#' ssm = maftools::read.maf(ssm)
 #'
 #' #build plot
 #' prettyCoOncoplot(maf = ssm,

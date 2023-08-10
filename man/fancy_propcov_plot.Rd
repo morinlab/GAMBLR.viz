@@ -22,9 +22,9 @@ fancy_propcov_plot(
 
 \item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
 
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
+\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Obtains metadata and filters on the cohort supplied in this parameter.}
 
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Obtains metadata and filters on the pathology supplied in this parameter.}
 
 \item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.}
 
@@ -49,7 +49,7 @@ To do this one would call the function with `comparison_samples` parameter. For 
 \examples{
 #Example 1 - using these_sample_ids parameter
 #subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
+metadata = GAMBLR.data::gambl_metadata
 kridel_fl = dplyr::filter(metadata, pathology == "FL",
                cohort == "FL_Kridel")
 kridel_fl_samples = dplyr::select(kridel_fl, sample_id)

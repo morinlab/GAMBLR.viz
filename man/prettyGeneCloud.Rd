@@ -39,7 +39,7 @@ If no genes are supplied when calling the function, this function will default t
 }
 \examples{
 #get all coding SSM
-maf = get_coding_ssm(seq_type = "genome")
+maf = GAMBLR.data::sample_data$grch37$maf
 
 #get gene symbols from MAF
 maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")

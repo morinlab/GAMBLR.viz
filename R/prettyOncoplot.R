@@ -62,8 +62,8 @@
 #' library(grid)
 #'
 #' #get some data
-#' maf_data = get_coding_ssm(seq_type = "genome")
-#' maf_metadata = get_gambl_metadata()
+#' maf_data = GAMBLR.data::sample_data$grch37$maf
+#' maf_metadata = GAMBLR.data::gambl_metadata
 #' maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 #'
 #' #define some genes of interest
