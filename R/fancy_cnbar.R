@@ -2,31 +2,22 @@
 #'
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
-#' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
-#' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
-#' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
-#' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
-#' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
+#' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. This function expects an already loaded SEG file with the `this_seg` parameter.
+#' Such a seg file can be retrieved with [GAMBLR.results::get_sample_cn_segments]. It is also possible to specify the absolute path to such a SEG file with `this_seg_path`.
+#' The returned plot can also be restricted to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 #' For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
 #' With `include_cn2` (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
 #' The user can also control the annotations of the returned plot with `plot_title` and `plot_subtitle`. Lastly,
 #' This function also computes the number of affected bases for each copy number state and plots these values on a secondary y-axis (right),
-#' useful for overviewing the extent of each copy number state, in the context of the full genome.
+#' useful for overview the extent of each copy number state, in the context of the full genome.
 #'
-#' @param this_sample_id Sample to be plotted.
-#' @param seq_data Optional parameter with copy number df already loaded into R.
-#' @param seq_path Optional parameter with path to external cn file.
-#' @param chrom_col Index of column with chromosome annotations (to be used with either maf_data or maf_path).
-#' @param start_col Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
-#' @param end_col Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
-#' @param cn_col Index of column holding copy number information (to be used with either maf_data or maf_path).
+#' @param this_seg An already loaded SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].
+#' @param this_seg_path An absolute path to a SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select Vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param cutoff Set threshold for maximum CN state to be retrieved.
-#' @param include_cn2 Optional boolean statement for including CN = 2 states in plot.
-#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
+#' @param include_cn2 Optional Boolean statement for including CN = 2 states in plot.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -34,84 +25,66 @@
 #' @export
 #'
 #' @examples
-#' #Return a plot for one sample, with default parameters.
-#' fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' #get data
+#' dohh2_seg = GAMBLR.data::sample_data$grch37$seg %>% dplyr::filter(ID == "DOHH-2")
+#' 
+#' #build plot
+#' fancy_cnbar(this_seg = dohh2_seg, include_cn2 = FALSE)
 #'
-fancy_cnbar = function(this_sample_id,
-                       seq_data,
-                       seq_path = NULL,
-                       chrom_col = 2,
-                       start_col = 3,
-                       end_col = 4,
-                       cn_col = 7,
-                       plot_title = paste0(this_sample_id),
+fancy_cnbar = function(this_seg,
+                       this_seg_path = NULL,
+                       plot_title = paste0("Copy Number Segments"),
                        plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
                        chr_select = paste0("chr", c(1:22)),
                        cutoff = 15,
-                       include_cn2 = TRUE,
-                       this_seq_type = "genome") {
+                       include_cn2 = TRUE){
 
-  if(!missing(seq_data)){
-    seq = seq_data
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col] = "chrom"
-    colnames(seq)[start_col] = "start"
-    colnames(seq)[end_col] = "end"
-    colnames(seq)[cn_col] = "CN"
+  if(!missing(this_seg)){
+    seg = dohh2_seg
 
-  }else if (!is.null(seq_path)){
-    seq = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col] = "chrom"
-    colnames(seq)[start_col] = "start"
-    colnames(seq)[end_col] = "end"
-    colnames(seq)[cn_col] = "CN"
+  }else if (!is.null(this_seg_path)){
+    seg = read.table(this_seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
 
-  #get maf data for a specific sample.
-  if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
-      streamlined = FALSE,
-      from_flatfile = TRUE,
-      this_seq_type = this_seq_type
-    )
+  if(missing(this_seg) && is.null(this_seg_path)){
+    stop("Please provide an already loaded SEG file with the `seg_data` parameter. 
+  If you have GAMBLR.results installed (and GSC access), you can call `get_sample_cn_segments` to retrieve such a file.
+  As an alternative, an absolute path to a SEG file is also accepted by `seg_path`.")
   }
 
   #add chr prefix if missing
-  if(!str_detect(seq$chrom, "chr")[2]){
-    seq = mutate(seq, chrom = paste0("chr", chrom))
+  if(!str_detect(seg$chrom, "chr")[2]){
+    seg = mutate(seg, chrom = paste0("chr", chrom))
   }
 
   #read maf into R and select relevant variables and transformt to factor.
-  seq_df = dplyr::select(seq, chrom, start, end, CN) %>%
+  seg_df = dplyr::select(seg, chrom, start, end, CN) %>%
     mutate_at(vars(chrom), list(factor))
 
   #subsetting maf based on user-defined parameters
-  seq_df = seq_df[seq_df$chrom %in% chr_select, ]
+  seg_df = seg_df[seg_df$chrom %in% chr_select, ]
 
   #transform data type
-  seq_df$CN = as.factor(seq_df$CN)
+  seg_df$CN = as.factor(seg_df$CN)
 
   #count levels of factor
   if(include_cn2){
     cn_states = c(0:cutoff)
-    cns_count = dplyr::filter(seq_df, CN %in% cn_states) %>%
+    cns_count = dplyr::filter(seg_df, CN %in% cn_states) %>%
       group_by(CN) %>%
       summarize(count = n())
   }else{
     cn_states = c(0:1, 3:cutoff)
-    cns_count = dplyr::filter(seq_df, CN %in% cn_states) %>%
+    cns_count = dplyr::filter(seg_df, CN %in% cn_states) %>%
       group_by(CN) %>%
       summarize(count = n())
   }
 
   cns_count$Type = paste0(cns_count$CN)
-  cns_count = dplyr::select(cns_count, count, Type)
+  cns_count = dplyr::select(cns_count, count, Type, CN)
 
   #compute lenght of cn segments and transform for plotting
-  l_cn_seg = seq
+  l_cn_seg = seg
   l_cn_seg$lenght = l_cn_seg$end - l_cn_seg$start
   l_cn_seg$CN = as.factor(l_cn_seg$CN)
   l_cn_seg = dplyr::filter(l_cn_seg, CN %in% cn_states)
@@ -120,10 +93,10 @@ fancy_cnbar = function(this_sample_id,
     l_cn_seg = dplyr::filter(l_cn_seg, CN != 2)
   }
 
-  cn_seq_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
-  colnames(cn_seq_lenghts) = c("CN", "lenght")
+  cn_seg_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
+  colnames(cn_seg_lenghts) = c("CN", "lenght")
 
-  joined_cn = merge(cns_count, cn_seq_lenghts) %>%
+  joined_cn = merge(cns_count, cn_seg_lenghts) %>%
     as.data.frame() %>%
     dplyr::select(CN, count, lenght)
 
@@ -134,7 +107,7 @@ fancy_cnbar = function(this_sample_id,
   p = ggplot(joined_cn, aes(x = CN)) +
     geom_segment(aes(y = 1, yend = lenght/500000, x = CN, xend = CN)) +
     geom_point(aes(y = lenght/500000), colour = "#E6B315", size = 3, group = 2) +
-    geom_bar(aes(y = count, fill = CN, label = count), position = "stack", stat = "identity") +
+    geom_bar(aes(y = count, fill = CN), position = "stack", stat = "identity") +
     scale_y_log10(limits = c(1, max(joined_cn$count) + 5000), sec.axis = sec_axis(~.*500000, name = "Nucleotides (n)")) +
     labs(title = plot_title, subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
     scale_fill_manual(values = get_gambl_colours("copy_number")) +

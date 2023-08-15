@@ -2,11 +2,11 @@
 #'
 #' @description Make a word cloud of gene names from a MAF file based on mutation frequency.
 #'
-#' @details Create a wordcloud from an incoming MAF. Required parameter is `maf_df`.
+#' @details Create a wordcloud from an incoming MAF. Required parameter is `this_maf`.
 #' Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `other_genes_colour` and `colour_index`.
 #' If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 #'
-#' @param maf_df A MAF-format data frame containing the mutations you want to summarize in a gene word cloud
+#' @param this_maf Required parameter. A MAF-format data frame containing the mutations you want to summarize in a gene word cloud
 #' @param these_genes An optional vector of gene symbols (defaults to all lymphoma genes)
 #' @param other_genes An optional second vector of gene symbols to include in your cloud in a second colour
 #' @param these_genes_colour Specify the hex code of a colour to use for the first set of genes
@@ -30,7 +30,7 @@
 #' #build wordcloud
 #' prettyGeneCloud(maf_df = maf, these_genes = my_genes)
 #'
-prettyGeneCloud = function(maf_df,
+prettyGeneCloud = function(this_maf,
                            these_genes,
                            other_genes,
                            these_genes_colour="#B2DF8A",
@@ -42,19 +42,29 @@ prettyGeneCloud = function(maf_df,
   #drop genes not in the list then tally only coding variants (by default).
   # TODO: eventually allow an option to collapse samples from the same patient
   if(missing(other_genes)){
-    these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% these_genes)
+    these_genes_maf = dplyr::filter(this_maf,Hugo_Symbol %in% these_genes)
   }else{
-    these_genes_maf = dplyr::filter(maf_df,Hugo_Symbol %in% c(these_genes,other_genes))
+    these_genes_maf = dplyr::filter(this_maf,Hugo_Symbol %in% c(these_genes,other_genes))
   }
 
 
   #drop non-coding
   these_genes_maf = dplyr::filter(these_genes_maf,Variant_Classification %in% coding_vc)
+  
   these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>%
-    slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally()
+    slice_head() %>% 
+    ungroup() %>% 
+    group_by(Hugo_Symbol) %>% 
+    tally()
+  
   these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>%
-    slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally()
+    slice_head() %>% 
+    ungroup() %>% 
+    group_by(Hugo_Symbol) %>% 
+    tally()
+  
   print(as.data.frame(head(these_genes_unique,25)))
+  
   if(!missing(other_genes)){
     #assign a colour to each gene list
     these_genes_unique = these_genes_unique %>%

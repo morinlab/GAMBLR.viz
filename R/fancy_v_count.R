@@ -15,25 +15,18 @@
 #' to control what variants are to be counted with `variant_select`. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
 #' the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
 #'
-#' @param this_sample_id Sample to be plotted.
-#' @param maf_data Optional parameter with maf like df already loaded into R.
-#' @param maf_path Optional parameter with path to external maf like file.
+#' @param this_maf Parameter with maf like df already loaded into R.
+#' @param this_maf_path Parameter with path to external maf like file.
+#' @param this_bedpe Parameter with bedpe like df already loaded into R.
+#' @param this_bedpe_path Parameter with path to external bedpe like file.
 #' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).
-#' @param projection Genome build for returned variants (only applicable for ssm = FALSE).
-#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
-#' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
-#' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param variant_select Subtypes of SVs to be included in plot, default is DEL, INS and DUP.
 #' @param snp_colours Optional vector with colours for SNPs (DNP and TNP).
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param log10_y Set to TRUE to force y axis to be in log10.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -48,69 +41,48 @@
 #' fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 #'               chr_select = c("chr1"))
 #'
-fancy_v_count = function(this_sample_id,
-                         maf_data,
-                         maf_path = NULL,
+fancy_v_count = function(this_maf,
+                         this_maf_path = NULL,
+                         this_bedpe,
+                         this_bedpe_path = NULL,
                          ssm = TRUE,
-                         projection = "grch37",
-                         this_seq_type = "genome",
-                         min_vaf = 0,
-                         variant_type_col = 10,
-                         chromosome_col = 5,
                          plot_title = paste0(this_sample_id),
                          plot_subtitle = "Variant Count For Selected Contigs",
                          chr_select = paste0("chr", c(1:22)),
                          variant_select = c("DEL", "INS", "DUP"),
                          snp_colours = c("SNP" = "#2B9971", "DNP" = "#993F2B", "TNP" = "#A62656"),
                          hide_legend = FALSE,
-                         coding_only = FALSE,
-                         log10_y = FALSE,
-                         from_flatfile = TRUE,
-                         use_augmented_maf = TRUE){
-
-  if(!missing(maf_data)){
-    maf = maf_data
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-
-  }else if (!is.null(maf_path)){
-    maf = fread_maf(maf_path)
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-  }
-
-  #get maf data for a specific sample.
-  if(missing(maf_data) && is.null(maf_path)){
+                         log10_y = FALSE){
+  
     if(ssm){
-      maf = assign_cn_to_ssm(
-        this_sample_id = this_sample_id,
-        coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
-        this_seq_type = this_seq_type)$maf
+      if(!missing(this_maf)){
+        maf = this_maf
+      }else if(!is.null(this_maf_path)){
+        maf = fread_maf(this_maf_path)
+      }else{
+        stop("Please provide either a maf file (this_maf) or a path to a maf file (this_maf_path)...")
+      }  
     }else{
-      maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
-        dplyr::select(CHROM_A, START_A, END_A, manta_name)
-
+      if(!missing(this_bedpe)){
+        maf = this_bedpe
+      }else if(!is.null(this_bedpe_path)){
+        maf = fread_maf(this_bedpe_path)
+      }else{
+        stop("Please provide either a bedpe file (this_bedpe) or a path to a bedpe file (this_bedpe_path)...")
+      }
       #get manta results in required format
       maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
-
+    
       #rename variables
-      names(maf)[1] = "Chromosome"
-      names(maf)[2] = "Start_Position"
-      names(maf)[3] = "End_Position"
-      names(maf)[4] = "Variant_Type"
-
+      names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
+    
       #filter out translocations and set order of variables
       maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
         dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
-
+    
       #remove "Manta" from Variant_Type string
       maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
     }
-  }
 
   #add chr prefix if missing
   if(!str_detect(maf$Chromosome, "chr")[1]){

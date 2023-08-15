@@ -7,17 +7,18 @@
 #' The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 #' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 #' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-#' This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+#' This function expects the user to provide an already loaded maf as (`this_maf`). 
+#' If you have access to core GAMBLR functions, you can run [GAMBLR::get_ssm_by_regions], 
+#' supplying the `regions_bed` to the `region` parameter of that function to the return the expected data.
 #'
+#' @param this_maf An already loaded maf. This parameter is required.
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).
 #' @param regions_to_display Optional vector of names from default regions_bed to use.
-#' @param exclude_classifications Optional argument for excluding specific classifications from a metadeta file.
+#' @param exclude_classifications Optional argument for excluding specific classifications from a metadata file.
 #' @param metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
-#' @param seq_type the seqtype you want results back for if `maf_data` is not provided.
-#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
 #' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
-#' @param maf_data An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.
-#' @param verbose Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.
+#' @param verbose Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.
 #'
 #' @return Nothing
 #'
@@ -25,29 +26,23 @@
 #' @export
 #'
 #' @examples
-#' #get lymphgen colours
-#' lymphgen_colours = get_gambl_colours(classification = "lymphgen")
+#' #get data
+#' dohh2_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
 #'
 #' #build plot
-#' ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
-#'                                                "MYC-TSS",
-#'                                                "SGK1-TSS",
-#'                                                "IGL"),
-#'                         custom_colours = lymphgen_colours,
-#'                         seq_type = "genome")
+#' ashm_multi_rainbow_plot(this_maf = dohh2_maf, 
+#'                         regions_to_display = c("BCL2-TSS", "MYC-TSS", "SGK1-TSS", "IGL"), 
+#'                         custom_colours = get_gambl_colours(classification = "lymphgen"))
 #'
-ashm_multi_rainbow_plot = function(regions_bed,
+ashm_multi_rainbow_plot = function(this_maf,
+                                   regions_bed,
                                    regions_to_display,
                                    exclude_classifications,
                                    metadata,
-                                   seq_type,
                                    custom_colours,
                                    classification_column = "lymphgen",
-                                   maf_data,
                                    verbose = TRUE){
 
-  table_name = check_config_value(config::get("results_tables")$ssm)
-  db = check_config_value(config::get("database_name"))
   #get the mutations for each region and combine
   #regions_bed should contain chr, start, end, name (with these exact names)
   if(missing(metadata)){
@@ -88,11 +83,14 @@ ashm_multi_rainbow_plot = function(regions_bed,
   regions_bed = dplyr::filter(regions_bed, names %in% regions_to_display)
   regions = pull(regions_bed, regions)
   names = pull(regions_bed, names)
-  if(missing(maf_data)){
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type = seq_type)})
+  
+  #subset the maf
+  if(!missing(this_maf)){
+    region_mafs = lapply(regions, function(x){handle_ssm_by_region(region = x, this_maf = this_maf)})
   }else{
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data)})
+    stop("Please provide an input MAF subset to specified regions...")
   }
+  
   tibbled_data = tibble(region_mafs, region_name = names)
   unnested_df = tibbled_data %>%
     unnest_longer(region_mafs)
@@ -102,7 +100,6 @@ ashm_multi_rainbow_plot = function(regions_bed,
 
   meta_arranged = meta_arranged %>% mutate_if(is.factor, as.character)
   meta_arranged = meta_arranged %>% mutate(classification = factor(!!sym(classification_column)))
-
 
   muts_anno = left_join(unlisted_df, meta_arranged)
   muts_first = dplyr::select(muts_anno, start, region_name) %>%
@@ -140,7 +137,5 @@ ashm_multi_rainbow_plot = function(regions_bed,
     p = p +
         scale_colour_manual(values = custom_colours)
   }
-
   print(p)
-
 }

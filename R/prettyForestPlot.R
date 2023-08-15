@@ -9,7 +9,7 @@
 #' This is done with the `min_mutations` parameter.
 #' For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 #'
-#' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
+#' @param this_maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
 #' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
 #' @param genes An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
@@ -51,7 +51,7 @@
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #'
-prettyForestPlot = function(maf,
+prettyForestPlot = function(this_maf,
                             mutmat,
                             metadata,
                             genes,
@@ -85,18 +85,20 @@ prettyForestPlot = function(maf,
   metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
 
   #read maf into r
-  if(!missing(maf)){
+  if(!missing(this_maf)){
     #extract gene symbols from maf with minimum N mutations (if no genes list is provided)
     if(missing(genes)){
-      genes = maf %>%
+      genes = this_maf %>%
         dplyr::select(Hugo_Symbol) %>%
         add_count(Hugo_Symbol) %>%
         distinct(Hugo_Symbol, .keep_all = TRUE) %>%
         dplyr::filter(n >= min_mutations) %>%
         pull(Hugo_Symbol)
     }
-    maf = maf[maf$Hugo_Symbol %in% genes, ]
-    maf = maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
+    maf = this_maf[this_maf$Hugo_Symbol %in% genes, ]
+    maf = this_maf[this_maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
+  }else{
+    stop("Please provide a maf with `this_maf` paraemter...")
   }
 
   #If separate_hotspots = true, confirm the input maf is hotspot annotated

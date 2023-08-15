@@ -3,14 +3,15 @@
 #' @description Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 #'
 #' @details This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
-#' or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
+#' or the user can provide a maf that has already been subset to the region(s) of interest with `this_maf`.
+#' Regardless, the user has to provide a maf or maf-like object with `this_maf` as an required parameter.
 #' As a third alternative, the regions can also be specified as a bed file with `bed`.
 #' Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
 #' Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
 #'
-#' @param mutations_maf A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).
-#' @param metadata should be a data frame with sample_id as a column.
-#' @param exclude_classifications Optional argument for excluding specific classifications from a metadeta file.
+#' @param this_maf Required parameter. A data frame containing mutations (MAF format) within a region of interest.
+#' @param metadata A data frame with sample_id as a column.
+#' @param exclude_classifications Optional argument for excluding specific classifications from a metadata file.
 #' @param drop_unmutated Boolean argument for removing unmutated sample ids in mutated cases.
 #' @param classification_column The name of the metadata column to use for ordering and colouring samples.
 #' @param bed Optional data frame specifying the regions to annotate (required columns: start, end, name).
@@ -24,14 +25,16 @@
 #' @export
 #'
 #' @examples
-#' #basic usage
-#' this_region = "chr6:90975034-91066134"
-#' this_metadata = get_gambl_metadata()
+#' #get data
+#' dohh2_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+#' dohh2_meta = GAMBLR.data::gambl_metadata %>% dplyr::filter(sample_id == "DOHH-2")
 #'
-#' ashm_rainbow_plot(metadata = this_metadata,
-#'                   region = this_region)
+#' #build plot
+#' ashm_rainbow_plot(this_maf = dohh2_maf,
+#' b                 metadata = dohh2_meta, 
+#'                   region = "chr6:90975034-91066134")
 #'
-ashm_rainbow_plot = function(mutations_maf,
+ashm_rainbow_plot = function(this_maf,
                              metadata,
                              exclude_classifications,
                              drop_unmutated = FALSE,
@@ -40,23 +43,22 @@ ashm_rainbow_plot = function(mutations_maf,
                              region,
                              custom_colours,
                              hide_ids = TRUE){
-
-  table_name = check_config_value(config::get("results_tables")$ssm)
-  db = check_config_value(config::get("database_name"))
-  if(!missing(region)){
+  
+  if(!region == ""){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
     chromosome = split_chunks[1]
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
-    if(missing(mutations_maf)){
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE,from_indexed_flatfile = T)
-    }else{
-      #ensure it only contains mutations in the region specified
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf)
-    }
   }
+  
+  if(!missing(this_maf)){
+    regions_maf = handle_ssm_by_region(this_maf = this_maf, region = region)
+  }else{
+    stop("Please provide a MAF, or MAF-like object with the `this_maf` parameter...")
+  }
+
   if(!missing(classification_column)){
     meta_arranged = arrange(metadata, pathology_rank, lymphgen)
     if(!missing(exclude_classifications)){
@@ -66,7 +68,8 @@ ashm_rainbow_plot = function(mutations_maf,
     classification_column = "lymphgen"
     meta_arranged = metadata
   }
-  mutation_positions = mutations_maf %>%
+  
+  mutation_positions = regions_maf %>%
     dplyr::select(Tumor_Sample_Barcode, Start_Position) %>%
     as.data.frame()
 
@@ -77,6 +80,7 @@ ashm_rainbow_plot = function(mutations_maf,
     meta_arranged = meta_arranged %>%
       dplyr::filter(sample_id %in% mutated_cases)
   }
+  
   #add a fake mutation at the start position for each sample to ensure every sample shows up
   fake_mutations = data.frame(Tumor_Sample_Barcode = pull(metadata, sample_id), Start_Position = qstart - 1000)
   mutation_positions = rbind(mutation_positions, fake_mutations)
@@ -97,6 +101,7 @@ ashm_rainbow_plot = function(mutations_maf,
       geom_point(aes(x = Start_Position, y = sample_id, colour = classification), alpha = 0.4) +
       scale_colour_manual(values = custom_colours)
   }
+  
   if(missing(bed)){
     p + guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
   }else{

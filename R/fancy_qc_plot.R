@@ -13,13 +13,7 @@
 #' Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 #' lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
 #'
-#' @param these_sample_ids Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).
-#' @param keep_cohort Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.
-#' @param keep_pathology Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.
-#' @param seq_type Selected seq type for incoming QC metrics.
-#' @param metadata Optional, user can provide a metadata df to subset sample IDs from.
-#' @param these_samples_metadata GAMBL metadata subset to the cases you want to process.
-#' @param plot_data Plotting parameter, define the data type to be plotted.
+#' @param collated_results Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].
 #' @param fill_by Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.
 #' @param labels If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.
 #' @param interactive Boolean parameter for generating interactive plot (HTML). Default is FALSE.
@@ -35,44 +29,12 @@
 #' @export
 #'
 #' @examples
-#' #Example 1 - using these_sample_ids parameter
-#' #subset on FL cases with QC metrics available and plot
-#' metadata = get_gambl_metadata()
-#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
-#'                cohort == "FL_Kridel")
-#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
 #'
-#' fancy_qc_plot(these_sample_ids = kridel_fl_samples,
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
-#'
-#' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fancy_qc_plot(these_samples_metadata = kridel_fl,
-#'               interactive = TRUE,
-#'               labels = c("cohort", "pathology"),
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
-#'
-#' #Example 3 - using in-house metadata filtering options
-#' fancy_qc_plot(keep_cohort = "FL_Kridel",
-#'               keep_pathology = "FL",
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
-#'
-fancy_qc_plot = function(these_sample_ids,
-                         keep_cohort,
-                         keep_pathology,
-                         seq_type = "genome",
-                         metadata,
-                         these_samples_metadata,
-                         plot_data,
+fancy_qc_plot = function(collated_results,
+                         comparison_samples,
                          fill_by = "pathology",
                          labels = c("sample_id", "cohort"),
                          interactive = FALSE,
-                         comparison_samples,
                          plot_title = "",
                          y_axis_lab = "",
                          return_plotdata = FALSE){
@@ -87,55 +49,20 @@ fancy_qc_plot = function(these_sample_ids,
     return(plotting_variables)
   }
 
-  #get gambl metadata (if not supplied)
-  if(missing(metadata)){
-    this_meta = get_gambl_metadata(seq_type_filter = seq_type)
-  }else{
-    this_meta = metadata
+  #check if required parameter is provided
+  if(missing(collated_results)){
+    stop("Please provide a data frame with collated results to the `collated_reesults` parameter...")
   }
-
-  if(!missing(these_samples_metadata)){
-    these_sample_ids = dplyr::select(these_samples_metadata, sample_id) %>%
-      as.data.frame(strings.as.factors = FALSE)
-  }
-
-  #filter metadata on selected cohort/pathology
-  if(missing(these_sample_ids) && missing(these_samples_metadata)){
-    if(!missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, cohort == keep_cohort)
-    }
-
-    if(!missing(keep_pathology) && missing(keep_cohort)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology)
-    }
-
-    if(!missing(keep_cohort) && !missing(keep_pathology)){
-      these_sample_ids = dplyr::filter(this_meta, pathology == keep_pathology, cohort == keep_cohort)
-    }
-
-    if(missing(keep_cohort) && missing(keep_pathology)){
-      these_sample_ids = dplyr::select(this_meta, sample_id)
-    }
-  }
-
-  #get QC data for selected samples
-  qc_metrics = collate_results(sample_table = these_sample_ids, seq_type_filter = seq_type)
-  message(paste0("QC Metric successfully retreived for ", nrow(qc_metrics), " samples out of a total of ", nrow(these_sample_ids), " samples in input sample table."))
 
   #aggregate sample list with metadata columns
-  qc_meta = qc_metrics %>%
-    inner_join(this_meta) %>%
+  qc_meta = collated_results %>%
     mutate_if(is.integer, as.factor) %>%
     mutate_if(is.character, as.factor)
 
   qc_meta$group = "main_sample"
 
-  #Retrieve QC metrics for comparison samples, if provided.
   if(!missing(comparison_samples)){
-    comp_data = collate_results(sample_table = comparison_samples, seq_type_filter = seq_type)
-
-    #aggregate sample list with metadata columns
-    comp_meta = comp_data %>% inner_join(this_meta)
+    comp_meta = comparison_samples
     comp_meta = mutate_if(comp_meta, is.integer, as.factor)
     comp_meta = mutate_if(comp_meta, is.character, as.factor)
     comp_meta$group = "comparison_sample"

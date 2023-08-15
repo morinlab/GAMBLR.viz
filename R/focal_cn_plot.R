@@ -7,6 +7,8 @@
 #' with `gene`. If so, the function will internally retrieve the region for the specified gene.
 #' Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 #'
+#' @param this_seg
+#' @param this_seg_path
 #' @param region Genomic region for plotting in bed format.
 #' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).
@@ -36,7 +38,9 @@
 #'               type = "loss",
 #'               crop_distance = 100000000)
 #'
-focal_cn_plot = function(region,
+focal_cn_plot = function(this_seg,
+                         this_seg_path = NULL,
+                         region,
                          gene,
                          these_samples_metadata,
                          this_seq_type = "genome",
@@ -45,30 +49,46 @@ focal_cn_plot = function(region,
                          crop_segments = TRUE,
                          sort_by_annotation = c('pathology'),
                          crop_distance = 100000000){
-
+  
+  if(missing(these_samples_metadata)){
+    stop("Please provide metadata with `these_samples_metadata`...")
+  }
+  
   if(!missing(gene)){
     region = gene_to_region(gene)
     chunks = region_to_chunks(region)
   }else{
     chunks = region_to_chunks(region)
   }
-  if(type == "gain"){
-    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
-      mutate(size = end - start) %>%
-      dplyr::filter(CN>2)
-  }else{
-    all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
-      mutate(size = end - start) %>%
-      dplyr::filter(CN<2)
+  
+  if(!is.null(this_seg_path)){
+    this_seg = read.table(this_seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
   }
+
+  if(!missing(this_seg)){
+    if(type == "gain"){
+      all_not_dip = this_seg %>%
+        mutate(size = end - start) %>%
+        dplyr::filter(CN>2)
+    }else{
+      all_not_dip = this_seg %>%
+        mutate(size = end - start) %>%
+        dplyr::filter(CN<2)
+    }
+  }else{
+    stop("Please provide a seg file with either `this_seg` or aan absolute path to such a file with `this_seg_path`...")
+  }
+    
 
   #crop start and end if they're further than crop_distance from your region
   all_not_dip = mutate(all_not_dip, left_distance = as.numeric(chunks$start) - start)
   all_not_dip = mutate(all_not_dip, right_distance = end - as.numeric(chunks$end))
+  
   if(crop_segments){
     all_not_dip = mutate(all_not_dip, end = ifelse(right_distance > crop_distance, as.numeric(chunks$end) + crop_distance, end))
     all_not_dip = mutate(all_not_dip, start = ifelse(left_distance > crop_distance, as.numeric(chunks$start) - crop_distance, start))
   }
+  
   all_not_dip = left_join(all_not_dip, these_samples_metadata, by = c("ID" = "sample_id")) %>%
     dplyr::filter(!is.na(pathology))
 

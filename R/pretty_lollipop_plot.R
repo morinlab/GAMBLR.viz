@@ -6,8 +6,8 @@
 #' Returned plot is interactive, meaning the user can hover over individual points in the plot to reveal more information.
 #' The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
 #'
-#' @param maf_df A data frame containing the mutation data (from a MAF).
-#' @param gene The gene symbol to plot.
+#' @param this_maf Required parameter. A data frame containing the mutation data (from a MAF).
+#' @param gene Required parameter. The gene symbol to plot.
 #' @param plot_title Optional (defaults to gene name).
 #' @param plot_theme Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.
 #' @param out_name Optional, set the file name of the plot, if you export it to disk. Default name is my_lollipop_plot_{gene}.
@@ -32,20 +32,24 @@
 #'                      plot_title = "Mutation data for MYC",
 #'                      plot_theme = "nature2")
 #'
-pretty_lollipop_plot = function(maf_df,
+pretty_lollipop_plot = function(this_maf,
                                 gene,
                                 plot_title,
                                 plot_theme = "cbioportal",
                                 out_name = paste0("my_lollipop_plot_", gene)){
   if(missing(gene)){
-    stop("Plese provide a gene...")
+    stop("Please provide a gene...")
+  }
+  
+  if(missing(this_maf)){
+    stop("Please provide a maf with `this_maf` parameter...")
   }
 
   if(missing(plot_title)){
     plot_title = gene
   }
 
-  maf_df = maf_df %>%
+  maf_df = this_maf %>%
     dplyr::filter(Hugo_Symbol == gene)
 
   #use the readMAF function (modified by Ryan) to parse/convert

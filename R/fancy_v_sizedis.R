@@ -16,26 +16,17 @@
 #' For more info on how to run with these parameters, refer to the parameter descriptions.
 #'
 #'
-#' @param this_sample_id Sample to be plotted.
-#' @param maf_data Optional parameter with maf like df already loaded into R.
-#' @param maf_path Optional parameter with path to external maf like file.
+#' @param this_maf Parameter with maf like df already loaded into R.
+#' @param this_maf_path Parameter with path to external maf like file.
+#' @param this_bedpe Parameter with bedpe like df already loaded into R.
+#' @param this_bedpe_path Parameter with path to external bedpe like file.
 #' @param ssm Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).
-#' @param projection Genome build for returned variants (only applicable for ssm = FALSE).
-#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
-#' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
-#' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
-#' @param start_col Index of column with variant start coordinates (to be used with either maf_data or maf_path).
-#' @param end_col Index of column with variant end coordinates (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param scale_value Scale type for violin plot, accepted values are "area", "width", and "count", default is "count.
 #' @param log_10 Boolean statement for y-axis, default is TRUE.
 #' @param plot_trim If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -46,73 +37,46 @@
 #' #plot SSM size distributions:
 #' fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
 #'
-fancy_v_sizedis = function(this_sample_id,
-                           maf_data,
-                           maf_path = NULL,
+fancy_v_sizedis = function(this_maf,
+                           this_maf_path = NULL,
+                           this_bedpe,
+                           this_bedpe_path = NULL,
                            ssm = TRUE,
-                           projection = "grch37",
-                           this_seq_type = "genome",
-                           min_vaf = 0,
-                           variant_type_col = 10,
-                           chromosome_col = 5,
-                           start_col = 6,
-                           end_col = 7,
                            plot_title = paste0(this_sample_id),
                            plot_subtitle = "Variant Size Distribution",
                            scale_value = "width",
                            log_10 = TRUE,
                            plot_trim = FALSE,
-                           chr_select = paste0("chr", c(1:22)),
-                           coding_only = FALSE,
-                           from_flatfile = TRUE,
-                           use_augmented_maf = TRUE){
+                           chr_select = paste0("chr", c(1:22))){
 
-  if(!missing(maf_data)){
-    maf = maf_data
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-    colnames(maf)[start_col] = "Start_Position"
-    colnames(maf)[end_col] = "End_Position"
-
-  }else if (!is.null(maf_path)){
-    maf = fread_maf(maf_path)
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-    colnames(maf)[start_col] = "Start_Position"
-    colnames(maf)[end_col] = "End_Position"
-  }
-
-  #get maf data for a specific sample.
-  if(missing(maf_data) && is.null(maf_path)){
-    if(ssm){
-      maf = assign_cn_to_ssm(
-        this_sample_id = this_sample_id,
-        coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
-        this_seq_type = this_seq_type)$maf
+  if(ssm){
+    if(!missing(this_maf)){
+      maf = this_maf
+    }else if(!is.null(this_maf_path)){
+      maf = fread_maf(this_maf_path)
     }else{
-      maf = get_combined_sv(these_sample_ids  = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
-        dplyr::select(CHROM_A, START_A, END_A, manta_name)
-
-      #get manta results in required format
-      maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
-
-      #rename variables
-      names(maf)[1] = "Chromosome"
-      names(maf)[2] = "Start_Position"
-      names(maf)[3] = "End_Position"
-      names(maf)[4] = "Variant_Type"
-
-      #filter out translocations and set order of variables
-      maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
-        dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
-
-      #remove "Manta" from Variant_Type string
-      maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
+      stop("Please provide either a maf file (this_maf) or a path to a maf file (this_maf_path)...")
+    }  
+  }else{
+    if(!missing(this_bedpe)){
+      maf = this_bedpe
+    }else if(!is.null(this_bedpe_path)){
+      maf = fread_maf(this_bedpe_path)
+    }else{
+      stop("Please provide either a bedpe file (this_bedpe) or a path to a bedpe file (this_bedpe_path)...")
     }
+    #get manta results in required format
+    maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
+    
+    #rename variables
+    names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
+    
+    #filter out translocations and set order of variables
+    maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
+      dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
+    
+    #remove "Manta" from Variant_Type string
+    maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
   }
 
   #add chr prefix if missing

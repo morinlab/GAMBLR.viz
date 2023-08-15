@@ -11,12 +11,12 @@
 #' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 #' e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 #'
-#' @param this_sample_id Sample to be plotted.
-#' @param maf_data Optional parameter with maf like df already loaded into R.
-#' @param maf_path Optional parameter with path to external maf like file.
-#' @param ssm Set to FALSE to get plotting data from [GAMBLR::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
-#' @param projection Genome build for returned variants (only applicable for ssm = FALSE)
-#' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
+#' @param this_maf Parameter with maf like df already loaded into R.
+#' @param this_maf_path Parameter with path to external maf like file.
+#' @param this_bedpe Parameter with bedpe like df already loaded into R.
+#' @param this_bedpe_path Parameter with path to external bedpe like file.
+#' @param collated_results If supplied, the function will superimpose QC metrics to thee returned plot. Preferably the return from [GAMBLR.results::collate_results].
+#' @param ssm Seet to FALSE to plot SVs instead of SSM. If set to FALSE, this function expects a bedpe with SVs with `this_bedpe` or an absolute path to such a file with `this_bedpe_path`.
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
@@ -24,11 +24,6 @@
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
-#' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
-#' @param seq_type Default is "genome".
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -36,76 +31,47 @@
 #' @export
 #'
 #' @examples
-#' #plot ssm
-#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                  ssm = TRUE)
 #'
-#' #plot SVs for chr 1-5
-#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                  ssm = FALSE,
-#'                  min_vaf = 0,
-#'                  projection = "grch37",
-#'                  chr_select = paste0("chr", c(1:5)),
-#'                  plot_subtitle = "SV Count Distribution (chr1-5)")
-#'
-fancy_v_chrcount = function(this_sample_id,
-                            maf_data,
-                            maf_path = NULL,
+fancy_v_chrcount = function(this_maf,
+                            this_maf_path = NULL,
+                            this_bedpe,
+                            this_bedpe_path = NULL,
+                            collated_results,
                             ssm = TRUE,
-                            projection = "grch37",
-                            min_vaf = 0,
-                            variant_type_col = 10,
-                            chromosome_col = 5,
                             plot_title = paste0(this_sample_id),
                             y_interval = 1,
                             hide_legend = FALSE,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
-                            chr_select = paste0("chr", c(1:22)),
-                            coding_only = FALSE,
-                            from_flatfile = TRUE,
-                            use_augmented_maf = TRUE,
-                            add_qc_metric = FALSE,
-                            seq_type = "genome"){
-
-  if(!missing(maf_data)){
-    maf = maf_data
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-
-  }else if(!is.null(maf_path)){
-    maf = fread_maf(maf_path)
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
-  }
-
-  #get maf data for a specific sample.
-  if(missing(maf_data) && is.null(maf_path)){
-    if(ssm){
-      maf = assign_cn_to_ssm(
-        this_sample_id = this_sample_id,
-        coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
-        this_seq_type = seq_type)$maf
+                            chr_select = paste0("chr", c(1:22))){
+  
+  if(ssm){
+    if(!missing(this_maf)){
+      maf = this_maf
+    }else if(!is.null(this_maf_path)){
+      maf = fread_maf(this_maf_path)
     }else{
-      maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
-        dplyr::select(CHROM_A, START_A, END_A, manta_name)
-
-      #get manta results in required format
-      maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
-
-      #rename variables
-      names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
-
-      #filter out translocations and set order of variables
-      maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
-        dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
-
-      #remove "Manta" from Variant_Type string
-      maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
+      stop("Please provide either a maf file (this_maf) or a path to a maf file (this_maf_path)...")
+    }  
+  }else{
+    if(!missing(this_bedpe)){
+      maf = this_bedpe
+    }else if(!is.null(this_bedpe_path)){
+      maf = fread_maf(this_bedpe_path)
+    }else{
+      stop("Please provide either a bedpe file (this_bedpe) or a path to a bedpe file (this_bedpe_path)...")
     }
+    #get manta results in required format
+    maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
+    
+    #rename variables
+    names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
+    
+    #filter out translocations and set order of variables
+    maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
+      dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
+    
+    #remove "Manta" from Variant_Type string
+    maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
   }
 
   #convert variables to factors
@@ -148,14 +114,10 @@ fancy_v_chrcount = function(this_sample_id,
     ymax = max(maf_del$n) + max(maf_dup$n)
   }
 
-  if(add_qc_metric){
+  if(!missing(collted_results)){
     #get qc data for selected samples
-    sample_df = data.frame(sample_id = this_sample_id)
-    qc_metrics = collate_results(sample_table = sample_df, seq_type_filter = seq_type) %>%
+    qc_metrics = collated_results %>%
       dplyr::select(MeanCorrectedCoverage)
-    if(nrow(qc_metrics) < 1){
-      message("No QC metrics available for selected sample...")
-    }
   }
 
   #plot

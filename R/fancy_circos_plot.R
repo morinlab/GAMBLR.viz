@@ -4,27 +4,24 @@
 #'
 #' @details This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 #' To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-#' Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assign_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
+#' Per default, this function expects the user to provide a maf with `this_maf` parameter and a data frame with SV calls with `this_bedpe`.
 #' Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
 #' In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 #' This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
 #' Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
 #'
-#' @param this_sample_id Sample to be plotted.
+#' @param this_maf Required parameter (if `ssm_calls = TRUE`). A data frame in MAF format.
+#' @param this_bedpe Required parameter (if `sv_calls = TRUE`). A data frame in BEDPE, possible the return from [GAMBLR::get_combined_sv], if the user have access to core GAMBLR functions (GSC access).
 #' @param gene_list Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.
 #' @param ssm_calls Boolean parameter for plotting ssm. Default is TRUE.
 #' @param sv_calls Boolean parameter for plotting SVs, default is TRUE.
 #' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to TRUE the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
-#' @param projection Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.
-#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param out Path to output folder, to where the plot will be exported.
-#' @param plot_title Optional parameter for naming your plot, default is this_sample.
+#' @param plot_title Optional parameter for naming your plot.
+#' @param projection Default is grch37, needed for cytobands fetched by Rcircos.
 #' @param pdf Set to FALSE for png, default is TRUE (pdf).
-#' @param file_name Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.
+#' @param file_name Optional parameter for specifying the file name of generated circos plot, default is "_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.
 #'
 #' @return Nothing.
 #'
@@ -34,40 +31,34 @@
 #' @examples
 #' \dontrun{
 #' #retrieve gene names for FL genes
-#' fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) %>%
-#'   pull(Gene)
-#'
+#' fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) %>% pull(Gene)
+#' 
 #' # get regions for selected genes
-#' fl_genes_list = gene_to_region(gene_symbol = fl_genes,
-#'                                return_as = "bed")
-#'
-#' fancy_circos_plot(this_sample_id = "DOHH-2",
+#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#' 
+#' #get an example bedpe
+#' fancy_circos_plot(this_bedpe = dohh2_bedpe,
 #'                   ssm_calls = FALSE,
 #'                   gene_list = fl_genes_list,
-#'                   chr_select = c("chr8",
-#'                                  "chr14",
-#'                                  "chr18"),
-#'                   out = "../../plots/",
+#'                   chr_select = c("chr8", "chr14", "chr18"),
+#'                   out = "../",
 #'                   plot_title = "DOHH-2 (SVs) Example Plot",
 #'                   pdf = FALSE,
 #'                   file_name = "dohh2_example.png")
 #' }
 #'
-fancy_circos_plot = function(this_sample_id,
+fancy_circos_plot = function(this_maf,
+                             this_bedpe,
                              gene_list,
                              ssm_calls = TRUE,
                              sv_calls = TRUE,
                              chr_select = paste0("chr", c(1:22)),
                              vaf_cutoff = 0,
-                             coding_only = FALSE,
-                             from_flatfile = TRUE,
-                             use_augmented_maf = TRUE,
+                             plot_title = "Circos Plot",
                              projection = "grch37",
-                             this_seq_type = "genome",
-                             plot_title = paste0(this_sample_id),
                              out,
                              pdf = TRUE,
-                             file_name = paste0(this_sample_id, "_circos.pdf")){
+                             file_name = "_circos.pdf"){
 
   #set track properties based on selected plotting data
   if(ssm_calls && sv_calls && !missing(gene_list)){
@@ -156,12 +147,12 @@ fancy_circos_plot = function(this_sample_id,
 
   #get SSM data
   if(ssm_calls){
-    maf = assign_cn_to_ssm(
-      this_sample_id = this_sample_id,
-      coding_only = coding_only,
-      from_flatfile = from_flatfile,
-      use_augmented_maf = use_augmented_maf,
-      this_seq_type = this_seq_type)$maf #get maf data
+    if(!missing(this_maf)){
+      maf = this_maf
+    }else{
+      stop("Please provide a MAF with `this_maf` parameter...")
+    }
+
     maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
     maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
@@ -176,12 +167,16 @@ fancy_circos_plot = function(this_sample_id,
     ssm_ins = dplyr::filter(maf_tmp, Variant_Type == "INS") #subset on insertions
     ssm_snp = dplyr::filter(maf_tmp, Variant_Type == "SNP") #subset on single nucleotide polymorphism
     ssm_dnp = dplyr::filter(maf_tmp, Variant_Type == "DNP") #subset on dinucleotide polymorphism
-    message(paste0(nrow(ssm_del) + nrow(ssm_dnp) + nrow(ssm_ins) + nrow(ssm_snp)), " SSMs found for ", this_sample_id)
+    message(paste0(nrow(ssm_del) + nrow(ssm_dnp) + nrow(ssm_ins) + nrow(ssm_snp)), " SSMs found")
   }
 
   #get SVs
   if(sv_calls){
-    svs = get_combined_sv(these_sample_ids = this_sample_id, projection = projection)
+    if(!missing(this_bedpe)){
+      svs = this_bedpe
+    }else{
+      stop("Please provide a data frame with SVs to `these_svs` parameter, if you have access to core GAMBLR funcitons, considder running `get_combined_sv` to retreive such a data frame...")
+    }
 
     #filter on vaf
     svs = dplyr::filter(svs, VAF_tumour > vaf_cutoff)
@@ -222,7 +217,7 @@ fancy_circos_plot = function(this_sample_id,
     sv_del$SIZE = sv_del$END_A - sv_del$START_A
     sv_dup$SIZE = sv_dup$END_A - sv_dup$START_A
 
-    message(paste0(nrow(sv_trans) + nrow(sv_del) + nrow(sv_dup)), " SVs found for ", this_sample_id)
+    message(paste0(nrow(sv_trans) + nrow(sv_del) + nrow(sv_dup)), " SVs found")
   }
 
   #plotting

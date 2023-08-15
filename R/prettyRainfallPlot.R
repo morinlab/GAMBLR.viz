@@ -10,6 +10,7 @@
 #' @param projection Specify projection (grch37 or hg38) of mutations. Default is grch37.
 #' @param chromosome Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.
 #' @param this_maf Specify custom MAF data frame of mutations.
+#' @param this_bedpe
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
 #' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
@@ -36,10 +37,12 @@ prettyRainfallPlot = function(this_sample_id,
                               projection = "grch37",
                               chromosome,
                               this_maf,
+                              this_bedpe,
                               maf_path,
                               zoom_in_region,
                               seq_type,
                               label_sv = FALSE) {
+  
   if (missing(this_sample_id)) {
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
     if(missing(zoom_in_region)){
@@ -134,15 +137,14 @@ prettyRainfallPlot = function(this_sample_id,
       this_sample_id = "all samples"
     }
   } else if(!missing(this_sample_id)) {
-    message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
-    these_ssm = get_ssm_by_sample(this_sample_id,
-                                  projection = projection, this_seq_type = seq_type)
+    stop("Please provide either a maf file (this_maf) or a path to a maf file (this_maf_path)...")
+
   }else if(!missing(seq_type)){
     if(missing(this_sample_id)){
       this_sample_id = "all samples"
     }
     message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
-    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection)
+    these_ssm = handle_ssm_by_region(this_maf = this_maf, region = region)
   }
 
   # do rainfall calculation using lag
@@ -215,13 +217,18 @@ prettyRainfallPlot = function(this_sample_id,
   }
 
   if (label_sv) {
-    message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
-    these_sv = get_combined_sv(these_sample_ids  = this_sample_id)
+    if(missing(this_bedpe)){
+      stop("Please provide a bedpe with SVs to `this_bedpe`...")
+    }else{
+      these_sv = this_bedpe
+    }
+    
     if ("SCORE" %in% colnames(these_sv)) {
       these_sv = these_sv %>%
         rename("SOMATIC_SCORE" = "SCORE")
     }
     # annotate SV
+    #TODO: update once annotate_sv has a new home
     these_sv = annotate_sv(these_sv)
 
     # make SVs a long df with 1 record per SV corresponding to the strand
