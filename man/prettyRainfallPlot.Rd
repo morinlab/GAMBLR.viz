@@ -10,6 +10,7 @@ prettyRainfallPlot(
   projection = "grch37",
   chromosome,
   this_maf,
+  this_bedpe,
   maf_path,
   zoom_in_region,
   seq_type,

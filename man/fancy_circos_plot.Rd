@@ -5,25 +5,24 @@
 \title{SSM and SV Circos Plot.}
 \usage{
 fancy_circos_plot(
-  this_sample_id,
+  this_maf,
+  this_bedpe,
   gene_list,
   ssm_calls = TRUE,
   sv_calls = TRUE,
   chr_select = paste0("chr", c(1:22)),
   vaf_cutoff = 0,
-  coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
+  plot_title = "Circos Plot",
   projection = "grch37",
-  this_seq_type = "genome",
-  plot_title = paste0(this_sample_id),
   out,
   pdf = TRUE,
-  file_name = paste0(this_sample_id, "_circos.pdf")
+  file_name = "_circos.pdf"
 )
 }
 \arguments{
-\item{this_sample_id}{Sample to be plotted.}
+\item{this_maf}{Required parameter (if `ssm_calls = TRUE`). A data frame in MAF format.}
+
+\item{this_bedpe}{Required parameter (if `sv_calls = TRUE`). A data frame in BEDPE, possible the return from [GAMBLR::get_combined_sv], if the user have access to core GAMBLR functions (GSC access).}
 
 \item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.}
 
@@ -35,23 +34,15 @@ fancy_circos_plot(
 
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
 
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
+\item{plot_title}{Optional parameter for naming your plot.}
 
-\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
-
-\item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
-
-\item{plot_title}{Optional parameter for naming your plot, default is this_sample.}
+\item{projection}{Default is grch37, needed for cytobands fetched by Rcircos.}
 
 \item{out}{Path to output folder, to where the plot will be exported.}
 
 \item{pdf}{Set to FALSE for png, default is TRUE (pdf).}
 
-\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
+\item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
 }
 \value{
 Nothing.
@@ -62,7 +53,7 @@ Create a circos plot visualizing SVS and SSM with optional gene annotations.
 \details{
 This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
 To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assign_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
+Per default, this function expects the user to provide a maf with `this_maf` parameter and a data frame with SV calls with `this_bedpe`.
 Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
 In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
@@ -71,20 +62,17 @@ Lastly, this plot can also highlight genes of interest. To do so, provide a data
 \examples{
 \dontrun{
 #retrieve gene names for FL genes
-fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) \%>\%
-  pull(Gene)
+fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) \%>\% pull(Gene)
 
 # get regions for selected genes
-fl_genes_list = gene_to_region(gene_symbol = fl_genes,
-                               return_as = "bed")
+fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
 
-fancy_circos_plot(this_sample_id = "DOHH-2",
+#get an example bedpe
+fancy_circos_plot(this_bedpe = dohh2_bedpe,
                   ssm_calls = FALSE,
                   gene_list = fl_genes_list,
-                  chr_select = c("chr8",
-                                 "chr14",
-                                 "chr18"),
-                  out = "../../plots/",
+                  chr_select = c("chr8", "chr14", "chr18"),
+                  out = "../",
                   plot_title = "DOHH-2 (SVs) Example Plot",
                   pdf = FALSE,
                   file_name = "dohh2_example.png")

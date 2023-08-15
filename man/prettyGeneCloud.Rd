@@ -5,7 +5,7 @@
 \title{Gene Cloud Plot}
 \usage{
 prettyGeneCloud(
-  maf_df,
+  this_maf,
   these_genes,
   other_genes,
   these_genes_colour = "#B2DF8A",
@@ -14,7 +14,7 @@ prettyGeneCloud(
 )
 }
 \arguments{
-\item{maf_df}{A MAF-format data frame containing the mutations you want to summarize in a gene word cloud}
+\item{this_maf}{Required parameter. A MAF-format data frame containing the mutations you want to summarize in a gene word cloud}
 
 \item{these_genes}{An optional vector of gene symbols (defaults to all lymphoma genes)}
 
@@ -33,7 +33,7 @@ data frame with counts for each gene
 Make a word cloud of gene names from a MAF file based on mutation frequency.
 }
 \details{
-Create a wordcloud from an incoming MAF. Required parameter is `maf_df`.
+Create a wordcloud from an incoming MAF. Required parameter is `this_maf`.
 Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `other_genes_colour` and `colour_index`.
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }

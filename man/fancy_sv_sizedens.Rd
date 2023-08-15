@@ -5,40 +5,24 @@
 \title{Structural Variants Size Plot.}
 \usage{
 fancy_sv_sizedens(
-  this_sample_id,
-  maf_data,
-  maf_path = NULL,
-  chrom_a_col = 3,
-  start_a_col = 4,
-  end_a_col = 5,
-  variant_type_col = 9,
+  this_bedpe,
+  this_bedpe_path = NULL,
   vaf_cutoff = 0,
   size_cutoff = 50,
   adjust_value = 1,
   trim = FALSE,
   hide_legend = FALSE,
   chr_select = paste0("chr", c(1:22)),
-  plot_title = paste0(this_sample_id),
+  plot_title = "SV Sizes",
   plot_subtitle =
     paste0("SV sizes for Manta calls. Dashed line annotates mean variant size.\\nVAF cut off: ",
-    vaf_cutoff, ", SV size cut off: ", size_cutoff),
-  projection = "grch37"
+    vaf_cutoff, ", SV size cut off: ", size_cutoff)
 )
 }
 \arguments{
-\item{this_sample_id}{Sample to be plotted.}
+\item{this_bedpe}{Parameter with maf like df already loaded into R.}
 
-\item{maf_data}{Optional parameter with copy number df already loaded into R.}
-
-\item{maf_path}{Optional parameter with path to external cn file.}
-
-\item{chrom_a_col}{Index of column holding chromosome (to be used with either maf_data or maf_path).}
-
-\item{start_a_col}{Index of column holding start coordinates (to be used with either maf_data or maf_path).}
-
-\item{end_a_col}{Index of column holding end coordinates (to be used with either maf_data or maf_path).}
-
-\item{variant_type_col}{Index of column holding variant type information (to be used with either maf_data or maf_path).}
+\item{this_bedpe_path}{Parameter with path to external maf like file.}
 
 \item{vaf_cutoff}{Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).}
 
@@ -74,14 +58,4 @@ If either of the `maf` parameters are used, note that it's possible to specify t
 (`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
 This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
 parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
-}
-\examples{
-#build plot sith default parameters
-fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-
-#restrict plot to only chromosome 1 and 2
-fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                  size_cutoff = 0,
-                  chr_select = c("chr1", "chr2"))
-
 }

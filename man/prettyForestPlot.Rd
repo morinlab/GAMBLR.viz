@@ -5,7 +5,7 @@
 \title{Forest Plot.}
 \usage{
 prettyForestPlot(
-  maf,
+  this_maf,
   mutmat,
   metadata,
   genes,
@@ -21,7 +21,7 @@ prettyForestPlot(
 )
 }
 \arguments{
-\item{maf}{A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.}
+\item{this_maf}{A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.}
 
 \item{mutmat}{Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".}
 

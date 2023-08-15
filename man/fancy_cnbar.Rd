@@ -5,36 +5,20 @@
 \title{Copy Number states barplot}
 \usage{
 fancy_cnbar(
-  this_sample_id,
-  seq_data,
-  seq_path = NULL,
-  chrom_col = 2,
-  start_col = 3,
-  end_col = 4,
-  cn_col = 7,
-  plot_title = paste0(this_sample_id),
+  this_seg,
+  this_seg_path = NULL,
+  plot_title = paste0("Copy Number Segments"),
   plot_subtitle =
     "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
-  include_cn2 = TRUE,
-  this_seq_type = "genome"
+  include_cn2 = TRUE
 )
 }
 \arguments{
-\item{this_sample_id}{Sample to be plotted.}
+\item{this_seg}{An already loaded SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].}
 
-\item{seq_data}{Optional parameter with copy number df already loaded into R.}
-
-\item{seq_path}{Optional parameter with path to external cn file.}
-
-\item{chrom_col}{Index of column with chromosome annotations (to be used with either maf_data or maf_path).}
-
-\item{start_col}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
-
-\item{end_col}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
-
-\item{cn_col}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
+\item{this_seg_path}{An absolute path to a SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
@@ -44,9 +28,7 @@ fancy_cnbar(
 
 \item{cutoff}{Set threshold for maximum CN state to be retrieved.}
 
-\item{include_cn2}{Optional boolean statement for including CN = 2 states in plot.}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+\item{include_cn2}{Optional Boolean statement for including CN = 2 states in plot.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -55,20 +37,20 @@ A plot as a ggplot object (grob).
 Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 }
 \details{
-`fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
-can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
-parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
-the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
-restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
+`fancy_cnbar` visualizes copy number (CN) states on sample-level. This function expects an already loaded SEG file with the `this_seg` parameter.
+Such a seg file can be retrieved with [GAMBLR.results::get_sample_cn_segments]. It is also possible to specify the absolute path to such a SEG file with `this_seg_path`.
+The returned plot can also be restricted to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
 With `include_cn2` (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
 The user can also control the annotations of the returned plot with `plot_title` and `plot_subtitle`. Lastly,
 This function also computes the number of affected bases for each copy number state and plots these values on a secondary y-axis (right),
-useful for overviewing the extent of each copy number state, in the context of the full genome.
+useful for overview the extent of each copy number state, in the context of the full genome.
 }
 \examples{
-#Return a plot for one sample, with default parameters.
-fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#get data
+dohh2_seg = GAMBLR.data::sample_data$grch37$seg \%>\% dplyr::filter(ID == "DOHH-2")
+
+#build plot
+fancy_cnbar(this_seg = dohh2_seg, include_cn2 = FALSE)
 
 }

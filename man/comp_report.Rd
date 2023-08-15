@@ -5,32 +5,26 @@
 \title{sample-level SV/SSM/CN reports in PDF}
 \usage{
 comp_report(
-  this_sample_id,
+  this_seg,
+  this_seg_path,
+  this_maf,
+  this_maf_path,
   export_individual_plots = FALSE,
-  out,
-  seq_data,
-  seq_path = NULL,
-  maf_data,
-  maf_path = NULL,
-  this_seq_type = "genome"
+  out
 )
 }
 \arguments{
-\item{this_sample_id}{Sample ID to be plotted in report.}
+\item{this_seg}{Required parameter. A SEG file loaded into R.}
+
+\item{this_seg_path}{Required, if `this_seg` is not provided. An absolute path to the seg file of interest.}
+
+\item{this_maf}{Required parameter. A MAF file loaded into R.}
+
+\item{this_maf_path}{Required, if `this_maf` is not provided. An absolute path to the maf file of interest.}
 
 \item{export_individual_plots}{Boolean parameter, set to TRUE to export individual plots.}
 
 \item{out}{Path to output folder.}
-
-\item{seq_data}{Optional parameter with copy number df already loaded into R.}
-
-\item{seq_path}{Optional parameter with path to external cn file.}
-
-\item{maf_data}{Optional parameter with maf like df already loaded into R.}
-
-\item{maf_path}{Optional parameter with path to external maf like file.}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 Nothing.
@@ -39,17 +33,21 @@ Nothing.
 Construct pdf with sample-level plots, using minimum of arguments
 }
 \details{
-This function runs the complete collection of `fancy_x_plots` for a specific sample ID (`this_sample`), with default parameters.
+This function runs the complete collection of `fancy_x_plots` on an incoming MAF (`this_maf`) and SEG file (`this_seg`), with default parameters.
 The generated plots are put together into a two-page PDF. In addition, it is also possible to export all individual plots.
-This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the
-`this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local
-file on disk with the `seq_path` and `maf_path` parameters.
+This can be done by setting `export_individual_plots` to TRUE.
 }
 \examples{
 \dontrun{
+
+#get data for plotting
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+dohh2_seg = GAMBLR.data::sample_data$grch37$seg \%>\% dplyr::filter(ID == "DOHH-2")
+
 #create a PDF report for one sample, as well as exporting all individual plots.
-comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
-            out = "reports/",
+comp_report(this_seg = dohh2_seg,
+            this_maf = dohh2_maf,
+            out = "",
             export_individual_plots = TRUE)
 }
 

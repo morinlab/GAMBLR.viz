@@ -5,28 +5,21 @@
 \title{n SNVs per chromosome plot}
 \usage{
 fancy_snv_chrdistplot(
-  this_sample_id,
-  maf_data,
-  maf_path = NULL,
+  this_maf,
+  this_maf_path = NULL,
   variant_type_col = 10,
   chromosome_col = 5,
   plot_title = paste0(this_sample_id),
   plot_subtitle = "SNV Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
-  hide_legend = FALSE,
-  coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
-  this_seq_type = "genome"
+  hide_legend = FALSE
 )
 }
 \arguments{
-\item{this_sample_id}{Sample to be plotted.}
+\item{this_maf}{Parameter with maf like df already loaded into R.}
 
-\item{maf_data}{Optional parameter with maf like df already loaded into R.}
-
-\item{maf_path}{Optional parameter with path to external maf like file.}
+\item{this_maf_path}{Parameter with path to external maf like file.}
 
 \item{variant_type_col}{Index of column holding Variant Type (to be used with either maf_data or maf_path).}
 
@@ -41,14 +34,6 @@ fancy_snv_chrdistplot(
 \item{include_dnp}{Optional argument for including DNPs. Default is FALSE.}
 
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
-
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -67,14 +52,4 @@ argument (Boolean) for if variants of this subtype should be included or not. Th
 counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
 and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
 also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
-}
-\examples{
-#plot SNVs
-fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-
-#plot SNVs and DNPs
-fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                      include_dnp = TRUE,
-                      plot_subtitle = "SNV + DNP Distribution Per Chromosome")
-
 }

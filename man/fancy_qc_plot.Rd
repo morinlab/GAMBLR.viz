@@ -5,44 +5,26 @@
 \title{Plot Quality Control Metrics.}
 \usage{
 fancy_qc_plot(
-  these_sample_ids,
-  keep_cohort,
-  keep_pathology,
-  seq_type = "genome",
-  metadata,
-  these_samples_metadata,
-  plot_data,
+  collated_results,
+  comparison_samples,
   fill_by = "pathology",
   labels = c("sample_id", "cohort"),
   interactive = FALSE,
-  comparison_samples,
   plot_title = "",
   y_axis_lab = "",
   return_plotdata = FALSE
 )
 }
 \arguments{
-\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column (has to be named sample_id).}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
 
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
-
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
-
-\item{seq_type}{Selected seq type for incoming QC metrics.}
-
-\item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
-
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
-
-\item{plot_data}{Plotting parameter, define the data type to be plotted.}
+\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
 \item{labels}{If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.}
 
 \item{interactive}{Boolean parameter for generating interactive plot (HTML). Default is FALSE.}
-
-\item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
 
@@ -67,33 +49,4 @@ In addition, the generated plot can also be returned as an interactive HTML rend
 If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
 Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
-}
-\examples{
-#Example 1 - using these_sample_ids parameter
-#subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
-kridel_fl = dplyr::filter(metadata, pathology == "FL",
-               cohort == "FL_Kridel")
-kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
-
-fancy_qc_plot(these_sample_ids = kridel_fl_samples,
-              plot_data = "AverageBaseQuality",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "Average Base Quality For FL_Kridel")
-
-#Example 2 - using already filtered metadata (these_samples_metadata)
-fancy_qc_plot(these_samples_metadata = kridel_fl,
-              interactive = TRUE,
-              labels = c("cohort", "pathology"),
-              plot_data = "AverageBaseQuality",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "Average Base Quality For FL_Kridel")
-
-#Example 3 - using in-house metadata filtering options
-fancy_qc_plot(keep_cohort = "FL_Kridel",
-              keep_pathology = "FL",
-              plot_data = "AverageBaseQuality",
-              y_axis_lab = "Average Base Quality",
-              plot_title = "Average Base Quality For FL_Kridel")
-
 }

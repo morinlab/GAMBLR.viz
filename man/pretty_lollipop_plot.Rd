@@ -5,7 +5,7 @@
 \title{Lollipop Plot}
 \usage{
 pretty_lollipop_plot(
-  maf_df,
+  this_maf,
   gene,
   plot_title,
   plot_theme = "cbioportal",
@@ -13,9 +13,9 @@ pretty_lollipop_plot(
 )
 }
 \arguments{
-\item{maf_df}{A data frame containing the mutation data (from a MAF).}
+\item{this_maf}{Required parameter. A data frame containing the mutation data (from a MAF).}
 
-\item{gene}{The gene symbol to plot.}
+\item{gene}{Required parameter. The gene symbol to plot.}
 
 \item{plot_title}{Optional (defaults to gene name).}
 

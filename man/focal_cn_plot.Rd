@@ -5,6 +5,8 @@
 \title{Copy Number Segments Plot}
 \usage{
 focal_cn_plot(
+  this_seg,
+  this_seg_path = NULL,
   region,
   gene,
   these_samples_metadata,

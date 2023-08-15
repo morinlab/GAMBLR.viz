@@ -4,33 +4,16 @@
 \alias{fancy_propcov_plot}
 \title{Proportional Coverage Plot.}
 \usage{
-fancy_propcov_plot(
-  these_sample_ids,
-  metadata,
-  these_samples_metadata,
-  keep_cohort,
-  keep_pathology,
-  comparison_samples,
-  seq_type = "genome",
-  plot_subtitle = ""
-)
+fancy_propcov_plot(collated_results, comparison_samples, plot_subtitle = "")
 }
 \arguments{
-\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
-
-\item{metadata}{Optional, user can provide a metadata df to subset sample IDs from.}
-
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
-
-\item{keep_cohort}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the cohort supplied in this parameter.}
-
-\item{keep_pathology}{Optional parameter to be used when these_sample is NULL. Calls get_gambl_metadata() and filters on the pathology supplied in this parameter.}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
 
 \item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.}
 
-\item{seq_type}{Selected seq type for incoming QC metrics.}
-
 \item{plot_subtitle}{Plotting parameter, subtitle of generated plot.}
+
+\item{seq_type}{Selected seq type for incoming QC metrics.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -40,27 +23,15 @@ Visualize proportional coverage (10X and 30X) for selected samples and add compa
 }
 \details{
 Create a highly customizable plot visualizing proportional alignment metrics i.e what proportions of the aligned reads that show 10x and 30x coverage.
-This function provides straightforward subsetting parameters allowing for a straightforward execution. Either provide a data frame with sample IDs in the first column to the `these_samples_ids` parameter.
-Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
-If `these_samples_ids` and `these_samples_metadata` is not provided, the user can subset al GAMBL samples on the fly with `keep_cohort` and/or `keep_pathology`.
-This function can also plot the same results for a comparison group of interest, i.e another table with sample IDs. This can be useful for visualising how certain cohorts/pathologies compares to each other.
+This function can also plot the same results for a comparison group of interest, i.e another table with sample IDs. This can be useful for visualizing how certain cohorts/pathologies compares to each other.
 To do this one would call the function with `comparison_samples` parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
 }
 \examples{
-#Example 1 - using these_sample_ids parameter
-#subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
-kridel_fl = dplyr::filter(metadata, pathology == "FL",
-               cohort == "FL_Kridel")
-kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+#get data
+dlbcl_a_collated = collate_results() \%>\% dplyr::filter(BL_subgroup == "DLBCL-A")
+dlbcl_b_collated = collate_results() \%>\% dplyr::filter(BL_subgroup == "DLBCL-B")
 
-fancy_propcov_plot(these_sample_ids = kridel_fl_samples)
-
-#Example 2 - using already filtered metadata (these_samples_metadata)
-fancy_propcov_plot(these_samples_metadata = kridel_fl)
-
-#Example 3 - using in-house metadata filtering options
-fancy_propcov_plot(keep_cohort = "FL_Kridel",
-                   keep_pathology = "FL")
+#build plot
+fancy_propcov_plot(collated_results = dlbcl_a_collated, comparison_samples = dlbcl_b_collated)
 
 }

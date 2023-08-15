@@ -5,35 +5,30 @@
 \title{CN VAF Plot}
 \usage{
 copy_number_vaf_plot(
-  this_sample_id,
+  this_maf,
+  this_seg,
   just_segments = FALSE,
-  coding_only = FALSE,
+  coding_only = TRUE,
   one_chrom,
   genes_to_label,
-  this_seq_type = "genome",
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
-  add_chr_prefix = FALSE
+  add_chr_prefix = FALSE,
+  plot_title = "My Plot"
 )
 }
 \arguments{
-\item{this_sample_id}{The sample_id for the sample to plot.}
+\item{this_maf}{A maf loaded into R. This is a required paraemter.}
+
+\item{this_seg}{A seg loaded into R. This is a required paraemter.}
 
 \item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.}
 
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
 \item{one_chrom}{Subset plot to one chromosome.}
 
-\item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
-
-\item{from_flatfile}{If set to true the function will use flatfiles instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
+\item{genes_to_label}{Optional. Provide a vector of genes to label (if mutated).}
 
 \item{add_chr_prefix}{If TRUE, "chr" prefix will be added to chr column. Default is FALSE.}
+
+\item{plot_title}{The title for the created plot.}
 }
 \value{
 Nothing
@@ -42,17 +37,17 @@ Nothing
 Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 }
 \details{
-This function takes a sample ID and internally calls [GAMBLR::assign_cn_to_ssm] to get copy number segments for plotting.
+This function requires a maf (`this_maf`) and a seg file (`this_seg`) to construct the returned plot.
 This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
-This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
-and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
+This only plots the segments.
 }
 \examples{
-#build plot
-copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#get data
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+dohh2_seg = GAMBLR.data::sample_data$grch37$seg \%>\% dplyr::filter(ID == "DOHH-2")
 
-#coding only
-copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                     coding_only = TRUE)
+#build plot
+copy_number_vaf_plot(this_maf = dohh2_maf,this_seg = dohh2_seg, plot_title = "DOHH-2")
+
 
 }

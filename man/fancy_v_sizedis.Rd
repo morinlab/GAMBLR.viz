@@ -5,50 +5,29 @@
 \title{Variant size distribution plot}
 \usage{
 fancy_v_sizedis(
-  this_sample_id,
-  maf_data,
-  maf_path = NULL,
+  this_maf,
+  this_maf_path = NULL,
+  this_bedpe,
+  this_bedpe_path = NULL,
   ssm = TRUE,
-  projection = "grch37",
-  this_seq_type = "genome",
-  min_vaf = 0,
-  variant_type_col = 10,
-  chromosome_col = 5,
-  start_col = 6,
-  end_col = 7,
   plot_title = paste0(this_sample_id),
   plot_subtitle = "Variant Size Distribution",
   scale_value = "width",
   log_10 = TRUE,
   plot_trim = FALSE,
-  chr_select = paste0("chr", c(1:22)),
-  coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  chr_select = paste0("chr", c(1:22))
 )
 }
 \arguments{
-\item{this_sample_id}{Sample to be plotted.}
+\item{this_maf}{Parameter with maf like df already loaded into R.}
 
-\item{maf_data}{Optional parameter with maf like df already loaded into R.}
+\item{this_maf_path}{Parameter with path to external maf like file.}
 
-\item{maf_path}{Optional parameter with path to external maf like file.}
+\item{this_bedpe}{Parameter with bedpe like df already loaded into R.}
+
+\item{this_bedpe_path}{Parameter with path to external bedpe like file.}
 
 \item{ssm}{Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).}
-
-\item{projection}{Genome build for returned variants (only applicable for ssm = FALSE).}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
-
-\item{min_vaf}{The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).}
-
-\item{variant_type_col}{Index of column holding Variant Type (to be used with either maf_data or maf_path).}
-
-\item{chromosome_col}{Index of column holding Chromosome (to be used with either maf_data or maf_path).}
-
-\item{start_col}{Index of column with variant start coordinates (to be used with either maf_data or maf_path).}
-
-\item{end_col}{Index of column with variant end coordinates (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
@@ -61,12 +40,6 @@ fancy_v_sizedis(
 \item{plot_trim}{If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.}
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
-
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
 A plot as a ggplot object (grob).

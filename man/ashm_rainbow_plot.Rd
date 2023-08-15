@@ -5,7 +5,7 @@
 \title{ASHM Rainbow Plot}
 \usage{
 ashm_rainbow_plot(
-  mutations_maf,
+  this_maf,
   metadata,
   exclude_classifications,
   drop_unmutated = FALSE,
@@ -17,11 +17,11 @@ ashm_rainbow_plot(
 )
 }
 \arguments{
-\item{mutations_maf}{A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).}
+\item{this_maf}{Required parameter. A data frame containing mutations (MAF format) within a region of interest.}
 
-\item{metadata}{should be a data frame with sample_id as a column.}
+\item{metadata}{A data frame with sample_id as a column.}
 
-\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
+\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadata file.}
 
 \item{drop_unmutated}{Boolean argument for removing unmutated sample ids in mutated cases.}
 
@@ -43,17 +43,20 @@ Make a rainbow plot of all mutations in a region, ordered and coloured by metada
 }
 \details{
 This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
-or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
+or the user can provide a maf that has already been subset to the region(s) of interest with `this_maf`.
+Regardless, the user has to provide a maf or maf-like object with `this_maf` as an required parameter.
 As a third alternative, the regions can also be specified as a bed file with `bed`.
 Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
 Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
 }
 \examples{
-#basic usage
-this_region = "chr6:90975034-91066134"
-this_metadata = get_gambl_metadata()
+#get data
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+dohh2_meta = GAMBLR.data::gambl_metadata \%>\% dplyr::filter(sample_id == "DOHH-2")
 
-ashm_rainbow_plot(metadata = this_metadata,
-                  region = this_region)
+#build plot
+ashm_rainbow_plot(this_maf = dohh2_maf,
+b                 metadata = dohh2_meta, 
+                  region = "chr6:90975034-91066134")
 
 }

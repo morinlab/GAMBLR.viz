@@ -5,40 +5,21 @@
 \title{Plot Alignment Metrics}
 \usage{
 fancy_alignment_plot(
-  these_sample_ids,
-  metadata,
-  these_samples_metadata,
+  collated_results,
   comparison_group,
-  seq_type = "genome",
   add_mean = TRUE,
   add_corrected_coverage = TRUE,
-  keep_cohort,
-  keep_pathology,
-  this_color_palette = c(TotalReads = "#3D405B", TotalUniquelyMapped = "#81B29A",
-    TotalDuplicatedreads = "#E07A5F"),
   plot_sub = ""
 )
 }
 \arguments{
-\item{these_sample_ids}{Data frame with sample IDs (to be plotted) in the first column.}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
 
-\item{metadata}{Optional argument, used to derive sample IDs if sample_table is Null.}
-
-\item{these_samples_metadata}{GAMBL metadata subset to the cases you want to process.}
-
-\item{comparison_group}{Optional argument for plotting mean alignment metrics. Default is plotting the mean for samples provided. This parameter takes a vector of sample IDs.}
-
-\item{seq_type}{Subset qc metrics to a specific seq_type, default is genome.}
+\item{comparison_group}{Optional argument for plotting mean alignment metrics from another group off sample IDs. This should be a data frame with collated results [GAMBLR::collate_results] with sample IDs to be compared.}
 
 \item{add_mean}{Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.}
 
-\item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples.}
-
-\item{keep_cohort}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected cohorts.}
-
-\item{keep_pathology}{If no df with sample IDs is supplied (these_sample_ids = NULL) the function calls get_gambl_metadata and subsets on selected pathology.}
-
-\item{this_color_palette}{Optional parameter that holds the selected colours for the plotted bars.}
+\item{add_corrected_coverage}{Set to TRUE to add corrected coverage for selected samples. Default is TRUE.}
 
 \item{plot_sub}{Optional parameter, add a subtitle to the alignment metric plot.}
 }
@@ -51,28 +32,21 @@ Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of
 \details{
 This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
 total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics from additional samples,
-allowing for easy comparisons between different sample populations. To run this function, simply specify the sample IDs you are interested in with `these_sample_ids`.
-This parameter expects a data frame with sample IDs in the first column. Optionally, the user can also provide an already subset (with the sample IDS of interest)
-metadata table with `these_samples_metadata`. For adding a comparison group to the returned plot, simply give another cohort/set of samples to the `comparison_group` parameter.
-Similarly to `these_sample_ids`, this parameter also expects a data frame with sample IDs in the first column. In addition, this plot can also add additional read-metrics such as
-mean values for all plotted metrics and corrected coverage. To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
+allowing for easy comparisons between different sample populations. To run this function, provide a data frame with collated results [GAMBLR::colalte_results] subset to the sample IDs of interest.
+Similarly, if a comparison group is to be superimposed to the returned plot, provide another collated results for these sample IDs (with [GAMBLR::collate_results]).
+In addition, this plot can also add additional read-metrics such as mean values for all plotted metrics and corrected coverage. 
+To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
 }
 \examples{
-#Example 1 - using these_sample_ids parameter
-#subset on FL cases with QC metrics available and plot
-metadata = get_gambl_metadata()
-kridel_fl = dplyr::filter(metadata, pathology == "FL",
-               cohort == "FL_Kridel")
+\dontrun{
+dlbcl_a_collated = all_collated \%>\% dplyr::filter(BL_subgroup == "DLBCL-A")
+dlbcl_b_collated = all_collated \%>\% dplyr::filter(BL_subgroup == "DLBCL-B")
 
-kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
-
-fancy_alignment_plot(these_sample_ids = kridel_fl_samples)
-
-#Example 2 - using already filtered metadata (these_samples_metadata)
-fancy_alignment_plot(these_samples_metadata = kridel_fl)
-
-#Example 3 - using in-house metadata filtering options
-fancy_alignment_plot(keep_cohort = "FL_Kridel",
-                     keep_pathology = "FL")
+fancy_alignment_plot(collated_results = dlbcl_a_collated, 
+                     comparison_group = dlbcl_b_collated, 
+                     add_mean = TRUE, 
+                     add_corrected_coverage = TRUE, 
+                     plot_sub = "Example Plot")
+}
 
 }
