@@ -39,11 +39,11 @@ Nothing.
 Construct pdf with sample-level plots, using minimum of arguments
 }
 \details{
-This function runs the complete collection of `fancy_x_plots` for a specific sample ID (`this_sample`), with default parameters.
+This function runs the complete collection of \code{fancy_x_plots} for a specific sample ID (\code{this_sample}), with default parameters.
 The generated plots are put together into a two-page PDF. In addition, it is also possible to export all individual plots.
-This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the
-`this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local
-file on disk with the `seq_path` and `maf_path` parameters.
+This can be done by setting \code{export_individual_plots} to TRUE. It is also possible to use an already loaded seq file instead of using the
+\code{this_sample_id} parameter, this is done with the \code{seq_data} and \code{maf_data} parameters. Similarly, you can also point this function to a local
+file on disk with the \code{seq_path} and \code{maf_path} parameters.
 }
 \examples{
 \dontrun{

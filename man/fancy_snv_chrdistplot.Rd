@@ -58,15 +58,15 @@ Visualizing the number of SNVs per chromosome.
 }
 \details{
 This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-In addition, the user can also give this function a sample ID and the function will run [GAMBLR::assign_cn_to_ssm]
+In addition, the user can also give this function a sample ID and the function will run \link[GAMBLR.utils:assign_cn_to_ssm]{GAMBLR.utils::assign_cn_to_ssm}
 to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
-that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column
+that holds the Variant Type information (\code{variant_type_col}), in addition the user can also specify what column
 in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
-options. For example, `chr_select` allows the user to restrict the plot to specific chromosomes. `include_dnp` is an optional
+options. For example, \code{chr_select} allows the user to restrict the plot to specific chromosomes. \code{include_dnp} is an optional
 argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only
-counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
-and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
-also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
+counting coding mutations (\code{coding_only}). Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
+also have convenient parameters for customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle}.
 }
 \examples{
 #plot SNVs

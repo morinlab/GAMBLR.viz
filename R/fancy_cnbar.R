@@ -3,7 +3,7 @@
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
+#' accepts either a sample ID, for which the function will get copy number states with [GAMBLR.results::get_sample_cn_segments]. The function
 #' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
 #' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to

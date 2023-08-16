@@ -75,17 +75,17 @@ A plot as a ggplot object (grob).
 Generate a violin plot showing variant (SSM or SVs) size distributions for selected contigs.
 }
 \details{
-Function for plotting variant size distributions. This function takes either a sample ID given to the `this_sample` parameter.
-In addition, the function can also accept an already loaded MAF or MAF-like object given to the `maf_data` parameter.
-As a third option, the function can also read a maf from disk (provide path to maf with `maf_path`).
+Function for plotting variant size distributions. This function takes either a sample ID given to the \code{this_sample} parameter.
+In addition, the function can also accept an already loaded MAF or MAF-like object given to the \code{maf_data} parameter.
+As a third option, the function can also read a maf from disk (provide path to maf with \code{maf_path}).
 A collection of convenient filtering and data subsetting parameters are also available for this function.
-For restricting your data (if plotting data retrieved with `this_sample_id`), the user can choose to only plot coding mutations with setting `coding_only` to TRUE.
-This plot can also deal with SVs as well as SSM data. To control this, please use the `ssm` parameter. If set to TRUE and if `this_sample` is called,
-the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls `get_combined_sv` to get SV calls for plotting.
-If the user calls either `maf_data` or `maf_path`, there are a collection of parameters available for specifying
-the relevant columns in the given data frame (`variant_type_col`, `chhromosome_col`, `start_col`, `end_col`). It is also possible to
-restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
-In addition, plot aesthetics can also be controlled with `plot_title`, `plot_subtitle`, `scale_value`, `log10`, and `trim`.
+For restricting your data (if plotting data retrieved with \code{this_sample_id}), the user can choose to only plot coding mutations with setting \code{coding_only} to TRUE.
+This plot can also deal with SVs as well as SSM data. To control this, please use the \code{ssm} parameter. If set to TRUE and if \code{this_sample} is called,
+the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls \code{get_combined_sv} to get SV calls for plotting.
+If the user calls either \code{maf_data} or \code{maf_path}, there are a collection of parameters available for specifying
+the relevant columns in the given data frame (\code{variant_type_col}, \code{chhromosome_col}, \code{start_col}, \code{end_col}). It is also possible to
+restrict the returned plot to any given chromosome. This is done with the \code{chr_select} parameter (default is all autosomes).
+In addition, plot aesthetics can also be controlled with \code{plot_title}, \code{plot_subtitle}, \code{scale_value}, \code{log10}, and \code{trim}.
 For more info on how to run with these parameters, refer to the parameter descriptions.
 }
 \examples{

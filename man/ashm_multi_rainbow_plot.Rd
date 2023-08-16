@@ -25,13 +25,13 @@ ashm_multi_rainbow_plot(
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
-\item{seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
+\item{seq_type}{the seqtype you want results back for if \code{maf_data} is not provided.}
 
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
 
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
-\item{maf_data}{An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.}
+\item{maf_data}{An already loaded maf, if no provided, this function will call \code{get_ssm_by_region}, using the regions supplied into \code{regions_bed}.}
 
 \item{verbose}{Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.}
 }
@@ -44,10 +44,10 @@ Generates a colourful multi-panel overview of hypermutation in regions of intere
 \details{
 The input for this function is a bed-file with the following columns; chr, start, end, name.
 Note that for this function to work, the column names must be exactly this.
-The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
-It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
-In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+The user also needs to specify a vector of names (\code{regions_to_display}) to further control what regions are to be displayed on the returned plot.
+It is also possible to exclude specific classifications from the metadata file. This is achieved with \code{exclude_classifications}.
+In addition the user can also use the \code{metadata} parameter to use an already subset and arranged metadata table.
+This function will call \link[GAMBLR.results:get_ssm_by_region]{GAMBLR.results::get_ssm_by_region} if \code{maf_data} is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
 #get lymphgen colours

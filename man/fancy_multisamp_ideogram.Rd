@@ -55,8 +55,8 @@ To create multi-sample ideograms, i.e showing CN segments across multiple sample
 This can be used to infer inheritance patterns, hotspots, etc. across multiple samples or the sample ID but for different timepoints.
 In addition, this plot can also allow to only plot concordant (or discordant) cn segments between two samples. i.e how two samples differ, or are alike.
 The function automatically detects the number of samples provided and sets the plotting parameters accordingly.
-The maximum number of samples this plot can deal with is 4 and sample IDs of interest are given to the `these_sample_ids`.
-In order to only plot segments that are concordant between the selected samples, set `komapre` to TRUE and `concordance` to TRUE.
+The maximum number of samples this plot can deal with is 4 and sample IDs of interest are given to the \code{these_sample_ids}.
+In order to only plot segments that are concordant between the selected samples, set \code{komapre} to TRUE and \code{concordance} to TRUE.
 To instead plot discordant CN segments, set this parameter to FALSE.
 }
 \examples{

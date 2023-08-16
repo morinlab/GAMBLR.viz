@@ -13,8 +13,8 @@ fancy_cnbar(
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+  plot_subtitle =
+    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
   include_cn2 = TRUE,
@@ -55,15 +55,15 @@ A plot as a ggplot object (grob).
 Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 }
 \details{
-`fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
-accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
-can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
-parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
-the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
-restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
+\code{fancy_cnbar} visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
+accepts either a sample ID, for which the function will get copy number states with \link[GAMBLR.results:get_sample_cn_segments]{GAMBLR.results::get_sample_cn_segments}. The function
+can also accept an already loaded seq file given to the \code{seq_data} parameter. It can also load a seq file with the \code{seq_path}
+parameter. If the user calls either \code{seq_data} or \code{seq_path}, there are a collection of parameters available for specifying
+the relevant columns in the given data frame (\code{chrom_col}, \code{starat_col}, \code{end_col}, \code{cn_col}). It is also possible to
+restrict the returned plot to any given chromosome. This is done with the \code{chr_select} parameter (default is all autosomes).
 For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
-With `include_cn2` (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
-The user can also control the annotations of the returned plot with `plot_title` and `plot_subtitle`. Lastly,
+With \code{include_cn2} (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
+The user can also control the annotations of the returned plot with \code{plot_title} and \code{plot_subtitle}. Lastly,
 This function also computes the number of affected bases for each copy number state and plots these values on a secondary y-axis (right),
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }

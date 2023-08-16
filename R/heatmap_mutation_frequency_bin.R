@@ -2,7 +2,7 @@
 #'
 #' @description Obtain a heatmap of mutation counts across sliding windows for multiple regions.
 #'
-#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
+#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR.utils::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR.results::get_ssm_by_regions]).
 #' to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 #'
 #' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.
@@ -11,7 +11,7 @@
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
 #' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.
 #' @param maf_data Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
-#' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_bin_regions].
+#' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR.utils::calc_mutation_frequency_bin_regions].
 #' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37.
 #' @param region_padding Amount to pad the start and end coordinates by. Default 1000
 #' @param drop_unmutated Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.
@@ -23,7 +23,7 @@
 #' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").
 #' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.
 #' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.
-#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.
+#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR.viz::get_gambl_colours], or will default to the Blood colour palette.
 #' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.
 #' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.
 #' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.

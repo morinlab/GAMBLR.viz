@@ -20,7 +20,7 @@ prettyChromoplot(
 \arguments{
 \item{scores}{Output file scores.gistic from the run of GISTIC2.0}
 
-\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
+\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named \code{gene}. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
 
 \item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 
@@ -45,8 +45,8 @@ plot
 Use GISTIC2.0 scores output to reproduce maftools::chromoplot with more flexibility.
 }
 \details{
-This function uses GISTIC2.0 scores to create a chromosome plot, based on a similar plotting function from `maftools`.
-The only required parameter for this function is `scores`, which is the path to a file with GISTIC2.0 scores.
+This function uses GISTIC2.0 scores to create a chromosome plot, based on a similar plotting function from \code{maftools}.
+The only required parameter for this function is \code{scores}, which is the path to a file with GISTIC2.0 scores.
 Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 }
 \examples{

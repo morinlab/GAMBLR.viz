@@ -32,7 +32,7 @@ fancy_v_chrcount(
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
 
-\item{ssm}{Set to FALSE to get plotting data from [GAMBLR::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)}
+\item{ssm}{Set to FALSE to get plotting data from \link[GAMBLR.results:get_combined_sv]{GAMBLR.results::get_combined_sv} (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)}
 
 \item{projection}{Genome build for returned variants (only applicable for ssm = FALSE)}
 
@@ -70,13 +70,13 @@ Visualizing variant (SSM or SVs) counts per chromosome.
 }
 \details{
 Takes a maf data frame (or path to a maf), counts the number of variants per chromosome.
-Selected chromosomes (`chr_select`) are plotted along the x-axis and the variant counts are represented on the y-axis.
+Selected chromosomes (\code{chr_select}) are plotted along the x-axis and the variant counts are represented on the y-axis.
 This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
-It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
-This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
-In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
-To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
-e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
+It plots SVs per default and SSM can be added with setting \code{ssm = TRUE}.
+This plot can also be restricted to only show coding mutations. To do so, set \code{coding_only} to TRUE.
+In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from \link[GAMBLR.utils:collate_results]{GAMBLR.utils::collate_results}).
+To do so, set \code{add_qc_metric} to TRUE. A collection of parameters for customizing the returned plot are also available.
+e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and \code{plot_subtitle}.
 }
 \examples{
 #plot ssm

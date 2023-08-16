@@ -30,7 +30,7 @@ Nothing.
 Generates a visually appealing and interactive lollipop plot.
 }
 \details{
-This function is depending on a modified version of `readMAF` from the `g3viz` package.
+This function is depending on a modified version of \code{readMAF} from the \code{g3viz} package.
 Returned plot is interactive, meaning the user can hover over individual points in the plot to reveal more information.
 The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
 }

@@ -44,7 +44,7 @@ Generates a plot of all CN segments for a specified region.
 \details{
 This function visualizes all CN segments for a defined region, colours the returned segments based on lymphgen information.
 In addition, this function takes either a specified region (chr:start-end format). If no region is supplied, the user can give the function a gene symbol
-with `gene`. If so, the function will internally retrieve the region for the specified gene.
+with \code{gene}. If so, the function will internally retrieve the region for the specified gene.
 Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 }
 \examples{

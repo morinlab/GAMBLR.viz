@@ -74,7 +74,7 @@ Create a highly customizable heatmap using the ComplexHeatmap package.
 \details{
 Make an heatmap that is looking cute using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
 If you provide your own non-GAMBL samples and metadata, you must include at least the columns with names corresponding to annotation tracks and column "Tumor_Sample_Barcode".
-showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The feature matrix is supplied in `this_matrix` argument.
+showing sample ids. The metadata can contain numeric columns, which will be plotted as numeric variables in the annotation. The feature matrix is supplied in \code{this_matrix} argument.
 and is expected to have samples in rows, and features in columns. The argument importance_values is similar to the widths of NMF object or importance values for feature/group from RF models.
 It is also expected to have column names (having names of the groups that will be shown on heatmap) and rownames (corresponding to feature ids).
 }

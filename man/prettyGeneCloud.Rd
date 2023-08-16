@@ -33,8 +33,8 @@ data frame with counts for each gene
 Make a word cloud of gene names from a MAF file based on mutation frequency.
 }
 \details{
-Create a wordcloud from an incoming MAF. Required parameter is `maf_df`.
-Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `other_genes_colour` and `colour_index`.
+Create a wordcloud from an incoming MAF. Required parameter is \code{maf_df}.
+Optional parameters are \code{these_genes}, \code{other_genes}, \code{these_genes_colour}, \code{other_genes_colour} and \code{colour_index}.
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }
 \examples{

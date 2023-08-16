@@ -86,13 +86,13 @@ Generate sample-level ideogram with copy number information, ssm and gene annota
 \details{
 This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
 It is also possible to superimpose the plot with gene annotations. Offering a comprehensive overview of all SSM and CN segments of different aneuploidy.
-The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
-To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
+The plotting of SSM can be toggled with setting \code{include_ssm} to TRUE. If so, it is also possible to count the number of SSMs per chromosome with \code{ssm_count = TRUE}.
+To get data for plotting, there are a few different options available; like all \code{fanncy_x_plots} a sample ID can be provided to the \code{this_sample}
 parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
-This data can also be provided with `seq_data`, `seg_path`, `maf_data` and `maf_path`.
+This data can also be provided with \code{seq_data}, \code{seg_path}, \code{maf_data} and \code{maf_path}.
 For more info on how to run with these parameters, refer to the parameter descriptions.
-In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
-Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`.
+In order to annotate the ideogram with genes, simply give the \code{gene_annotations} parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
+Another useful parameter for restricting the plotted regions is to call the function with \code{intersect_regions}.
 This parameter takes a vector of characters or a data frame with regions that the plotted calls are restricted to.
 }
 \examples{

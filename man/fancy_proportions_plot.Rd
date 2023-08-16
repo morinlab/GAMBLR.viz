@@ -35,10 +35,10 @@ A plot as a ggplot object (grob).
 \description{
 This function takes all the available proportional quality control metrics and a vector of sample IDs (plotted on the x-ais) and plots the vlaues along the y-axis.
 This function provides straightforward subsetting parameters allowing for a straightforward execution.
-Either provide a data frame with sample IDs in the first column to the `these_samples_ids` parameter.
+Either provide a data frame with sample IDs in the first column to the \code{these_samples_ids} parameter.
 Or, call one of the optional parameters for using an already subset metadata table (subset to the sample IDs of interest).
-If `these_samples_ids` and `these_samples_metadata` is not provided, the user can subset al GAMBL samples on the fly with `keep_cohort` and/or `keep_pathology`.
-This function also provides parameters for easy customization of the plot aesthetics. For example, the subtitle of the plot can easily be controlled with the `plot_subtitle` parameter.
+If \code{these_samples_ids} and \code{these_samples_metadata} is not provided, the user can subset al GAMBL samples on the fly with \code{keep_cohort} and/or \code{keep_pathology}.
+This function also provides parameters for easy customization of the plot aesthetics. For example, the subtitle of the plot can easily be controlled with the \code{plot_subtitle} parameter.
 For usage examples and more information, refer to the parameter descriptions and examples in the fancy vignette.
 }
 \details{

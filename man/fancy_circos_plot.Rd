@@ -25,7 +25,7 @@ fancy_circos_plot(
 \arguments{
 \item{this_sample_id}{Sample to be plotted.}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.}
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with \link[GAMBLR.utils:gene_to_region]{GAMBLR.utils::gene_to_region} (return_as = "bed") output format. See examples.}
 
 \item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
 
@@ -61,12 +61,12 @@ Create a circos plot visualizing SVS and SSM with optional gene annotations.
 }
 \details{
 This function is using RCircos to create sample-level cirocs plots, annotating SVs and SSM with the potential of adding gene annotations.
-To control what variants are to be plotted, simply use the two Boolean parameters; `ssm_calls` and `sv_calls` (both TRUE by default).
-Provide the sample ID of interest in with the `this_sample_id` parameter. This function calls [GAMBLR::assign_cn_to_ssm] and [GAMBLR::get_combined_sv] to retrieve data for plotting.
-Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the `out` parameter.
-In addition, the user can control the output format. For PDF, set `pdf` to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
+To control what variants are to be plotted, simply use the two Boolean parameters; \code{ssm_calls} and \code{sv_calls} (both TRUE by default).
+Provide the sample ID of interest in with the \code{this_sample_id} parameter. This function calls \link[GAMBLR.utils:assign_cn_to_ssm]{GAMBLR.utils::assign_cn_to_ssm} and \link[GAMBLR.results:get_combined_sv]{GAMBLR.results::get_combined_sv} to retrieve data for plotting.
+Since this function does not create a grob, but rather outputs a rendered PDF/PNG, the user has to provide an output path with the \code{out} parameter.
+In addition, the user can control the output format. For PDF, set \code{pdf} to TRUE (default) and to export the created plot as PNG, set the same parameter to FALSE.
 This function also has convenient filtering parameters available, see parameter descriptions for more information and how to properly use the filtering parameters.
-Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from `gene_to_region(return_as = "bed")`) to the `gene_list` parameter.
+Lastly, this plot can also highlight genes of interest. To do so, provide a data frame (comparable to the return from \code{gene_to_region(return_as = "bed")}) to the \code{gene_list} parameter.
 }
 \examples{
 \dontrun{

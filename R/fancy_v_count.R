@@ -6,7 +6,7 @@
 #' Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
 #' you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
 #' In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-#' (`this_sample_id`) and the function will retrieve data using [GAMBLR::assign_cn_to_ssm] or [GAMBLR::get_combined_sv] (depending on how the `ssm` parameter is used).
+#' (`this_sample_id`) and the function will retrieve data using [GAMBLR.utils::assign_cn_to_ssm] or [GAMBLR.results::get_combined_sv] (depending on how the `ssm` parameter is used).
 #' This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
 #' the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
 #' Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`

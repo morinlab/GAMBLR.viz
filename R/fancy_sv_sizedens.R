@@ -6,7 +6,7 @@
 #' For example, it is possible to subset the included variants to a specific VAF threshold with `VAF_cutoff`. The `size_cutoff` is another parameter
 #' for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
 #' This function takes either a sample ID (`this_sample_id`) or an already loaded data frame (`maf_data` or a path to a maf-like file with `maf_path`).
-#' If `this_sample_id` is called, the function will run [GAMBLR::get_combined_sv] to retrieve SV calls.
+#' If `this_sample_id` is called, the function will run [GAMBLR.results::get_combined_sv] to retrieve SV calls.
 #' If either of the `maf` parameters are used, note that it's possible to specify the columns of interest;
 #' (`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
 #' This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic

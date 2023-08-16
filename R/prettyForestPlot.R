@@ -17,7 +17,7 @@
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR::annotate_hotspots].
+#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR.utils::annotate_hotspots].
 #' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.

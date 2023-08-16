@@ -42,10 +42,10 @@ Nothing
 Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 }
 \details{
-This function takes a sample ID and internally calls [GAMBLR::assign_cn_to_ssm] to get copy number segments for plotting.
-This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
-This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
-and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
+This function takes a sample ID and internally calls \link[GAMBLR.utils:assign_cn_to_ssm]{GAMBLR.utils::assign_cn_to_ssm} to get copy number segments for plotting.
+This plot is visualizing mutation VAFs per default, this can be turned off with setting \code{just_segments} to TRUE.
+This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set \code{coding_only= TRUE},
+and then specify the genes of interest (coding regions) with the \code{genes_to_label} (vector of genes).
 }
 \examples{
 #build plot

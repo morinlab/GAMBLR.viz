@@ -73,17 +73,17 @@ Generate a bar plot visualizing total variant (SSM or SVs) count for selected co
 }
 \details{
 This function creates a barplot showing the total number of variants for a selected sample.
-Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
-you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
+Convenience parameters for restricting the returned plot are available. For example, with \code{ssm} (Boolean)
+you can toggle if the plot will be in respect to SSM (\code{ssm = TRUE}) or if you wish to count SVs (\code{ssm = FALSE}).
 In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-(`this_sample_id`) and the function will retrieve data using [GAMBLR::assign_cn_to_ssm] or [GAMBLR::get_combined_sv] (depending on how the `ssm` parameter is used).
-This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
-the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
-Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`
-and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
-customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle` and `snp_colours`. lastly, it is also possible
-to control what variants are to be counted with `variant_select`. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
-the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
+(\code{this_sample_id}) and the function will retrieve data using \link[GAMBLR.utils:assign_cn_to_ssm]{GAMBLR.utils::assign_cn_to_ssm} or \link[GAMBLR.results:get_combined_sv]{GAMBLR.results::get_combined_sv} (depending on how the \code{ssm} parameter is used).
+This function also supports a maf or maf-like data frame directly, this is done with \code{maf_data} or \code{maf_path}. If data is supplied with either of these parameters,
+the user can specify what column holds the variant type information as well as chromosome information (\code{variant_type_col} and \code{chromosome_col}).
+Restricting the plot to coding mutations is done with \code{coding_only = TRUE}. Flat-file and augmented maf options can be toggled with \code{from_flatfile}
+and \code{use_augmented_maf}. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
+customizing the returned plot, e.g \code{plot_title}, \code{y_interval}, \code{hide_legend}, and\code{plot_subtitle} and \code{snp_colours}. lastly, it is also possible
+to control what variants are to be counted with \code{variant_select}. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
+the variant types specified in this parameter must match with whatever is present in the corresponding \code{variant_type_col}.
 }
 \examples{
 #count all variants for one sample (default parameters)

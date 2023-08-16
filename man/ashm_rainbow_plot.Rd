@@ -42,9 +42,9 @@ ggplot2 object
 Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 }
 \details{
-This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
-or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
-As a third alternative, the regions can also be specified as a bed file with `bed`.
+This function creates a rainbow plot for all mutations in a region. Region can either be specified with the \code{region} parameter,
+or the user can provide a maf that has already been subset to the region(s) of interest with \code{mutation_maf}.
+As a third alternative, the regions can also be specified as a bed file with \code{bed}.
 Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
 Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
 }

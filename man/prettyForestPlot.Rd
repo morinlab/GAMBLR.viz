@@ -29,7 +29,7 @@ prettyForestPlot(
 
 \item{genes}{An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
 
-\item{min_mutations}{Optional parameter for when no `genes` is provided. This parameter ensures only genes with n mutations are kept in `genes`. Default value is 1, this means all genes in the incoming maf will be plotted.}
+\item{min_mutations}{Optional parameter for when no \code{genes} is provided. This parameter ensures only genes with n mutations are kept in \code{genes}. Default value is 1, this means all genes in the incoming maf will be plotted.}
 
 \item{comparison_column}{Mandatory: the name of the metadata column containing the comparison values.}
 
@@ -37,7 +37,7 @@ prettyForestPlot(
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
-\item{separate_hotspots}{Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR::annotate_hotspots].}
+\item{separate_hotspots}{Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with \link[GAMBLR.utils:annotate_hotspots]{GAMBLR.utils::annotate_hotspots}.}
 
 \item{comparison_name}{Optional: Specify the legend title if different from the comparison column name.}
 
@@ -56,9 +56,9 @@ Create a forest plot comparing mutation frequencies for a set of genes between t
 \details{
 This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
 In addition this function also lets the user control the mutation frequencies of the plotted genes.
-If no `genes` is provided, this function auto-defaults to all genes in the incoming maf.
+If no \code{genes} is provided, this function auto-defaults to all genes in the incoming maf.
 The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
-This is done with the `min_mutations` parameter.
+This is done with the \code{min_mutations} parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{

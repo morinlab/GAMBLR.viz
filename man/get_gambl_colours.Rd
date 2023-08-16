@@ -35,9 +35,9 @@ Get GAMBL colour schemes for annotating figures.
 \details{
 This function was designed to retrieve specified GAMBL colour palettes.
 By default, this function returns all the colours currently available.
-The user can easily specify what classification to return colors for with the `classification` parameter.
+The user can easily specify what classification to return colors for with the \code{classification} parameter.
 It is also possible to return any given colour in different formats.
-To do so, refer to the Boolean arguments; `as_list` and `as_dataframe`.
+To do so, refer to the Boolean arguments; \code{as_list} and \code{as_dataframe}.
 For more information regarding the available colours, refer to the utilities vignette.
 }
 \examples{

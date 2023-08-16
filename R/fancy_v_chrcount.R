@@ -7,14 +7,14 @@
 #' This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 #' It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
 #' This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
-#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
+#' In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR.utils::collate_results]).
 #' To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 #' e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 #'
 #' @param this_sample_id Sample to be plotted.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
-#' @param ssm Set to FALSE to get plotting data from [GAMBLR::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
+#' @param ssm Set to FALSE to get plotting data from [GAMBLR.results::get_combined_sv] (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf)
 #' @param projection Genome build for returned variants (only applicable for ssm = FALSE)
 #' @param min_vaf The minimum tumour VAF for a SV to be returned. Recommended: 0 (only applicable for ssm = FALSE).
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
