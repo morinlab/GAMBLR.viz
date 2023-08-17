@@ -59,3 +59,11 @@ If either of the `maf` parameters are used, note that it's possible to specify t
 This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
 parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
 }
+\examples{
+#get data
+dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe \%>\% dplyr::filter(tumour_sample_id == "DOHH-2")
+
+#build plot
+fancy_sv_sizedens(this_bedpe = dohh2_bedpe)
+
+}

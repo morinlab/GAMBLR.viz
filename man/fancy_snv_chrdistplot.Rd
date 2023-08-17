@@ -9,7 +9,7 @@ fancy_snv_chrdistplot(
   this_maf_path = NULL,
   variant_type_col = 10,
   chromosome_col = 5,
-  plot_title = paste0(this_sample_id),
+  plot_title = "",
   plot_subtitle = "SNV Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
@@ -52,4 +52,12 @@ argument (Boolean) for if variants of this subtype should be included or not. Th
 counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
 and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
 also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
+}
+\examples{
+#get data
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+
+#build plot
+fancy_snv_chrdistplot(this_maf = dohh2_maf)
+
 }

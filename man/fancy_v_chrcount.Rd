@@ -10,8 +10,9 @@ fancy_v_chrcount(
   this_bedpe,
   this_bedpe_path = NULL,
   collated_results,
+  add_qc_metric = FALSE,
   ssm = TRUE,
-  plot_title = paste0(this_sample_id),
+  plot_title = "",
   y_interval = 1,
   hide_legend = FALSE,
   plot_subtitle = "Variant Count Distribution Per Chromosome",
@@ -28,6 +29,8 @@ fancy_v_chrcount(
 \item{this_bedpe_path}{Parameter with path to external bedpe like file.}
 
 \item{collated_results}{If supplied, the function will superimpose QC metrics to thee returned plot. Preferably the return from [GAMBLR.results::collate_results].}
+
+\item{add_qc_metric}{Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).}
 
 \item{ssm}{Seet to FALSE to plot SVs instead of SSM. If set to FALSE, this function expects a bedpe with SVs with `this_bedpe` or an absolute path to such a file with `this_bedpe_path`.}
 
@@ -60,4 +63,13 @@ This plot can also be restricted to only show coding mutations. To do so, set `c
 In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
 To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
+}
+\examples{
+#get data
+dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe \%>\% dplyr::filter(tumour_sample_id == "DOHH-2")
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+
+#build plot
+fancy_v_chrcount(this_maf = dohh2_maf, this_bedpe = dohh2_bedpe, y_interval = 10)
+
 }

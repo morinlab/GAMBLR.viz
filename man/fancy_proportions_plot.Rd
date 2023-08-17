@@ -21,3 +21,11 @@ For usage examples and more information, refer to the parameter descriptions and
 \details{
 Visualize proportional metrics for selected samples.
 }
+\examples{
+#get data
+dlbcl_a_collated = collate_results() \%>\% dplyr::filter(BL_subgroup == "DLBCL-A")
+
+#build plot
+fancy_proportions_plot(collated_results = dlbcl_a_collated, plot_subtitle = "Example Plot")  
+
+}

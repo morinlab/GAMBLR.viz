@@ -7,6 +7,7 @@
 fancy_qc_plot(
   collated_results,
   comparison_samples,
+  plot_data,
   fill_by = "pathology",
   labels = c("sample_id", "cohort"),
   interactive = FALSE,
@@ -19,6 +20,8 @@ fancy_qc_plot(
 \item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
 
 \item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
+
+\item{plot_data}{Plotting parameter, define the data type to be plotted.}
 
 \item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
@@ -49,4 +52,12 @@ In addition, the generated plot can also be returned as an interactive HTML rend
 If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
 Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
+}
+\examples{
+#get data
+collated_fl = collate_results(join_with_full_metadata = TRUE) \%>\% dplyr::filter(pathology == "FL")
+
+#build plot
+fancy_qc_plot(collated_results = collated_fl, plot_data = "AverageBaseQuality")
+
 }
