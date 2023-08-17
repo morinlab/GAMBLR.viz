@@ -29,12 +29,17 @@
 #' @export
 #'
 #' @examples
+#' #get data
+#' dohh2_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+#' 
+#' #build plot
+#' fancy_snv_chrdistplot(this_maf = dohh2_maf)
 #'
 fancy_snv_chrdistplot = function(this_maf,
                                  this_maf_path = NULL,
                                  variant_type_col = 10,
                                  chromosome_col = 5,
-                                 plot_title = paste0(this_sample_id),
+                                 plot_title = "",
                                  plot_subtitle = "SNV Distribution Per Chromosome",
                                  chr_select = paste0("chr", c(1:22)),
                                  include_dnp = FALSE,

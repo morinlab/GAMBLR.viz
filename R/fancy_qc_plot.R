@@ -18,6 +18,7 @@
 #' @param labels If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.
 #' @param interactive Boolean parameter for generating interactive plot (HTML). Default is FALSE.
 #' @param comparison_samples Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.
+#' @param plot_data Plotting parameter, define the data type to be plotted.
 #' @param plot_title Plotting parameter, plot title.
 #' @param y_axis_lab Plotting parameter, label of y-axis.
 #' @param return_plotdata Optional parameter, if set to TRUE a vector of acceptable data types for plotting will be returned, and nothing else.
@@ -29,9 +30,15 @@
 #' @export
 #'
 #' @examples
+#' #get data
+#' collated_fl = collate_results(join_with_full_metadata = TRUE) %>% dplyr::filter(pathology == "FL")
+#' 
+#' #build plot
+#' fancy_qc_plot(collated_results = collated_fl, plot_data = "AverageBaseQuality")
 #'
 fancy_qc_plot = function(collated_results,
                          comparison_samples,
+                         plot_data,
                          fill_by = "pathology",
                          labels = c("sample_id", "cohort"),
                          interactive = FALSE,

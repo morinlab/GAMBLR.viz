@@ -16,6 +16,7 @@
 #' @param this_bedpe Parameter with bedpe like df already loaded into R.
 #' @param this_bedpe_path Parameter with path to external bedpe like file.
 #' @param collated_results If supplied, the function will superimpose QC metrics to thee returned plot. Preferably the return from [GAMBLR.results::collate_results].
+#' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
 #' @param ssm Seet to FALSE to plot SVs instead of SSM. If set to FALSE, this function expects a bedpe with SVs with `this_bedpe` or an absolute path to such a file with `this_bedpe_path`.
 #' @param variant_type_col Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col Index of column holding Chromosome (to be used with either maf_data or maf_path).
@@ -31,14 +32,21 @@
 #' @export
 #'
 #' @examples
+#' #get data
+#' dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe %>% dplyr::filter(tumour_sample_id == "DOHH-2")
+#' dohh2_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+#'
+#' #build plot
+#' fancy_v_chrcount(this_maf = dohh2_maf, this_bedpe = dohh2_bedpe, y_interval = 10)
 #'
 fancy_v_chrcount = function(this_maf,
                             this_maf_path = NULL,
                             this_bedpe,
                             this_bedpe_path = NULL,
                             collated_results,
+                            add_qc_metric = FALSE,
                             ssm = TRUE,
-                            plot_title = paste0(this_sample_id),
+                            plot_title = "",
                             y_interval = 1,
                             hide_legend = FALSE,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
@@ -114,7 +122,7 @@ fancy_v_chrcount = function(this_maf,
     ymax = max(maf_del$n) + max(maf_dup$n)
   }
 
-  if(!missing(collted_results)){
+  if(!missing(collated_results)){
     #get qc data for selected samples
     qc_metrics = collated_results %>%
       dplyr::select(MeanCorrectedCoverage)

@@ -86,7 +86,7 @@ ashm_multi_rainbow_plot = function(this_maf,
   
   #subset the maf
   if(!missing(this_maf)){
-    region_mafs = lapply(regions, function(x){handle_ssm_by_region(region = x, this_maf = this_maf)})
+    region_mafs = lapply(regions, function(x){GAMBLR.helpers::handle_ssm_by_region(region = x, this_maf = this_maf)})
   }else{
     stop("Please provide an input MAF subset to specified regions...")
   }

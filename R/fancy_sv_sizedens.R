@@ -30,6 +30,11 @@
 #' @export
 #'
 #' @examples
+#' #get data
+#' dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe %>% dplyr::filter(tumour_sample_id == "DOHH-2")
+#' 
+#' #build plot
+#' fancy_sv_sizedens(this_bedpe = dohh2_bedpe)
 #'
 fancy_sv_sizedens = function(this_bedpe,
                              this_bedpe_path = NULL,

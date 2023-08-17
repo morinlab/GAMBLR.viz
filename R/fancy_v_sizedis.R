@@ -34,15 +34,19 @@
 #' @export
 #'
 #' @examples
-#' #plot SSM size distributions:
-#' fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' #get data
+#' dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe %>% dplyr::filter(tumour_sample_id == "DOHH-2")
+#' dohh2_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
+#' 
+#' #build plot
+#' fancy_v_sizedis(this_maf = dohh2_maf, this_bedpe = dohh2_bedpe)
 #'
 fancy_v_sizedis = function(this_maf,
                            this_maf_path = NULL,
                            this_bedpe,
                            this_bedpe_path = NULL,
                            ssm = TRUE,
-                           plot_title = paste0(this_sample_id),
+                           plot_title = "",
                            plot_subtitle = "Variant Size Distribution",
                            scale_value = "width",
                            log_10 = TRUE,
