@@ -40,7 +40,7 @@ fancy_cnbar = function(this_seg,
                        include_cn2 = TRUE){
 
   if(!missing(this_seg)){
-    seg = dohh2_seg
+    seg = this_seg
 
   }else if (!is.null(this_seg_path)){
     seg = read.table(this_seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)

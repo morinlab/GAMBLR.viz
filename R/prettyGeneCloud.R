@@ -19,16 +19,16 @@
 #' @export
 #'
 #' @examples
-#' #get all coding SSM
-#' maf = get_coding_ssm(seq_type = "genome")
+#' #get data
+#' my_maf = GAMBLR.data::sample_data$grch37$mafv
 #'
 #' #get gene symbols from MAF
-#' maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
+#' maf_genes = dplyr::filter(my_maf, Hugo_Symbol != "Unknown")
 #' maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
 #' my_genes = maf_genes_chr1$Hugo_Symbol
 #'
 #' #build wordcloud
-#' prettyGeneCloud(maf_df = maf, these_genes = my_genes)
+#' prettyGeneCloud(this_maf = my_maf, these_genes = my_genes)
 #'
 prettyGeneCloud = function(this_maf,
                            these_genes,
@@ -36,6 +36,7 @@ prettyGeneCloud = function(this_maf,
                            these_genes_colour="#B2DF8A",
                            other_genes_colour="#bc42f5",
                            colour_index){
+  
   if(missing(these_genes)){
     these_genes = pull(GAMBLR.data::lymphoma_genes, Gene)
   }

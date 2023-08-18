@@ -70,8 +70,7 @@ fancy_ideogram = function(gene_annotation,
 
   #additional regions to plot
   if(!missing(gene_annotation)){
-    #TODO: update the package to. point to the home of gene_to_region
-    gene = GAMBLR.package_name::gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
+    gene = GAMBLR.utils::gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
     gene.annotate = gene[gene$chr %in% paste0(c(1:22)), ]
     cols.int = c("chromosome", "start", "end")
     gene.annotate[cols.int] = sapply(gene.annotate[cols.int], as.integer)

@@ -11,7 +11,7 @@
 #'
 #' @param this_maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
 #' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
-#' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
+#' @param these_samples_metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
 #' @param genes An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
 #' @param min_mutations Optional parameter for when no `genes` is provided. This parameter ensures only genes with n mutations are kept in `genes`. Default value is 1, this means all genes in the incoming maf will be plotted.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
@@ -31,21 +31,18 @@
 #' @export
 #'
 #' @examples
-#' metadata = get_gambl_metadata(case_set = "tFL-study")
-#' this_meta = dplyr::filter(metadata, pairing_status == "matched")
-#' this_meta = dplyr::filter(this_meta, consensus_pathology %in% c("FL", "DLBCL"))
+#' #get data
+#' my_meta = GAMBLR.data::gambl_metadata
+#' my_maf = GAMBLR.data::sample_data$grch37$maf
 #'
-#' maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
-#'                      basic_columns = TRUE,
-#'                      seq_type = "genome")
-#'
-#' prettyForestPlot(maf = maf,
-#'                  metadata = this_metadata,
+#' prettyForestPlot(this_maf = my_maf,
+#'                  these_samples_metadata = my_meta,
+#'                  min_mutations = 50,
 #'                  genes = c("ATP6V1B2",
 #'                            "EZH2",
 #'                            "TNFRSF14",
 #'                            "RRAGC"),
-#'                  comparison_column = "consensus_pathology",
+#'                  comparison_column = "pathology",
 #'                  comparison_values = c("DLBCL",
 #'                                        "FL"),
 #'                  separate_hotspots = FALSE,
@@ -53,7 +50,7 @@
 #'
 prettyForestPlot = function(this_maf,
                             mutmat,
-                            metadata,
+                            these_samples_metadata,
                             genes,
                             min_mutations = 1,
                             comparison_column,
@@ -67,10 +64,10 @@ prettyForestPlot = function(this_maf,
 
   #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
   if(comparison_values[1] == FALSE){
-    if(class(metadata[[comparison_column]]) == "factor"){
-      comparison_values = levels(metadata[[comparison_column]])
+    if(class(these_samples_metadata[[comparison_column]]) == "factor"){
+      comparison_values = levels(these_samples_metadata[[comparison_column]])
     } else {
-      comparison_values = unique(metadata[[comparison_column]])
+      comparison_values = unique(these_samples_metadata[[comparison_column]])
     }
   }
   #Ensure there are only two comparison_values
@@ -79,10 +76,10 @@ prettyForestPlot = function(this_maf,
       stop(paste0("Your comparison must have two values. \nEither specify comparison_values as a vector of length 2 or subset your metadata so your comparison_column has only two unique values or factor levels."))
   }
   #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
-  metadata = metadata[metadata[[comparison_column]] %in% comparison_values, ]
+  these_samples_metadata = these_samples_metadata[these_samples_metadata[[comparison_column]] %in% comparison_values, ]
 
   #Ensure the metadata comparison column is a factor with levels matching the input
-  metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
+  these_samples_metadata$comparison = factor(these_samples_metadata[[comparison_column]], levels = comparison_values)
 
   #read maf into r
   if(!missing(this_maf)){
@@ -96,7 +93,7 @@ prettyForestPlot = function(this_maf,
         pull(Hugo_Symbol)
     }
     maf = this_maf[this_maf$Hugo_Symbol %in% genes, ]
-    maf = this_maf[this_maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
+    maf = this_maf[this_maf$Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode, ]
   }else{
     stop("Please provide a maf with `this_maf` paraemter...")
   }
@@ -104,18 +101,18 @@ prettyForestPlot = function(this_maf,
   #If separate_hotspots = true, confirm the input maf is hotspot annotated
   if(!missing(mutmat)){
     #add the required columns from the metadata and make the names consistent
-    mutmat = left_join(dplyr::select(metadata, sample_id, comparison),mutmat) %>%
+    mutmat = left_join(dplyr::select(these_samples_metadata, sample_id, comparison),mutmat) %>%
       dplyr::rename("Tumor_Sample_Barcode"="sample_id")
-  }else if(!missing(maf)){
+  }else if(!missing(this_maf)){
     if(separate_hotspots){
-      if(!"hot_spot" %in% colnames(maf))
+      if(!"hot_spot" %in% colnames(this_maf))
         stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
       maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
     }
     #Convert the maf file to a binary matrix
-    mutmat = maf %>%
+    mutmat = this_maf %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      full_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison), by = "Tumor_Sample_Barcode") %>%
+      full_join(dplyr::select(these_samples_metadata, Tumor_Sample_Barcode, comparison), by = "Tumor_Sample_Barcode") %>%
       distinct() %>%
       dplyr::mutate(is_mutated = 1) %>%
       pivot_wider(names_from = Hugo_Symbol, values_from = is_mutated, values_fill = 0) %>%
@@ -226,22 +223,22 @@ prettyForestPlot = function(this_maf,
   }
 
   if(custom_colours[1] == FALSE){
-    if(length(levels(metadata$comparison)[levels(metadata$comparison) %in% names(get_gambl_colours())]) == 2){
-      colours = get_gambl_colours()[levels(metadata$comparison)]
+    if(length(levels(these_samples_metadata$comparison)[levels(these_samples_metadata$comparison) %in% names(get_gambl_colours())]) == 2){
+      colours = get_gambl_colours()[levels(these_samples_metadata$comparison)]
     } else {
       colours = get_gambl_colours(classification = "blood")[c("Red", "Blue")]
-      names(colours) = levels(metadata$comparison)
+      names(colours) = levels(these_samples_metadata$comparison)
     }
   } else {
     colours = custom_colours
   }
 
   if(custom_labels[1] == FALSE){
-    labels = levels(metadata$comparison)
-    names(labels) = levels(metadata$comparison)
+    labels = levels(these_samples_metadata$comparison)
+    names(labels) = levels(these_samples_metadata$comparison)
   } else if(length(custom_labels) != 2) {
-    labels = levels(metadata$comparison)
-    names(labels) = levels(metadata$comparison)
+    labels = levels(these_samples_metadata$comparison)
+    names(labels) = levels(these_samples_metadata$comparison)
     print("Provided custom labels is not a character vector of length 2. Defaulting to comparison factor levels as labels. ")
   } else {
     labels = custom_labels
@@ -264,7 +261,7 @@ prettyForestPlot = function(this_maf,
     geom_col(position = "dodge", width = 0.5) +
     xlab("") + ylab("% Mutated") +
     coord_flip() +
-    scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
+    scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(these_samples_metadata$comparison)]) +
     cowplot::theme_cowplot() +
     theme(axis.text.y = element_blank(), legend.position = "bottom")
 

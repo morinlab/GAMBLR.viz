@@ -47,10 +47,10 @@ focal_cn_plot = function(this_seg,
   }
   
   if(!missing(gene)){
-    region = gene_to_region(gene)
-    chunks = region_to_chunks(region)
+    region = GAMBLR.utils::gene_to_region(gene)
+    chunks = GAMBLR.helpers::region_to_chunks(region)
   }else{
-    chunks = region_to_chunks(region)
+    chunks = GAMBLR.helpers::region_to_chunks(region)
   }
   
   if(!is.null(this_seg_path)){

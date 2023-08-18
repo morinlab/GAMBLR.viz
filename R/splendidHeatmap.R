@@ -35,6 +35,7 @@
 #'
 #' @examples
 #' \dontrun{
+#' #TODO: add a workinng example using the bundled data...
 #' splendidHeatmap(this_matrix = data,
 #'                 importance_values = rf$importance[,c(1:3)],
 #'                 these_samples_metadata = MASTER.METADATA,

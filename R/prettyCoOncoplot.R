@@ -12,8 +12,8 @@
 #' you want to be plotted on the left side. For developers: new arguments added to prettyOncoplot in the future
 #' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 #'
-#' @param maf Required argument. A maftools object containing the mutations you want to plot on both oncoplots.
-#' @param metadata Required argument. A data.frame with metadata for both oncoplots.
+#' @param this_maf Required argument. A maftools object containing the mutations you want to plot on both oncoplots.
+#' @param these_samples_metadata Required argument. A data.frame with metadata for both oncoplots.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
@@ -27,15 +27,14 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #get data for plotting
-#' ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
-#' ssm = maftools::read.maf(ssm)
-#' meta = get_gambl_metadata()
-#' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
+#' my_metadata = GAMBLR.data::gambl_metadata 
+#' my_maf = GAMBLR.data::sample_data$grch37$maf %>% dplyr::filter(Tumor_Sample_Barcode %in% my_metadata$sample_id)
 #'
 #' #build plot
-#' prettyCoOncoplot(maf = ssm,
-#'                  metadata = meta,
+#' prettyCoOncoplot(this_maf = my_maf,
+#'                  these_samples_metadata = my_metadata,
 #'                  comparison_column = "cohort",
 #'                  include_noncoding = NULL,
 #'                  minMutationPercent = 0,
@@ -55,9 +54,10 @@
 #'                  legend_row = 2,
 #'                  label1 = "Adult",
 #'                  label2 = "Pediatric")
+#' }
 #'
-prettyCoOncoplot = function(maf,
-                            metadata,
+prettyCoOncoplot = function(this_maf,
+                            these_samples_metadata,
                             comparison_column,
                             comparison_values,
                             label1,
@@ -65,7 +65,7 @@ prettyCoOncoplot = function(maf,
                             ...){
 
     # check for required arguments
-    required = c("maf", "metadata", "comparison_column")
+    required = c("this-maf", "these_samples_metadata", "comparison_column")
 
     defined = names(as.list(match.call())[-1])
 
@@ -89,12 +89,12 @@ prettyCoOncoplot = function(maf,
     }
 
     #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
-    meta1 = metadata[metadata[[comparison_column]] %in% comparison_values[1], ]
-    meta2 = metadata[metadata[[comparison_column]] %in% comparison_values[2], ]
+    meta1 = these_samples_metadata[these_samples_metadata[[comparison_column]] %in% comparison_values[1], ]
+    meta2 = these_samples_metadata[these_samples_metadata[[comparison_column]] %in% comparison_values[2], ]
 
     # Subset maf to only samples in the comparison values
-    ssm1 = maftools::subsetMaf(maf,tsb=pull(meta1, Tumor_Sample_Barcode))
-    ssm2 = maftools::subsetMaf(maf,tsb=pull(meta2, Tumor_Sample_Barcode))
+    ssm1 = maftools::subsetMaf(this_maf,tsb=pull(meta1, Tumor_Sample_Barcode))
+    ssm2 = maftools::subsetMaf(this_maf,tsb=pull(meta2, Tumor_Sample_Barcode))
 
     # Arguments to pass into prettyOncoplot
     oncoplot_args = list(...)

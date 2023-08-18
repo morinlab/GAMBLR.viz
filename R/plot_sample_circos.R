@@ -2,72 +2,48 @@
 #'
 #' @description Plot a sample-centric circos overview.
 #'
-#' @details This function takes a sample ID in the `this_sample_id` parameter.
-#' Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the `sv_df`, `cnv_df` and `ssm_df` parameters.
-#' Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
+#' @details This function lets the user supply already loaded data frames (SV, CNV, SSM) with the `this_bedpe` and`this_seg` parameters.
+#' Convenient Boolean parameters are also available for restricting the plot to specific mutation types (`include_sv` and `include_cnv`).
 #'
-#' @param this_sample_id Sample ID for the sample to plot.
-#' @param sv_df Optional data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.
-#' @param cnv_df Optional data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.
-#' @param ssm_df This parameter does not do anything yet. Maybe it was meant to be implemented.
-#' @param include_sv Default TRUE. (does not do anything yet).
-#' @param include_cnv Default TRUE. (does not do anything yet).
-#' @param this_projection The selected projection, default is grch37 and it's the only supported peojection.
+#' @param this_bedpe Required data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.
+#' @param this_seg Required data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.
+#' @param this_maf This parameter does not do anything yet. Maybe it was meant to be implemented.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param include_ssm Defaul FALSE. (does not do anything yet).
 #' @param legend_metadata_columns Column names from metadata
 #' @param legend_metadata_names List of metadata names to be plotted.
 #' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.
-#' @param label_genes Gene labels (df, list or what type?)
+#' @param label_genes Gene labels.
 #' @param auto_label_sv Default is FALSE
 #'
 #' @return Nothing
 #'
 #' @import dplyr circlize ComplexHeatmap ggplot2
-#' @export
 #'
 #' @examples
-#'
-#' plot_sample_circos(this_sample_id = "13-38657_tumorB",
-#'                    legend_metadata_columns = c("pathology",
-#'                                                "lymphgen",
-#'                                                "COO_consensus",
-#'                                                "DHITsig_consensus",
-#'                                                "bcl2_ba",
-#'                                                "myc_ba"),
-#'                    legend_metadata_names = c("pathology",
-#'                                              "LymphGen",
-#'                                              "COO",
-#'                                              "DHITsig",
-#'                                              "BCL2",
-#'                                              "MYC"),
+#' #get data
+#' dohh2_seg = GAMBLR.data::sample_data$grch37$seg %>% dplyr::filter(ID == "DOHH-2")
+#' dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe %>% dplyr::filter(tumour_sample_id == "DOHH-2")
+#' 
+#' #build plot
+#' plot_sample_circos(this_bedpe = dohh2_bedpe,
+#'                    this_seg = dohh2_seg,
 #'                    chrom_list = c("chr2",
 #'                                   "chr3",
 #'                                   "chr8",
 #'                                   "chr14",
 #'                                   "chr18"))
 #'
-plot_sample_circos = function(this_sample_id,
-                              sv_df,
-                              cnv_df,
-                              ssm_df,
-                              include_sv = TRUE,
-                              include_ssm = FALSE,
+plot_sample_circos = function(this_bedpe,
+                              this_seg,
                               legend_metadata_columns,
                               legend_metadata_names = c(),
-                              include_cnv = TRUE,
-                              this_projection = "grch37",
                               this_seq_type = "genome",
                               chrom_list,
                               label_genes,
                               auto_label_sv = FALSE){
 
-  if(this_projection == "hg38"){
-    stop("Currently, only grch37 is supported...")
-  }
-
-  add_cnv = function(cnv_df){
-    bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
+  add_cnv = function(this_seg){
+    bed = data.frame(this_seg[,c("chrom", "start", "end", "log.ratio")])
     colnames(bed) = c("chr", "start", "end", "value1")
     col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
     circos.genomicTrackPlotRegion(bed, stack = TRUE, panel.fun = function(region, value, ...) {
@@ -76,12 +52,8 @@ plot_sample_circos = function(this_sample_id,
       cell.xlim = get.cell.meta.data("cell.xlim")
     }, bg.border = NA)
   }
-  if(missing(cnv_df)){
-    cnv_df = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      with_chr_prefix = TRUE,
-      this_seq_type = this_seq_type
-    )
+  if(missing(this_seg)){
+    stop("Please provide a data frame with CNVs...")
   }
   if(missing(chrom_list)){
 
@@ -94,17 +66,13 @@ plot_sample_circos = function(this_sample_id,
       dplyr::select(chromosome, start, end, gene_name) %>%
       dplyr::mutate(chromosome = paste0("chr", chromosome))
   }
-  if(missing(sv_df)){
-    sv_df = get_manta_sv(verbose = FALSE) %>%
-      dplyr::filter(tumour_sample_id == this_sample_id)
-  }else{
-    sv_df = sv_df %>%
-      dplyr::filter(tumour_sample_id == this_sample_id)
+  if(missing(this_bedpe)){
+    stop("Please provide a data frame with SVs...")
   }
-
+  
   #add chr prefixes if grch37 is selcted (expected by circlize)
-  if(this_projection == "grch37"){
-    sv_df = sv_df %>%
+  if(all(!str_detect(this_bedpe$CHROM_A, "chr"))){
+    sv_df = this_bedpe %>%
       dplyr::mutate(CHROM_A = paste0("chr", CHROM_A)) %>%
       dplyr::mutate(CHROM_B = paste0("chr", CHROM_B))
   }
@@ -114,11 +82,9 @@ plot_sample_circos = function(this_sample_id,
     dplyr::filter(CHROM_B %in% chrom_list)
 
   if(auto_label_sv){
-
     #annotate oncogene SVs and label them
-    annotated_sv  = annotate_sv(sv_df, with_chr_prefix = TRUE) %>%
-      dplyr::filter(!is.na(partner)) %>%
-      dplyr::filter(tumour_sample_id == this_sample_id)
+    annotated_sv  = GAMBLR.utils::annotate_sv(sv_df, with_chr_prefix = TRUE) %>%
+      dplyr::filter(!is.na(partner))
 
     these_oncogenes = unique(pull(annotated_sv, gene))
     these_partners = unique(pull(annotated_sv, partner))
@@ -155,7 +121,7 @@ plot_sample_circos = function(this_sample_id,
   colnames(bed2) = c("chrom", "start", "end", "sample_id")
   circos.clear()
   circos.initializeWithIdeogram(chromosome.index = chrom_list)
-  add_cnv(cnv_df)
+  add_cnv(this_seg)
   circos.genomicLink(bed1, bed2, col = "#bdbdc1")
   if(!missing(label_genes)){
     circos.genomicLabels(gene_bed, labels.column = "gene_name")
@@ -164,17 +130,20 @@ plot_sample_circos = function(this_sample_id,
     circos.genomicLink(anno_bed1, anno_bed2,col = 'red')
     circos.genomicLabels(bed_mut, labels.column = "gene")
   }
-  text(c(0.75, 0.75), this_sample_id, cex = 0.8)
+  
+  this_sample = unique(this_bedpe$tumour_sample_id)
+  text(c(0.75, 0.75), this_sample, cex = 0.8)
+  
   if(!missing(legend_metadata_columns)){
-    samp_meta = get_gambl_metadata() %>%
-      dplyr::filter(sample_id == this_sample_id)
-
+      samp_meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>%
+        dplyr::filter(sample_id == this_sample)
+    
     these_meta = samp_meta[legend_metadata_columns]
     these_cols = get_gambl_colours()
     vals = as.character(these_meta)
     names = colnames(these_meta)
 
-    all_cols = map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
+    all_cols = GAMBLR.helpers::map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
 
     cols = all_cols[vals]
     print(cols)

@@ -54,7 +54,7 @@ ashm_rainbow_plot = function(this_maf,
   }
   
   if(!missing(this_maf)){
-    regions_maf = handle_ssm_by_region(this_maf = this_maf, region = region)
+    regions_maf = GAMBLR.helpers::handle_ssm_by_region(this_maf = this_maf, region = region)
   }else{
     stop("Please provide a MAF, or MAF-like object with the `this_maf` parameter...")
   }

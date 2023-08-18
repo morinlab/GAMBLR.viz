@@ -46,7 +46,7 @@ ashm_multi_rainbow_plot = function(this_maf,
   #get the mutations for each region and combine
   #regions_bed should contain chr, start, end, name (with these exact names)
   if(missing(metadata)){
-    metadata = get_gambl_metadata()
+    metadata = GAMBLR.helpers::handle_metadata()
     meta_arranged = arrange(metadata, pathology_rank, lymphgen)
   }else{
     meta_arranged = metadata #assume the user already arranged it the way they wanted

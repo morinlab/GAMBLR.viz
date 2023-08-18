@@ -34,7 +34,7 @@
 #' fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) %>% pull(Gene)
 #' 
 #' # get regions for selected genes
-#' fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+#' fl_genes_list = GAMBLR.utils::gene_to_region(gene_symbol = fl_genes, return_as = "bed")
 #' 
 #' #get an example bedpe
 #' fancy_circos_plot(this_bedpe = dohh2_bedpe,
@@ -223,11 +223,11 @@ fancy_circos_plot = function(this_maf,
   #plotting
   #define reference build
   if(projection == "grch37"){
-    data(UCSC.HG19.Human.CytoBandIdeogram)
-    cytobands = UCSC.HG19.Human.CytoBandIdeogram
+    data(RCircos::UCSC.HG19.Human.CytoBandIdeogram)
+    cytobands = RCircos::UCSC.HG19.Human.CytoBandIdeogram
   }else if(projection == "hg38"){
-    data(UCSC.HG38.Human.CytoBandIdeogram)
-    cytobands = UCSC.HG38.Human.CytoBandIdeogram
+    data(RCircos::UCSC.HG38.Human.CytoBandIdeogram)
+    cytobands = RCircos::UCSC.HG38.Human.CytoBandIdeogram
   }
 
 
@@ -239,7 +239,7 @@ fancy_circos_plot = function(this_maf,
   suppressMessages(RCircos::RCircos.Set.Core.Components(cyto.info = cytobands, chr.exclude = chr_exclude, tracks.inside = 10))
 
   #set plot parameters
-  RCircos.params = RCircos.Get.Plot.Parameters()
+  RCircos.params = RCircos::RCircos.Get.Plot.Parameters()
 
   #define plotting parameters
   out.file = paste0(out, file_name)
@@ -252,16 +252,16 @@ fancy_circos_plot = function(this_maf,
     png(out.file, height = 7, width = 7, units = "in", res = 300)
   }
 
-  RCircos.Set.Plot.Area(margins = 0);
+  RCircos::RCircos.Set.Plot.Area(margins = 0);
 
   #create empty plot
-  RCircos.Chromosome.Ideogram.Plot()
+  RCircos::RCircos.Chromosome.Ideogram.Plot()
 
   #add tracks to plot
   #add gene names
   if(!missing(gene_list)){
-    RCircos.Gene.Connector.Plot(gene_list, gene_con_track, "in")
-    RCircos.Gene.Name.Plot(gene_list, 4, gene_name_track, "in")
+    RCircos::RCircos.Gene.Connector.Plot(gene_list, gene_con_track, "in")
+    RCircos::RCircos.Gene.Name.Plot(gene_list, 4, gene_name_track, "in")
   }
 
   #aadd tracks
@@ -269,43 +269,43 @@ fancy_circos_plot = function(this_maf,
     #ssm deletions
     RCircos.params$track.background = "steelblue2"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(ssm_del, track.num = ssm_del_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(ssm_del, track.num = ssm_del_track, side = "in")
 
     #ssm insertions
     RCircos.params$track.background = "sienna2"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(ssm_ins, track.num = ssm_ins_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(ssm_ins, track.num = ssm_ins_track, side = "in")
 
     #ssm snp
     RCircos.params$track.background = "seagreen"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(ssm_snp, track.num = ssm_snp_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(ssm_snp, track.num = ssm_snp_track, side = "in")
 
     #ssm dnp
     RCircos.params$track.background = "tomato4"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(ssm_dnp, track.num = ssm_dnp_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(ssm_dnp, track.num = ssm_dnp_track, side = "in")
   }
 
   if(sv_calls){
     #translocations
-    RCircos.Link.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE)
+    RCircos::RCircos.Link.Plot(sv_trans, track.num = trans_track, by.chromosome = FALSE)
 
     #duplications
     RCircos.params$track.background = "sienna2"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_dup, track.num = sv_dup_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(sv_dup, track.num = sv_dup_track, side = "in")
 
     #deletions
     RCircos.params$track.background = "steelblue2"
     RCircos.params$max.layers = 1
-    RCircos.Reset.Plot.Parameters(RCircos.params)
-    RCircos.Tile.Plot(sv_del, track.num = sv_del_track, side = "in")
+    RCircos::RCircos.Reset.Plot.Parameters(RCircos.params)
+    RCircos::RCircos.Tile.Plot(sv_del, track.num = sv_del_track, side = "in")
   }
 
   #add plot title and legends
