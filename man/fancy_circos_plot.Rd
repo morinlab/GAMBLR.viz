@@ -22,9 +22,9 @@ fancy_circos_plot(
 \arguments{
 \item{this_maf}{Required parameter (if `ssm_calls = TRUE`). A data frame in MAF format.}
 
-\item{this_bedpe}{Required parameter (if `sv_calls = TRUE`). A data frame in BEDPE, possible the return from [GAMBLR::get_combined_sv], if the user have access to core GAMBLR functions (GSC access).}
+\item{this_bedpe}{Required parameter (if `sv_calls = TRUE`). A data frame in BEDPE, possible the return from `get_combined_sv` in GAMBLR, if the user have access to core GAMBLR functions (GSC access).}
 
-\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR::gene_to_region] (return_as = "bed") output format. See examples.}
+\item{gene_list}{Optional parameter to annotate genes on the circos plot from a data frame of genes. Is compatible with [GAMBLR.utilites::gene_to_region] (return_as = "bed") output format. See examples.}
 
 \item{ssm_calls}{Boolean parameter for plotting ssm. Default is TRUE.}
 

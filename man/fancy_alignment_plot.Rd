@@ -13,9 +13,9 @@ fancy_alignment_plot(
 )
 }
 \arguments{
-\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from `collate_results` in GAMBLR.}
 
-\item{comparison_group}{Optional argument for plotting mean alignment metrics from another group off sample IDs. This should be a data frame with collated results [GAMBLR::collate_results] with sample IDs to be compared.}
+\item{comparison_group}{Optional argument for plotting mean alignment metrics from another group off sample IDs. This should be a data frame with collated results from `collate_results` in GAMBLR, with sample IDs to be compared.}
 
 \item{add_mean}{Set to TRUE to superimpose mean values of plotted variables. Default is TRUE.}
 
@@ -32,8 +32,8 @@ Visualize (stacked barplot) genomic read-subsets (metrics) across a selection of
 \details{
 This function is available for plotting relevant alignment metrics (read-subsets) for a selection of samples. Per default, this plot returns the following read-metrics;
 total n reads, total n uniquely mapped reads, total n duplicated reads. This plot can also be superimposed with read metrics from additional samples,
-allowing for easy comparisons between different sample populations. To run this function, provide a data frame with collated results [GAMBLR::colalte_results] subset to the sample IDs of interest.
-Similarly, if a comparison group is to be superimposed to the returned plot, provide another collated results for these sample IDs (with [GAMBLR::collate_results]).
+allowing for easy comparisons between different sample populations. To run this function, provide a data frame with collated results from `collate_results` in GAMBLR, subset to the sample IDs of interest.
+Similarly, if a comparison group is to be superimposed to the returned plot, provide another collated results for these sample IDs (with `collate_results` from GAMBLR).
 In addition, this plot can also add additional read-metrics such as mean values for all plotted metrics and corrected coverage. 
 To enable these features, simply set `add_mean` and `add_corrected_coverage` to TRUE (default).
 }

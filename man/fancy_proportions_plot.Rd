@@ -7,7 +7,7 @@
 fancy_proportions_plot(collated_results, plot_subtitle = "")
 }
 \arguments{
-\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from `collate_results` in GAMBLR.}
 
 \item{plot_subtitle}{Plotting parameter, subtitle of generated plot.}
 }

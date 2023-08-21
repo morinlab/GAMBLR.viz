@@ -7,7 +7,7 @@
 fancy_propcov_plot(collated_results, comparison_samples, plot_subtitle = "")
 }
 \arguments{
-\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].}
+\item{collated_results}{Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from `collate_results` in GAMBLR.}
 
 \item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.}
 

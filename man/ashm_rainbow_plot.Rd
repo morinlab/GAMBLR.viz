@@ -56,7 +56,7 @@ dohh2_meta = GAMBLR.data::gambl_metadata \%>\% dplyr::filter(sample_id == "DOHH-
 
 #build plot
 ashm_rainbow_plot(this_maf = dohh2_maf,
-b                 metadata = dohh2_meta, 
+                  metadata = dohh2_meta, 
                   region = "chr6:90975034-91066134")
 
 }

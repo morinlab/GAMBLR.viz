@@ -39,7 +39,7 @@ If no genes are supplied when calling the function, this function will default t
 }
 \examples{
 #get data
-my_maf = GAMBLR.data::sample_data$grch37$mafv
+my_maf = GAMBLR.data::sample_data$grch37$maf
 
 #get gene symbols from MAF
 maf_genes = dplyr::filter(my_maf, Hugo_Symbol != "Unknown")

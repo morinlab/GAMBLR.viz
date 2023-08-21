@@ -16,9 +16,9 @@ copy_number_vaf_plot(
 )
 }
 \arguments{
-\item{this_maf}{A maf loaded into R. This is a required paraemter.}
+\item{this_maf}{A maf loaded into R. This is a required parameter.}
 
-\item{this_seg}{A seg loaded into R. This is a required paraemter.}
+\item{this_seg}{A seg loaded into R. This is a required parameter.}
 
 \item{just_segments}{Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.}
 

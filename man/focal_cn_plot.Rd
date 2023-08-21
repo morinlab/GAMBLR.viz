@@ -19,6 +19,10 @@ focal_cn_plot(
 )
 }
 \arguments{
+\item{this_seg}{Required parameter, an already loaded seg file in R.}
+
+\item{this_seg_path}{Required parameter (if `this_seg` is not provided). An absolute path to a seg file on disk.}
+
 \item{region}{Genomic region for plotting in bed format.}
 
 \item{gene}{Optional variable, converts gene to region if region not supplied.}

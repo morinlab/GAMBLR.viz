@@ -26,7 +26,7 @@ ashm_multi_rainbow_plot(
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.}
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized palette.}
 
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
@@ -45,7 +45,7 @@ The user also needs to specify a vector of names (`regions_to_display`) to furth
 It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
 This function expects the user to provide an already loaded maf as (`this_maf`). 
-If you have access to core GAMBLR functions, you can run [GAMBLR::get_ssm_by_regions], 
+If you have access to core GAMBLR functions, you can run `get_ssm_by_regions` from GAMBLR package, 
 supplying the `regions_bed` to the `region` parameter of that function to the return the expected data.
 }
 \examples{

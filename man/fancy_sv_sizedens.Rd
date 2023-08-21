@@ -28,7 +28,7 @@ fancy_sv_sizedens(
 
 \item{size_cutoff}{Threshold for filtering variants on size, default is 50bp.}
 
-\item{adjust_value}{A multiplicate bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.}
+\item{adjust_value}{A multiplicative bandwidth adjustment. This makes it possible to adjust the bandwidth while still using the bandwidth estimator. For example, adjust = 1/2 means use half of the default bandwidth.}
 
 \item{trim}{If FALSE, the default, each density is computed on the full range of the data.}
 
@@ -52,12 +52,6 @@ Generate plot visualizing SV sizes. Subset on variant type, filter on VAF, size 
 Plot sample-level SV sizes across selected chromosomes. This function also has a variety of filtering parameters available.
 For example, it is possible to subset the included variants to a specific VAF threshold with `VAF_cutoff`. The `size_cutoff` is another parameter
 for filtering the variants on set variant sizes, the default for this parameter is to only include variants of at least 50bp.
-This function takes either a sample ID (`this_sample_id`) or an already loaded data frame (`maf_data` or a path to a maf-like file with `maf_path`).
-If `this_sample_id` is called, the function will run [GAMBLR::get_combined_sv] to retrieve SV calls.
-If either of the `maf` parameters are used, note that it's possible to specify the columns of interest;
-(`chrom_a_col`, `start_a_col`, `end_a_col` and `variant_type_col`), allowing this function to work with any maf-like data frames.
-This function also allows the user to customize the returned plot. For more info on how to do this, please refer to the aesthetic
-parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
 }
 \examples{
 #get data

@@ -59,7 +59,6 @@ Takes a maf data frame (or path to a maf), counts the number of variants per chr
 Selected chromosomes (`chr_select`) are plotted along the x-axis and the variant counts are represented on the y-axis.
 This function can plot both Structural Variants (SV) and Simple Shared Motifs (SSM).
 It plots SVs per default and SSM can be added with setting `ssm = TRUE`.
-This plot can also be restricted to only show coding mutations. To do so, set `coding_only` to TRUE.
 In addition, the returned plot can also be superimposed with a sample-specific mean coverage (from [GAMBLR::collate_results]).
 To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizing the returned plot are also available.
 e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
