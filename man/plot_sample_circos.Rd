@@ -5,16 +5,10 @@
 \title{Sample-level Circos Plot}
 \usage{
 plot_sample_circos(
-  this_sample_id,
-  sv_df,
-  cnv_df,
-  ssm_df,
-  include_sv = TRUE,
-  include_ssm = FALSE,
+  this_bedpe,
+  this_seg,
   legend_metadata_columns,
   legend_metadata_names = c(),
-  include_cnv = TRUE,
-  this_projection = "grch37",
   this_seq_type = "genome",
   chrom_list,
   label_genes,
@@ -22,33 +16,23 @@ plot_sample_circos(
 )
 }
 \arguments{
-\item{this_sample_id}{Sample ID for the sample to plot.}
+\item{this_bedpe}{Required data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.}
 
-\item{sv_df}{Optional data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.}
-
-\item{cnv_df}{Optional data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.}
-
-\item{ssm_df}{This parameter does not do anything yet. Maybe it was meant to be implemented.}
-
-\item{include_sv}{Default TRUE. (does not do anything yet).}
-
-\item{include_ssm}{Defaul FALSE. (does not do anything yet).}
+\item{this_seg}{Required data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.}
 
 \item{legend_metadata_columns}{Column names from metadata}
 
 \item{legend_metadata_names}{List of metadata names to be plotted.}
 
-\item{include_cnv}{Default TRUE. (does not do anything yet).}
-
-\item{this_projection}{The selected projection, default is grch37 and it's the only supported peojection.}
-
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
 
-\item{label_genes}{Gene labels (df, list or what type?)}
+\item{label_genes}{Gene labels.}
 
 \item{auto_label_sv}{Default is FALSE}
+
+\item{this_maf}{This parameter does not do anything yet. Maybe it was meant to be implemented.}
 }
 \value{
 Nothing
@@ -57,25 +41,17 @@ Nothing
 Plot a sample-centric circos overview.
 }
 \details{
-This function takes a sample ID in the `this_sample_id` parameter.
-Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the `sv_df`, `cnv_df` and `ssm_df` parameters.
-Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
+This function lets the user supply already loaded data frames (SV, CNV, SSM) with the `this_bedpe` and`this_seg` parameters.
+Convenient Boolean parameters are also available for restricting the plot to specific mutation types (`include_sv` and `include_cnv`).
 }
 \examples{
+#get data
+dohh2_seg = GAMBLR.data::sample_data$grch37$seg \%>\% dplyr::filter(ID == "DOHH-2")
+dohh2_bedpe = GAMBLR.data::sample_data$grch37$bedpe \%>\% dplyr::filter(tumour_sample_id == "DOHH-2")
 
-plot_sample_circos(this_sample_id = "13-38657_tumorB",
-                   legend_metadata_columns = c("pathology",
-                                               "lymphgen",
-                                               "COO_consensus",
-                                               "DHITsig_consensus",
-                                               "bcl2_ba",
-                                               "myc_ba"),
-                   legend_metadata_names = c("pathology",
-                                             "LymphGen",
-                                             "COO",
-                                             "DHITsig",
-                                             "BCL2",
-                                             "MYC"),
+#build plot
+plot_sample_circos(this_bedpe = dohh2_bedpe,
+                   this_seg = dohh2_seg,
                    chrom_list = c("chr2",
                                   "chr3",
                                   "chr8",

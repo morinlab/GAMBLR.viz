@@ -18,6 +18,7 @@
 #' @return Nothing
 #'
 #' @import dplyr circlize ComplexHeatmap ggplot2
+#' @export
 #'
 #' @examples
 #' #get data

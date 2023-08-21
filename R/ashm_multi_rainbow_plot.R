@@ -8,7 +8,7 @@
 #' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 #' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
 #' This function expects the user to provide an already loaded maf as (`this_maf`). 
-#' If you have access to core GAMBLR functions, you can run [GAMBLR::get_ssm_by_regions], 
+#' If you have access to core GAMBLR functions, you can run `get_ssm_by_regions` from GAMBLR package, 
 #' supplying the `regions_bed` to the `region` parameter of that function to the return the expected data.
 #'
 #' @param this_maf An already loaded maf. This parameter is required.
@@ -16,7 +16,7 @@
 #' @param regions_to_display Optional vector of names from default regions_bed to use.
 #' @param exclude_classifications Optional argument for excluding specific classifications from a metadata file.
 #' @param metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
-#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized palette.
 #' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
 #' @param verbose Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.
 #'

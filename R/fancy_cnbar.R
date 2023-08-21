@@ -3,7 +3,7 @@
 #' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. This function expects an already loaded SEG file with the `this_seg` parameter.
-#' Such a seg file can be retrieved with [GAMBLR.results::get_sample_cn_segments]. It is also possible to specify the absolute path to such a SEG file with `this_seg_path`.
+#' Such a seg file can be retrieved with `get_sample_cn_segments` in GAMBLR. It is also possible to specify the absolute path to such a SEG file with `this_seg_path`.
 #' The returned plot can also be restricted to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 #' For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
 #' With `include_cn2` (Boolean) the user can control if CN segments = 2 should be added to the plot, default is TRUE.
@@ -11,8 +11,8 @@
 #' This function also computes the number of affected bases for each copy number state and plots these values on a secondary y-axis (right),
 #' useful for overview the extent of each copy number state, in the context of the full genome.
 #'
-#' @param this_seg An already loaded SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].
-#' @param this_seg_path An absolute path to a SEG file. This function is compatible with the return of [GAMBLR.results::get_sample_cn_segments].
+#' @param this_seg An already loaded SEG file. This function is compatible with the return of `get_sample_cn_segments` from GAMBLR.
+#' @param this_seg_path An absolute path to a SEG file. This function is compatible with the return of `get_sample_cn_segments` from GAMBLR..
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select Vector of chromosomes to be included in plot, defaults to autosomes.

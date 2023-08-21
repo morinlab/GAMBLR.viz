@@ -35,16 +35,11 @@ Returned plot is interactive, meaning the user can hover over individual points 
 The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
 }
 \examples{
-#get metadata (Fl and DLBCL)
-metadata = get_gambl_metadata()
-this_metadata = dplyr::filter(metadata, consensus_pathology \%in\% c("FL", "DLBCL"))
+#get data
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
 
-#get maf data for returned samples
-maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
-                     seq_type = "genome")
-
-#construct pretty_lollipop_plot.
-pretty_lollipop_plot(maf_df = maf,
+#build plot
+pretty_lollipop_plot(this_maf = dohh2_maf,
                      gene = "MYC",
                      plot_title = "Mutation data for MYC",
                      plot_theme = "nature2")

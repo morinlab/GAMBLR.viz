@@ -6,8 +6,8 @@
 #' This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
 #' This only plots the segments.
 #'
-#' @param this_maf A maf loaded into R. This is a required paraemter.
-#' @param this_seg A seg loaded into R. This is a required paraemter.
+#' @param this_maf A maf loaded into R. This is a required parameter.
+#' @param this_seg A seg loaded into R. This is a required parameter.
 #' @param just_segments Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.
 #' @param one_chrom Subset plot to one chromosome.
 #' @param genes_to_label Optional. Provide a vector of genes to label (if mutated).

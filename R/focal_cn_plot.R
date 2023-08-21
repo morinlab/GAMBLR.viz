@@ -7,8 +7,8 @@
 #' with `gene`. If so, the function will internally retrieve the region for the specified gene.
 #' Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 #'
-#' @param this_seg
-#' @param this_seg_path
+#' @param this_seg Required parameter, an already loaded seg file in R.
+#' @param this_seg_path Required parameter (if `this_seg` is not provided). An absolute path to a seg file on disk.
 #' @param region Genomic region for plotting in bed format.
 #' @param gene Optional variable, converts gene to region if region not supplied.
 #' @param these_samples_metadata Required parameter. GAMBL metadata subset to the cases you want to process (or full metadata).

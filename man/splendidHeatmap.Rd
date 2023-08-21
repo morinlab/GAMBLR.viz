@@ -80,6 +80,7 @@ It is also expected to have column names (having names of the groups that will b
 }
 \examples{
 \dontrun{
+#TODO: add a workinng example using the bundled data...
 splendidHeatmap(this_matrix = data,
                 importance_values = rf$importance[,c(1:3)],
                 these_samples_metadata = MASTER.METADATA,

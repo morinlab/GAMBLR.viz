@@ -5,21 +5,18 @@
 \title{Rainfall Plot}
 \usage{
 prettyRainfallPlot(
-  this_sample_id,
   label_ashm_genes = TRUE,
   projection = "grch37",
   chromosome,
   this_maf,
   this_bedpe,
-  maf_path,
+  this_maf_path,
   zoom_in_region,
-  seq_type,
+  plot_title = "My Plot",
   label_sv = FALSE
 )
 }
 \arguments{
-\item{this_sample_id}{Sample id for the sample to display. This is argument is not required if you want a multi-sample plot but is otherwise needed.}
-
 \item{label_ashm_genes}{Boolean argument indicating whether the aSHM regions will be labeled or not.}
 
 \item{projection}{Specify projection (grch37 or hg38) of mutations. Default is grch37.}
@@ -28,11 +25,13 @@ prettyRainfallPlot(
 
 \item{this_maf}{Specify custom MAF data frame of mutations.}
 
-\item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
+\item{this_bedpe}{Specify custom BEDPE data frame of mutations.}
+
+\item{this_maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
 
 \item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
 
-\item{seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
+\item{plot_title}{The title of the generated plot.}
 
 \item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
 }
@@ -47,13 +46,11 @@ If non are specified, the SSM will be obtained through GAMBLR directly (with [GA
 Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
-prettyRainfallPlot(this_sample_id = "Raji",
-                   seq_type = "genome",
-                   zoom_in_region = "8:125252796-135253201",
-                   label_sv = TRUE)
+#get data for one sample
+dohh2_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode == "DOHH-2")
 
-#multi-sample rainfall plot for one gene region
-prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
-                   seq_type = "genome")
+#build plot for one sample
+prettyRainfallPlot(this_maf = dohh2_maf,
+                   zoom_in_region = "8:125252796-135253201")
 
 }

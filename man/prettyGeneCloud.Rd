@@ -38,15 +38,15 @@ Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `oth
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }
 \examples{
-#get all coding SSM
-maf = get_coding_ssm(seq_type = "genome")
+#get data
+my_maf = GAMBLR.data::sample_data$grch37$mafv
 
 #get gene symbols from MAF
-maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
+maf_genes = dplyr::filter(my_maf, Hugo_Symbol != "Unknown")
 maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
 my_genes = maf_genes_chr1$Hugo_Symbol
 
 #build wordcloud
-prettyGeneCloud(maf_df = maf, these_genes = my_genes)
+prettyGeneCloud(this_maf = my_maf, these_genes = my_genes)
 
 }

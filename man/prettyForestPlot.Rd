@@ -7,7 +7,7 @@
 prettyForestPlot(
   this_maf,
   mutmat,
-  metadata,
+  these_samples_metadata,
   genes,
   min_mutations = 1,
   comparison_column,
@@ -25,7 +25,7 @@ prettyForestPlot(
 
 \item{mutmat}{Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".}
 
-\item{metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
+\item{these_samples_metadata}{Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.}
 
 \item{genes}{An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.}
 
@@ -62,21 +62,18 @@ This is done with the `min_mutations` parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
-metadata = get_gambl_metadata(case_set = "tFL-study")
-this_meta = dplyr::filter(metadata, pairing_status == "matched")
-this_meta = dplyr::filter(this_meta, consensus_pathology \%in\% c("FL", "DLBCL"))
+#get data
+my_meta = GAMBLR.data::gambl_metadata
+my_maf = GAMBLR.data::sample_data$grch37$maf
 
-maf = get_coding_ssm(limit_samples = this_metadata$sample_id,
-                     basic_columns = TRUE,
-                     seq_type = "genome")
-
-prettyForestPlot(maf = maf,
-                 metadata = this_metadata,
+prettyForestPlot(this_maf = my_maf,
+                 these_samples_metadata = my_meta,
+                 min_mutations = 50,
                  genes = c("ATP6V1B2",
                            "EZH2",
                            "TNFRSF14",
                            "RRAGC"),
-                 comparison_column = "consensus_pathology",
+                 comparison_column = "pathology",
                  comparison_values = c("DLBCL",
                                        "FL"),
                  separate_hotspots = FALSE,

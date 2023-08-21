@@ -5,8 +5,8 @@
 \title{Side-by-side Oncoplots}
 \usage{
 prettyCoOncoplot(
-  maf,
-  metadata,
+  this_maf,
+  these_samples_metadata,
   comparison_column,
   comparison_values,
   label1,
@@ -15,9 +15,9 @@ prettyCoOncoplot(
 )
 }
 \arguments{
-\item{maf}{Required argument. A maftools object containing the mutations you want to plot on both oncoplots.}
+\item{this_maf}{Required argument. A maftools object containing the mutations you want to plot on both oncoplots.}
 
-\item{metadata}{Required argument. A data.frame with metadata for both oncoplots.}
+\item{these_samples_metadata}{Required argument. A data.frame with metadata for both oncoplots.}
 
 \item{comparison_column}{Required: the name of the metadata column containing the comparison values.}
 
@@ -47,15 +47,14 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
+\dontrun{
 #get data for plotting
-ssm = get_coding_ssm(limit_cohort = c("BL_Adult", "BL_Pediatric"), seq_type = "genome")
-ssm = maftools::read.maf(ssm)
-meta = get_gambl_metadata()
-meta = dplyr::filter(meta, cohort \%in\% c("BL_Adult", "BL_Pediatric"))
+my_metadata = GAMBLR.data::gambl_metadata 
+my_maf = GAMBLR.data::sample_data$grch37$maf \%>\% dplyr::filter(Tumor_Sample_Barcode \%in\% my_metadata$sample_id)
 
 #build plot
-prettyCoOncoplot(maf = ssm,
-                 metadata = meta,
+prettyCoOncoplot(this_maf = my_maf,
+                 these_samples_metadata = my_metadata,
                  comparison_column = "cohort",
                  include_noncoding = NULL,
                  minMutationPercent = 0,
@@ -75,5 +74,6 @@ prettyCoOncoplot(maf = ssm,
                  legend_row = 2,
                  label1 = "Adult",
                  label2 = "Pediatric")
+}
 
 }

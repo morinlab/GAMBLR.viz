@@ -31,7 +31,7 @@
 #'
 #' #build plot
 #' ashm_rainbow_plot(this_maf = dohh2_maf,
-#' b                 metadata = dohh2_meta, 
+#'                   metadata = dohh2_meta, 
 #'                   region = "chr6:90975034-91066134")
 #'
 ashm_rainbow_plot = function(this_maf,

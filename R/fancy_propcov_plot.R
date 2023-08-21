@@ -6,7 +6,7 @@
 #' This function can also plot the same results for a comparison group of interest, i.e another table with sample IDs. This can be useful for visualizing how certain cohorts/pathologies compares to each other.
 #' To do this one would call the function with `comparison_samples` parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
 #'
-#' @param collated_results Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].
+#' @param collated_results Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from `collate_results` in GAMBLR.
 #' @param comparison_samples Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group.
 #' @param seq_type Selected seq type for incoming QC metrics.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.

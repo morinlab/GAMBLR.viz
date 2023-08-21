@@ -65,7 +65,7 @@ Lastly, this plot can also highlight genes of interest. To do so, provide a data
 fl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes_lymphoma_genes_v0.0, FL == TRUE) \%>\% pull(Gene)
 
 # get regions for selected genes
-fl_genes_list = gene_to_region(gene_symbol = fl_genes, return_as = "bed")
+fl_genes_list = GAMBLR.utils::gene_to_region(gene_symbol = fl_genes, return_as = "bed")
 
 #get an example bedpe
 fancy_circos_plot(this_bedpe = dohh2_bedpe,

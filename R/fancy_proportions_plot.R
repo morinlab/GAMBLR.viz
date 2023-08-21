@@ -5,7 +5,7 @@
 #' @description This function also provides parameters for easy customization of the plot aesthetics. For example, the subtitle of the plot can easily be controlled with the `plot_subtitle` parameter.
 #' For usage examples and more information, refer to the parameter descriptions and examples in the fancy vignette.
 #'
-#' @param collated_results Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from [GAMBLR::collate_results].
+#' @param collated_results Required parameter. A data frame with collated results for the sample IDs of interest. Preferably, the return from `collate_results` in GAMBLR.
 #' @param plot_subtitle Plotting parameter, subtitle of generated plot.
 #'
 #' @return A plot as a ggplot object (grob).

@@ -2,18 +2,9 @@
 #'
 #' @description Generate a violin plot showing variant (SSM or SVs) size distributions for selected contigs.
 #'
-#' @details Function for plotting variant size distributions. This function takes either a sample ID given to the `this_sample` parameter.
-#' In addition, the function can also accept an already loaded MAF or MAF-like object given to the `maf_data` parameter.
-#' As a third option, the function can also read a maf from disk (provide path to maf with `maf_path`).
-#' A collection of convenient filtering and data subsetting parameters are also available for this function.
-#' For restricting your data (if plotting data retrieved with `this_sample_id`), the user can choose to only plot coding mutations with setting `coding_only` to TRUE.
-#' This plot can also deal with SVs as well as SSM data. To control this, please use the `ssm` parameter. If set to TRUE and if `this_sample` is called,
-#' the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls `get_combined_sv` to get SV calls for plotting.
-#' If the user calls either `maf_data` or `maf_path`, there are a collection of parameters available for specifying
-#' the relevant columns in the given data frame (`variant_type_col`, `chhromosome_col`, `start_col`, `end_col`). It is also possible to
-#' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
-#' In addition, plot aesthetics can also be controlled with `plot_title`, `plot_subtitle`, `scale_value`, `log10`, and `trim`.
-#' For more info on how to run with these parameters, refer to the parameter descriptions.
+#' @details Function for plotting variant size distributions. This function takes either a dataf frame with a maf like objecct (`this_maf`),
+#' or an absolute pathh to such a file. In addition, if `ssm =. TRUE` the user can also provide a bedpe (`this_bedpe` or `this_bedpe_path`) with SVs to be inlcuded in the returned plot.
+#' For more information on how to run this function, see parameter descriptions and examples.
 #'
 #'
 #' @param this_maf Parameter with maf like df already loaded into R.
