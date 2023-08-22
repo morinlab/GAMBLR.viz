@@ -144,7 +144,7 @@ plot_sample_circos = function(this_bedpe,
     vals = as.character(these_meta)
     names = colnames(these_meta)
 
-    all_cols = GAMBLR.helpers::map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
+    all_cols = map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
 
     cols = all_cols[vals]
     print(cols)
