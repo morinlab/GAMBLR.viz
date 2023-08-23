@@ -2,46 +2,39 @@
 #'
 #' @description Obtain a heatmap of mutation counts across sliding windows for multiple regions.
 #'
-#' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
-#' to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
+#' @details This function takes a metadata table with `these_samples_metadata` parameter.
+#' May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 #'
+#' @param mut_freq_matrix Required. A matrix of binned mutation frequencies generated outside of this function, usually by `calc_mutation_frequency_bin_regions` from GAMBLR.
 #' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.
 #' @param regions_bed Data frame of regions with four columns (chrom, start, end, name).
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
-#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type. 
+#' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.
 #' @param maf_data Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().
-#' @param mut_freq_matrix Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_bin_regions].
-#' @param projection Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37. 
 #' @param region_padding Amount to pad the start and end coordinates by. Default 1000
-#' @param drop_unmutated Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.
 #' @param skip_regions Optional character vector of genes to exclude from the default aSHM regions.
 #' @param only_regions Optional character vector of genes to include from the default aSHM regions.
-#' @param slide_by Slide size for sliding window. Default 100.
-#' @param window_size Size of sliding window. Default 500. 
+#' @param window_size Size of sliding window. Default 500.
 #' @param metadataColumns Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").
-#' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology"). 
-#' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation. 
-#' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows. 
-#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.  
-#' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90. 
-#' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0. 
-#' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5. 
-#' @param min_mut_tumour Specify how many bins a tumour must be mutated in to be displayed. Default 0. 
-#' @param region_fontsize Fontsize of region labels on the heatmap. Default 8. 
-#' @param cluster_rows_heatmap Boolean. Default FALSE. 
+#' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").
+#' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.
+#' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.
+#' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.
+#' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.
+#' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.
+#' @param min_mut_tumour Specify how many bins a tumour must be mutated in to be displayed. Default 0.
+#' @param region_fontsize Fontsize of region labels on the heatmap. Default 8.
+#' @param cluster_rows_heatmap Boolean. Default FALSE.
 #' @param cluster_cols_heatmap Boolean.  Default FALSE.
-#' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE. 
-#' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name. 
-#' @param legend_row Control aesthetics of the heatmap legend. Default 3. 
+#' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.
+#' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.
+#' @param legend_row Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_col Control aesthetics of the heatmap legend. Default 3.
-#' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal". 
-#' @param legendFontSize Control aesthetics of the heatmap legend. Default 10. 
+#' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal".
+#' @param legendFontSize Control aesthetics of the heatmap legend. Default 10.
 #' @param legend_side Control aesthetics of the heatmap legend. Default "bottom".
-#' @param return_heatmap_obj Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE. 
-#' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
-#' @param mode Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#'
+#' @param return_heatmap_obj Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
@@ -50,61 +43,38 @@
 #' @export
 #'
 #' @examples
-#' #load metadata.
-#' metadata = get_gambl_metadata()
-#' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))
+#' #TODO: add a working example, either with bundled data or develop non-GSC dependent functions for wrangling maf into the accepted format.
 #'
-#' #bring together all derived sample-level results from many GAMBL pipelines.
-#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
-#'                                 these_samples_metadata = dlbcl_bl_meta)
-#'
-#' #get ashm regions
-#' some_regions = GAMBLR.data::grch37_ashm_regions
-#'
-#' mut_count_matrix <- calc_mutation_frequency_bin_by_regions(
-#'    these_samples_metadata = dlbcl_bl_meta,
-#'    regions_bed = some_regions
-#' )
-#'
-heatmap_mutation_frequency_bin <- function(
-  regions_list = NULL,
-  regions_bed = NULL,
-  these_samples_metadata = NULL,
-  these_sample_ids = NULL,
-  this_seq_type = c("genome", "capture"),
-  maf_data,
-  mut_freq_matrix,
-  projection = "grch37",
-  region_padding = 1000,
-  drop_unmutated = FALSE,
-  metadataColumns = c("pathology"),
-  sortByColumns = c("pathology"),
-  expressionColumns = NULL,
-  orientation = "sample_rows",
-  skip_regions,
-  only_regions,
-  customColours = NULL,
-  backgroundColour = "grey90",
-  slide_by = 100,
-  window_size = 500,
-  min_count_per_bin = 0,
-  min_bin_recurrence = 5,
-  min_mut_tumour = 0,
-  region_fontsize = 8,
-  cluster_rows_heatmap = FALSE,
-  cluster_cols_heatmap = FALSE,
-  show_gene_colours = FALSE,
-  label_regions_by = "name",
-  legend_row = 3,
-  legend_col = 3,
-  legend_direction = "horizontal",
-  legendFontSize = 10,
-  legend_side = "bottom",
-  return_heatmap_obj = FALSE,
-  from_indexed_flatfile = TRUE,
-  mode = "slms-3"
-) {
-
+heatmap_mutation_frequency_bin <- function(mut_freq_matrix,
+                                           regions_list = NULL,
+                                           regions_bed = NULL,
+                                           these_samples_metadata = NULL,
+                                           these_sample_ids = NULL,
+                                           this_seq_type = c("genome", "capture"),
+                                           region_padding = 1000,
+                                           metadataColumns = c("pathology"),
+                                           sortByColumns = c("pathology"),
+                                           expressionColumns = NULL,
+                                           orientation = "sample_rows",
+                                           skip_regions,
+                                           only_regions,
+                                           customColours = NULL,
+                                           backgroundColour = "grey90",
+                                           window_size = 500,
+                                           min_bin_recurrence = 5,
+                                           min_mut_tumour = 0,
+                                           region_fontsize = 8,
+                                           cluster_rows_heatmap = FALSE,
+                                           cluster_cols_heatmap = FALSE,
+                                           show_gene_colours = FALSE,
+                                           label_regions_by = "name",
+                                           legend_row = 3,
+                                           legend_col = 3,
+                                           legend_direction = "horizontal",
+                                           legendFontSize = 10,
+                                           legend_side = "bottom",
+                                           return_heatmap_obj = FALSE){
+  
   # Get region specifications
   if (missing(skip_regions)) {
     skip_regions <- NULL
@@ -121,23 +91,21 @@ heatmap_mutation_frequency_bin <- function(
   )
   regions_bed <- regions$regions_bed
   regions <- regions$regions_list
-
-  # Harmonize metadata and sample IDs
-  get_meta <- id_ease(
-    these_samples_metadata,
-    these_sample_ids,
-    this_seq_type
-  )
-  metadata <- get_meta$this_metadata
-  these_sample_ids <- get_meta$these_samples
-
+  
+  if(missing(these_samples_metadata)){
+    metadata = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type)
+  }else{
+    metadata = these_samples_metadata
+    these_sample_ids <- metadata$sample_id
+  }
+  
   # Ensure all requested metadata columns are present in the metadata
   allMetaCols <- unique(c(metadataColumns, sortByColumns, expressionColumns))
-
+  
   if (!min(allMetaCols %in% colnames(metadata))) {
     stop("Not all requested columns are present in the metadata table. ")
   }
-
+  
   if (!missing(mut_freq_matrix)) {
     samples_in_colnames <- max(colnames(mut_freq_matrix) %in% these_sample_ids)
     samples_in_rownames <- max(rownames(mut_freq_matrix) %in% these_sample_ids)
@@ -152,38 +120,17 @@ heatmap_mutation_frequency_bin <- function(
       stop("Error: sample IDs are not present in either rownames or colnames of provided matrix. ")
     }
   } else {
-    # Obtain sliding window mutation frequencies for all regions
-    if (missing(maf_data)) {
-      maf_data <- NULL
-    }
-    all_wide <- calc_mutation_frequency_bin_regions(
-      maf_data = maf_data,
-      regions_bed = regions_bed,
-      these_samples_metadata = metadata,
-      projection = projection,
-      slide_by = slide_by,
-      window_size = window_size,
-      drop_unmutated = drop_unmutated,
-      return_format = "wide",
-      from_indexed_flatfile = from_indexed_flatfile,
-      mode = mode
-    )
-
-    # Convert to a matrix with samples in colnames and bins in rownames
-    all_matrix <- data.frame(t(select(all_wide, -sample_id)))
-    colnames(all_matrix) <- all_wide$sample_id
-    rownames(all_matrix) <- colnames(all_wide)[2:length(colnames(all_wide))]
+    stop("Please provide a matrix of binned mutation frequencies, preferably the output from `calc_mutation_frequency_bin_regions` in GAMBLR.results...")
   }
-
-
+  
   # Normalize the expression columns
   if (!is.null(expressionColumns)) {
     these_samples_metadata <- these_samples_metadata %>%
       mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
   }
-
+  
   # Subset metadata to specified display columns
-
+  
   meta_show <- metadata %>%
     select(sample_id, all_of(allMetaCols)) %>%
     drop_na() %>%
@@ -191,7 +138,7 @@ heatmap_mutation_frequency_bin <- function(
     arrange(across(all_of(sortByColumns))) %>%
     dplyr::filter(sample_id %in% colnames(all_matrix)) %>%
     column_to_rownames(var = "sample_id")
-
+  
   message(paste("starting with", length(colnames(all_matrix)), "samples"))
   samples_show <- colnames(all_matrix)[which(colSums(all_matrix) >= min_mut_tumour)]
   message(paste("returning matrix with", length(samples_show), "samples"))
@@ -201,18 +148,18 @@ heatmap_mutation_frequency_bin <- function(
   meta_show <- meta_show[rownames(meta_show) %in% samples_show, , drop = FALSE]
   matrix_show <- all_matrix[which(rowSums(all_matrix) > min_bin_recurrence), rownames(meta_show)]
   identical(rownames(meta_show), colnames(matrix_show))
-
+  
   # Set heatmap colour function
   bin_col_fun <- colorRamp2(
     c(0, 3, 6, 9),
     c(backgroundColour, "orange", "red", "purple")
   )
-
+  
   # Handle custom colours
   annoColumns <- unique(c(metadataColumns, sortByColumns))
   # Get columns with no custom colours specified
   needsColour <- annoColumns[!annoColumns %in% names(customColours)]
-
+  
   gamblColours <- NULL
   if (length(needsColour) > 0) {
     gamblColours <- lapply(needsColour, function(x) {
@@ -222,7 +169,7 @@ heatmap_mutation_frequency_bin <- function(
     names(gamblColours) <- needsColour
   }
   annoColoursTmp <- append(gamblColours, customColours)
-
+  
   # Check that there are enough colour values for each annotation
   annoColours <- lapply(annoColumns, function(x) {
     if (length(levels(meta_show[[x]])[
@@ -241,7 +188,7 @@ heatmap_mutation_frequency_bin <- function(
     return(colours)
   })
   names(annoColours) <- annoColumns
-
+  
   # Add colour functions for expression columns
   if (!is.null(expressionColumns)) {
     col_fun <- circlize::colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
@@ -251,7 +198,7 @@ heatmap_mutation_frequency_bin <- function(
     names(exprColours) <- expressionColumns
     annoColours <- append(annoColours, exprColours)
   }
-
+  
   # assign bins back to regions for better annotation
   assign_bins_to_region <- function(bin_names, rdf, label_by = "name") {
     bin_df <- data.frame(bin_name = bin_names) %>%
@@ -259,7 +206,7 @@ heatmap_mutation_frequency_bin <- function(
       mutate(start = as.integer(start)) %>%
       mutate(end = start + 1) %>%
       mutate(bin_name = bin_names)
-
+    
     regions.dt <- rdf %>%
       mutate(
         start = start - window_size,
@@ -267,7 +214,7 @@ heatmap_mutation_frequency_bin <- function(
       ) %>%
       as.data.table()
     setkey(regions.dt, chrom, start, end)
-
+    
     bin.dt <- as.data.table(bin_df)
     setkey(bin.dt, chrom, start, end)
     bin_overlapped <- foverlaps(bin.dt, regions.dt) %>%
@@ -278,10 +225,10 @@ heatmap_mutation_frequency_bin <- function(
       distinct(bin_name, .keep_all = TRUE) %>%
       column_to_rownames(var = "bin_name") %>%
       drop_na()
-
+    
     return(bin_overlapped)
   }
-
+  
   bin_annot <- assign_bins_to_region(
     bin_names = rownames(matrix_show),
     rdf = regions_bed,
@@ -295,17 +242,17 @@ heatmap_mutation_frequency_bin <- function(
     legend_direction = legend_direction,
     labels_gp = gpar(fontsize = legendFontSize)
   )
-
+  
   annotation_legend_param <- list(
     nrow = legend_row,
     ncol = legend_col,
     direction = legend_direction,
     labels_gp = gpar(fontsize = legendFontSize)
   )
-
+  
   if (orientation == "sample_rows") {
     to_show_t <- t(matrix_show[rownames(bin_annot), ])
-
+    
     row_annot <- HeatmapAnnotation(
       df = meta_show,
       show_legend = T,
@@ -373,7 +320,7 @@ heatmap_mutation_frequency_bin <- function(
       heatmap_legend_param = heatmap_legend_param
     )
   }
-
+  
   if (return_heatmap_obj) {
     return(ht)
   } else {
