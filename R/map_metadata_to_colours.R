@@ -34,7 +34,7 @@ map_metadata_to_colours = function(metadataColumns,
                                    annoAlpha = 1){
   
   clinical_colours = ggsci::get_ash("clinical")
-  all_gambl_colours = GAMBLR.viz::get_gambl_colours()
+  all_gambl_colours = get_gambl_colours()
   colours = list()
   colvec = c()
   
@@ -53,14 +53,14 @@ map_metadata_to_colours = function(metadataColumns,
         print(paste("using alias to look up colours for", column))
         message(paste("using", key, "for", column))
       }
-      these = GAMBLR.viz::get_gambl_colours(classification = key)
+      these = get_gambl_colours(classification = key)
       colours[[column]] = these
       colvec = c(colvec, these[this_value])
       if(verbose){
         message("adding:", these[this_value])
       }
     }else if(column == "sex"){
-      these = GAMBLR.viz::get_gambl_colours("sex", alpha = annoAlpha)
+      these = get_gambl_colours("sex", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these= c(these, "NA" = "white")
       }
@@ -84,7 +84,7 @@ map_metadata_to_colours = function(metadataColumns,
         print("using pos_neg")
       }
       
-      these = GAMBLR.viz::get_gambl_colours("pos_neg", alpha = annoAlpha)
+      these = get_gambl_colours("pos_neg", alpha = annoAlpha)
       these = these[levels(options)]
       
       if(!"NA" %in% names(these)){
@@ -93,14 +93,14 @@ map_metadata_to_colours = function(metadataColumns,
       colours[[column]] = these
       colvec = c(colvec, these[this_value])
     }else if("GCB" %in% options){
-      these = GAMBLR.viz::get_gambl_colours("COO", alpha = annoAlpha)
+      these = get_gambl_colours("COO", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these,"NA" = "white")
       }
       colours[[column]] = these
       colvec = c(colvec,these)
     }else if(column %in% c("pathology")){
-      these = GAMBLR.viz::get_gambl_colours(column, alpha = annoAlpha)
+      these = get_gambl_colours(column, alpha = annoAlpha)
       
       if(!"NA" %in% names(these)){
         these = c(these,"NA" = "white")
@@ -108,14 +108,14 @@ map_metadata_to_colours = function(metadataColumns,
       colours[[column]] = these
       colvec = c(colvec, these)
     }else if(grepl("lymphgen", column, ignore.case = TRUE)){
-      these = GAMBLR.viz::get_gambl_colours("lymphgen", alpha = annoAlpha)
+      these = get_gambl_colours("lymphgen", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
       colours[[column]] = these
       colvec = c(colvec, these)
     }else if(column == "HMRN"){
-      these = GAMBLR.viz::get_gambl_colours("hmrn", alpha = annoAlpha)
+      these = get_gambl_colours("hmrn", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these= c(these,"NA" = "white")
       }
