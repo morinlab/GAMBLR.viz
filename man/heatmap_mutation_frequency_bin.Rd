@@ -5,16 +5,13 @@
 \title{Heatmap of mutation counts across sliding windows for multiple regions.}
 \usage{
 heatmap_mutation_frequency_bin(
+  mut_freq_matrix,
   regions_list = NULL,
   regions_bed = NULL,
   these_samples_metadata = NULL,
   these_sample_ids = NULL,
   this_seq_type = c("genome", "capture"),
-  maf_data,
-  mut_freq_matrix,
-  projection = "grch37",
   region_padding = 1000,
-  drop_unmutated = FALSE,
   metadataColumns = c("pathology"),
   sortByColumns = c("pathology"),
   expressionColumns = NULL,
@@ -23,9 +20,7 @@ heatmap_mutation_frequency_bin(
   only_regions,
   customColours = NULL,
   backgroundColour = "grey90",
-  slide_by = 100,
   window_size = 500,
-  min_count_per_bin = 0,
   min_bin_recurrence = 5,
   min_mut_tumour = 0,
   region_fontsize = 8,
@@ -38,12 +33,12 @@ heatmap_mutation_frequency_bin(
   legend_direction = "horizontal",
   legendFontSize = 10,
   legend_side = "bottom",
-  return_heatmap_obj = FALSE,
-  from_indexed_flatfile = TRUE,
-  mode = "slms-3"
+  return_heatmap_obj = FALSE
 )
 }
 \arguments{
+\item{mut_freq_matrix}{Required. A matrix of binned mutation frequencies generated outside of this function, usually by `calc_mutation_frequency_bin_regions` from GAMBLR.}
+
 \item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
 
 \item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name).}
@@ -54,15 +49,7 @@ heatmap_mutation_frequency_bin(
 
 \item{this_seq_type}{Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.}
 
-\item{maf_data}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
-
-\item{mut_freq_matrix}{Optional matrix of binned mutation frequencies generated outside of this function, usually by [GAMBLR::calc_mutation_frequency_bin_regions].}
-
-\item{projection}{Genome build the function will operate in. Ensure this matches your provided regions and maf data for correct chr prefix handling. Default grch37.}
-
 \item{region_padding}{Amount to pad the start and end coordinates by. Default 1000}
-
-\item{drop_unmutated}{Whether to drop bins with 0 mutations. If returning a matrix format, this will only drop bins with no mutations in any samples.}
 
 \item{metadataColumns}{Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").}
 
@@ -80,11 +67,7 @@ heatmap_mutation_frequency_bin(
 
 \item{backgroundColour}{Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.}
 
-\item{slide_by}{Slide size for sliding window. Default 100.}
-
 \item{window_size}{Size of sliding window. Default 500.}
-
-\item{min_count_per_bin}{Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.}
 
 \item{min_bin_recurrence}{Specify how many samples a bin must be mutated in to be displayed. Default 5.}
 
@@ -112,9 +95,7 @@ heatmap_mutation_frequency_bin(
 
 \item{return_heatmap_obj}{Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.}
 
-\item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
-
-\item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+\item{maf_data}{Optional maf data frame. Will be subset to rows where Tumor_Sample_Barcode matches provided sample IDs or metadata table. If not provided, maf data will be obtained with get_ssm_by_regions().}
 }
 \value{
 A table of mutation counts for sliding windows across one or more regions. May be long or wide.
@@ -123,24 +104,10 @@ A table of mutation counts for sliding windows across one or more regions. May b
 Obtain a heatmap of mutation counts across sliding windows for multiple regions.
 }
 \details{
-This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
-to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
+This function takes a metadata table with `these_samples_metadata` parameter.
+May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 }
 \examples{
-#load metadata.
-metadata = get_gambl_metadata()
-dlbcl_bl_meta = dplyr::filter(metadata, pathology \%in\% c("DLBCL", "BL"))
-
-#bring together all derived sample-level results from many GAMBL pipelines.
-dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
-                                these_samples_metadata = dlbcl_bl_meta)
-
-#get ashm regions
-some_regions = GAMBLR.data::grch37_ashm_regions
-
-mut_count_matrix <- calc_mutation_frequency_bin_by_regions(
-   these_samples_metadata = dlbcl_bl_meta,
-   regions_bed = some_regions
-)
+#TODO: add a working example, either with bundled data or develop non-GSC dependent functions for wrangling maf into the accepted format.
 
 }

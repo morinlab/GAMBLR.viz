@@ -33,7 +33,7 @@ prettyCoOncoplot(
 A ggplot object with 2 oncoplots side-by-side.
 }
 \description{
-`prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
+`prettyCoOncoplot` returns ggplot-compatible figure of 2 `prettyOncoplot` side-by-side.
 }
 \details{
 This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
