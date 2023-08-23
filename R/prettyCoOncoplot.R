@@ -1,6 +1,6 @@
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
+#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 `prettyOncoplot` side-by-side.
 #'
 #' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 #' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
