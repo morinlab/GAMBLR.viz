@@ -1,5 +1,4 @@
-#' INTERNAL FUNCTION called by [GAMBLR::plot_sample_circos], not meant for out-of-package usage.
-#' Assign a colour palette to metadata columns automatically and consistently.
+#' @title Assign a colour palette to metadata columns automatically and consistently.
 #'
 #' @param metadataColumns Names of the metadata columns to assign colours for.
 #' @param these_samples_metadata Metadata for just the samples you need colours for.
@@ -11,8 +10,6 @@
 #' @return Either a vector or list of colours.
 #'
 #' @import dplyr ggsci
-#'
-#' @noRd
 #'
 #' @examples
 #' #get metadata
