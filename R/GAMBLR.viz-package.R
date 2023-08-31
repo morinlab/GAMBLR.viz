@@ -17,6 +17,7 @@
 #' @importFrom GAMBLR get_ssm_by_sample
 #' @importFrom GAMBLR.helpers check_config_value
 #' @importFrom GAMBLR.helpers coding_vc
+#' @importFrom GAMBLR.helpers process_regions
 #' @importFrom GAMBLR.helpers rainfall_conv
 #' @importFrom GAMBLR.helpers region_to_chunks
 #' @importFrom GAMBLR.helpers standardize_chr_prefix
