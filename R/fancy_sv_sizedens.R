@@ -31,15 +31,15 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot
+#' @import dplyr ggplot2 cowplot stringr
 #' @export
 #'
 #' @examples
 #' #build plot sith default parameters
-#' fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_sv_sizedens(this_sample_id = "SP116715")
 #'
 #' #restrict plot to only chromosome 1 and 2
-#' fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#' fancy_sv_sizedens(this_sample_id = "SP116715",
 #'                   size_cutoff = 0,
 #'                   chr_select = c("chr1", "chr2"))
 #'
@@ -78,7 +78,7 @@ fancy_sv_sizedens = function(this_sample_id,
 
   #get variants, filter and subset
   if(missing(maf_data) && is.null(maf_path)){
-    svs = get_combined_sv(these_sample_ids = this_sample_id, projection = projection) %>%
+    svs = get_manta_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = vaf_cutoff) %>%
       dplyr::filter(VAF_tumour > vaf_cutoff) %>%
       dplyr::select(CHROM_A, START_A, END_A, manta_name)
   }

@@ -20,18 +20,15 @@
 #' @param kompare Boolean statement, set to TRUE to call cnvKompare on the selected samples for plotting concordant (or discordant) cn segments across selected chromosomes.
 #' @param concordance Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set the parameter to FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr cowplot stringr
 #' @export
 #'
 #' @examples
 #' #two samples ideogram
-#' fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
-#'                                               "00-15201_tumorB"),
+#' fancy_multisamp_ideogram(these_sample_ids = c("05-18426T", "05-18426T"),
 #'                          include_cn2 = TRUE,
 #'                          plot_title = "Multi-sample Ideograms Example",
 #'                          plot_sub = "grch37",
@@ -47,9 +44,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
                                     include_cn2 = FALSE,
                                     kompare = FALSE,
                                     concordance = TRUE,
-                                    coding_only = FALSE,
-                                    from_flatfile = TRUE,
-                                    use_augmented_maf = TRUE){
+                                    coding_only = FALSE){
 
   #plot theme
   ideogram_theme = function(){
@@ -92,7 +87,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
 
   if(kompare){
     #call cnvKompare to retreive CN segments shared (or not) shared between selected samples.
-    cnv_komp = cnvKompare(these_sample_ids = these_sample_ids)
+    cnv_komp = GAMBLR.utils::cnvKompare(these_sample_ids = these_sample_ids)
 
     #select concordant or discordant CN segments for plotting.
     if(concordance){
@@ -114,8 +109,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   }else{
     #load CN data
     cn_states = get_sample_cn_segments(
-      multiple_samples = TRUE,
-      sample_list = these_sample_ids,
+      these_sample_ids = these_sample_ids,
       streamlined = FALSE,
       this_seq_type = this_seq_type
     )
@@ -124,9 +118,10 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   #convert chr into y coordinates
   cn_states$ycoord = cn_states$chrom
 
-  #paste chr in chromosomecolumn, if not there
+  #paste chr in chromosome column, if not there
   if(!str_detect(cn_states$chrom[1], "chr")){
-    cn_states = mutate(cn_states, chrom = paste0("chr", chrom))}
+    cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
+    }
 
   #transform data types
   cols.int = c("start", "end", "ycoord")

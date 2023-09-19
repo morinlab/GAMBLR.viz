@@ -32,8 +32,6 @@
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param log10_y Set to TRUE to force y axis to be in log10.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -42,11 +40,7 @@
 #'
 #' @examples
 #' #count all variants for one sample (default parameters)
-#' fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-#'
-#' #count and plot all variants on chromosome 1
-#' fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'               chr_select = c("chr1"))
+#' fancy_v_count(this_sample_id = "DOHH-2")
 #'
 fancy_v_count = function(this_sample_id,
                          maf_data,
@@ -64,9 +58,7 @@ fancy_v_count = function(this_sample_id,
                          snp_colours = c("SNP" = "#2B9971", "DNP" = "#993F2B", "TNP" = "#A62656"),
                          hide_legend = FALSE,
                          coding_only = FALSE,
-                         log10_y = FALSE,
-                         from_flatfile = TRUE,
-                         use_augmented_maf = TRUE){
+                         log10_y = FALSE){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -87,11 +79,9 @@ fancy_v_count = function(this_sample_id,
       maf = assign_cn_to_ssm(
         this_sample_id = this_sample_id,
         coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
         this_seq_type = this_seq_type)$maf
     }else{
-      maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
+      maf = get_manta_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format

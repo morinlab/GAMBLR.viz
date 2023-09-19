@@ -60,8 +60,6 @@ fancy_circos_plot = function(this_sample_id,
                              chr_select = paste0("chr", c(1:22)),
                              vaf_cutoff = 0,
                              coding_only = FALSE,
-                             from_flatfile = TRUE,
-                             use_augmented_maf = TRUE,
                              projection = "grch37",
                              this_seq_type = "genome",
                              plot_title = paste0(this_sample_id),
@@ -159,8 +157,6 @@ fancy_circos_plot = function(this_sample_id,
     maf = assign_cn_to_ssm(
       this_sample_id = this_sample_id,
       coding_only = coding_only,
-      from_flatfile = from_flatfile,
-      use_augmented_maf = use_augmented_maf,
       this_seq_type = this_seq_type)$maf #get maf data
     maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
     maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
@@ -181,7 +177,7 @@ fancy_circos_plot = function(this_sample_id,
 
   #get SVs
   if(sv_calls){
-    svs = get_combined_sv(these_sample_ids = this_sample_id, projection = projection)
+    svs = get_manta_sv(these_sample_ids = this_sample_id, projection = projection)
 
     #filter on vaf
     svs = dplyr::filter(svs, VAF_tumour > vaf_cutoff)

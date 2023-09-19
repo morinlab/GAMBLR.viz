@@ -11,13 +11,13 @@
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).
 #' @param regions_to_display Optional vector of names from default regions_bed to use.
-#' @param exclude_classifications Optional argument for excluding specific classifications from a metadeta file.
+#' @param exclude_classifications Optional argument for excluding specific classifications from a metadata file.
 #' @param metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
 #' @param seq_type the seqtype you want results back for if `maf_data` is not provided.
-#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
+#' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
 #' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
 #' @param maf_data An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.
-#' @param verbose Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.
+#' @param verbose Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.
 #'
 #' @return Nothing
 #'
@@ -46,12 +46,10 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    maf_data,
                                    verbose = TRUE){
 
-  table_name = check_config_value(config::get("results_tables")$ssm)
-  db = check_config_value(config::get("database_name"))
   #get the mutations for each region and combine
   #regions_bed should contain chr, start, end, name (with these exact names)
   if(missing(metadata)){
-    metadata = GAMBLR.helpers::handle_metadata()
+    metadata = get_gambl_metadata(seq_type_filter = seq_type)
     meta_arranged = arrange(metadata, pathology_rank, lymphgen)
   }else{
     meta_arranged = metadata #assume the user already arranged it the way they wanted
@@ -89,7 +87,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
   regions = pull(regions_bed, regions)
   names = pull(regions_bed, names)
   if(missing(maf_data)){
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE,seq_type = seq_type)})
+    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, seq_type = seq_type)})
   }else{
     region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data)})
   }

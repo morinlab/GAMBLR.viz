@@ -59,32 +59,33 @@
 #' @export
 #'
 #' @examples
+#' #load packages
 #' library(grid)
-#'
+#' 
 #' #get some data
-#' maf_data = GAMBLR.data::sample_data$grch37$maf
-#' maf_metadata = GAMBLR.data::gambl_metadata
+#' maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
+#' maf_metadata = get_gambl_metadata()
 #' maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
-#'
+#' 
 #' #define some genes of interest
 #' bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
 #'              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
 #'              "CCND3", "SMARCA4", "DDX3X")
-#'
+#' 
 #' dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
-#'
+#' 
 #' genes = c(bl_genes, dlbcl_genes)
-#'
+#' 
 #' #define gene groups
 #' gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
 #' names(gene_groups) = genes
-#'
+#' 
 #' #filter metadata
 #' maf_metadata = dplyr::filter(maf_metadata,!lymphgen %in% c("COMPOSITE"))
-#'
+#' 
 #' #convert metadata column into factor
 #' maf_metadata$pathology = as.factor(maf_metadata$pathology)
-#'
+#' 
 #' #define order of factors for selected metadata column
 #' maf_metadata$pathology = factor(maf_metadata$pathology,
 #'                                 levels = c("DLBCL", "BL",
@@ -93,9 +94,9 @@
 #'                                            "FL", "HGBL",
 #'                                            "MCL", "PBL",
 #'                                            "SCBC", "UNSPECIFIED"))
-#'
+#' 
 #' maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
-#'
+#' 
 #' #create prettyOncoplot
 #' prettyOncoplot(maftools_obj = maf,
 #'                genes = genes,
@@ -109,7 +110,7 @@
 #'                fontSizeGene = 11,
 #'                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
 #'                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
-#'
+#' 
 prettyOncoplot = function(maftools_obj,
                           onco_matrix_path,
                           genes,

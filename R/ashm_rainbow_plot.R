@@ -26,7 +26,7 @@
 #' @examples
 #' #basic usage
 #' this_region = "chr6:90975034-91066134"
-#' this_metadata = GAMBLR.data::gambl_metadata
+#' this_metadata = get_gambl_metadata()
 #'
 #' ashm_rainbow_plot(metadata = this_metadata,
 #'                   region = this_region)
@@ -41,8 +41,6 @@ ashm_rainbow_plot = function(mutations_maf,
                              custom_colours,
                              hide_ids = TRUE){
 
-  table_name = check_config_value(config::get("results_tables")$ssm)
-  db = check_config_value(config::get("database_name"))
   if(!missing(region)){
     region = gsub(",", "", region)
     split_chunks = unlist(strsplit(region, ":"))
@@ -51,7 +49,7 @@ ashm_rainbow_plot = function(mutations_maf,
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
     if(missing(mutations_maf)){
-      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE,from_indexed_flatfile = T)
+      mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE)
     }else{
       #ensure it only contains mutations in the region specified
       mutations_maf = get_ssm_by_region(region = region, streamlined = TRUE, maf_data = mutations_maf)

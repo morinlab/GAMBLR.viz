@@ -34,8 +34,6 @@
 #' @param plot_trim If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -44,7 +42,7 @@
 #'
 #' @examples
 #' #plot SSM size distributions:
-#' fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_v_sizedis(this_sample_id = "DOHH-2")
 #'
 fancy_v_sizedis = function(this_sample_id,
                            maf_data,
@@ -63,9 +61,7 @@ fancy_v_sizedis = function(this_sample_id,
                            log_10 = TRUE,
                            plot_trim = FALSE,
                            chr_select = paste0("chr", c(1:22)),
-                           coding_only = FALSE,
-                           from_flatfile = TRUE,
-                           use_augmented_maf = TRUE){
+                           coding_only = FALSE){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -90,11 +86,9 @@ fancy_v_sizedis = function(this_sample_id,
       maf = assign_cn_to_ssm(
         this_sample_id = this_sample_id,
         coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
         this_seq_type = this_seq_type)$maf
     }else{
-      maf = get_combined_sv(these_sample_ids  = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
+      maf = get_manta_sv(these_sample_ids  = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format

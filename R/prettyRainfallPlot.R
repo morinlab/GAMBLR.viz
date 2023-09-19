@@ -48,15 +48,15 @@ prettyRainfallPlot = function(this_sample_id,
 
   # allow user to specify chromosome prefix inconsistent with chromosome names
   if (!missing(chromosome)) {
-    chromosome = standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
+    chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
   }
 
   # allow to zoom in to a specific region
   if (!missing(zoom_in_region)) {
     region = zoom_in_region
-    zoom_in_region = region_to_chunks(zoom_in_region)
-    zoom_in_region$chromosome = standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
-                                                       projection = projection)
+    zoom_in_region = GAMBLR.helpers::region_to_chunks(zoom_in_region)
+    zoom_in_region$chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
+                                                                       projection = projection)
     zoom_in_region$start = as.numeric(zoom_in_region$start)
     zoom_in_region$end = as.numeric(zoom_in_region$end)
   }
@@ -135,7 +135,8 @@ prettyRainfallPlot = function(this_sample_id,
   } else if(!missing(this_sample_id)) {
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
     these_ssm = get_ssm_by_sample(this_sample_id,
-                                  projection = projection, this_seq_type = seq_type)
+                                  projection = projection, 
+                                  this_seq_type = seq_type)
   }else if(!missing(seq_type)){
     if(missing(this_sample_id)){
       this_sample_id = "all samples"
@@ -215,7 +216,7 @@ prettyRainfallPlot = function(this_sample_id,
 
   if (label_sv) {
     message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
-    these_sv = get_combined_sv(these_sample_ids  = this_sample_id)
+    these_sv = get_manta_sv(these_sample_ids  = this_sample_id)
     if ("SCORE" %in% colnames(these_sv)) {
       these_sv = these_sv %>%
         rename("SOMATIC_SCORE" = "SCORE")
