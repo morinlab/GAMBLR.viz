@@ -19,8 +19,6 @@ fancy_v_chrcount(
   plot_subtitle = "Variant Count Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
   coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
   add_qc_metric = FALSE,
   seq_type = "genome"
 )
@@ -54,10 +52,6 @@ fancy_v_chrcount(
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
-
 \item{add_qc_metric}{Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).}
 
 \item{seq_type}{Default is "genome".}
@@ -80,15 +74,8 @@ e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 }
 \examples{
 #plot ssm
-fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                 ssm = TRUE)
-
-#plot SVs for chr 1-5
-fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-                 ssm = FALSE,
-                 min_vaf = 0,
-                 projection = "grch37",
-                 chr_select = paste0("chr", c(1:5)),
-                 plot_subtitle = "SV Count Distribution (chr1-5)")
+fancy_v_chrcount(this_sample_id = "DOHH-2",
+                 ssm = TRUE, 
+                 y_interval = 10)
 
 }

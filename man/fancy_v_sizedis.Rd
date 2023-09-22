@@ -22,9 +22,7 @@ fancy_v_sizedis(
   log_10 = TRUE,
   plot_trim = FALSE,
   chr_select = paste0("chr", c(1:22)),
-  coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  coding_only = FALSE
 )
 }
 \arguments{
@@ -63,10 +61,6 @@ fancy_v_sizedis(
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -90,6 +84,6 @@ For more info on how to run with these parameters, refer to the parameter descri
 }
 \examples{
 #plot SSM size distributions:
-fancy_v_sizedis(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_v_sizedis(this_sample_id = "DOHH-2")
 
 }

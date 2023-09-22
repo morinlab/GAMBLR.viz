@@ -62,12 +62,11 @@ This is done with the `min_mutations` parameter.
 For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
 }
 \examples{
-metadata = GAMBLR.data::gambl_metadata
+metadata = get_gambl_metadata()
 this_meta = dplyr::filter(metadata, pairing_status == "matched")
 this_meta = dplyr::filter(this_meta, pathology \%in\% c("FL", "DLBCL"))
 
-maf = GAMBLR.data::sample_data$grch37$maf \%>\%
-	filter(Tumor_Sample_Barcode \%in\% this_meta$sample_id)
+maf = get_ssm_by_sample(these_samples_metadata = this_meta)
 
 prettyForestPlot(maf = maf,
                  metadata = this_metadata,
@@ -75,10 +74,10 @@ prettyForestPlot(maf = maf,
                            "EZH2",
                            "TNFRSF14",
                            "RRAGC"),
-                 comparison_column = "consensus_pathology",
+                 comparison_column = "pathology",
                  comparison_values = c("DLBCL",
                                        "FL"),
                  separate_hotspots = FALSE,
-                 comparison_name = "FL vs DLBCL")
+                 comparison_name = "FL vs DLBCL") 
 
 }

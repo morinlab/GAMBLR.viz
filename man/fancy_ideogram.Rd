@@ -25,8 +25,6 @@ fancy_ideogram(
   include_ssm = TRUE,
   ssm_count = TRUE,
   coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
   this_seq_type = "genome"
 )
 }
@@ -71,10 +69,6 @@ fancy_ideogram(
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
-
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
@@ -97,7 +91,7 @@ This parameter takes a vector of characters or a data frame with regions that th
 }
 \examples{
 #build plot
-fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+fancy_ideogram(this_sample_id = "DOHH-2",
                gene_annotation = "MYC",
                plot_title = "Sample-level Ideogram Example",
                plot_subtitle = "grch37")

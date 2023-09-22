@@ -16,8 +16,6 @@ fancy_snv_chrdistplot(
   include_dnp = FALSE,
   hide_legend = FALSE,
   coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
   this_seq_type = "genome"
 )
 }
@@ -44,10 +42,6 @@ fancy_snv_chrdistplot(
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
-
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 }
 \value{
@@ -70,10 +64,10 @@ also have convenient parameters for customizing the returned plot, e.g `plot_tit
 }
 \examples{
 #plot SNVs
-fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 
 #plot SNVs and DNPs
-fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
                       include_dnp = TRUE,
                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 

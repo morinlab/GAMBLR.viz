@@ -14,9 +14,7 @@ fancy_multisamp_ideogram(
   include_cn2 = FALSE,
   kompare = FALSE,
   concordance = TRUE,
-  coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  coding_only = FALSE
 )
 }
 \arguments{
@@ -39,10 +37,6 @@ fancy_multisamp_ideogram(
 \item{concordance}{Boolean parameter to be used when kompare = TRUE. Default is TRUE, to plot discordant segments, set the parameter to FALSE.}
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is FALSE.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -61,8 +55,7 @@ To instead plot discordant CN segments, set this parameter to FALSE.
 }
 \examples{
 #two samples ideogram
-fancy_multisamp_ideogram(these_sample_ids = c("00-15201_tumorA",
-                                              "00-15201_tumorB"),
+fancy_multisamp_ideogram(these_sample_ids = c("05-18426T", "05-18426T"),
                          include_cn2 = TRUE,
                          plot_title = "Multi-sample Ideograms Example",
                          plot_sub = "grch37",

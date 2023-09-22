@@ -21,19 +21,19 @@ ashm_multi_rainbow_plot(
 
 \item{regions_to_display}{Optional vector of names from default regions_bed to use.}
 
-\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
+\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadata file.}
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
 \item{seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.}
 
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
 \item{maf_data}{An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.}
 
-\item{verbose}{Set to FALSE to rpevent printing the full regions bed file to the console. Default is TRUE.}
+\item{verbose}{Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.}
 }
 \value{
 Nothing
