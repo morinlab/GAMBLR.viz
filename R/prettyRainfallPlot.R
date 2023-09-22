@@ -21,14 +21,10 @@
 #' @export
 #'
 #' @examples
-#' prettyRainfallPlot(this_sample_id = "Raji",
+#' prettyRainfallPlot(this_sample_id = "DOHH-2",
 #'                    seq_type = "genome",
 #'                    zoom_in_region = "8:125252796-135253201",
 #'                    label_sv = TRUE)
-#'
-#' #multi-sample rainfall plot for one gene region
-#' prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
-#'                    seq_type = "genome")
 #'
 prettyRainfallPlot = function(this_sample_id,
                               label_ashm_genes = TRUE,
