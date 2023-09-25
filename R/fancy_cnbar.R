@@ -35,7 +35,7 @@
 #'
 #' @examples
 #' #Return a plot for one sample, with default parameters.
-#' fancy_cnbar(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_cnbar(this_sample_id = "DOHH-2")
 #'
 fancy_cnbar = function(this_sample_id,
                        seq_data,
@@ -70,12 +70,9 @@ fancy_cnbar = function(this_sample_id,
 
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
-      streamlined = FALSE,
-      from_flatfile = TRUE,
-      this_seq_type = this_seq_type
+    seq = get_sample_cn_segments(these_sample_ids = this_sample_id,
+                                 streamlined = FALSE,
+                                 this_seq_type = this_seq_type
     )
   }
 
@@ -123,7 +120,7 @@ fancy_cnbar = function(this_sample_id,
   cn_seq_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
   colnames(cn_seq_lenghts) = c("CN", "lenght")
 
-  joined_cn = merge(cns_count, cn_seq_lenghts) %>%
+  joined_cn = cbind(cns_count, cn_seq_lenghts) %>%
     as.data.frame() %>%
     dplyr::select(CN, count, lenght)
 

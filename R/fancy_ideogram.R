@@ -33,8 +33,6 @@
 #' @param include_ssm Set to TRUE to plot SSMs (dels and ins).
 #' @param ssm_count Optional parameter to summarize n variants per chromosome, inlcude_ssm must be set to TRUE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A plot as a ggplot object (grob).
@@ -44,7 +42,7 @@
 #'
 #' @examples
 #' #build plot
-#' fancy_ideogram(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#' fancy_ideogram(this_sample_id = "DOHH-2",
 #'                gene_annotation = "MYC",
 #'                plot_title = "Sample-level Ideogram Example",
 #'                plot_subtitle = "grch37")
@@ -69,8 +67,6 @@ fancy_ideogram = function(this_sample_id,
                           include_ssm = TRUE,
                           ssm_count = TRUE,
                           coding_only = FALSE,
-                          from_flatfile = TRUE,
-                          use_augmented_maf = TRUE,
                           this_seq_type = "genome"){
 
   #plot theme
@@ -85,7 +81,7 @@ fancy_ideogram = function(this_sample_id,
 
   #additional regions to plot
   if(!missing(gene_annotation)){
-    gene = gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
+    gene = GAMBLR.utils::gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
     gene.annotate = gene[gene$chr %in% paste0(c(1:22)), ]
     cols.int = c("chromosome", "start", "end")
     gene.annotate[cols.int] = sapply(gene.annotate[cols.int], as.integer)
@@ -124,8 +120,7 @@ fancy_ideogram = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(seq_data) && is.null(seq_path)){
     cn_states = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
+      these_sample_ids = this_sample_id,
       with_chr_prefix = FALSE,
       streamlined = FALSE,
       this_seq_type = this_seq_type
@@ -231,8 +226,6 @@ fancy_ideogram = function(this_sample_id,
       maf = assign_cn_to_ssm(
         this_sample_id = this_sample_id,
         coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
         this_seq_type = this_seq_type)$maf
     }
 

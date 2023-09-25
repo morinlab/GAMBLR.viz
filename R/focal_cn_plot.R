@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' #get metadata
-#' this_metadata = GAMBLR.data::gambl_metadata
+#' this_metadata = get_gambl_metadata()
 #'
 #' #get myc region
 #' myc_region = gene_to_region(gene_symbol = "MYC",
@@ -47,10 +47,10 @@ focal_cn_plot = function(region,
                          crop_distance = 100000000){
 
   if(!missing(gene)){
-    region = gene_to_region(gene)
-    chunks = region_to_chunks(region)
+    region = GAMBLR.utils::gene_to_region(gene)
+    chunks = GAMBLR.utils::region_to_chunks(region)
   }else{
-    chunks = region_to_chunks(region)
+    chunks = GAMBLR.utils::region_to_chunks(region)
   }
   if(type == "gain"){
     all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%

@@ -45,13 +45,9 @@ Plot a rainfall plot for one sample. This function takes in the MAF data frame, 
 Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
-prettyRainfallPlot(this_sample_id = "Raji",
+prettyRainfallPlot(this_sample_id = "DOHH-2",
                    seq_type = "genome",
                    zoom_in_region = "8:125252796-135253201",
                    label_sv = TRUE)
-
-#multi-sample rainfall plot for one gene region
-prettyRainfallPlot(zoom_in_region = "chr3:5,221,286-5,269,723",
-                   seq_type = "genome")
 
 }

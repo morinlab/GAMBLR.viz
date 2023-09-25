@@ -21,9 +21,7 @@ fancy_v_count(
   snp_colours = c(SNP = "#2B9971", DNP = "#993F2B", TNP = "#A62656"),
   hide_legend = FALSE,
   coding_only = FALSE,
-  log10_y = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE
+  log10_y = FALSE
 )
 }
 \arguments{
@@ -60,10 +58,6 @@ fancy_v_count(
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
 \item{log10_y}{Set to TRUE to force y axis to be in log10.}
-
-\item{from_flatfile}{If set to true the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -87,10 +81,6 @@ the variant types specified in this parameter must match with whatever is presen
 }
 \examples{
 #count all variants for one sample (default parameters)
-fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D")
-
-#count and plot all variants on chromosome 1
-fancy_v_count(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-              chr_select = c("chr1"))
+fancy_v_count(this_sample_id = "DOHH-2")
 
 }

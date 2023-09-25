@@ -12,8 +12,6 @@ fancy_circos_plot(
   chr_select = paste0("chr", c(1:22)),
   vaf_cutoff = 0,
   coding_only = FALSE,
-  from_flatfile = TRUE,
-  use_augmented_maf = TRUE,
   projection = "grch37",
   this_seq_type = "genome",
   plot_title = paste0(this_sample_id),
@@ -37,10 +35,6 @@ fancy_circos_plot(
 
 \item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 
-\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
-
 \item{projection}{Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.}
 
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
@@ -52,6 +46,10 @@ fancy_circos_plot(
 \item{pdf}{Set to FALSE for png, default is TRUE (pdf).}
 
 \item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
+
+\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
+
+\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
 Nothing.

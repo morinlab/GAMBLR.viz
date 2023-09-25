@@ -77,10 +77,10 @@ parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `tr
 }
 \examples{
 #build plot sith default parameters
-fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+fancy_sv_sizedens(this_sample_id = "SP116715")
 
 #restrict plot to only chromosome 1 and 2
-fancy_sv_sizedens(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+fancy_sv_sizedens(this_sample_id = "SP116715",
                   size_cutoff = 0,
                   chr_select = c("chr1", "chr2"))
 

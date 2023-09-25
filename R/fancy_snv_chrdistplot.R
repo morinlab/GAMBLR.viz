@@ -24,8 +24,6 @@
 #' @param include_dnp Optional argument for including DNPs. Default is FALSE.
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #'
 #' @return A plot as a ggplot object (grob).
@@ -35,10 +33,10 @@
 #'
 #' @examples
 #' #plot SNVs
-#' fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 #'
 #' #plot SNVs and DNPs
-#' fancy_snv_chrdistplot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#' fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
 #'                       include_dnp = TRUE,
 #'                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
 #'
@@ -53,8 +51,6 @@ fancy_snv_chrdistplot = function(this_sample_id,
                                  include_dnp = FALSE,
                                  hide_legend = FALSE,
                                  coding_only = FALSE,
-                                 from_flatfile = TRUE,
-                                 use_augmented_maf = TRUE,
                                  this_seq_type = "genome"){
 
   if(!missing(maf_data)){
@@ -75,8 +71,6 @@ fancy_snv_chrdistplot = function(this_sample_id,
     maf = assign_cn_to_ssm(
       this_sample_id = this_sample_id,
       coding_only = coding_only,
-      from_flatfile = from_flatfile,
-      use_augmented_maf = use_augmented_maf,
       this_seq_type = this_seq_type)$maf
   }
 

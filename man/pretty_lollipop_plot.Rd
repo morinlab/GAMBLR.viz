@@ -36,12 +36,11 @@ The plot can also be exported in a variety of file formats inside the interactiv
 }
 \examples{
 #get metadata (Fl and DLBCL)
-metadata = GAMBLR.data::gambl_metadata
-this_metadata = dplyr::filter(metadata, consensus_pathology \%in\% c("FL", "DLBCL"))
+metadata = get_gambl_metadata()
+this_meta = dplyr::filter(metadata, pairing_status == "matched")
+this_meta = dplyr::filter(this_meta, pathology \%in\% c("FL", "DLBCL"))
 
-#get maf data for returned samples
-maf = GAMBLR.data::sample_data$grch37$maf \%>\%
-	filter(Tumor_Sample_Barcode \%in\% this_metadata$sample_id)
+maf = get_ssm_by_sample(these_samples_metadata = this_meta)
 
 #construct pretty_lollipop_plot.
 pretty_lollipop_plot(maf_df = maf,

@@ -47,20 +47,18 @@ This function can also plot the same results for a comparison group of interest,
 To do this one would call the function with `comparison_samples` parameter. For more info on how to use this function, please refer to examples, vignettes (fancy_vignette) and parameter descriptions.
 }
 \examples{
-#Example 1 - using these_sample_ids parameter
-#subset on FL cases with QC metrics available and plot
-metadata = GAMBLR.data::gambl_metadata
-kridel_fl = dplyr::filter(metadata, pathology == "FL",
-               cohort == "FL_Kridel")
-kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+#load packages
+library(dplyr)
 
-fancy_propcov_plot(these_sample_ids = kridel_fl_samples)
+#get sample IDs for available genome samples
+genome_collated = collate_results(seq_type_filter = "genome") \%>\% 
+  pull(sample_id)
 
-#Example 2 - using already filtered metadata (these_samples_metadata)
-fancy_propcov_plot(these_samples_metadata = kridel_fl)
+#subset the collated samples on BL samples
+my_samples = get_gambl_metadata() \%>\% 
+  dplyr::filter(sample_id \%in\% genome_collated) \%>\% 
+  dplyr::filter(pathology == "BL") \%>\% pull(sample_id)
 
-#Example 3 - using in-house metadata filtering options
-fancy_propcov_plot(keep_cohort = "FL_Kridel",
-                   keep_pathology = "FL")
+fancy_propcov_plot(these_sample_ids = my_samples)
 
 }

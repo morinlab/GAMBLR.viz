@@ -25,8 +25,6 @@
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to true the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is FALSE.
 #' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
 #' @param seq_type Default is "genome".
 #'
@@ -37,16 +35,9 @@
 #'
 #' @examples
 #' #plot ssm
-#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                  ssm = TRUE)
-#'
-#' #plot SVs for chr 1-5
-#' fancy_v_chrcount(this_sample_id = "HTMCP-01-06-00422-01A-01D",
-#'                  ssm = FALSE,
-#'                  min_vaf = 0,
-#'                  projection = "grch37",
-#'                  chr_select = paste0("chr", c(1:5)),
-#'                  plot_subtitle = "SV Count Distribution (chr1-5)")
+#' fancy_v_chrcount(this_sample_id = "DOHH-2",
+#'                  ssm = TRUE, 
+#'                  y_interval = 10)
 #'
 fancy_v_chrcount = function(this_sample_id,
                             maf_data,
@@ -62,8 +53,6 @@ fancy_v_chrcount = function(this_sample_id,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
                             chr_select = paste0("chr", c(1:22)),
                             coding_only = FALSE,
-                            from_flatfile = TRUE,
-                            use_augmented_maf = TRUE,
                             add_qc_metric = FALSE,
                             seq_type = "genome"){
 
@@ -86,11 +75,9 @@ fancy_v_chrcount = function(this_sample_id,
       maf = assign_cn_to_ssm(
         this_sample_id = this_sample_id,
         coding_only = coding_only,
-        from_flatfile = from_flatfile,
-        use_augmented_maf = use_augmented_maf,
         this_seq_type = seq_type)$maf
     }else{
-      maf = get_combined_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
+      maf = get_manta_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format

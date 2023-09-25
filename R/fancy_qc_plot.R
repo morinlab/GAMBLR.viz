@@ -35,32 +35,19 @@
 #' @export
 #'
 #' @examples
-#' #Example 1 - using these_sample_ids parameter
-#' #subset on FL cases with QC metrics available and plot
-#' metadata = GAMBLR.data::gambl_metadata
-#' kridel_fl = dplyr::filter(metadata, pathology == "FL",
-#'                cohort == "FL_Kridel")
-#' kridel_fl_samples = dplyr::select(kridel_fl, sample_id)
+#' #load packages
+#' library(dplyr)
+#' 
+#' #get sample IDs for available genome samples
+#' genome_collated = collate_results(seq_type_filter = "genome") %>% 
+#'   pull(sample_id)
 #'
-#' fancy_qc_plot(these_sample_ids = kridel_fl_samples,
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
+#' #subset the collated samples on BL samples
+#' my_samples = get_gambl_metadata() %>% 
+#'   dplyr::filter(sample_id %in% genome_collated) %>% 
+#'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
-#' #Example 2 - using already filtered metadata (these_samples_metadata)
-#' fancy_qc_plot(these_samples_metadata = kridel_fl,
-#'               interactive = TRUE,
-#'               labels = c("cohort", "pathology"),
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
-#'
-#' #Example 3 - using in-house metadata filtering options
-#' fancy_qc_plot(keep_cohort = "FL_Kridel",
-#'               keep_pathology = "FL",
-#'               plot_data = "AverageBaseQuality",
-#'               y_axis_lab = "Average Base Quality",
-#'               plot_title = "Average Base Quality For FL_Kridel")
+#' fancy_qc_plot(these_sample_ids = my_samples, plot_data = "AverageBaseQuality")
 #'
 fancy_qc_plot = function(these_sample_ids,
                          keep_cohort,

@@ -24,10 +24,10 @@
 #'
 #' @examples
 #' #build plot
-#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D")
+#' copy_number_vaf_plot(this_sample_id = "DOHH-2")
 #'
 #' #coding only
-#' copy_number_vaf_plot(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#' copy_number_vaf_plot(this_sample_id = "DOHH-2",
 #'                      coding_only = TRUE)
 #'
 copy_number_vaf_plot = function(this_sample_id,
@@ -49,8 +49,6 @@ copy_number_vaf_plot = function(this_sample_id,
   maf_and_seg = assign_cn_to_ssm(
     this_sample_id = this_sample_id,
     coding_only = coding_only,
-    from_flatfile = from_flatfile,
-    use_augmented_maf = use_augmented_maf,
     this_seq_type = this_seq_type
   )
   vaf_cn_maf = maf_and_seg[["maf"]]

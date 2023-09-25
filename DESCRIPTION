@@ -19,7 +19,6 @@ Imports:
     dplyr,
     forcats,
     g3viz,
-    GAMBLR,
     GAMBLR.data,
     GAMBLR.helpers,
     ggbeeswarm,
@@ -46,7 +45,6 @@ Imports:
     utils,
     wordcloud
 Remotes:
-    morinLab/GAMBLR,
     morinLab/GAMBLR.data,
     morinLab/GAMBLR.helpers
 Encoding: UTF-8

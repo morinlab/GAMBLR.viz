@@ -153,11 +153,12 @@ The first one should match the Tumor_Sample_Barcode in the MAF object or onco_ma
 sample_id, pathology
 }
 \examples{
+#load packages
 library(grid)
 
 #get some data
-maf_data = GAMBLR.data::sample_data$grch37$maf
-maf_metadata = GAMBLR.data::gambl_metadata
+maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
+maf_metadata = get_gambl_metadata()
 maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 
 #define some genes of interest
