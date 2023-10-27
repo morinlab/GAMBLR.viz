@@ -21,6 +21,7 @@ Imports:
     g3viz,
     GAMBLR.data,
     GAMBLR.helpers,
+    GAMBLR.utils,
     ggbeeswarm,
     ggplot2,
     ggpubr,
@@ -46,7 +47,8 @@ Imports:
     wordcloud
 Remotes:
     morinLab/GAMBLR.data,
-    morinLab/GAMBLR.helpers
+    morinLab/GAMBLR.helpers,
+    morinLab/GAMBLR.utils
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
