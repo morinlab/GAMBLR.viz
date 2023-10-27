@@ -9,7 +9,7 @@ ashm_multi_rainbow_plot(
   regions_to_display,
   exclude_classifications,
   metadata,
-  seq_type,
+  this_seq_type,
   custom_colours,
   classification_column = "lymphgen",
   maf_data,
@@ -25,7 +25,7 @@ ashm_multi_rainbow_plot(
 
 \item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
-\item{seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
+\item{this_seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
 
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.}
 
@@ -59,6 +59,6 @@ ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
                                                "SGK1-TSS",
                                                "IGL"),
                         custom_colours = lymphgen_colours,
-                        seq_type = "genome")
+                        this_seq_type = "genome")
 
 }
