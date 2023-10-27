@@ -125,7 +125,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
         ggplot() +
         geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
         labs(title = "", subtitle = "", x = "", y = "Sample") +
-        theme_Morons() +
+        GAMBLR.helpers::theme_Morons() +
         theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = ggplot2::margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank()) +
         facet_wrap(~region_name, scales = "free_x") +
         guides(color = guide_legend(reverse = TRUE,

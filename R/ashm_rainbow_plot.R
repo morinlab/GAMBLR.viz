@@ -109,7 +109,7 @@ ashm_rainbow_plot = function(mutations_maf,
 
   p = p +
     labs(y = "Sample") +
-    theme_Morons() +
+    GAMBLR.helpers::theme_Morons() +
     theme(plot.margin = ggplot2::margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank())
 
   if(hide_ids){

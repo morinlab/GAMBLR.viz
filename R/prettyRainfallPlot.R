@@ -309,7 +309,7 @@ prettyRainfallPlot = function(this_sample_id,
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
     scale_color_manual(values = GAMBLR.helpers::get_gambl_colours("rainfall")) +
     ylab("log(IMD)") +
-    theme_Morons() +
+    GAMBLR.helpers::theme_Morons() +
     facet_wrap( ~ Chromosome_f, scales = "free_x") +
     ggtitle(this_sample_id) +
     theme(plot.title = element_text(hjust = 0)) # left-align title plot
