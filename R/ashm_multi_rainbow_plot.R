@@ -26,7 +26,7 @@
 #'
 #' @examples
 #' #get lymphgen colours
-#' lymphgen_colours = get_gambl_colours(classification = "lymphgen")
+#' lymphgen_colours = GAMBLR.helpers::get_gambl_colours(classification = "lymphgen")
 #'
 #' #build plot
 #' ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",

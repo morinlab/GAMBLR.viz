@@ -222,10 +222,10 @@ prettyForestPlot = function(maf,
   }
 
   if(custom_colours[1] == FALSE){
-    if(length(levels(metadata$comparison)[levels(metadata$comparison) %in% names(get_gambl_colours())]) == 2){
-      colours = get_gambl_colours()[levels(metadata$comparison)]
+    if(length(levels(metadata$comparison)[levels(metadata$comparison) %in% names(GAMBLR.helpers::get_gambl_colours())]) == 2){
+      colours = GAMBLR.helpers::get_gambl_colours()[levels(metadata$comparison)]
     } else {
-      colours = get_gambl_colours(classification = "blood")[c("Red", "Blue")]
+      colours = GAMBLR.helpers::get_gambl_colours(classification = "blood")[c("Red", "Blue")]
       names(colours) = levels(metadata$comparison)
     }
   } else {

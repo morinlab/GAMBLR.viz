@@ -138,8 +138,8 @@ fancy_v_sizedis = function(this_sample_id,
         labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variant Size (bp)") +
         geom_violin(trim = plot_trim, scale = scale_value, color = NA) +
         stat_summary(fun = mean, geom = "point", shape = 20, size = 3, color = "black") +
-        {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
-        {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
+        {if(ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("indels"))} +
+        {if(!ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("svs"))} +
         {if(log_10)scale_y_log10()} +
         theme_cowplot() +
         theme(legend.position = "none")

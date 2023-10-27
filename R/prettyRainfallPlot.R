@@ -307,7 +307,7 @@ prettyRainfallPlot = function(this_sample_id,
 
   p = ggplot(rainfall_points) +
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
-    scale_color_manual(values = get_gambl_colours("rainfall")) +
+    scale_color_manual(values = GAMBLR.helpers::get_gambl_colours("rainfall")) +
     ylab("log(IMD)") +
     theme_Morons() +
     facet_wrap( ~ Chromosome_f, scales = "free_x") +

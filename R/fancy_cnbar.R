@@ -134,7 +134,7 @@ fancy_cnbar = function(this_sample_id,
     geom_bar(aes(y = count, fill = CN, label = count), position = "stack", stat = "identity") +
     scale_y_log10(limits = c(1, max(joined_cn$count) + 5000), sec.axis = sec_axis(~.*500000, name = "Nucleotides (n)")) +
     labs(title = plot_title, subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
-    scale_fill_manual(values = get_gambl_colours("copy_number")) +
+    scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("copy_number")) +
     scale_x_discrete(limits = cn_levels) +
     geom_text(aes(x = CN, y = count, label = count), colour = "#000000", size = 5, position = position_stack(vjust = 0.5)) +
     theme_cowplot() +

@@ -130,7 +130,7 @@ fancy_qc_plot = function(these_sample_ids,
   }
 
   #get gambl colours for selected fill and subset to levels in selected factor
-  col_gambl = get_gambl_colours(fill_by) %>%
+  col_gambl = GAMBLR.helpers::get_gambl_colours(fill_by) %>%
     as.data.frame()
 
   col_gambl$factors = rownames(col_gambl)

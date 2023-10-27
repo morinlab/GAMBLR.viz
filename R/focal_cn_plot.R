@@ -78,7 +78,7 @@ focal_cn_plot = function(region,
   all_not_dip$ID = factor(all_not_dip$ID, levels = unique(all_not_dip$ID))
 
   ggplot(all_not_dip, aes(x = start, xend = end, y = ID, yend = ID, colour = lymphgen)) +
-    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = get_gambl_colours()[type]) +
+    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = GAMBLR.helpers::get_gambl_colours()[type]) +
     geom_segment(size = segment_size) + theme_cowplot() +
     theme(axis.text.y = element_blank())
 }
