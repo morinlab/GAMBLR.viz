@@ -24,6 +24,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #basic usage
 #' this_region = "chr6:90975034-91066134"
 #' this_metadata = get_gambl_metadata()
