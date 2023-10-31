@@ -123,13 +123,13 @@ heatmap_mutation_frequency_bin <- function(
   regions <- regions$regions_list
 
   # Harmonize metadata and sample IDs
-  get_meta <- id_ease(
+  metadata <- id_ease(
     these_samples_metadata,
     these_sample_ids,
     this_seq_type
   )
-  metadata <- get_meta$this_metadata
-  these_sample_ids <- get_meta$these_samples
+
+  these_sample_ids <- metadata$sample_id
 
   # Ensure all requested metadata columns are present in the metadata
   allMetaCols <- unique(c(metadataColumns, sortByColumns, expressionColumns))

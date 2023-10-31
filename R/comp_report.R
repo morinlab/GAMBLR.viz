@@ -79,17 +79,13 @@ comp_report = function(this_sample_id,
     maf = assign_cn_to_ssm(
       this_sample_id = this_sample_id,
       coding_only = FALSE,
-      from_flatfile = TRUE,
-      use_augmented_maf = TRUE,
       this_seq_type = this_seq_type)$maf
   }
 
   if(missing(seq_data) && is.null(seq_path)){
     seq = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
-      multiple_samples = FALSE,
+      these_sample_ids = this_sample_id,
       streamlined = FALSE,
-      from_flatfile = TRUE,
       this_seq_type = this_seq_type
     )
   }
