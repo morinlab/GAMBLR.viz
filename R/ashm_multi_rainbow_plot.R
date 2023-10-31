@@ -25,6 +25,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours(classification = "lymphgen")
 #'

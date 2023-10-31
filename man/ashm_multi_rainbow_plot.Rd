@@ -50,6 +50,8 @@ In addition the user can also use the `metadata` parameter to use an already sub
 This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
+library(GAMBLR.data)
+
 #get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours(classification = "lymphgen")
 
