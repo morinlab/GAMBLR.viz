@@ -50,7 +50,7 @@ prettyRainfallPlot = function(this_sample_id,
   # allow to zoom in to a specific region
   if (!missing(zoom_in_region)) {
     region = zoom_in_region
-    zoom_in_region = GAMBLR.helpers::region_to_chunks(zoom_in_region)
+    zoom_in_region = GAMBLR.data::region_to_chunks(zoom_in_region)
     zoom_in_region$chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
                                                                        projection = projection)
     zoom_in_region$start = as.numeric(zoom_in_region$start)

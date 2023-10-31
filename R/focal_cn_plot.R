@@ -48,9 +48,9 @@ focal_cn_plot = function(region,
 
   if(!missing(gene)){
     region = GAMBLR.utils::gene_to_region(gene)
-    chunks = GAMBLR.utils::region_to_chunks(region)
+    chunks = GAMBLR.data::region_to_chunks(region)
   }else{
-    chunks = GAMBLR.utils::region_to_chunks(region)
+    chunks = GAMBLR.data::region_to_chunks(region)
   }
   if(type == "gain"){
     all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
