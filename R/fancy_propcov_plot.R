@@ -81,7 +81,7 @@ fancy_propcov_plot = function(these_sample_ids,
 
   #retrieve data for comparison, provided as a df with sample IDs in the first column (subset from gambl metadata)
   if(!missing(comparison_samples)){
-    comp_data = collate_qc_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
+    comp_data = collate_results(sample_table = comparison_samples, seq_type_filter = seq_type) %>%
       dplyr::select(ProportionCoverage10x, ProportionCoverage30x) %>%
       gather(Type, Value)
 
