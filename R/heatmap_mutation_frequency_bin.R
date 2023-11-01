@@ -216,7 +216,7 @@ heatmap_mutation_frequency_bin <- function(
   gamblColours <- NULL
   if (length(needsColour) > 0) {
     gamblColours <- lapply(needsColour, function(x) {
-      colours <- get_gambl_colours()[levels(meta_show[[x]])]
+      colours <- GAMBLR.helpers::get_gambl_colours()[levels(meta_show[[x]])]
       colours <- colours[unique(names(colours))][!is.na(names(colours))]
     })
     names(gamblColours) <- needsColour
@@ -233,7 +233,7 @@ heatmap_mutation_frequency_bin <- function(
         x,
         "- using default colours. "
       ))
-      colours <- get_gambl_colours("blood")[1:length(levels(meta_show[[x]]))]
+      colours <- GAMBLR.helpers::get_gambl_colours("blood")[1:length(levels(meta_show[[x]]))]
       names(colours) <- levels(meta_show[[x]])
     } else {
       return(annoColoursTmp[[x]])

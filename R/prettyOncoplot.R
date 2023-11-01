@@ -256,7 +256,7 @@ prettyOncoplot = function(maftools_obj,
   if(missing(genes)){
     genes = rownames(mat)
   }
-  col = get_gambl_colours("mutation", alpha = mutAlpha)
+  col = GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
   mat[mat == 0]=""
   patients_kept = patients[which(patients %in% colnames(mat))]
   patients_dropped = patients[which(!patients %in% colnames(mat))]
@@ -367,10 +367,10 @@ prettyOncoplot = function(maftools_obj,
   )
   #automagically assign colours for other metadata columns.
   #TO DO: convert the loop below into a "map_metadata_to_colours" function HAS THIS BEEN RESOLVED?
-  blood_cols = get_gambl_colours("blood", alpha = annoAlpha)
+  blood_cols = GAMBLR.helpers::get_gambl_colours("blood", alpha = annoAlpha)
   colours = list()
   clinical_colours = ggsci::get_ash("clinical")
-  all_gambl_colours = get_gambl_colours()
+  all_gambl_colours = GAMBLR.helpers::get_gambl_colours()
   for(column in metadataColumns){
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels = unique(these_samples_metadata[[column]]))
     options = these_samples_metadata %>%
@@ -386,7 +386,7 @@ prettyOncoplot = function(maftools_obj,
       print("<<<<<<<")
     }
     if(column == "sex"){
-      these = get_gambl_colours("sex", alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours("sex", alpha = annoAlpha)
       these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
@@ -406,32 +406,32 @@ prettyOncoplot = function(maftools_obj,
       if(verbose){
         print("using pos_neg")
       }
-      these = get_gambl_colours("pos_neg", alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours("pos_neg", alpha = annoAlpha)
       these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
       colours[[column]] = these
     }else if("GCB" %in% options){
-      these = get_gambl_colours("COO", alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours("COO", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
       colours[[column]] = these
     }else if(column %in% c("pathology")){
-      these = get_gambl_colours(column, alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours(column, alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these,"NA" = "white")
       }
       colours[[column]] = these
     }else if(grepl("lymphgen", column, ignore.case = TRUE)){
-      these = get_gambl_colours("lymphgen", alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours("lymphgen", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
       colours[[column]] = these
     }else if(column == "HMRN"){
-      these = get_gambl_colours("hmrn", alpha = annoAlpha)
+      these = GAMBLR.helpers::get_gambl_colours("hmrn", alpha = annoAlpha)
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
@@ -612,7 +612,7 @@ prettyOncoplot = function(maftools_obj,
       pull("Enriched in")
 
     right_annotation = rowAnnotation(" " = enrichment_label,
-                             col = list(" " = c(get_gambl_colours()[these_comparisons], Both = "#ACADAF", "NA" = "#000000")),
+                             col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], Both = "#ACADAF", "NA" = "#000000")),
                              simple_anno_size = unit(metadataBarHeight, "mm"),
                              annotation_legend_param =
                                list(title = "Enriched in",

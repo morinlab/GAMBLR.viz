@@ -45,7 +45,7 @@ copy_number_vaf_plot = function(this_sample_id,
     chrom_order = c(1:22, "X")
     chrom_order = factor(unlist(lapply(chrom_order, function(x){paste0("chr", x)})))
   }
-  cn_colours = get_gambl_colours(classification = "copy_number")
+  cn_colours = GAMBLR.helpers::get_gambl_colours(classification = "copy_number")
   maf_and_seg = assign_cn_to_ssm(
     this_sample_id = this_sample_id,
     coding_only = coding_only,

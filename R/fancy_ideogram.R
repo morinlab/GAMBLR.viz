@@ -298,7 +298,7 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #get colours and combine palette for indels and cn states
-  ideogram_palette = c(get_gambl_colours("indels"), get_gambl_colours("copy_number"))
+  ideogram_palette = c(GAMBLR.helpers::get_gambl_colours("indels"), GAMBLR.helpers::get_gambl_colours("copy_number"))
   selected_colours = ideogram_palette[c(1,2,19,18,16:13)]
   names(selected_colours)[c(3:8)] = c("CN0", "CN1", "CN3", "CN4", "CN5", "CN6+")
 

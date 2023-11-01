@@ -27,8 +27,8 @@
 #' this_metadata = get_gambl_metadata()
 #'
 #' #get myc region
-#' myc_region = gene_to_region(gene_symbol = "MYC",
-#'                             return_as = "region")
+#' myc_region = GAMBLR.utils::gene_to_region(gene_symbol = "MYC",
+#'                                           return_as = "region")
 #'
 #' #build plot
 #' focal_cn_plot(these_samples_metadata = this_metadata,
@@ -48,9 +48,9 @@ focal_cn_plot = function(region,
 
   if(!missing(gene)){
     region = GAMBLR.utils::gene_to_region(gene)
-    chunks = GAMBLR.utils::region_to_chunks(region)
+    chunks = GAMBLR.data::region_to_chunks(region)
   }else{
-    chunks = GAMBLR.utils::region_to_chunks(region)
+    chunks = GAMBLR.data::region_to_chunks(region)
   }
   if(type == "gain"){
     all_not_dip = get_cn_segments(region = region, this_seq_type = this_seq_type) %>%
@@ -78,7 +78,7 @@ focal_cn_plot = function(region,
   all_not_dip$ID = factor(all_not_dip$ID, levels = unique(all_not_dip$ID))
 
   ggplot(all_not_dip, aes(x = start, xend = end, y = ID, yend = ID, colour = lymphgen)) +
-    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = get_gambl_colours()[type]) +
+    geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = GAMBLR.helpers::get_gambl_colours()[type]) +
     geom_segment(size = segment_size) + theme_cowplot() +
     theme(axis.text.y = element_blank())
 }

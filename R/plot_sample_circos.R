@@ -170,7 +170,7 @@ plot_sample_circos = function(this_sample_id,
       dplyr::filter(sample_id == this_sample_id)
 
     these_meta = samp_meta[legend_metadata_columns]
-    these_cols = get_gambl_colours()
+    these_cols = GAMBLR.helpers::get_gambl_colours()
     vals = as.character(these_meta)
     names = colnames(these_meta)
 

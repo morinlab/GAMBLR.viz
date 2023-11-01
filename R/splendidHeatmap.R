@@ -109,7 +109,7 @@ splendidHeatmap = function(this_matrix,
   my_colours = NULL
   these_names = NULL
   for (i in 1:length(metadataColumns)){
-    this_metadata_column = get_gambl_colours(metadataColumns[i])
+    this_metadata_column = GAMBLR.helpers::get_gambl_colours(metadataColumns[i])
     if (sum(is.na(names(this_metadata_column[unlist(c(unique(these_samples_metadata[,metadataColumns[i]])))]))) <= 1 &
         nrow(unique(these_samples_metadata[,metadataColumns[i]])) > 1){
       these_names = c(these_names, metadataColumns[i])

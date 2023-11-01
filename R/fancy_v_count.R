@@ -121,7 +121,7 @@ fancy_v_count = function(this_sample_id,
     summarize(count = n())
 
   #get colours
-  indels_cols = get_gambl_colours("indels")
+  indels_cols = GAMBLR.helpers::get_gambl_colours("indels")
   colours = append(indels_cols, snp_colours)
 
   #plot
@@ -130,7 +130,7 @@ fancy_v_count = function(this_sample_id,
     {if(log10_y)labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants n (log10)", fill = "")} +
     {if(!log10_y)labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "")} +
     {if(ssm)scale_fill_manual(values = colours)} +
-    {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
+    {if(!ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("svs"))} +
     geom_text(size = 5, position = position_stack(vjust = 0.5)) +
     {if(log10_y)scale_y_log10(expand = c(0, 0))} +
     {if(!log10_y)scale_y_continuous(expand = c(0, 0))} +

@@ -52,8 +52,8 @@ Sample IDs are specified along the y-axis and the genomic position is visualized
 this_metadata = get_gambl_metadata()
 
 #get myc region
-myc_region = gene_to_region(gene_symbol = "MYC",
-                            return_as = "region")
+myc_region = GAMBLR.utils::gene_to_region(gene_symbol = "MYC",
+                                          return_as = "region")
 
 #build plot
 focal_cn_plot(these_samples_metadata = this_metadata,

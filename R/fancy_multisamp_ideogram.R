@@ -167,7 +167,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
     sample4_cn = droplevels(sample4_cn)}
 
   #get colours and combine palette for indels and cn states
-  ideogram_palette = get_gambl_colours("copy_number")
+  ideogram_palette = GAMBLR.helpers::get_gambl_colours("copy_number")
   if(include_cn2){
     selected_colours = ideogram_palette[c(17:11)]
     names(selected_colours)[c(1:6)] = c("CN0", "CN1", "CN2", "CN3", "CN4", "CN5", "CN6+")

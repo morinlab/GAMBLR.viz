@@ -112,8 +112,8 @@ fancy_sv_sizedens = function(this_sample_id,
   manta_sv = dplyr::filter(manta_sv, size >= size_cutoff)
   manta_sv$row_num = seq.int(nrow(manta_sv))
 
-  del_col = get_gambl_colours("indels")[[1]]
-  dup_col = get_gambl_colours("indels")[[2]]
+  del_col = GAMBLR.helpers::get_gambl_colours("indels")[[1]]
+  dup_col = GAMBLR.helpers::get_gambl_colours("indels")[[2]]
 
   #plotting
   p = ggplot(manta_sv, aes(x = size, fill = type)) +

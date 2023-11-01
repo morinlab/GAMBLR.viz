@@ -49,6 +49,8 @@ Lastly, this function has a variety of parameters that can be used to further cu
 Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
 }
 \examples{
+library(GAMBLR.data)
+
 #basic usage
 this_region = "chr6:90975034-91066134"
 this_metadata = get_gambl_metadata()

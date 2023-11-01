@@ -150,8 +150,8 @@ fancy_v_chrcount = function(this_sample_id,
         labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
         scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
         geom_bar(position = "stack", stat = "identity") +
-        {if(ssm)scale_fill_manual(values = get_gambl_colours("indels"))} +
-        {if(!ssm)scale_fill_manual(values = get_gambl_colours("svs"))} +
+        {if(ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("indels"))} +
+        {if(!ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("svs"))} +
         {if(add_qc_metric)geom_hline(qc_metrics, mapping = aes(yintercept = MeanCorrectedCoverage / 10), linetype = "dashed", group = 2)} +
         {if(!add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = y_interval))} +
         {if(add_qc_metric)scale_y_continuous(expand = c(0, 0), breaks = seq(0, ymax + 2, by = y_interval), sec.axis = sec_axis(~.*10, name = "Mean Corrected Coverage (X)", breaks = seq(0, 100, by = 10)))} +

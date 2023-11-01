@@ -13,7 +13,6 @@ Imports:
     broom,
     circlize,
     ComplexHeatmap,
-    config,
     cowplot,
     data.table,
     dplyr,
@@ -21,32 +20,27 @@ Imports:
     g3viz,
     GAMBLR.data,
     GAMBLR.helpers,
+    GAMBLR.utils,
     ggbeeswarm,
     ggplot2,
     ggpubr,
     ggrepel,
     ggsci,
-    ggthemes,
-    graphics,
-    grDevices,
-    grid,
     gridExtra,
     maftools,
-    methods,
     plotly,
     purrr,
     RCircos,
     RColorBrewer,
     readr,
-    stats,
     stringr,
     tibble,
     tidyr,
-    utils,
     wordcloud
 Remotes:
     morinLab/GAMBLR.data,
-    morinLab/GAMBLR.helpers
+    morinLab/GAMBLR.helpers,
+    morinLab/GAMBLR.utils
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

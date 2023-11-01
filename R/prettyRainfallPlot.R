@@ -50,7 +50,7 @@ prettyRainfallPlot = function(this_sample_id,
   # allow to zoom in to a specific region
   if (!missing(zoom_in_region)) {
     region = zoom_in_region
-    zoom_in_region = GAMBLR.helpers::region_to_chunks(zoom_in_region)
+    zoom_in_region = GAMBLR.data::region_to_chunks(zoom_in_region)
     zoom_in_region$chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = zoom_in_region$chromosome,
                                                                        projection = projection)
     zoom_in_region$start = as.numeric(zoom_in_region$start)
@@ -307,9 +307,9 @@ prettyRainfallPlot = function(this_sample_id,
 
   p = ggplot(rainfall_points) +
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
-    scale_color_manual(values = get_gambl_colours("rainfall")) +
+    scale_color_manual(values = GAMBLR.helpers::get_gambl_colours("rainfall")) +
     ylab("log(IMD)") +
-    theme_Morons() +
+    GAMBLR.helpers::theme_Morons() +
     facet_wrap( ~ Chromosome_f, scales = "free_x") +
     ggtitle(this_sample_id) +
     theme(plot.title = element_text(hjust = 0)) # left-align title plot

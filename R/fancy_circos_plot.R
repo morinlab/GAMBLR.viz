@@ -38,7 +38,7 @@
 #'   pull(Gene)
 #'
 #' # get regions for selected genes
-#' fl_genes_list = gene_to_region(gene_symbol = fl_genes,
+#' fl_genes_list = GAMBLR.utils::gene_to_region(gene_symbol = fl_genes,
 #'                                return_as = "bed")
 #'
 #' fancy_circos_plot(this_sample_id = "DOHH-2",
