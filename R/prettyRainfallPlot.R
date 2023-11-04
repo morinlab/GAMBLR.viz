@@ -12,7 +12,7 @@
 #' @param maf_path Specify path to MAF file if it is not already loaded into data frame.
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
 #' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
-#' @param seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
+#' @param this_seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #'
@@ -22,7 +22,7 @@
 #'
 #' @examples
 #' prettyRainfallPlot(this_sample_id = "DOHH-2",
-#'                    seq_type = "genome",
+#'                    this_seq_type = "genome",
 #'                    zoom_in_region = "8:125252796-135253201",
 #'                    label_sv = TRUE)
 #'
@@ -33,7 +33,7 @@ prettyRainfallPlot = function(this_sample_id,
                               this_maf,
                               maf_path,
                               zoom_in_region,
-                              seq_type,
+                              this_seq_type,
                               label_sv = FALSE) {
   if (missing(this_sample_id)) {
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
@@ -132,13 +132,13 @@ prettyRainfallPlot = function(this_sample_id,
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
     these_ssm = get_ssm_by_sample(this_sample_id,
                                   projection = projection, 
-                                  this_seq_type = seq_type)
-  }else if(!missing(seq_type)){
+                                  this_seq_type = this_seq_type)
+  }else if(!missing(this_seq_type)){
     if(missing(this_sample_id)){
       this_sample_id = "all samples"
     }
-    message(paste("Will use all mutations for",seq_type, "in this region:",zoom_in_region))
-    these_ssm = get_ssm_by_region(region = region,seq_type = seq_type,projection=projection)
+    message(paste("Will use all mutations for",this_seq_type, "in this region:",zoom_in_region))
+    these_ssm = get_ssm_by_region(region = region, this_seq_type = this_seq_type, projection = projection)
   }
 
   # do rainfall calculation using lag

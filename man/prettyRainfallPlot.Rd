@@ -12,7 +12,7 @@ prettyRainfallPlot(
   this_maf,
   maf_path,
   zoom_in_region,
-  seq_type,
+  this_seq_type,
   label_sv = FALSE
 )
 }
@@ -31,7 +31,7 @@ prettyRainfallPlot(
 
 \item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
 
-\item{seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
+\item{this_seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
 
 \item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
 }
@@ -46,7 +46,7 @@ Create a sample-level rainfall plot visualizing single nucleotide substitutions 
 }
 \examples{
 prettyRainfallPlot(this_sample_id = "DOHH-2",
-                   seq_type = "genome",
+                   this_seq_type = "genome",
                    zoom_in_region = "8:125252796-135253201",
                    label_sv = TRUE)
 
