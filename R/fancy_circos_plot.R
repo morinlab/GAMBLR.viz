@@ -17,8 +17,6 @@
 #' @param chr_select Optional argument for subset on selected chromosomes, default is all autosomes.
 #' @param vaf_cutoff Threshold for filtering variants on VAF (events with a VAF > cutoff will be retained).
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
-#' @param from_flatfile If set to TRUE the function will use flat files instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #' @param projection Genomic projection for variants and circos plot. Accepted values are grch37 and hg38, default is grch37.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param out Path to output folder, to where the plot will be exported.
@@ -143,7 +141,8 @@ fancy_circos_plot = function(this_sample_id,
     }
 
     #add "chr" prefix, if needed
-    if(!str_detect(gene_list$Chromosome, "chr")){
+    if( any( !str_detect(gene_list$Chromosome, "chr") ) ){
+      stopifnot( "Inconsistent chromosome names in argument `gene_list`." = all( !str_detect(gene_list$Chromosome, "chr") ) )
       gene_list = mutate(gene_list, Chromosome = paste0("chr", Chromosome))
     }
 
@@ -163,7 +162,7 @@ fancy_circos_plot = function(this_sample_id,
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
     maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
 
-    if(!str_detect(maf_tmp$Chromosome, "chr")){ #add chr prefic, if missing...
+    if( any( !str_detect(maf_tmp$Chromosome, "chr") ) ){ #add chr prefic, if missing...
       maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
     }
 
@@ -186,19 +185,21 @@ fancy_circos_plot = function(this_sample_id,
     svs_df = dplyr::select(svs, CHROM_A, START_A, END_A, CHROM_B, START_B, END_B, manta_name)
 
     #split manta_name variable
-    svs_df = data.frame(svs_df$CHROM_A, svs_df$START_A, svs_df$END_A, svs_df$CHROM_B, svs_df$START_B, svs_df$END_B, do.call(rbind, strsplit(svs_df$manta_name, split = ":", fixed = TRUE)))
+    svs_df = data.frame( svs_df$CHROM_A, svs_df$START_A, svs_df$END_A, 
+                         svs_df$CHROM_B, svs_df$START_B, svs_df$END_B, 
+                         sub("^(.+?):.*", "\\1", svs_df$manta_name) )
 
     #rename variables
     colnames(svs_df)[1:7] = c("CHROM_A", "START_A", "END_A", "CHROM_B", "START_B", "END_B", "TYPE")
 
-      #add chr prefix, if missing
+    #add chr prefix, if missing
     if(!str_detect(svs_df$CHROM_A, "chr")[1]){
       svs_df = mutate(svs_df, CHROM_A = paste0("chr", CHROM_A))
-      }
+    }
 
     if(!str_detect(svs_df$CHROM_B, "chr")[4]){
       svs_df = mutate(svs_df, CHROM_B = paste0("chr", CHROM_B))
-      }
+    }
 
     #subset on selected chromosomes
     svs_df = svs_df[svs_df$CHROM_A %in% chr_select, ]
@@ -224,10 +225,10 @@ fancy_circos_plot = function(this_sample_id,
   #plotting
   #define reference build
   if(projection == "grch37"){
-    data(UCSC.HG19.Human.CytoBandIdeogram)
+    data(UCSC.HG19.Human.CytoBandIdeogram, package = "RCircos")
     cytobands = UCSC.HG19.Human.CytoBandIdeogram
   }else if(projection == "hg38"){
-    data(UCSC.HG38.Human.CytoBandIdeogram)
+    data(UCSC.HG38.Human.CytoBandIdeogram, package = "RCircos")
     cytobands = UCSC.HG38.Human.CytoBandIdeogram
   }
 
