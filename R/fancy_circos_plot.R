@@ -162,7 +162,7 @@ fancy_circos_plot = function(this_sample_id,
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor
     maf_tmp[maf_tmp==0] <- 1 #transform all lenght coordinates == 0 to 1
 
-    if( any( !str_detect(maf_tmp$Chromosome, "chr") ) ){ #add chr prefic, if missing...
+    if( any( !str_detect(maf_tmp$Chromosome, "chr") ) ){ #add chr prefix, if missing...
       maf_tmp = mutate(maf_tmp, Chromosome = paste0("chr", Chromosome))
     }
 
