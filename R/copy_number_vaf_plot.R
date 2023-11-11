@@ -23,12 +23,14 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #build plot
 #' copy_number_vaf_plot(this_sample_id = "DOHH-2")
 #'
 #' #coding only
 #' copy_number_vaf_plot(this_sample_id = "DOHH-2",
 #'                      coding_only = TRUE)
+#' }
 #'
 copy_number_vaf_plot = function(this_sample_id,
                                 just_segments = FALSE,

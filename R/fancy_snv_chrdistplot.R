@@ -33,12 +33,14 @@
 #'
 #' @examples
 #' #plot SNVs
+#' \dontrun{
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 #'
 #' #plot SNVs and DNPs
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
 #'                       include_dnp = TRUE,
 #'                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+#' }
 #'
 fancy_snv_chrdistplot = function(this_sample_id,
                                  maf_data,

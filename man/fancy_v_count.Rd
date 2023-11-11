@@ -81,6 +81,8 @@ the variant types specified in this parameter must match with whatever is presen
 }
 \examples{
 #count all variants for one sample (default parameters)
+\dontrun{
 fancy_v_count(this_sample_id = "DOHH-2")
+}
 
 }

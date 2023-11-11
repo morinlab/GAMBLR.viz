@@ -84,6 +84,8 @@ For more info on how to run with these parameters, refer to the parameter descri
 }
 \examples{
 #plot SSM size distributions:
+\dontrun{
 fancy_v_sizedis(this_sample_id = "DOHH-2")
+}
 
 }

@@ -48,11 +48,13 @@ This only plots the segments. The user can also restrict the plotted segments to
 and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
 }
 \examples{
+\dontrun{
 #build plot
 copy_number_vaf_plot(this_sample_id = "DOHH-2")
 
 #coding only
 copy_number_vaf_plot(this_sample_id = "DOHH-2",
                      coding_only = TRUE)
+}
 
 }

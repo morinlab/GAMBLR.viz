@@ -64,11 +64,13 @@ also have convenient parameters for customizing the returned plot, e.g `plot_tit
 }
 \examples{
 #plot SNVs
+\dontrun{
 fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 
 #plot SNVs and DNPs
 fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
                       include_dnp = TRUE,
                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+}
 
 }

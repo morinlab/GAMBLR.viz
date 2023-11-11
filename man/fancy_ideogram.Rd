@@ -91,9 +91,11 @@ This parameter takes a vector of characters or a data frame with regions that th
 }
 \examples{
 #build plot
+\dontrun{
 fancy_ideogram(this_sample_id = "DOHH-2",
                gene_annotation = "MYC",
                plot_title = "Sample-level Ideogram Example",
                plot_subtitle = "grch37")
+}
 
 }
