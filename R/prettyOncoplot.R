@@ -7,7 +7,7 @@
 #' The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
 #' sample_id, pathology
 #'
-#' @param maftools_obj A maftools object containing the mutations you want to plot.
+#' @param maf_df A maf as data frame containing the mutations you want to plot.
 #' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
 #' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
@@ -54,38 +54,36 @@
 #'
 #' @return Nothing
 #'
-#' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 maftools tibble
-#' @importFrom utils getFromNamespace
+#' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 GAMBLR.helpers tibble
 #' @export
 #'
 #' @examples
 #' #load packages
 #' library(grid)
-#' 
+#'
 #' #get some data
 #' maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
 #' maf_metadata = get_gambl_metadata()
-#' maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
-#' 
+#'
 #' #define some genes of interest
 #' bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
 #'              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
 #'              "CCND3", "SMARCA4", "DDX3X")
-#' 
+#'
 #' dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
-#' 
+#'
 #' genes = c(bl_genes, dlbcl_genes)
-#' 
+#'
 #' #define gene groups
 #' gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
 #' names(gene_groups) = genes
-#' 
+#'
 #' #filter metadata
 #' maf_metadata = dplyr::filter(maf_metadata,!lymphgen %in% c("COMPOSITE"))
-#' 
+#'
 #' #convert metadata column into factor
 #' maf_metadata$pathology = as.factor(maf_metadata$pathology)
-#' 
+#'
 #' #define order of factors for selected metadata column
 #' maf_metadata$pathology = factor(maf_metadata$pathology,
 #'                                 levels = c("DLBCL", "BL",
@@ -94,11 +92,11 @@
 #'                                            "FL", "HGBL",
 #'                                            "MCL", "PBL",
 #'                                            "SCBC", "UNSPECIFIED"))
-#' 
+#'
 #' maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
-#' 
+#'
 #' #create prettyOncoplot
-#' prettyOncoplot(maftools_obj = maf,
+#' prettyOncoplot(maf_df = maf_data,
 #'                genes = genes,
 #'                these_samples_metadata = maf_metadata,
 #'                splitGeneGroups = gene_groups,
@@ -110,8 +108,8 @@
 #'                fontSizeGene = 11,
 #'                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
 #'                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
-#' 
-prettyOncoplot = function(maftools_obj,
+#'
+prettyOncoplot = function(maf_df,
                           onco_matrix_path,
                           genes,
                           include_noncoding = NULL,
@@ -156,34 +154,62 @@ prettyOncoplot = function(maftools_obj,
                           annotation_col = 1,
                           verbose = FALSE){
 
-  # Use non-exported function from maftools
-  createOncoMatrix <- getFromNamespace("createOncoMatrix", "maftools")
-
   patients = pull(these_samples_metadata, sample_id)
+  if(missing(maf_df)){
+    stop(
+        "You must provide maf data frame."
+    )
+  }
+  onco_matrix_coding <- GAMBLR.helpers::coding_class[
+    !GAMBLR.helpers::coding_class %in% c("Silent", "Splice_Region", "Targeted_Region")
+  ]
   #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
   if(!recycleOncomatrix & missing(onco_matrix_path)){
     onco_matrix_path = "onco_matrix.txt"
   #order the data frame the way you want the patients shown
-    maf_patients = unique(as.character(maftools_obj@data$Tumor_Sample_Barcode))
+    maf_patients = unique(as.character(maf_df$Tumor_Sample_Barcode))
     if(any(!maf_patients %in% patients)){
       extra = maf_patients[which(!maf_patients %in% patients)]
       patients = maf_patients[which(maf_patients %in% patients)]
       n_drop = length(extra)
       message(paste(n_drop, "patients are not in your metadata, will drop them from the data before displaying"))
-      maftools_obj = subsetMaf(maf = maftools_obj, tsb = patients)
+      maf_df = filter(maf_df, Tumor_Sample_Barcode %in% patients)
     }
     if(missing(genes)){
       #check that our MAFtools object only contains samples in the supplied metadata
-      genes = maftools::getGeneSummary(x = maftools_obj)[order(MutatedSamples, decreasing = TRUE)][,.(Hugo_Symbol, MutatedSamples)]
+      gene_summary = maf_df %>%
+            distinct(
+                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+                Start_Position, End_Position
+            ) %>%
+            filter(
+                Tumor_Sample_Barcode %in% patients,
+                Variant_Classification %in% onco_matrix_coding
+            ) %>%
+            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+            group_by(Hugo_Symbol) %>%
+            summarize(MutatedSamples = n(), .groups = "drop") %>%
+            arrange(desc(MutatedSamples))
+      genes = gene_summary
       colnames(genes)[2] = "mutload"
-      totSamps = as.numeric(maftools_obj@summary[3, summary])
-      genes[,fractMutated := mutload / totSamps]
-      genes = genes[fractMutated * 100 >= minMutationPercent, Hugo_Symbol]
+      totSamps = as.numeric(length(unique(maf_df$Tumor_Sample_Barcode)))
+      genes$fractMutated = genes$mutload / totSamps
+      genes = genes %>% filter(fractMutated * 100 >= minMutationPercent) %>% pull(Hugo_Symbol)
+
       lg = length(genes)
       message(paste("creating oncomatrix with", lg, "genes"))
-      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
-      mat_origin = om$oncoMatrix
-      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+      mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+
+      tsbs = maf_df %>%
+        distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+        filter(
+            Tumor_Sample_Barcode %in% patients,
+            Variant_Classification %in% onco_matrix_coding
+        ) %>%
+        group_by(Tumor_Sample_Barcode) %>%
+        summarize(total = n(), .groups = "drop") %>%
+        arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
       print(paste("numcases:", length(tsbs)))
 
       if(!removeNonMutated){
@@ -197,9 +223,31 @@ prettyOncoplot = function(maftools_obj,
       if(any(duplicated(genes))){
         stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
       }
-      om = createOncoMatrix(m = maftools_obj, g = genes, add_missing = TRUE)
-      mat_origin = om$oncoMatrix
-      tsbs = levels(maftools::getSampleSummary(x = maftools_obj)[,Tumor_Sample_Barcode])
+      gene_summary = maf_df %>%
+            distinct(
+                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+                Start_Position, End_Position
+            ) %>%
+            filter(
+                Hugo_Symbol %in% genes,
+                Tumor_Sample_Barcode %in% patients,
+                Variant_Classification %in% onco_matrix_coding
+            ) %>%
+            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+            group_by(Hugo_Symbol) %>%
+            summarize(MutatedSamples = n(), .groups = "drop") %>%
+            arrange(desc(MutatedSamples))
+      mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+      mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+      tsbs = maf_df %>%
+        distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+        filter(
+            Tumor_Sample_Barcode %in% patients,
+            Variant_Classification %in% onco_matrix_coding
+        ) %>%
+        group_by(Tumor_Sample_Barcode) %>%
+        summarize(total = n(), .groups = "drop") %>%
+        arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
       print(paste("numcases:",length(tsbs)))
       print(paste("numgenes:",length(mat_origin[,1])))
       if(!removeNonMutated){
@@ -232,7 +280,10 @@ prettyOncoplot = function(maftools_obj,
     for(gene in names(include_noncoding)){
       for(this_vc in unname(include_noncoding[[gene]])){
         message(paste(gene, "and", this_vc))
-        these_samples = dplyr::filter(maftools_obj@maf.silent,Hugo_Symbol == gene & Variant_Classification == this_vc) %>%
+        these_samples = dplyr::filter(
+            maf_df,
+            Hugo_Symbol == gene & Variant_Classification == this_vc
+          ) %>%
           dplyr::select(Tumor_Sample_Barcode, Variant_Classification) %>%
           unique() %>%
           pull(Tumor_Sample_Barcode)
@@ -265,21 +316,21 @@ prettyOncoplot = function(maftools_obj,
     message(patients_dropped)
   }
   genes_kept = genes[which(genes %in% rownames(mat))]
-  genes_dropped = genes[which(!genes %in% maftools_obj@gene.summary$Hugo_Symbol)]
+  genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
   for (g in genes_dropped) {
-    maftools_obj@gene.summary = dplyr::add_row(maftools_obj@gene.summary, Hugo_Symbol = g)
+    gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
   }
-  maftools_obj@gene.summary <- maftools_obj@gene.summary %>% replace(is.na(.), 0)
+  gene_summary <- gene_summary %>% replace(is.na(.), 0)
+
   if(!missing(minMutationPercent)){
     if(! onco_matrix_path == "onco_matrix.txt"){
 
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
-    mutation_counts <- maftools_obj@gene.summary %>%
+    mutation_counts <- gene_summary %>%
       select(Hugo_Symbol, MutatedSamples)
-
-    numpat = length(patients)
+    numpat = length(patients_kept)
     mutation_counts = mutate(mutation_counts, percent_mutated = 100 * MutatedSamples / numpat)
     genes_keep = mutation_counts %>%
       dplyr::filter(percent_mutated >= minMutationPercent) %>%
@@ -463,7 +514,7 @@ prettyOncoplot = function(maftools_obj,
   }
 
   if(highlightHotspots){
-    hot_samples = dplyr::filter(maftools_obj@data, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
+    hot_samples = dplyr::filter(maf_df, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
       mutate(mutated = "hot_spot") %>%
       unique()
@@ -563,7 +614,7 @@ prettyOncoplot = function(maftools_obj,
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
-    tally_mutations = maftools_obj@data %>%
+    tally_mutations = maf_df %>%
       dplyr::filter(Tumor_Sample_Barcode %in% patients_kept) %>%
       group_by(Tumor_Sample_Barcode) %>%
       summarize(n_mutations = n()) %>%

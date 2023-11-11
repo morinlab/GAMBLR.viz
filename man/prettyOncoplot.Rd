@@ -5,7 +5,7 @@
 \title{Oncooplot}
 \usage{
 prettyOncoplot(
-  maftools_obj,
+  maf_df,
   onco_matrix_path,
   genes,
   include_noncoding = NULL,
@@ -52,7 +52,7 @@ prettyOncoplot(
 )
 }
 \arguments{
-\item{maftools_obj}{A maftools object containing the mutations you want to plot.}
+\item{maf_df}{A maf as data frame containing the mutations you want to plot.}
 
 \item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).}
 
@@ -159,7 +159,6 @@ library(grid)
 #get some data
 maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
 maf_metadata = get_gambl_metadata()
-maf = maftools::read.maf(maf_data, clinicalData = maf_metadata)
 
 #define some genes of interest
 bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
@@ -192,7 +191,7 @@ maf_metadata$pathology = factor(maf_metadata$pathology,
 maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
 
 #create prettyOncoplot
-prettyOncoplot(maftools_obj = maf,
+prettyOncoplot(maf_df = maf_data,
                genes = genes,
                these_samples_metadata = maf_metadata,
                splitGeneGroups = gene_groups,
