@@ -46,10 +46,6 @@ fancy_circos_plot(
 \item{pdf}{Set to FALSE for png, default is TRUE (pdf).}
 
 \item{file_name}{Optional parameter for specifying the file name of generated circos plot, default is "{this_sample}_circos.pdf". If pdf is set to FALSE, a png will be generated, thus the .png extension needs to be attached to the file_name.}
-
-\item{from_flatfile}{If set to TRUE the function will use flat files instead of the database.}
-
-\item{use_augmented_maf}{Boolean statement if to use augmented maf, default is TRUE.}
 }
 \value{
 Nothing.

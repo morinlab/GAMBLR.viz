@@ -113,7 +113,7 @@ fancy_propcov_plot = function(these_sample_ids,
   #plotting
   p = ggplot(data = sub_metrics, aes(x = Type, y = Value, fill = Type)) +
     geom_violin(trim = FALSE, scale = "width") +
-    stat_summary(fun.y = mean, geom = "point", shape = 23, size = 2, fill = "white") +
+    stat_summary(fun = mean, geom = "point", shape = 23, size = 2, fill = "white") +
     ylim(0, 1) +
     labs(title = "Proportion Coverage", subtitle = plot_subtitle, x = "", y = "Fraction") +
     theme_cowplot() +

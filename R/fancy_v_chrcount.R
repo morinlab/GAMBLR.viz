@@ -35,9 +35,11 @@
 #'
 #' @examples
 #' #plot ssm
+#' \dontrun{
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
 #'                  ssm = TRUE, 
 #'                  y_interval = 10)
+#' }
 #'
 fancy_v_chrcount = function(this_sample_id,
                             maf_data,

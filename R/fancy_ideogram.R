@@ -42,10 +42,12 @@
 #'
 #' @examples
 #' #build plot
+#' \dontrun{
 #' fancy_ideogram(this_sample_id = "DOHH-2",
 #'                gene_annotation = "MYC",
 #'                plot_title = "Sample-level Ideogram Example",
 #'                plot_subtitle = "grch37")
+#' }
 #'
 fancy_ideogram = function(this_sample_id,
                           gene_annotation,

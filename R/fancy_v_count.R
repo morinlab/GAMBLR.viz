@@ -40,7 +40,9 @@
 #'
 #' @examples
 #' #count all variants for one sample (default parameters)
+#' \dontrun{
 #' fancy_v_count(this_sample_id = "DOHH-2")
+#' }
 #'
 fancy_v_count = function(this_sample_id,
                          maf_data,

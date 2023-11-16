@@ -42,7 +42,9 @@
 #'
 #' @examples
 #' #plot SSM size distributions:
+#' \dontrun{
 #' fancy_v_sizedis(this_sample_id = "DOHH-2")
+#' }
 #'
 fancy_v_sizedis = function(this_sample_id,
                            maf_data,

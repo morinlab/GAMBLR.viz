@@ -69,6 +69,8 @@ useful for overviewing the extent of each copy number state, in the context of t
 }
 \examples{
 #Return a plot for one sample, with default parameters.
+\dontrun{
 fancy_cnbar(this_sample_id = "DOHH-2")
+}
 
 }
