@@ -4,10 +4,10 @@
 \alias{ssm_to_proteinpaint}
 \title{MAF to ProteinPaint table}
 \usage{
-ssm_to_proteinpaint(maf, print_removed_rows = FALSE)
+ssm_to_proteinpaint(maf_data, print_removed_rows = FALSE)
 }
 \arguments{
-\item{maf}{A data frame in MAF format.}
+\item{maf_data}{A data frame in MAF format.}
 
 \item{print_removed_rows}{Boolean parameter. Set to TRUE for returning rows from the 
 incoming MAF that do not contain any values in the required columns. Commonly used for 
@@ -38,7 +38,7 @@ internally in `ssm_to_proteinpaint`.
 \examples{
 library(GAMBLR.data)
 
-# get maf
+# get maf data frame
 my_maf = get_coding_ssm(basic_columns = FALSE)
 
 # convert maf to ProteinPaint format
