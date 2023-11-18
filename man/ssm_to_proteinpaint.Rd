@@ -9,9 +9,10 @@ ssm_to_proteinpaint(maf, print_removed_rows = FALSE)
 \arguments{
 \item{maf}{A data frame in MAF format.}
 
-\item{print_removed_rows}{Boolean value indicating whether only removed rows, *i.e.* 
-rows in `maf` that do not contain values for required columns, should be printed. 
-Used for checking purpose.}
+\item{print_removed_rows}{Boolean parameter. Set to TRUE for returning rows from the 
+incoming MAF that do not contain any values in the required columns. Commonly used for 
+checking purposes only. Setting this to TRUE, does not produce an output compatible with 
+Protein paint. The default is FALSE.}
 }
 \value{
 A data frame.

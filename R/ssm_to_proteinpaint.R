@@ -17,9 +17,10 @@
 #' internally in `ssm_to_proteinpaint`.
 #' 
 #' @param maf A data frame in MAF format.
-#' @param print_removed_rows Boolean value indicating whether only removed rows, *i.e.* 
-#' rows in `maf` that do not contain values for required columns, should be printed. 
-#' Used for checking purpose.
+#' @param print_removed_rows Boolean parameter. Set to TRUE for returning rows from the 
+#' incoming MAF that do not contain any values in the required columns. Commonly used for 
+#' checking purposes only. Setting this to TRUE, does not produce an output compatible with 
+#' Protein paint. The default is FALSE.
 #'
 #' @return A data frame.
 #' 
