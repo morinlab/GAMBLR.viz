@@ -35,6 +35,8 @@ fancy_ideogram(
 
 \item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
+\item{seg_path}{Optional parameter with path to external seg like file.}
+
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
