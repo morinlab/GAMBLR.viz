@@ -4,8 +4,8 @@
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
 #' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
-#' can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
-#' parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
+#' can also accept an already loaded seg file given to the `seg_data` parameter. It can also load a seg file with the `seg_path`
+#' parameter. If the user calls either `seg_data` or `seg_path`, there are a collection of parameters available for specifying
 #' the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
 #' restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 #' For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
@@ -15,8 +15,8 @@
 #' useful for overviewing the extent of each copy number state, in the context of the full genome.
 #'
 #' @param this_sample_id Sample to be plotted.
-#' @param seq_data Optional parameter with copy number df already loaded into R.
-#' @param seq_path Optional parameter with path to external cn file.
+#' @param seg_data Optional parameter with copy number df already loaded into R.
+#' @param seg_path Optional parameter with path to external cn file.
 #' @param chrom_col Index of column with chromosome annotations (to be used with either maf_data or maf_path).
 #' @param start_col Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
 #' @param end_col Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
@@ -35,13 +35,11 @@
 #'
 #' @examples
 #' #Return a plot for one sample, with default parameters.
-#' \dontrun{
-#' fancy_cnbar(this_sample_id = "DOHH-2")
-#' }
+#' my_plot = fancy_cnbar(this_sample_id = "DOHH-2")
 #'
 fancy_cnbar = function(this_sample_id,
-                       seq_data,
-                       seq_path = NULL,
+                       seg_data,
+                       seg_path = NULL,
                        chrom_col = 2,
                        start_col = 3,
                        end_col = 4,
@@ -53,55 +51,55 @@ fancy_cnbar = function(this_sample_id,
                        include_cn2 = TRUE,
                        this_seq_type = "genome") {
 
-  if(!missing(seq_data)){
-    seq = seq_data
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col] = "chrom"
-    colnames(seq)[start_col] = "start"
-    colnames(seq)[end_col] = "end"
-    colnames(seq)[cn_col] = "CN"
+  if(!missing(seg_data)){
+    seg = seg_data
+    seg = as.data.frame(seg)
+    colnames(seg)[chrom_col] = "chrom"
+    colnames(seg)[start_col] = "start"
+    colnames(seg)[end_col] = "end"
+    colnames(seg)[cn_col] = "CN"
 
-  }else if (!is.null(seq_path)){
-    seq = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col] = "chrom"
-    colnames(seq)[start_col] = "start"
-    colnames(seq)[end_col] = "end"
-    colnames(seq)[cn_col] = "CN"
+  }else if (!is.null(seg_path)){
+    seg = read.table(seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    seg = as.data.frame(seg)
+    colnames(seg)[chrom_col] = "chrom"
+    colnames(seg)[start_col] = "start"
+    colnames(seg)[end_col] = "end"
+    colnames(seg)[cn_col] = "CN"
   }
 
-  #get maf data for a specific sample.
-  if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(these_sample_ids = this_sample_id,
+  #get seg data for a specific sample.
+  if(missing(seg_data) && is.null(seg_path)){
+    seg = get_sample_cn_segments(these_sample_ids = this_sample_id,
                                  streamlined = FALSE,
                                  this_seq_type = this_seq_type
     )
   }
 
   #add chr prefix if missing
-  if(!str_detect(seq$chrom, "chr")[2]){
-    seq = mutate(seq, chrom = paste0("chr", chrom))
+  if(!str_detect(seg$chrom, "chr")[2]){
+    seg = mutate(seg, chrom = paste0("chr", chrom))
   }
 
   #read maf into R and select relevant variables and transformt to factor.
-  seq_df = dplyr::select(seq, chrom, start, end, CN) %>%
+  seg_df = dplyr::select(seg, chrom, start, end, CN) %>%
     mutate_at(vars(chrom), list(factor))
 
   #subsetting maf based on user-defined parameters
-  seq_df = seq_df[seq_df$chrom %in% chr_select, ]
+  seg_df = seg_df[seg_df$chrom %in% chr_select, ]
 
   #transform data type
-  seq_df$CN = as.factor(seq_df$CN)
+  seg_df$CN = as.factor(seg_df$CN)
 
   #count levels of factor
   if(include_cn2){
     cn_states = c(0:cutoff)
-    cns_count = dplyr::filter(seq_df, CN %in% cn_states) %>%
+    cns_count = dplyr::filter(seg_df, CN %in% cn_states) %>%
       group_by(CN) %>%
       summarize(count = n())
   }else{
     cn_states = c(0:1, 3:cutoff)
-    cns_count = dplyr::filter(seq_df, CN %in% cn_states) %>%
+    cns_count = dplyr::filter(seg_df, CN %in% cn_states) %>%
       group_by(CN) %>%
       summarize(count = n())
   }
@@ -110,7 +108,7 @@ fancy_cnbar = function(this_sample_id,
   cns_count = dplyr::select(cns_count, count, Type)
 
   #compute lenght of cn segments and transform for plotting
-  l_cn_seg = seq
+  l_cn_seg = seg
   l_cn_seg$lenght = l_cn_seg$end - l_cn_seg$start
   l_cn_seg$CN = as.factor(l_cn_seg$CN)
   l_cn_seg = dplyr::filter(l_cn_seg, CN %in% cn_states)
@@ -119,10 +117,10 @@ fancy_cnbar = function(this_sample_id,
     l_cn_seg = dplyr::filter(l_cn_seg, CN != 2)
   }
 
-  cn_seq_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
-  colnames(cn_seq_lenghts) = c("CN", "lenght")
+  cn_seg_lenghts = aggregate(l_cn_seg$lenght, list(l_cn_seg$CN), sum)
+  colnames(cn_seg_lenghts) = c("CN", "lenght")
 
-  joined_cn = cbind(cns_count, cn_seq_lenghts) %>%
+  joined_cn = cbind(cns_count, cn_seg_lenghts) %>%
     as.data.frame() %>%
     dplyr::select(CN, count, lenght)
 
