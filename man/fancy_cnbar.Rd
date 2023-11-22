@@ -6,15 +6,15 @@
 \usage{
 fancy_cnbar(
   this_sample_id,
-  seq_data,
-  seq_path = NULL,
+  seg_data,
+  seg_path = NULL,
   chrom_col = 2,
   start_col = 3,
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+  plot_subtitle =
+    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
   include_cn2 = TRUE,
@@ -24,9 +24,9 @@ fancy_cnbar(
 \arguments{
 \item{this_sample_id}{Sample to be plotted.}
 
-\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+\item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
-\item{seq_path}{Optional parameter with path to external cn file.}
+\item{seg_path}{Optional parameter with path to external cn file.}
 
 \item{chrom_col}{Index of column with chromosome annotations (to be used with either maf_data or maf_path).}
 
@@ -57,8 +57,8 @@ Generate a bar plot visualizing sample-specific copy number states and affected 
 \details{
 `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
 accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
-can also accept an already loaded seq file given to the `seq_data` parameter. It can also load a seq file with the `seq_path`
-parameter. If the user calls either `seq_data` or `seq_path`, there are a collection of parameters available for specifying
+can also accept an already loaded seg file given to the `seg_data` parameter. It can also load a seg file with the `seg_path`
+parameter. If the user calls either `seg_data` or `seg_path`, there are a collection of parameters available for specifying
 the relevant columns in the given data frame (`chrom_col`, `starat_col`, `end_col`, `cn_col`). It is also possible to
 restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
 For further control of the returned plot, it is also possible to set the threshold for maximum CN states to be returned (default is 15).
@@ -69,8 +69,6 @@ useful for overviewing the extent of each copy number state, in the context of t
 }
 \examples{
 #Return a plot for one sample, with default parameters.
-\dontrun{
-fancy_cnbar(this_sample_id = "DOHH-2")
-}
+my_plot = fancy_cnbar(this_sample_id = "DOHH-2")
 
 }

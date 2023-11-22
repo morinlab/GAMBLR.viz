@@ -8,8 +8,8 @@ comp_report(
   this_sample_id,
   export_individual_plots = FALSE,
   out,
-  seq_data,
-  seq_path = NULL,
+  seg_data,
+  seg_path = NULL,
   maf_data,
   maf_path = NULL,
   this_seq_type = "genome"
@@ -22,9 +22,9 @@ comp_report(
 
 \item{out}{Path to output folder.}
 
-\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+\item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
-\item{seq_path}{Optional parameter with path to external cn file.}
+\item{seg_path}{Optional parameter with path to external cn file.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -41,9 +41,9 @@ Construct pdf with sample-level plots, using minimum of arguments
 \details{
 This function runs the complete collection of `fancy_x_plots` for a specific sample ID (`this_sample`), with default parameters.
 The generated plots are put together into a two-page PDF. In addition, it is also possible to export all individual plots.
-This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the
-`this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local
-file on disk with the `seq_path` and `maf_path` parameters.
+This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seg file instead of using the
+`this_sample_id` parameter, this is done with the `seg_data` and `maf_data` parameters. Similarly, you can also point this function to a local
+file on disk with the `seg_path` and `maf_path` parameters.
 }
 \examples{
 \dontrun{

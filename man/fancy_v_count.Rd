@@ -31,7 +31,7 @@ fancy_v_count(
 
 \item{maf_path}{Optional parameter with path to external maf like file.}
 
-\item{ssm}{Set to FALSE to get plotting data from get_combined_sv (SVs). Default value is TRUE (plots SSM retrieved from annotate_cn_by_ssm$maf).}
+\item{ssm}{Set to FALSE to get plotting data from get_manta_sv (SVs). Default value is TRUE (plots SSM retrieved from get_ssm_by_sample).}
 
 \item{projection}{Genome build for returned variants (only applicable for ssm = FALSE).}
 
@@ -55,8 +55,6 @@ fancy_v_count(
 
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
 \item{log10_y}{Set to TRUE to force y axis to be in log10.}
 }
 \value{
@@ -70,19 +68,16 @@ This function creates a barplot showing the total number of variants for a selec
 Convenience parameters for restricting the returned plot are available. For example, with `ssm` (Boolean)
 you can toggle if the plot will be in respect to SSM (`ssm = TRUE`) or if you wish to count SVs (`ssm = FALSE`).
 In addition, this plot can also accept a variety of incoming data types. Either, you supply the function with a sample ID
-(`this_sample_id`) and the function will retrieve data using [GAMBLR::assign_cn_to_ssm] or [GAMBLR::get_combined_sv] (depending on how the `ssm` parameter is used).
+(`this_sample_id`) and the function will retrieve data using get_ssm_by_sample or get_manta_sv (depending on how the `ssm` parameter is used).
 This function also supports a maf or maf-like data frame directly, this is done with `maf_data` or `maf_path`. If data is supplied with either of these parameters,
 the user can specify what column holds the variant type information as well as chromosome information (`variant_type_col` and `chromosome_col`).
-Restricting the plot to coding mutations is done with `coding_only = TRUE`. Flat-file and augmented maf options can be toggled with `from_flatfile`
-and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function also have convenient parameters for
+Lastly, this plotting function also have convenient parameters for
 customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle` and `snp_colours`. lastly, it is also possible
 to control what variants are to be counted with `variant_select`. Default is deletions, insertions and duplications, c("DEL", "DUP", "INS"). Not that
 the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
 }
 \examples{
 #count all variants for one sample (default parameters)
-\dontrun{
 fancy_v_count(this_sample_id = "DOHH-2")
-}
 
 }
