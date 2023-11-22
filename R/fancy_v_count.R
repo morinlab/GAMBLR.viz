@@ -55,7 +55,6 @@ fancy_v_count = function(this_sample_id,
                          variant_select = c("DEL", "INS", "DUP"),
                          snp_colours = c("SNP" = "#2B9971", "DNP" = "#993F2B", "TNP" = "#A62656"),
                          hide_legend = FALSE,
-                         coding_only = FALSE,
                          log10_y = FALSE){
 
   if(!missing(maf_data)){

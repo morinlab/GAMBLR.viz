@@ -16,6 +16,7 @@
 #' @param this_sample_id Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
 #' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
 #' @param seg_data Optional parameter with copy number df already loaded into R.
+#' @param seg_path Optional parameter with path to external seg like file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param variant_type_col_maf Index of column holding Variant Type (to be used with either maf_data or maf_path).
