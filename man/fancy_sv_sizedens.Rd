@@ -78,6 +78,7 @@ This function also allows the user to customize the returned plot. For more info
 parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #build plot sith default parameters
@@ -87,5 +88,6 @@ fancy_sv_sizedens(this_sample_id = "SP116715")
 fancy_sv_sizedens(this_sample_id = "SP116715",
                   size_cutoff = 0,
                   chr_select = c("chr1", "chr2"))
+}
 
 }
