@@ -77,9 +77,9 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #grch37 coordinates
-  grch37_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
-  grch37_cent_start = GAMBLR.data::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
-  grch37_cent_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
+  grch37_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48),3]
+  grch37_cent_start = GAMBLR.data::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47),3]
+  grch37_cent_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48),2]
 
   #additional regions to plot
   if(!missing(gene_annotation)){
@@ -90,13 +90,13 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #build chr table for segment plotting
-  chr = paste0("chr", c(1:22))
+  chr = c( paste0("chr", c(1:22)), "chrX", "chrY" )
   chr_start = c(0)
   chr_end = grch37_end
   cent_start = grch37_cent_start
   cent_end =  grch37_cent_end
-  y = c(1:22)
-  yend = c(1:22)
+  y = c(1:24)
+  yend = c(1:24)
 
   #transform to data frame
   segment_data = data.frame(chr, chr_start, chr_end, cent_start, cent_end, y, yend)
@@ -193,9 +193,12 @@ fancy_ideogram = function(this_sample_id,
 
   #convert data types
   cols.int = c("start", "end", "ycoord")
-  cn_states[cols.int] = sapply(cn_states[cols.int], as.integer)
   cn_states$chrom = as.factor(cn_states$chrom)
   cn_states$CN = as.factor(cn_states$CN)
+  
+  # correct y coordinate for X and Y chromosomes
+  cn_states$ycoord = dplyr::recode(cn_states$ycoord, X="23", Y="24") %>% 
+    as.integer
 
   #subset on CN state
   cn_states$CN[cn_states$CN > 6] = 6
@@ -237,9 +240,8 @@ fancy_ideogram = function(this_sample_id,
     maf_trans$mid = ((maf_trans$End_Position - maf_trans$Start_Position) / 2) + maf_trans$Start_Position
 
     #convert chr into y coordinates
-    maf_trans$ystart = maf_trans$Chromosome
-    maf_trans$yend = maf_trans$Chromosome
-
+    maf_trans$ystart = maf_trans$yend = dplyr::recode(maf_trans$Chromosome, X="23", Y="24")
+    
     #paste chr in maf, if not there
     if(!str_detect(maf_trans$Chromosome[1], "chr")){
       maf_trans = mutate(maf_trans, Chromosome = paste0("chr", Chromosome))
