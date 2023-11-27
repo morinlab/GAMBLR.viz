@@ -90,8 +90,9 @@ fancy_sv_sizedens = function(this_sample_id,
   }
 
   #split manta_name variable
-  svs_df = data.frame(svs$CHROM_A, svs$START_A, svs$END_A, do.call(rbind, strsplit(svs$manta_name, split = ":", fixed = TRUE)))
-
+  svs_df = data.frame( svs$CHROM_A,   svs$START_A, svs$END_A,
+                       sub("^(.+?):.*", "\\1", svs$manta_name) )
+  
   #rename variables
   names(svs_df)[1] = "chrom"
   names(svs_df)[2] = "start"
