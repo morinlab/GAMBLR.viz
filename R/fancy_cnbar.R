@@ -133,7 +133,7 @@ fancy_cnbar = function(this_sample_id,
   p = ggplot(joined_cn, aes(x = CN)) +
     geom_segment(aes(y = 1, yend = lenght/500000, x = CN, xend = CN)) +
     geom_point(aes(y = lenght/500000), colour = "#E6B315", size = 3, group = 2) +
-    geom_bar(aes(y = count, fill = CN, label = count), position = "stack", stat = "identity") +
+    geom_bar(aes(y = count, fill = CN), position = "stack", stat = "identity") +
     scale_y_log10(limits = c(1, max(joined_cn$count) + 5000), sec.axis = sec_axis(~.*500000, name = "Nucleotides (n)")) +
     labs(title = plot_title, subtitle = plot_subtitle, x = "CN States", y = "CN Segments (n)", fill = "Legend") +
     scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("copy_number")) +
