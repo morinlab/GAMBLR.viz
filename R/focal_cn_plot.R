@@ -23,6 +23,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #get metadata
 #' this_metadata = get_gambl_metadata()
 #'

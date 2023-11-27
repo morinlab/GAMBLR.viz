@@ -50,6 +50,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #load metadata.
 #' metadata = GAMBLR.data::gambl_metadata
 #' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))

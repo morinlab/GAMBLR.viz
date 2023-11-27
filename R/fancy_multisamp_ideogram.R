@@ -27,6 +27,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #two samples ideogram
 #' fancy_multisamp_ideogram(these_sample_ids = c("05-18426T", "05-18426T"),
 #'                          include_cn2 = TRUE,

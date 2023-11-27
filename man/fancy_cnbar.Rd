@@ -68,6 +68,8 @@ This function also computes the number of affected bases for each copy number st
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }
 \examples{
+library(GAMBLR.data)
+
 #Return a plot for one sample, with default parameters.
 my_plot = fancy_cnbar(this_sample_id = "DOHH-2")
 

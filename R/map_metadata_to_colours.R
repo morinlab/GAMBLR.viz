@@ -12,6 +12,8 @@
 #' @import dplyr ggsci
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #get metadata
 #' all_meta = get_gambl_metadata()
 #'

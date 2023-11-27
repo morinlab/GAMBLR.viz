@@ -27,6 +27,7 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
 #'
 #' plot_sample_circos(this_sample_id = "13-38657_tumorB",
 #'                    legend_metadata_columns = c("pathology",

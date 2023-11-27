@@ -127,6 +127,8 @@ This function takes a metadata table with `these_samples_metadata` parameter and
 to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 }
 \examples{
+library(GAMBLR.data)
+
 #load metadata.
 metadata = GAMBLR.data::gambl_metadata
 dlbcl_bl_meta = dplyr::filter(metadata, pathology \%in\% c("DLBCL", "BL"))

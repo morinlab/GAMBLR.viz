@@ -155,6 +155,7 @@ sample_id, pathology
 \examples{
 #load packages
 library(grid)
+library(GAMBLR.data)
 
 #get some data
 maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())

@@ -33,6 +33,8 @@ Either a vector or list of colours.
 Assign a colour palette to metadata columns automatically and consistently.
 }
 \examples{
+library(GAMBLR.data)
+
 #get metadata
 all_meta = get_gambl_metadata()
 

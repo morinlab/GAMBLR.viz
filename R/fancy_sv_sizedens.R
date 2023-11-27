@@ -35,6 +35,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #build plot sith default parameters
 #' fancy_sv_sizedens(this_sample_id = "SP116715")
 #'

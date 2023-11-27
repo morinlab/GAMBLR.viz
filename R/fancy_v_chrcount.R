@@ -33,6 +33,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #plot ssm
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
 #'                  y_interval = 10)

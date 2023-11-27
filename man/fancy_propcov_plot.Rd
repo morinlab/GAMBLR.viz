@@ -49,6 +49,7 @@ To do this one would call the function with `comparison_samples` parameter. For 
 \examples{
 #load packages
 library(dplyr)
+library(GAMBLR.data)
 
 #get sample IDs for available genome samples
 genome_collated = collate_results(seq_type_filter = "genome") \%>\% 
