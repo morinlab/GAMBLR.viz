@@ -16,6 +16,7 @@
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
+#' @param projection The projection you want back.
 #'
 #' @return Nothing.
 #'
@@ -38,7 +39,8 @@ comp_report = function(this_sample_id,
                        seg_path = NULL,
                        maf_data,
                        maf_path = NULL,
-                       this_seq_type = "genome"){
+                       this_seq_type = "genome",
+                       projection = "grch37"){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -76,7 +78,8 @@ comp_report = function(this_sample_id,
 
   #read maf and seg data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
   if(missing(maf_data) && is.null(maf_path)){
-    maf = get_ssm_by_sample(these_sample_ids = this_sample_id, 
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
+                            this_seq_type = this_seq_type,
                             projection = projection)
   }
 
@@ -84,7 +87,8 @@ comp_report = function(this_sample_id,
     seg = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       streamlined = FALSE,
-      this_seq_type = this_seq_type
+      this_seq_type = this_seq_type, 
+      projection = projection
     )
   }
 
@@ -104,7 +108,7 @@ comp_report = function(this_sample_id,
 
   #build pdf report
   pdf(paste0(out, this_sample_id, "_report.pdf"), width = 17, height = 12)
-  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
+  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample_id, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
   page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
   dev.off()
 
