@@ -16,7 +16,8 @@
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param projection The projection you want back.
+#' @param projection Specify the projection you want the returned plots to be in reference to. 
+#' Possible values are "grch37" and "hg38". Default is grch37.
 #'
 #' @return Nothing.
 #'
