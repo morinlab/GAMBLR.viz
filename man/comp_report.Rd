@@ -12,7 +12,8 @@ comp_report(
   seg_path = NULL,
   maf_data,
   maf_path = NULL,
-  this_seq_type = "genome"
+  this_seq_type = "genome",
+  projection = "grch37"
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ comp_report(
 \item{maf_path}{Optional parameter with path to external maf like file.}
 
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+
+\item{projection}{The projection you want back.}
 }
 \value{
 Nothing.
