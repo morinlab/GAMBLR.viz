@@ -153,7 +153,7 @@ fancy_circos_plot = function(this_sample_id,
 
   #get SSM data
   if(ssm_calls){
-    maf = get_ssm_by_sample(these_sample_ids = this_sample_id, projection = projection, this_seq_type = this_seq_type)
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id, projection = projection, this_seq_type = this_seq_type)
     maf_tmp = dplyr::select(maf, Chromosome, Start_Position, End_Position, Variant_Type) #select appropriate columns
     maf_tmp$Variant_Size = maf_tmp$End_Position - maf_tmp$Start_Position # calcualte variant size
     maf_tmp$Variant_Type = as.factor(maf_tmp$Variant_Type) #transform Variant_Type to factor

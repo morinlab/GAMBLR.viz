@@ -225,7 +225,7 @@ fancy_ideogram = function(this_sample_id,
     }
 
     if(missing(maf_data) && is.null(maf_path)){
-      maf = get_ssm_by_sample(these_sample_ids = this_sample_id, 
+      maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
                               projection = "grch37", #currently only supported reference build.
                               this_seq_type = this_seq_type)
     }

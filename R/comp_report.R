@@ -79,7 +79,7 @@ comp_report = function(this_sample_id,
 
   #read maf and seg data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
   if(missing(maf_data) && is.null(maf_path)){
-    maf = get_ssm_by_sample(these_sample_ids = this_sample_id, 
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
                             this_seq_type = this_seq_type,
                             projection = projection)
   }

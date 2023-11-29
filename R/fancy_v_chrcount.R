@@ -69,7 +69,7 @@ fancy_v_chrcount = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      plot_data = get_ssm_by_sample(these_sample_ids = this_sample_id, 
+      plot_data = get_ssm_by_sample(this_sample_id = this_sample_id, 
                                     this_seq_type = this_seq_type, 
                                     projection = projection)
     }else{
