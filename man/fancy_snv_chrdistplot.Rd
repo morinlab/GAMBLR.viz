@@ -15,8 +15,8 @@ fancy_snv_chrdistplot(
   chr_select = paste0("chr", c(1:22)),
   include_dnp = FALSE,
   hide_legend = FALSE,
-  coding_only = FALSE,
-  this_seq_type = "genome"
+  this_seq_type = "genome",
+  projection = "grch37"
 )
 }
 \arguments{
@@ -40,9 +40,9 @@ fancy_snv_chrdistplot(
 
 \item{hide_legend}{Set to True to remove legend from plot, default is FALSE.}
 
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+
+\item{projection}{Genome build for returned variants. Default is grch37.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -52,25 +52,21 @@ Visualizing the number of SNVs per chromosome.
 }
 \details{
 This function takes on an already loaded maf-like data frame, or a path to the maf file of interest.
-In addition, the user can also give this function a sample ID and the function will run [GAMBLR::assign_cn_to_ssm]
+In addition, the user can also give this function a sample ID and the function will run get_ssm_by_sample
 to get data for plotting. If a maf file or data frame is used, the user has the chance to specify what column
 that holds the Variant Type information (`variant_type_col`), in addition the user can also specify what column
 in the incoming maf that is corresponding to the chromosome annotations. This function also includes useful subsetting
 options. For example, `chr_select` allows the user to restrict the plot to specific chromosomes. `include_dnp` is an optional
-argument (Boolean) for if variants of this subtype should be included or not. The plot can also be restricted to only
-counting coding mutations (`coding_only`). Flat-file and augmented maf options can be toggled with `from_flatfile`
-and `use_augmented_maf`. Both are TRUE by default and should rarely be set to FALSE. Lastly, this plotting function
+argument (Boolean) for if variants of this subtype should be included or not. Lastly, this plotting function
 also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
 }
 \examples{
 #plot SNVs
-\dontrun{
 fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 
 #plot SNVs and DNPs
 fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
                       include_dnp = TRUE,
                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
-}
 
 }

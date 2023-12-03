@@ -21,8 +21,7 @@ fancy_v_sizedis(
   scale_value = "width",
   log_10 = TRUE,
   plot_trim = FALSE,
-  chr_select = paste0("chr", c(1:22)),
-  coding_only = FALSE
+  chr_select = paste0("chr", c(1:22))
 )
 }
 \arguments{
@@ -59,8 +58,6 @@ fancy_v_sizedis(
 \item{plot_trim}{If TRUE, trim the tails of the violins to the range of the data. If FALSE (default), don't trim the tails.}
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
-
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -73,9 +70,8 @@ Function for plotting variant size distributions. This function takes either a s
 In addition, the function can also accept an already loaded MAF or MAF-like object given to the `maf_data` parameter.
 As a third option, the function can also read a maf from disk (provide path to maf with `maf_path`).
 A collection of convenient filtering and data subsetting parameters are also available for this function.
-For restricting your data (if plotting data retrieved with `this_sample_id`), the user can choose to only plot coding mutations with setting `coding_only` to TRUE.
 This plot can also deal with SVs as well as SSM data. To control this, please use the `ssm` parameter. If set to TRUE and if `this_sample` is called,
-the function gets data with annotate_cn_by_ssm and if set to FALSE, the function calls `get_combined_sv` to get SV calls for plotting.
+the function gets data with get_ssm_by_sample and if set to FALSE, the function calls `get_manta_sv` to get SV calls for plotting.
 If the user calls either `maf_data` or `maf_path`, there are a collection of parameters available for specifying
 the relevant columns in the given data frame (`variant_type_col`, `chhromosome_col`, `start_col`, `end_col`). It is also possible to
 restrict the returned plot to any given chromosome. This is done with the `chr_select` parameter (default is all autosomes).
@@ -84,8 +80,6 @@ For more info on how to run with these parameters, refer to the parameter descri
 }
 \examples{
 #plot SSM size distributions:
-\dontrun{
 fancy_v_sizedis(this_sample_id = "DOHH-2")
-}
 
 }

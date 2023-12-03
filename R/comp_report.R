@@ -4,18 +4,20 @@
 #'
 #' @details This function runs the complete collection of `fancy_x_plots` for a specific sample ID (`this_sample`), with default parameters.
 #' The generated plots are put together into a two-page PDF. In addition, it is also possible to export all individual plots.
-#' This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seq file instead of using the
-#' `this_sample_id` parameter, this is done with the `seq_data` and `maf_data` parameters. Similarly, you can also point this function to a local
-#' file on disk with the `seq_path` and `maf_path` parameters.
+#' This can be done by setting `export_individual_plots` to TRUE. It is also possible to use an already loaded seg file instead of using the
+#' `this_sample_id` parameter, this is done with the `seg_data` and `maf_data` parameters. Similarly, you can also point this function to a local
+#' file on disk with the `seg_path` and `maf_path` parameters.
 #'
 #' @param this_sample_id Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
 #' @param out Path to output folder.
-#' @param seq_data Optional parameter with copy number df already loaded into R.
-#' @param seq_path Optional parameter with path to external cn file.
+#' @param seg_data Optional parameter with copy number df already loaded into R.
+#' @param seg_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
+#' @param projection Specify the projection you want the returned plots to be in reference to. 
+#' Possible values are "grch37" and "hg38". Default is grch37.
 #'
 #' @return Nothing.
 #'
@@ -34,11 +36,12 @@
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
                        out,
-                       seq_data,
-                       seq_path = NULL,
+                       seg_data,
+                       seg_path = NULL,
                        maf_data,
                        maf_path = NULL,
-                       this_seq_type = "genome"){
+                       this_seq_type = "genome",
+                       projection = "grch37"){
 
   if(!missing(maf_data)){
     maf = maf_data
@@ -57,36 +60,36 @@ comp_report = function(this_sample_id,
     colnames(maf)[end_col_maf] = "End_Position"
   }
 
-  if(!missing(seq_data)){
-    seq = seq_data
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col_seq] = "chrom"
-    colnames(seq)[start_col_seq] = "start"
-    colnames(seq)[end_col_seq] = "end"
-    colnames(seq)[cn_col_seq] = "CN"
+  if(!missing(seg_data)){
+    seg = seg_data
+    seg = as.data.frame(seg)
+    colnames(seg)[chrom_col_seg] = "chrom"
+    colnames(seg)[start_col_seg] = "start"
+    colnames(seg)[end_col_seg] = "end"
+    colnames(seg)[cn_col_seg] = "CN"
 
-  }else if (!is.null(seq_path)){
-    seq = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
-    seq = as.data.frame(seq)
-    colnames(seq)[chrom_col_seq] = "chrom"
-    colnames(seq)[start_col_seq] = "start"
-    colnames(seq)[end_col_seq] = "end"
-    colnames(seq)[cn_col_seq] = "CN"
+  }else if (!is.null(seg_path)){
+    seg = read.table(seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
+    seg = as.data.frame(seg)
+    colnames(seg)[chrom_col_seg] = "chrom"
+    colnames(seg)[start_col_seg] = "start"
+    colnames(seg)[end_col_seg] = "end"
+    colnames(seg)[cn_col_seg] = "CN"
   }
 
-  #read maf and seq data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
+  #read maf and seg data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
   if(missing(maf_data) && is.null(maf_path)){
-    maf = assign_cn_to_ssm(
-      this_sample_id = this_sample_id,
-      coding_only = FALSE,
-      this_seq_type = this_seq_type)$maf
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
+                            this_seq_type = this_seq_type,
+                            projection = projection)
   }
 
-  if(missing(seq_data) && is.null(seq_path)){
-    seq = get_sample_cn_segments(
+  if(missing(seg_data) && is.null(seg_path)){
+    seg = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       streamlined = FALSE,
-      this_seq_type = this_seq_type
+      this_seq_type = this_seq_type, 
+      projection = projection
     )
   }
 
@@ -99,14 +102,14 @@ comp_report = function(this_sample_id,
   sv_count = fancy_v_count(this_sample_id = this_sample_id, plot_title = "", plot_subtitle = "E. SV Counts.", ssm = FALSE, variant_select = c("DEL", "DUP"), hide_legend = TRUE)
   sv_size = fancy_sv_sizedens(this_sample_id = this_sample_id, plot_title = "", plot_subtitle = "F. SV Size Density.", hide_legend = TRUE)
   snv_plot = fancy_snv_chrdistplot(this_sample_id = this_sample_id,  maf_data = maf, plot_title = "", plot_subtitle = "G. SNV Distribution Per Chromosome.")
-  cns = fancy_cnbar(this_sample_id = this_sample_id, seq_data = seq, plot_title = "", plot_subtitle = "H. CN states.")
+  cns = fancy_cnbar(this_sample_id = this_sample_id, seg_data = seg, plot_title = "", plot_subtitle = "H. CN states.")
 
   #page 2 ideogram
-  cnv_ideogram = fancy_ideogram(this_sample_id = this_sample_id, seq_data = seq, maf_data = maf, plot_title = "", plot_subtitle = "F. Ideogram.")
+  cnv_ideogram = fancy_ideogram(this_sample_id = this_sample_id, seg_data = seg, maf_data = maf, plot_title = "", plot_subtitle = "F. Ideogram.")
 
   #build pdf report
   pdf(paste0(out, this_sample_id, "_report.pdf"), width = 17, height = 12)
-  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
+  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample_id, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
   page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
   dev.off()
 

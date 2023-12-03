@@ -18,9 +18,8 @@ fancy_v_chrcount(
   hide_legend = FALSE,
   plot_subtitle = "Variant Count Distribution Per Chromosome",
   chr_select = paste0("chr", c(1:22)),
-  coding_only = FALSE,
   add_qc_metric = FALSE,
-  seq_type = "genome"
+  this_seq_type = "genome"
 )
 }
 \arguments{
@@ -50,11 +49,9 @@ fancy_v_chrcount(
 
 \item{chr_select}{vector of chromosomes to be included in plot, defaults to autosomes.}
 
-\item{coding_only}{Optional. Set to TRUE to restrict to plotting only coding mutations.}
-
 \item{add_qc_metric}{Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).}
 
-\item{seq_type}{Default is "genome".}
+\item{this_seq_type}{Default is "genome".}
 }
 \value{
 A plot as a ggplot object (grob).
@@ -74,10 +71,7 @@ e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 }
 \examples{
 #plot ssm
-\dontrun{
 fancy_v_chrcount(this_sample_id = "DOHH-2",
-                 ssm = TRUE, 
                  y_interval = 10)
-}
 
 }

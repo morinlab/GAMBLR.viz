@@ -24,9 +24,8 @@
 #' @param hide_legend Set to True to remove legend from plot, default is FALSE.
 #' @param plot_subtitle Subtitle for created plot.
 #' @param chr_select vector of chromosomes to be included in plot, defaults to autosomes.
-#' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param add_qc_metric Boolean statement, if set to TRUE specified QC metric will be added (second y-axis).
-#' @param seq_type Default is "genome".
+#' @param this_seq_type Default is "genome".
 #'
 #' @return A plot as a ggplot object (grob).
 #'
@@ -35,11 +34,8 @@
 #'
 #' @examples
 #' #plot ssm
-#' \dontrun{
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
-#'                  ssm = TRUE, 
 #'                  y_interval = 10)
-#' }
 #'
 fancy_v_chrcount = function(this_sample_id,
                             maf_data,
@@ -54,87 +50,91 @@ fancy_v_chrcount = function(this_sample_id,
                             hide_legend = FALSE,
                             plot_subtitle = "Variant Count Distribution Per Chromosome",
                             chr_select = paste0("chr", c(1:22)),
-                            coding_only = FALSE,
                             add_qc_metric = FALSE,
-                            seq_type = "genome"){
+                            this_seq_type = "genome"){
 
   if(!missing(maf_data)){
-    maf = maf_data
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
+    plot_data = maf_data
+    plot_data = as.data.frame(plot_data)
+    colnames(plot_data)[variant_type_col] = "Variant_Type"
+    colnames(plot_data)[chromosome_col] = "Chromosome"
 
   }else if(!is.null(maf_path)){
-    maf = fread_maf(maf_path)
-    maf = as.data.frame(maf)
-    colnames(maf)[variant_type_col] = "Variant_Type"
-    colnames(maf)[chromosome_col] = "Chromosome"
+    plot_data = fread_maf(maf_path)
+    plot_data = as.data.frame(plot_data)
+    colnames(plot_data)[variant_type_col] = "Variant_Type"
+    colnames(plot_data)[chromosome_col] = "Chromosome"
   }
 
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      maf = assign_cn_to_ssm(
-        this_sample_id = this_sample_id,
-        coding_only = coding_only,
-        this_seq_type = seq_type)$maf
+      plot_data = get_ssm_by_sample(this_sample_id = this_sample_id, 
+                                    this_seq_type = this_seq_type, 
+                                    projection = projection)
     }else{
-      maf = get_manta_sv(these_sample_ids = this_sample_id, projection = projection, min_vaf = min_vaf) %>%
+      plot_data = get_manta_sv(these_sample_ids = this_sample_id, 
+                               projection = projection, 
+                               min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format
-      maf = data.frame(maf$CHROM_A, maf$START_A, maf$END_A, do.call(rbind, strsplit(maf$manta_name, split = ":", fixed = TRUE)))
+      plot_data = data.frame(plot_data$CHROM_A, plot_data$START_A, plot_data$END_A, do.call(rbind, strsplit(plot_data$manta_name, split = ":", fixed = TRUE)))
 
       #rename variables
-      names(maf)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
+      names(plot_data)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
 
       #filter out translocations and set order of variables
-      maf = dplyr::filter(maf, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
+      plot_data = dplyr::filter(plot_data, Variant_Type %in% c("MantaDEL", "MantaDUP")) %>%
         dplyr::select(Chromosome, Start_Position, End_Position, Variant_Type)
 
       #remove "Manta" from Variant_Type string
-      maf$Variant_Type = gsub("^.{0,5}", "", maf$Variant_Type)
+      plot_data$Variant_Type = gsub("^.{0,5}", "", plot_data$Variant_Type)
+    }
+    
+    if(nrow(plot_data) == 0){
+      stop("No variants found for the selected sample")
     }
   }
 
   #convert variables to factors
-  maf$Variant_Type = as.factor(maf$Variant_Type)
-  maf$Chromosome = as.factor(maf$Chromosome)
+  plot_data$Variant_Type = as.factor(plot_data$Variant_Type)
+  plot_data$Chromosome = as.factor(plot_data$Chromosome)
 
   #add chr prefix if missing
-  if(!str_detect(maf$Chromosome[1], "chr")){
-    maf = mutate(maf, Chromosome = paste0("chr", Chromosome))
+  if(!str_detect(plot_data$Chromosome[1], "chr")){
+    plot_data = mutate(plot_data, Chromosome = paste0("chr", Chromosome))
   }
 
   #subset data frame on sv sub type
-  maf_del = dplyr::filter(maf, Variant_Type == "DEL") %>%
+  plot_del = dplyr::filter(plot_data, Variant_Type == "DEL") %>%
     add_count(Chromosome) %>%
     distinct(Chromosome, .keep_all = TRUE) %>%
     dplyr::select(Chromosome, Variant_Type, n)
 
   if(ssm){
-    maf_ins = dplyr::filter(maf, Variant_Type == "INS") %>%
+    plot_ins = dplyr::filter(plot_data, Variant_Type == "INS") %>%
       add_count(Chromosome) %>%
       distinct(Chromosome, .keep_all = TRUE) %>%
       dplyr::select(Chromosome, Variant_Type, n)
 
     #combine data frames
-    maf.count = rbind(maf_del, maf_ins)
+    mut.count = rbind(plot_del, plot_ins)
 
     #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
-    ymax = max(maf_del$n) + max(maf_ins$n)
+    ymax = max(plot_del$n) + max(plot_ins$n)
 
   }else{
-    maf_dup = dplyr::filter(maf, Variant_Type == "DUP") %>%
+    plot_dup = dplyr::filter(plot_data, Variant_Type == "DUP") %>%
       add_count(Chromosome) %>%
       distinct(Chromosome, .keep_all = TRUE) %>%
       dplyr::select(Chromosome, Variant_Type, n)
 
     #combine data frames
-    maf.count = rbind(maf_del, maf_dup)
+    mut.count = rbind(plot_del, plot_dup)
 
     #get max number of mutations for the chromosome harboring most variants (for setting y-axis value).
-    ymax = max(maf_del$n) + max(maf_dup$n)
+    ymax = max(plot_del$n) + max(plot_dup$n)
   }
 
   if(add_qc_metric){
@@ -148,7 +148,7 @@ fancy_v_chrcount = function(this_sample_id,
   }
 
   #plot
-  p = ggplot(maf.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
+  p = ggplot(mut.count, aes(x = Chromosome, y = n, fill = Variant_Type, label = n)) +
         labs(title = plot_title, subtitle = plot_subtitle, x = "", y = "Variants (n)", fill = "") +
         scale_x_discrete(expand = c(0, 0.58), limits = chr_select) +
         geom_bar(position = "stack", stat = "identity") +

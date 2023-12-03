@@ -7,18 +7,18 @@
 fancy_ideogram(
   this_sample_id,
   gene_annotation,
-  seq_data,
-  seq_path = NULL,
+  seg_data,
+  seg_path = NULL,
   maf_data,
   maf_path = NULL,
   variant_type_col_maf = 10,
   chromosome_col_maf = 5,
   start_col_maf = 6,
   end_col_maf = 7,
-  chrom_col_seq = 2,
-  start_col_seq = 3,
-  end_col_seq = 4,
-  cn_col_seq = 7,
+  chrom_col_seg = 2,
+  start_col_seg = 3,
+  end_col_seg = 4,
+  cn_col_seg = 7,
   plot_title = paste0(this_sample_id),
   plot_subtitle = "Genome-wide Ideogram (grch37).",
   intersect_regions,
@@ -33,9 +33,9 @@ fancy_ideogram(
 
 \item{gene_annotation}{Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.}
 
-\item{seq_data}{Optional parameter with copy number df already loaded into R.}
+\item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
-\item{seq_path}{Optional parameter with path to external cn file.}
+\item{seg_path}{Optional parameter with path to external seg like file.}
 
 \item{maf_data}{Optional parameter with maf like df already loaded into R.}
 
@@ -49,13 +49,13 @@ fancy_ideogram(
 
 \item{end_col_maf}{Index of column with variant end coordinates (to be used with either maf_data or maf_path).}
 
-\item{chrom_col_seq}{Index of column with chromosome annotations (to be used with either maf_data or maf_path).}
+\item{chrom_col_seg}{Index of column with chromosome annotations (to be used with either maf_data or maf_path).}
 
-\item{start_col_seq}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
+\item{start_col_seg}{Index of column with copy number start coordinates (to be used with either maf_data or maf_path).}
 
-\item{end_col_seq}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
+\item{end_col_seg}{Index of column with copy number end coordinates (to be used with either maf_data or maf_path).}
 
-\item{cn_col_seq}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
+\item{cn_col_seg}{Index of column holding copy number information (to be used with either maf_data or maf_path).}
 
 \item{plot_title}{Title of plot (default to sample ID).}
 
@@ -83,7 +83,7 @@ It is also possible to superimpose the plot with gene annotations. Offering a co
 The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
 To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
 parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
-This data can also be provided with `seq_data`, `seg_path`, `maf_data` and `maf_path`.
+This data can also be provided with `seg_data`, `seg_path`, `maf_data` and `maf_path`.
 For more info on how to run with these parameters, refer to the parameter descriptions.
 In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
 Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`.

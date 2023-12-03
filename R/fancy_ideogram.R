@@ -7,7 +7,7 @@
 #' The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
 #' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
 #' parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
-#' This data can also be provided with `seq_data`, `seg_path`, `maf_data` and `maf_path`.
+#' This data can also be provided with `seg_data`, `seg_path`, `maf_data` and `maf_path`.
 #' For more info on how to run with these parameters, refer to the parameter descriptions.
 #' In order to annotate the ideogram with genes, simply give the `gene_annotations` parameter a set of genes as a vector of characters or a data frame with gene names in the first column.
 #' Another useful parameter for restricting the plotted regions is to call the function with `intersect_regions`.
@@ -15,18 +15,18 @@
 #'
 #' @param this_sample_id Sample to be plotted (for multiple samples, see fancy_multisample_ideogram.
 #' @param gene_annotation Annotate ideogram with a set of genes. These genes can either be specified as a vector of characters or a data frame.
-#' @param seq_data Optional parameter with copy number df already loaded into R.
-#' @param seq_path Optional parameter with path to external cn file.
+#' @param seg_data Optional parameter with copy number df already loaded into R.
+#' @param seg_path Optional parameter with path to external seg like file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param variant_type_col_maf Index of column holding Variant Type (to be used with either maf_data or maf_path).
 #' @param chromosome_col_maf Index of column holding Chromosome (to be used with either maf_data or maf_path).
 #' @param start_col_maf Index of column with variant start coordinates (to be used with either maf_data or maf_path).
 #' @param end_col_maf Index of column with variant end coordinates (to be used with either maf_data or maf_path).
-#' @param chrom_col_seq Index of column with chromosome annotations (to be used with either maf_data or maf_path).
-#' @param start_col_seq Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
-#' @param end_col_seq Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
-#' @param cn_col_seq Index of column holding copy number information (to be used with either maf_data or maf_path).
+#' @param chrom_col_seg Index of column with chromosome annotations (to be used with either maf_data or maf_path).
+#' @param start_col_seg Index of column with copy number start coordinates (to be used with either maf_data or maf_path).
+#' @param end_col_seg Index of column with copy number end coordinates (to be used with either maf_data or maf_path).
+#' @param cn_col_seg Index of column holding copy number information (to be used with either maf_data or maf_path).
 #' @param plot_title Title of plot (default to sample ID).
 #' @param plot_subtitle Optional argument for plot subtitle.
 #' @param intersect_regions Optional parameter for subset variant calls to specific regions. Should be either a vector of characters (chr:start-end) or data frame with regions.
@@ -51,18 +51,18 @@
 #'
 fancy_ideogram = function(this_sample_id,
                           gene_annotation,
-                          seq_data,
-                          seq_path = NULL,
+                          seg_data,
+                          seg_path = NULL,
                           maf_data,
                           maf_path = NULL,
                           variant_type_col_maf = 10,
                           chromosome_col_maf = 5,
                           start_col_maf = 6,
                           end_col_maf = 7,
-                          chrom_col_seq = 2,
-                          start_col_seq = 3,
-                          end_col_seq = 4,
-                          cn_col_seq = 7,
+                          chrom_col_seg = 2,
+                          start_col_seg = 3,
+                          end_col_seg = 4,
+                          cn_col_seg = 7,
                           plot_title = paste0(this_sample_id),
                           plot_subtitle = "Genome-wide Ideogram (grch37).",
                           intersect_regions,
@@ -102,25 +102,25 @@ fancy_ideogram = function(this_sample_id,
   segment_data = data.frame(chr, chr_start, chr_end, cent_start, cent_end, y, yend)
 
   #load CN data
-  if(!missing(seq_data)){
-    cn_states = seq_data
+  if(!missing(seg_data)){
+    cn_states = seg_data
     cn_states = as.data.frame(cn_states)
-    colnames(cn_states)[chrom_col_seq] = "chrom"
-    colnames(cn_states)[start_col_seq] = "start"
-    colnames(cn_states)[end_col_seq] = "end"
-    colnames(cn_states)[cn_col_seq] = "CN"
+    colnames(cn_states)[chrom_col_seg] = "chrom"
+    colnames(cn_states)[start_col_seg] = "start"
+    colnames(cn_states)[end_col_seg] = "end"
+    colnames(cn_states)[cn_col_seg] = "CN"
 
-  }else if(!is.null(seq_path)){
-    cn_states = read.table(seq_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
+  }else if(!is.null(seg_path)){
+    cn_states = read.table(seg_path, sep = "\t", header = TRUE, row.names = FALSE, col.names = FALSE, quote = FALSE)
     cn_states = as.data.frame(cn_states)
-    colnames(cn_states)[chrom_col_seq] = "chrom"
-    colnames(cn_states)[start_col_seq] = "start"
-    colnames(cn_states)[end_col_seq] = "end"
-    colnames(cn_states)[cn_col_seq] = "CN"
+    colnames(cn_states)[chrom_col_seg] = "chrom"
+    colnames(cn_states)[start_col_seg] = "start"
+    colnames(cn_states)[end_col_seg] = "end"
+    colnames(cn_states)[cn_col_seg] = "CN"
   }
 
   #get maf data for a specific sample.
-  if(missing(seq_data) && is.null(seq_path)){
+  if(missing(seg_data) && is.null(seg_path)){
     cn_states = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       with_chr_prefix = FALSE,
@@ -225,10 +225,9 @@ fancy_ideogram = function(this_sample_id,
     }
 
     if(missing(maf_data) && is.null(maf_path)){
-      maf = assign_cn_to_ssm(
-        this_sample_id = this_sample_id,
-        coding_only = coding_only,
-        this_seq_type = this_seq_type)$maf
+      maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
+                              projection = "grch37", #currently only supported reference build.
+                              this_seq_type = this_seq_type)
     }
 
     #transform maf data
