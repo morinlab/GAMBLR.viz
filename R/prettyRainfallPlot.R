@@ -13,6 +13,7 @@
 #' @param zoom_in_region Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.
 #' @param label_sv Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.
 #' @param this_seq_type Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)
+#' @param plot_title Specify the title for the returned plot, default is "my_plot".
 #'
 #' @return a ggplot2 plot. Print it using print() or save it using ggsave()
 #'
@@ -26,25 +27,28 @@
 #'                    zoom_in_region = "8:125252796-135253201",
 #'                    label_sv = TRUE)
 #'
-prettyRainfallPlot = function(this_sample_id,
+prettyRainfallPlot = function(this_sample_id = NULL,
                               label_ashm_genes = TRUE,
                               projection = "grch37",
                               chromosome,
-                              this_maf,
+                              this_maf = NULL,
                               maf_path,
                               zoom_in_region,
                               this_seq_type,
-                              label_sv = FALSE) {
-  if (missing(this_sample_id)) {
+                              label_sv = FALSE, 
+                              plot_title = "my_plot"){
+  
+  if(is.null(this_sample_id)){
     warning("No sample_id was provided. Using all mutations in the MAF within your region!")
-    if(missing(zoom_in_region)){
-      stop("Must provide a zoom_in_region to plot when showing data from more than one patient")
+    if(!is.null(this_maf) && length(unique(this_maf$Tumor_Sample_Barcode)) > 1 && missing(zoom_in_region)){
+      stop("Must provide a zoom_in_region to plot when showing data from more than one sample ID")
     }
   }
 
   # allow user to specify chromosome prefix inconsistent with chromosome names
   if (!missing(chromosome)) {
-    chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = chromosome, projection = projection)
+    chromosome = GAMBLR.helpers::standardize_chr_prefix(incoming_vector = chromosome, 
+                                                        projection = projection)
   }
 
   # allow to zoom in to a specific region
@@ -112,7 +116,7 @@ prettyRainfallPlot = function(this_sample_id,
   # get ssm for the requested sample
   if (!missing(this_maf)) {
     if(missing(this_sample_id)){
-      these_ssm=this_maf
+      these_ssm = this_maf
       this_sample_id = "all samples"
     }else{
       message ("Using the suppplied MAF df to obrain ser of SSM for the specified sample ...")
@@ -125,19 +129,14 @@ prettyRainfallPlot = function(this_sample_id,
     this_maf = suppressMessages(read_tsv(maf_path))
     if(!missing(this_sample_id)){
       this_maf = this_maf %>% dplyr::filter(Tumor_Sample_Barcode %in% this_sample_id)
-    }else{
-      this_sample_id = "all samples"
     }
   } else if(!missing(this_sample_id)) {
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
-    these_ssm = get_ssm_by_sample(this_sample_id,
+    these_ssm = get_ssm_by_sample(this_sample_id = this_sample_id,
                                   projection = projection, 
-                                  this_seq_type = this_seq_type)
+                                  this_seq_type = this_seq_type, )
   }else if(!missing(this_seq_type)){
-    if(missing(this_sample_id)){
-      this_sample_id = "all samples"
-    }
-    message(paste("Will use all mutations for",this_seq_type, "in this region:",zoom_in_region))
+    message(paste("Will use all mutations for ",this_seq_type, "in this region: ",zoom_in_region))
     these_ssm = get_ssm_by_region(region = region, this_seq_type = this_seq_type, projection = projection)
   }
 
@@ -212,7 +211,8 @@ prettyRainfallPlot = function(this_sample_id,
 
   if (label_sv) {
     message("Getting combined manta + GRIDSS SVs using GAMBLR ...")
-    these_sv = get_manta_sv(these_sample_ids  = this_sample_id)
+    these_sv = get_manta_sv(these_sample_ids = this_sample_id, 
+                            projection = projection)
     if ("SCORE" %in% colnames(these_sv)) {
       these_sv = these_sv %>%
         rename("SOMATIC_SCORE" = "SCORE")
@@ -304,6 +304,7 @@ prettyRainfallPlot = function(this_sample_id,
     sv_to_label = sv_to_label %>%
       mutate(Chromosome_f = factor(Chromosome))
   }
+  
 
   p = ggplot(rainfall_points) +
     geom_point(aes(x = Start_Position, y = IMD, color = Substitution)) +
@@ -311,7 +312,7 @@ prettyRainfallPlot = function(this_sample_id,
     ylab("log(IMD)") +
     GAMBLR.helpers::theme_Morons() +
     facet_wrap( ~ Chromosome_f, scales = "free_x") +
-    ggtitle(this_sample_id) +
+    ggtitle(plot_title) +
     theme(plot.title = element_text(hjust = 0)) # left-align title plot
 
   if (label_ashm_genes) {
