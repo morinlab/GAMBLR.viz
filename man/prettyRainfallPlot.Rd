@@ -5,15 +5,16 @@
 \title{Rainfall Plot}
 \usage{
 prettyRainfallPlot(
-  this_sample_id,
+  this_sample_id = NULL,
   label_ashm_genes = TRUE,
   projection = "grch37",
   chromosome,
-  this_maf,
+  this_maf = NULL,
   maf_path,
   zoom_in_region,
   this_seq_type,
-  label_sv = FALSE
+  label_sv = FALSE,
+  plot_title = "my_plot"
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ prettyRainfallPlot(
 \item{this_seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
 
 \item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
+
+\item{plot_title}{Specify the title for the returned plot, default is "my_plot".}
 }
 \value{
 a ggplot2 plot. Print it using print() or save it using ggsave()
