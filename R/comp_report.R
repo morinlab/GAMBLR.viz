@@ -28,8 +28,8 @@
 #' @examples
 #' \dontrun{
 #' #create a PDF report for one sample, as well as exporting all individual plots.
-#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
-#'             out = "reports/",
+#' comp_report(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'             out = "./",
 #'             export_individual_plots = TRUE)
 #' }
 #'
@@ -91,6 +91,18 @@ comp_report = function(this_sample_id,
       this_seq_type = this_seq_type, 
       projection = projection
     )
+  }
+  
+  # check whether maf and seg are empty 
+  is_maf_seq_empity <- c( nrow(maf), nrow(seg) ) %>% 
+    {. == 0}
+  if( all(is_maf_seq_empity) ){
+    stop("The report could not be generated because neither SSMs nor CN segments were found for the specified sample.")
+  }
+  if( sum(is_maf_seq_empity) == 1 ){
+    k <- c("SSMs", "CN segments") [is_maf_seq_empity] %>% 
+      gettextf("The report could not be generated because %s were not found for the specified sample.", .)
+    stop(k)
   }
 
   #execute a collection of sample-level plots with default parameters
