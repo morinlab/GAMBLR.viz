@@ -23,7 +23,7 @@
 #'                                                        "genetic_subgroup"),
 #'                                    these_samples_metadata = all_meta,
 #'                                    column_alias = list("nothing" = "FL"),
-#'                                    as_vector = F)
+#'                                    as_vector = FALSE)
 #'
 #' @export
 map_metadata_to_colours = function(metadataColumns,

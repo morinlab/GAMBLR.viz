@@ -44,6 +44,6 @@ all_cols = map_metadata_to_colours(metadataColumns = c("lymphgen",
                                                        "genetic_subgroup"),
                                    these_samples_metadata = all_meta,
                                    column_alias = list("nothing" = "FL"),
-                                   as_vector = F)
+                                   as_vector = FALSE)
 
 }
