@@ -44,7 +44,7 @@ plot_sample_circos(
 
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
-\item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.}
+\item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will be used.}
 
 \item{label_genes}{Gene labels (df, list or what type?)}
 
@@ -64,21 +64,16 @@ Convenient Boolean parameteers are also avaialble for restricting the plot to sp
 \examples{
 library(GAMBLR.data)
 
-plot_sample_circos(this_sample_id = "13-38657_tumorB",
+plot_sample_circos(this_sample_id = "02-13135T",
                    legend_metadata_columns = c("pathology",
                                                "lymphgen",
                                                "COO_consensus",
-                                               "DHITsig_consensus",
-                                               "bcl2_ba",
-                                               "myc_ba"),
+                                               "DHITsig_consensus"),
                    legend_metadata_names = c("pathology",
                                              "LymphGen",
                                              "COO",
-                                             "DHITsig",
-                                             "BCL2",
-                                             "MYC"),
-                   chrom_list = c("chr2",
-                                  "chr3",
+                                             "DHITsig"),
+                   chrom_list = c("chr3",
                                   "chr8",
                                   "chr14",
                                   "chr18"))

@@ -17,7 +17,7 @@
 #' @param include_ssm Defaul FALSE. (does not do anything yet).
 #' @param legend_metadata_columns Column names from metadata
 #' @param legend_metadata_names List of metadata names to be plotted.
-#' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will bes used.
+#' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will be used.
 #' @param label_genes Gene labels (df, list or what type?)
 #' @param auto_label_sv Default is FALSE
 #'
@@ -29,21 +29,16 @@
 #' @examples
 #' library(GAMBLR.data)
 #'
-#' plot_sample_circos(this_sample_id = "13-38657_tumorB",
+#' plot_sample_circos(this_sample_id = "02-13135T",
 #'                    legend_metadata_columns = c("pathology",
 #'                                                "lymphgen",
 #'                                                "COO_consensus",
-#'                                                "DHITsig_consensus",
-#'                                                "bcl2_ba",
-#'                                                "myc_ba"),
+#'                                                "DHITsig_consensus"),
 #'                    legend_metadata_names = c("pathology",
 #'                                              "LymphGen",
 #'                                              "COO",
-#'                                              "DHITsig",
-#'                                              "BCL2",
-#'                                              "MYC"),
-#'                    chrom_list = c("chr2",
-#'                                   "chr3",
+#'                                              "DHITsig"),
+#'                    chrom_list = c("chr3",
 #'                                   "chr8",
 #'                                   "chr14",
 #'                                   "chr18"))
@@ -79,7 +74,7 @@ plot_sample_circos = function(this_sample_id,
   }
   if(missing(cnv_df)){
     cnv_df = get_sample_cn_segments(
-      this_sample_id = this_sample_id,
+      these_sample_ids = this_sample_id,
       with_chr_prefix = TRUE,
       this_seq_type = this_seq_type
     )
@@ -165,16 +160,18 @@ plot_sample_circos = function(this_sample_id,
     circos.genomicLink(anno_bed1, anno_bed2,col = 'red')
     circos.genomicLabels(bed_mut, labels.column = "gene")
   }
-  text(c(0.75, 0.75), this_sample_id, cex = 0.8)
+  text(0.75, this_sample_id, cex = 0.8)
   if(!missing(legend_metadata_columns)){
     samp_meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>%
       dplyr::filter(sample_id == this_sample_id)
 
     these_meta = samp_meta[legend_metadata_columns]
     these_cols = GAMBLR.helpers::get_gambl_colours()
+    
+    k <- sapply(these_meta, is.factor)
+    these_meta[k] <- lapply(these_meta[k], as.character)
     vals = as.character(these_meta)
-    names = colnames(these_meta)
-
+    
     all_cols = map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
 
     cols = all_cols[vals]
