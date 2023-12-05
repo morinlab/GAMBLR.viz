@@ -116,7 +116,7 @@ fancy_sv_sizedens = function(this_sample_id,
                   type_table["MantaDEL"], type_table["MantaDUP"])
   }
   message(k)
-  stopifnot("Plot couldn't be made. At least 2 variants of either type is needed." =
+  stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
               any(type_table > 1))
   
   #calculate sizes
@@ -138,7 +138,7 @@ fancy_sv_sizedens = function(this_sample_id,
   k <- gettextf("%i MantaDEL and %i MantaDUP variants were left after filtering by size_cutoff.", 
                 type_table["MantaDEL"], type_table["MantaDUP"])
   message(k)
-  stopifnot("Plot couldn't be made. At least 2 variants of either type is needed." =
+  stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
               any(type_table > 1))
   
   # groups (MantaDEL or MantaDUP) with only 1 variant are dropped.
