@@ -94,13 +94,13 @@ comp_report = function(this_sample_id,
   }
   
   # check whether maf and seg are empty 
-  is_maf_seq_empity <- c( nrow(maf), nrow(seg) ) %>% 
+  is_maf_seq_empty <- c( nrow(maf), nrow(seg) ) %>% 
     {. == 0}
-  if( all(is_maf_seq_empity) ){
+  if( all(is_maf_seq_empty) ){
     stop("The report could not be generated because neither SSMs nor CN segments were found for the specified sample.")
   }
-  if( sum(is_maf_seq_empity) == 1 ){
-    k <- c("SSMs", "CN segments") [is_maf_seq_empity] %>% 
+  if( sum(is_maf_seq_empty) == 1 ){
+    k <- c("SSMs", "CN segments") [is_maf_seq_empty] %>% 
       gettextf("The report could not be generated because %s were not found for the specified sample.", .)
     stop(k)
   }
