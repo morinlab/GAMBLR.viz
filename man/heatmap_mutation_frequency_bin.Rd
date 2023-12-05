@@ -44,9 +44,9 @@ heatmap_mutation_frequency_bin(
 )
 }
 \arguments{
-\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
+\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
 
-\item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name).}
+\item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided.}
 
 \item{these_samples_metadata}{Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.}
 
@@ -130,24 +130,22 @@ to retrieve mutation counts for sliding windows across one or more regions and g
 library(GAMBLR.data)
 library(dplyr)
 
-# load metadata and subset on specific pathology.
-dlbcl_bl_meta = get_gambl_metadata() \%>\%
-  dplyr::filter(pathology \%in\% c("DLBCL", "BL"))
+# get meta data
+my_meta <- get_gambl_metadata() \%>\% 
+  filter(sample_id \%in\% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 
-# get ashm regions (grch37) of a set of genes.
-some_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\% 
-  dplyr::filter(!gene \%in\% c("BTG2", "CXCR4", "ST6GAL1", "BCL6", "LPP", "RHOH", "CD83", 
-                             "PIM1", "BACH2", "SGK1", "MYC", "PAX5", "GRHPR", "FANK1", "BIRC3", 
-                             "BTG1", "DTX1", "BCL7A", "ZFP36L1", "SERPINA9", "TCL1A", "CIITA", 
-                             "IRF8", "S1PR2", "MEF2B", "IGLL5", "TMSB4X", "PIM2")) \%>\% 
-  select(chr_name, hg19_start, hg19_end, gene) \%>\% 
-  rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") \%>\% 
+# get ashm regions of a set of genes.
+my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\%
+  rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") \%>\%
   mutate( chrom = stringr::str_remove(chrom, "chr") )
 
 # create heatmap of mutation counts for the specified regions
-heatmap_mutation_frequency_bin(these_samples_metadata = dlbcl_bl_meta,
-                               regions_bed = some_regions,
-                               from_indexed_flatfile = TRUE,
-                               mode = "slms-3")
+meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
+heatmap_mutation_frequency_bin(
+  regions_bed = my_regions,
+  these_samples_metadata = my_meta,
+  metadataColumns = meta_columns,
+  sortByColumns = meta_columns
+)
 
 }
