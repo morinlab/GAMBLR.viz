@@ -37,7 +37,7 @@
 #' library(GAMBLR.data)
 #' 
 #' #Return a plot for one sample, with default parameters.
-#' my_plot = fancy_cnbar(this_sample_id = "DOHH-2")
+#' fancy_cnbar(this_sample_id = "DOHH-2")
 #'
 fancy_cnbar = function(this_sample_id,
                        seg_data,
