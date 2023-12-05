@@ -134,7 +134,7 @@ prettyRainfallPlot = function(this_sample_id = NULL,
     message ("MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ...")
     these_ssm = get_ssm_by_sample(this_sample_id = this_sample_id,
                                   projection = projection, 
-                                  this_seq_type = this_seq_type, )
+                                  this_seq_type = this_seq_type)
   }else if(!missing(this_seq_type)){
     message(paste("Will use all mutations for ",this_seq_type, "in this region: ",zoom_in_region))
     these_ssm = get_ssm_by_region(region = region, this_seq_type = this_seq_type, projection = projection)
