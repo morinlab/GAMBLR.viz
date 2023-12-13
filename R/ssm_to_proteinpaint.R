@@ -17,6 +17,8 @@
 #' internally in `ssm_to_proteinpaint`.
 #' 
 #' @param maf_data A data frame in MAF format.
+#' @param coding_only Boolean parameter. Set to TRUE to restrict to only coding mutations.
+#' The default is FALSE.
 #' @param return_removed_rows Boolean parameter. Set to TRUE for returning rows from the 
 #' incoming MAF that do not contain any values in the required columns. Commonly used for 
 #' checking purposes only. Setting this to TRUE, does not produce an output compatible with 
@@ -37,6 +39,7 @@
 #' pp_df = ssm_to_proteinpaint(maf_data = my_maf)
 #' 
 ssm_to_proteinpaint = function(maf_data,
+                               coding_only = FALSE,
                                return_removed_rows = FALSE){
   
   # check for required columns in maf_data 
@@ -101,6 +104,12 @@ ssm_to_proteinpaint = function(maf_data,
                           `3'Flank` = "noncoding",
                           `5'Flank` = "noncoding",
                           IGR = "noncoding"))
+  
+  # if only coding mutations are desired
+  if(coding_only){
+    noncoding_muts = c("utr_5", "utr_3", "intron", "noncoding")
+    maf_data = dplyr::filter(maf_data, !(class %in% noncoding_muts))
+  }
   
   # remove version names in refseq column
   maf_data$refseq = maf_data$refseq %>% 
