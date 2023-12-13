@@ -135,22 +135,32 @@ ssm_to_proteinpaint = function(maf_data,
   maf_data = (maf_data$aachange == "") %>% 
     { mutate(maf_data, aachange = ifelse(., "NA", aachange)) }
   
-  # filter out rows that don't contain required column values and output warning message
+  # to filter out rows that don't contain required column values and output warning message
   required_cols = dplyr::select(maf_data, gene, refseq, chromosome, start, aachange, class) %>% 
     mutate(i = row_number()) %>% 
     tidyr::drop_na()
   required_cols = apply(required_cols != "", 1, all) %>% 
     dplyr::filter(required_cols, .)
-  if(return_removed_rows){  # if only removed rows should be returned (for checking purpose)
+  
+  # to filter out rows with unsupported values in column class
+  suported_class = c("missense", "proteinDel", "proteinIns", "nonsense", "silent", 
+                     "splice_region", "splice", "frameshift", "utr_5", "utr_3", "intron", 
+                     "noncoding")
+  required_cols = dplyr::filter(required_cols, class %in% suported_class)
+  
+  # if only removed rows should be returned (for checking purpose)
+  if(return_removed_rows){  
     removed_rows = 1:nrow(maf_data) %>% 
       "["(! . %in% required_cols$i) %>% 
       slice(maf_data, .)
     return(removed_rows)
   }
+  
+  # print a message stating how many mutations were lost
   num_removed_rows = (nrow(maf_data) - nrow(required_cols)) %>% 
     format(big.mark="'")
   k = format( nrow(maf_data), big.mark="'" ) %>% 
-    gettextf("Warning: %s rows out of %s were removed from the output table because there were missing values in required columns. Run `ssm_to_proteinpaint` again with `return_removed_rows = TRUE` to see these rows.",
+    gettextf("Warning: %s rows out of %s were removed from the output table because there were missing or unsupported values in required columns. Run `ssm_to_proteinpaint` again with `return_removed_rows = TRUE` to see these rows.",
              num_removed_rows, .)
   message(k)
   maf_data = slice(maf_data, required_cols$i)
