@@ -34,7 +34,7 @@
 #' my_maf = get_coding_ssm(basic_columns = FALSE)
 #' 
 #' # convert maf to ProteinPaint format
-#' pp_df = ssm_to_proteinpaint(my_maf)
+#' pp_df = ssm_to_proteinpaint(maf_data = my_maf)
 #' 
 ssm_to_proteinpaint = function(maf_data,
                                return_removed_rows = FALSE){
@@ -57,7 +57,7 @@ ssm_to_proteinpaint = function(maf_data,
     "["(! . %in% names(maf_data))
   if( length(maf_opt_cols_not_present) > 0 ){
     k = paste(maf_opt_cols_not_present, collapse = ", ") %>% 
-      gettextf("Warning: Otional columns missing in the input MAF data frame: %s.", .)
+      gettextf("Warning: Optional columns missing in the input MAF data frame: %s.", .)
     message(k)
   }
   
@@ -71,7 +71,7 @@ ssm_to_proteinpaint = function(maf_data,
     "["(! . %in% names(maf_data))
   if( length(maf_opt_cols_not_present) > 0 ){
     k = paste(maf_opt_cols_not_present, collapse = ", ") %>% 
-      gettextf("Warning: Otional columns missing in the metadata (created internally): %s.", .)
+      gettextf("Warning: Optional columns missing in the metadata (created internally): %s.", .)
     message(k)
   }
   
@@ -94,7 +94,13 @@ ssm_to_proteinpaint = function(maf_data,
                           Splice_Region = "splice_region",
                           Splice_Site = "splice",
                           Frame_Shift_Del = "frameshift",
-                          Frame_Shift_Ins = "frameshift"))
+                          Frame_Shift_Ins = "frameshift",
+                          `5'UTR` = "utr_5",
+                          `3'UTR` = "utr_3",
+                          Intron = "intron",
+                          `3'Flank` = "noncoding",
+                          `5'Flank` = "noncoding",
+                          IGR = "noncoding"))
   
   # remove version names in refseq column
   maf_data$refseq = maf_data$refseq %>% 

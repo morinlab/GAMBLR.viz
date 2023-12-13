@@ -42,6 +42,6 @@ library(GAMBLR.data)
 my_maf = get_coding_ssm(basic_columns = FALSE)
 
 # convert maf to ProteinPaint format
-pp_df = ssm_to_proteinpaint(my_maf)
+pp_df = ssm_to_proteinpaint(maf_data = my_maf)
 
 }
