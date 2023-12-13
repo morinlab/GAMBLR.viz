@@ -168,8 +168,7 @@ plot_sample_circos = function(this_sample_id,
     these_meta = samp_meta[legend_metadata_columns]
     these_cols = GAMBLR.helpers::get_gambl_colours()
     
-    k <- sapply(these_meta, is.factor)
-    these_meta[k] <- lapply(these_meta[k], as.character)
+    these_meta <- mutate_if(these_meta, is.factor, as.character)
     vals = as.character(these_meta)
     
     all_cols = map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
