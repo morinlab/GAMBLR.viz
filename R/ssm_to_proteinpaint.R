@@ -122,6 +122,10 @@ ssm_to_proteinpaint = function(maf_data,
                            disease, origin, patient, sample, sampletype, mutant_in_tumor, 
                            total_in_tumor, mutant_in_normal, total_in_normal, REF, ALT, VAF)
   
+  # if aachange is empty, change it to NA. this is to avoid filtering out desirable rows
+  maf_data = (maf_data$aachange == "") %>% 
+    { mutate(maf_data, aachange = ifelse(., "NA", aachange)) }
+  
   # filter out rows that don't contain required column values and output warning message
   required_cols = dplyr::select(maf_data, gene, refseq, chromosome, start, aachange, class) %>% 
     mutate(i = row_number()) %>% 
