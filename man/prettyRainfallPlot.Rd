@@ -48,11 +48,13 @@ Plot a rainfall plot for one sample. This function takes in the MAF data frame, 
 Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 prettyRainfallPlot(this_sample_id = "DOHH-2",
                    this_seq_type = "genome",
                    zoom_in_region = "8:125252796-135253201",
                    label_sv = TRUE)
+}
 
 }

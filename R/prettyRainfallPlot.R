@@ -22,12 +22,14 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #' 
 #' prettyRainfallPlot(this_sample_id = "DOHH-2",
 #'                    this_seq_type = "genome",
 #'                    zoom_in_region = "8:125252796-135253201",
 #'                    label_sv = TRUE)
+#' }
 #'
 prettyRainfallPlot = function(this_sample_id = NULL,
                               label_ashm_genes = TRUE,
@@ -138,7 +140,7 @@ prettyRainfallPlot = function(this_sample_id = NULL,
                                   projection = projection, 
                                   this_seq_type = this_seq_type)
   }else if(!missing(this_seq_type)){
-    message(paste("Will use all mutations for ",this_seq_type, "in this region: ",zoom_in_region))
+    message( paste("Will use all mutations for", this_seq_type, "in this region:", region) )
     these_ssm = get_ssm_by_region(region = region, this_seq_type = this_seq_type, projection = projection)
   }
 
@@ -268,10 +270,12 @@ prettyRainfallPlot = function(this_sample_id = NULL,
           )
         ) %>%
         group_by(fusion, chromosomeN) %>%
-        dplyr::filter(if (grepl("1", chromosomeN))
-          variable %in% c("start1", "end1")
+        dplyr::filter(
+          if ( grepl("1", chromosomeN[1]) )
+            variable %in% c("start1", "end1")
           else
-            variable %in% c("start2", "end2")) %>%
+            variable %in% c("start2", "end2")
+        ) %>%
         dplyr::mutate(variable = gsub("1|2", "", variable)) %>%
         distinct(fusion, Chromosome, variable, .keep_all = TRUE) %>%
         spread(., variable, value) %>%
