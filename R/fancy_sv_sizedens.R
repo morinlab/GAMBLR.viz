@@ -106,18 +106,29 @@ fancy_sv_sizedens = function(this_sample_id,
     dplyr::select(chrom, start, end, type)
   
   # check whether enough variants
-  manta_sv = mutate( manta_sv, type = factor(type, levels = c("MantaDEL", "MantaDUP")) )
-  type_table = table(manta_sv$type)
-  if( missing(maf_data) && is.null(maf_path) ){
-    k <- gettextf("%i MantaDEL and %i MantaDUP variants were found after filtering by vaf_cutoff.", 
-                  type_table["MantaDEL"], type_table["MantaDUP"])
-  }else{
-    k <- gettextf("%i MantaDEL and %i MantaDUP variants were found.", 
-                  type_table["MantaDEL"], type_table["MantaDUP"])
+  check_whether_enough_vars = function(manta_type, string1, string2){
+    type_table = table(manta_type)
+    var_num_message = "%i MantaDEL and %i MantaDUP variants were"
+    if( is.null(string2) ){
+      var_num_message = gettextf("%s %s.", var_num_message, string1)
+    }else{
+      var_num_message = gettextf("%s %s after filtering by %s.", 
+                                 var_num_message, string1, string2)
+    }
+    type_table = table(manta_type)
+    k <- gettextf(var_num_message, type_table["MantaDEL"], type_table["MantaDUP"])
+    message(k)
+    stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
+                any(type_table > 1))
   }
-  message(k)
-  stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
-              any(type_table > 1))
+  
+  manta_sv = mutate( manta_sv, type = factor(type, levels = c("MantaDEL", "MantaDUP")) )
+  
+  if( missing(maf_data) && is.null(maf_path) ){
+    check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = "vaf_cutoff")
+  }else{
+    check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = NULL)
+  }
   
   #calculate sizes
   manta_sv$size = manta_sv$end - manta_sv$start
@@ -134,12 +145,7 @@ fancy_sv_sizedens = function(this_sample_id,
   manta_sv = dplyr::filter(manta_sv, size >= size_cutoff)
   
   # check whether enough variants
-  type_table = table(manta_sv$type)
-  k <- gettextf("%i MantaDEL and %i MantaDUP variants were left after filtering by size_cutoff.", 
-                type_table["MantaDEL"], type_table["MantaDUP"])
-  message(k)
-  stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
-              any(type_table > 1))
+  check_whether_enough_vars(manta_type = manta_sv$type, string1 = "left", string2 = "size_cutoff")
   
   # groups (MantaDEL or MantaDUP) with only 1 variant are dropped.
   if(type_table["MantaDEL"] == 1){
