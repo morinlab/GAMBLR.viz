@@ -5,7 +5,7 @@
 #' @details This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
 #' It is also possible to superimpose the plot with gene annotations. Offering a comprehensive overview of all SSM and CN segments of different aneuploidy.
 #' The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
-#' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
+#' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample_id`
 #' parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
 #' This data can also be provided with `seg_data`, `seg_path`, `maf_data` and `maf_path`.
 #' For more info on how to run with these parameters, refer to the parameter descriptions.
