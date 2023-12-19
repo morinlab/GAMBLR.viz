@@ -10,7 +10,7 @@
 #'
 #' @param this_sample_id Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
-#' @param out Path to output folder.
+#' @param out Path to output folder. The default is the working directory. 
 #' @param seg_data Optional parameter with copy number df already loaded into R.
 #' @param seg_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -35,7 +35,7 @@
 #'
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
-                       out,
+                       out = "./",
                        seg_data,
                        seg_path = NULL,
                        maf_data,

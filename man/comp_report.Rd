@@ -7,7 +7,7 @@
 comp_report(
   this_sample_id,
   export_individual_plots = FALSE,
-  out,
+  out = "./",
   seg_data,
   seg_path = NULL,
   maf_data,
@@ -21,7 +21,7 @@ comp_report(
 
 \item{export_individual_plots}{Boolean parameter, set to TRUE to export individual plots.}
 
-\item{out}{Path to output folder.}
+\item{out}{Path to output folder. The default is the working directory.}
 
 \item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
