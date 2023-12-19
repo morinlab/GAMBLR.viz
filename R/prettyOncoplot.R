@@ -42,6 +42,7 @@
 #' @param groupNames optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param hide_annotations Hide annotations for specifc ashms. argument takes a list with annotations.
+#' @param hide_annotations_tracks When hide_annotations is supplied with a list of columns, this parameter can optionally also not display those columns as the annotation track. Accepts TRUE and FALSE (default).
 #' @param annotate_specific_genes Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).
 #' @param this_forest_object If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
@@ -132,6 +133,7 @@ prettyOncoplot = function(maf_df,
                           showTumorSampleBarcode = FALSE,
                           groupNames,
                           hide_annotations,
+                          hide_annotations_tracks = FALSE,
                           annotate_specific_genes = FALSE,
                           this_forest_object = NULL,
                           custom_colours = NULL,
@@ -679,6 +681,12 @@ prettyOncoplot = function(maf_df,
       }
   }
 
+  if(missing(hide_annotations)){
+    metadata_df = metadata_df
+  }else if (hide_annotations_tracks){
+    metadata_df = metadata_df %>%
+        dplyr:: select(-all_of(hide_annotations))
+  }
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,

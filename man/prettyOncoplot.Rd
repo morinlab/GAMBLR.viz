@@ -28,6 +28,7 @@ prettyOncoplot(
   showTumorSampleBarcode = FALSE,
   groupNames,
   hide_annotations,
+  hide_annotations_tracks = FALSE,
   annotate_specific_genes = FALSE,
   this_forest_object = NULL,
   custom_colours = NULL,
@@ -97,6 +98,8 @@ prettyOncoplot(
 \item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
 
 \item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
+
+\item{hide_annotations_tracks}{When hide_annotations is supplied with a list of columns, this parameter can optionally also not display those columns as the annotation track. Accepts TRUE and FALSE (default).}
 
 \item{annotate_specific_genes}{Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).}
 
