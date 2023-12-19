@@ -1,18 +1,18 @@
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
+#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR.viz::prettyOncoplot] side-by-side.
 #'
 #' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 #' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-#' recognized by [GAMBLR::prettyOncoplot] are supported and can be specified when calling this function.
+#' recognized by [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling this function.
 #' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
-#' font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
+#' font size, top annotation etc). If the provided argument is not recognized by [GAMBLR.viz::prettyOncoplot],
 #' it will be discarded. If you want a specific order of oncoplots on the left and right, please
 #' ensure the argument `comparison_column` is a factor with first level being the group
-#' you want to be plotted on the left side. For developers: new arguments added to prettyOncoplot in the future
+#' you want to be plotted on the left side. For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the future
 #' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 #'
-#' @param maf Required argument. A maftools object containing the mutations you want to plot on both oncoplots.
+#' @param maf Required argument. A data frame containing the mutations you want to plot on both oncoplots.
 #' @param metadata Required argument. A data.frame with metadata for both oncoplots.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
@@ -23,23 +23,22 @@
 #' @return A ggplot object with 2 oncoplots side-by-side.
 #'
 #' @rawNamespace import(ggpubr, except = "get_legend")
-#' @import ComplexHeatmap dplyr maftools
+#' @import ComplexHeatmap dplyr
 #' @export
 #'
 #' @examples
 #' #get data for plotting
 #' meta = GAMBLR.data::gambl_metadata
 #' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
-#' ssm = GAMBLR.data::sample_data$grch37$maf %>%
-#' 	filter(Tumor_Sample_Barcode %in% meta$sample_id)
-#' ssm = maftools::read.maf(ssm)
+#' ssm = GAMBLR.data::get_coding_ssm(
+#'     these_samples_metadata = meta,
+#'     projection = "hg38"
+#' )
 #'
 #' #build plot
 #' prettyCoOncoplot(maf = ssm,
 #'                  metadata = meta,
 #'                  comparison_column = "cohort",
-#'                  include_noncoding = NULL,
-#'                  minMutationPercent = 0,
 #'                  genes = c("MYC",
 #'                            "TET2",
 #'                            "TP53",
@@ -94,8 +93,14 @@ prettyCoOncoplot = function(maf,
     meta2 = metadata[metadata[[comparison_column]] %in% comparison_values[2], ]
 
     # Subset maf to only samples in the comparison values
-    ssm1 = maftools::subsetMaf(maf,tsb=pull(meta1, Tumor_Sample_Barcode))
-    ssm2 = maftools::subsetMaf(maf,tsb=pull(meta2, Tumor_Sample_Barcode))
+    ssm1 = maf %>%
+        dplyr::filter(
+            Tumor_Sample_Barcode %in% meta1$Tumor_Sample_Barcode
+        )
+    ssm2 = maf %>%
+        dplyr::filter(
+            Tumor_Sample_Barcode %in% meta2$Tumor_Sample_Barcode
+        )
 
     # Arguments to pass into prettyOncoplot
     oncoplot_args = list(...)
@@ -105,7 +110,7 @@ prettyCoOncoplot = function(maf,
     # Build oncoplot No1
     op1 = do.call(prettyOncoplot, c(
       list(
-        maftools_obj = ssm1,
+        maf_df = ssm1,
         these_samples_metadata = meta1
       ),
       oncoplot_args
@@ -122,7 +127,7 @@ prettyCoOncoplot = function(maf,
     # Build oncoplot No2
     op2 = do.call(prettyOncoplot, c(
       list(
-        maftools_obj = ssm2,
+        maf_df = ssm2,
         these_samples_metadata = meta2
       ),
       oncoplot_args

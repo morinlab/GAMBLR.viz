@@ -15,7 +15,7 @@ prettyCoOncoplot(
 )
 }
 \arguments{
-\item{maf}{Required argument. A maftools object containing the mutations you want to plot on both oncoplots.}
+\item{maf}{Required argument. A data frame containing the mutations you want to plot on both oncoplots.}
 
 \item{metadata}{Required argument. A data.frame with metadata for both oncoplots.}
 
@@ -33,33 +33,32 @@ prettyCoOncoplot(
 A ggplot object with 2 oncoplots side-by-side.
 }
 \description{
-`prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR::prettyOncoplot] side-by-side.
+`prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR.viz::prettyOncoplot] side-by-side.
 }
 \details{
 This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
 annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-recognized by [GAMBLR::prettyOncoplot] are supported and can be specified when calling this function.
+recognized by [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling this function.
 For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
-font size, top annotation etc). If the provided argument is not recognized by prettyOncoplot,
+font size, top annotation etc). If the provided argument is not recognized by [GAMBLR.viz::prettyOncoplot],
 it will be discarded. If you want a specific order of oncoplots on the left and right, please
 ensure the argument `comparison_column` is a factor with first level being the group
-you want to be plotted on the left side. For developers: new arguments added to prettyOncoplot in the future
+you want to be plotted on the left side. For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the future
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
 #get data for plotting
 meta = GAMBLR.data::gambl_metadata
 meta = dplyr::filter(meta, cohort \%in\% c("BL_Adult", "BL_Pediatric"))
-ssm = GAMBLR.data::sample_data$grch37$maf \%>\%
-	filter(Tumor_Sample_Barcode \%in\% meta$sample_id)
-ssm = maftools::read.maf(ssm)
+ssm = GAMBLR.data::get_coding_ssm(
+    these_samples_metadata = meta,
+    projection = "hg38"
+)
 
 #build plot
 prettyCoOncoplot(maf = ssm,
                  metadata = meta,
                  comparison_column = "cohort",
-                 include_noncoding = NULL,
-                 minMutationPercent = 0,
                  genes = c("MYC",
                            "TET2",
                            "TP53",
