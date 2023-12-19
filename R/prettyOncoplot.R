@@ -12,7 +12,7 @@
 #' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
-#' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified.
+#' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified. The default value is FALSE and respects all of the specified ordering.
 #' @param highlightHotspots Set to TRUE to highlight hot spots. Default is FALSE.
 #' @param these_samples_metadata Data frame containing metadata for your samples.
 #' @param metadataColumns A vector containing the categorical column names you want to plot below.
@@ -115,7 +115,7 @@ prettyOncoplot = function(maf_df,
                           genes,
                           include_noncoding = NULL,
                           keepGeneOrder = FALSE,
-                          keepSampleOrder = TRUE,
+                          keepSampleOrder = FALSE,
                           highlightHotspots = FALSE,
                           these_samples_metadata,
                           metadataColumns,
@@ -686,6 +686,22 @@ prettyOncoplot = function(maf_df,
   }else if (hide_annotations_tracks){
     metadata_df = metadata_df %>%
         dplyr:: select(-all_of(hide_annotations))
+  }
+
+  if(keepSampleOrder){
+    patients_kept <- patients_kept[order(
+        match(
+            patients_kept,
+            these_samples_metadata %>%
+                filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+                pull(Tumor_Sample_Barcode)
+        )
+    )]
+    metadata_df <- metadata_df[
+        order(match(rownames(metadata_df), patients_kept)),
+        ,
+        drop = FALSE
+    ]
   }
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,

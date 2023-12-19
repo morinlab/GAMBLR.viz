@@ -10,7 +10,7 @@ prettyOncoplot(
   genes,
   include_noncoding = NULL,
   keepGeneOrder = FALSE,
-  keepSampleOrder = TRUE,
+  keepSampleOrder = FALSE,
   highlightHotspots = FALSE,
   these_samples_metadata,
   metadataColumns,
