@@ -44,7 +44,7 @@ heatmap_mutation_frequency_bin(
 )
 }
 \arguments{
-\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
+\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or none) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
 
 \item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided.}
 

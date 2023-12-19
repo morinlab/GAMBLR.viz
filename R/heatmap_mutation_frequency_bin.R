@@ -5,7 +5,7 @@
 #' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
 #' to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 #'
-#' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.
+#' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or none) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.
 #' @param regions_bed Data frame of regions with four columns (chrom, start, end, name). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided.
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
