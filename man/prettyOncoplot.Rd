@@ -172,7 +172,7 @@ dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CD79B", "MYD88", "TP53")
 
 genes = c(fl_genes, dlbcl_genes)
 
-gene_groups = c(rep("FL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
+gene_groups = c(rep("FL", length(fl_genes)), rep("DLBCL", length(dlbcl_genes)))
 names(gene_groups) = genes
 
 prettyOncoplot(
