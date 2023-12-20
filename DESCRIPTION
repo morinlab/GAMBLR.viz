@@ -9,7 +9,7 @@ Description: This package is part of the Genomic Analysis of Mature B-cell
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
-Imports: 
+Imports:
     broom,
     circlize,
     ComplexHeatmap,
@@ -27,7 +27,6 @@ Imports:
     ggrepel,
     ggsci,
     gridExtra,
-    maftools,
     plotly,
     purrr,
     RCircos,

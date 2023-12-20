@@ -10,7 +10,7 @@ prettyOncoplot(
   genes,
   include_noncoding = NULL,
   keepGeneOrder = FALSE,
-  keepSampleOrder = TRUE,
+  keepSampleOrder = FALSE,
   highlightHotspots = FALSE,
   these_samples_metadata,
   metadataColumns,
@@ -28,6 +28,7 @@ prettyOncoplot(
   showTumorSampleBarcode = FALSE,
   groupNames,
   hide_annotations,
+  hide_annotations_tracks = FALSE,
   annotate_specific_genes = FALSE,
   this_forest_object = NULL,
   custom_colours = NULL,
@@ -62,7 +63,7 @@ prettyOncoplot(
 
 \item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified.}
 
-\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified.}
+\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified. The default value is FALSE and respects all of the specified ordering.}
 
 \item{highlightHotspots}{Set to TRUE to highlight hot spots. Default is FALSE.}
 
@@ -97,6 +98,8 @@ prettyOncoplot(
 \item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
 
 \item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
+
+\item{hide_annotations_tracks}{When hide_annotations is supplied with a list of columns, this parameter can optionally also not display those columns as the annotation track. Accepts TRUE and FALSE (default).}
 
 \item{annotate_specific_genes}{Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).}
 
@@ -156,52 +159,36 @@ sample_id, pathology
 #load packages
 library(grid)
 
-#get some data
-maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
-maf_metadata = get_gambl_metadata()
+maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") \%>\%
+    dplyr::filter(pathology \%in\% c("FL", "DLBCL"))
 
-#define some genes of interest
-bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
-             "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
-             "CCND3", "SMARCA4", "DDX3X")
+maf_data <- get_ssm_by_samples(
+    these_samples_metadata = maf_metadata
+)
 
-dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
+fl_genes = c("RRAGC", "CREBBP", "VMA21", "ATP6V1B2")
 
-genes = c(bl_genes, dlbcl_genes)
+dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CD79B", "MYD88", "TP53")
 
-#define gene groups
-gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
+genes = c(fl_genes, dlbcl_genes)
+
+gene_groups = c(rep("FL", length(fl_genes)), rep("DLBCL", length(dlbcl_genes)))
 names(gene_groups) = genes
 
-#filter metadata
-maf_metadata = dplyr::filter(maf_metadata,!lymphgen \%in\% c("COMPOSITE"))
-
-#convert metadata column into factor
-maf_metadata$pathology = as.factor(maf_metadata$pathology)
-
-#define order of factors for selected metadata column
-maf_metadata$pathology = factor(maf_metadata$pathology,
-                                levels = c("DLBCL", "BL",
-                                           "B-ALL", "CLL",
-                                           "COMFL", "DLBCL-BL-like",
-                                           "FL", "HGBL",
-                                           "MCL", "PBL",
-                                           "SCBC", "UNSPECIFIED"))
-
-maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
-
-#create prettyOncoplot
-prettyOncoplot(maf_df = maf_data,
-               genes = genes,
-               these_samples_metadata = maf_metadata,
-               splitGeneGroups = gene_groups,
-               keepGeneOrder = TRUE,
-               splitColumnName = "pathology",
-               metadataBarHeight = 5,
-               metadataBarFontsize = 8,
-               legend_row = 2,
-               fontSizeGene = 11,
-               metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
-               sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
+prettyOncoplot(
+    maf_df = maf_data,
+    genes = genes,
+    these_samples_metadata = maf_metadata \%>\%
+        arrange(patient_id),
+    splitGeneGroups = gene_groups,
+    keepGeneOrder = TRUE,
+    splitColumnName = "pathology",
+    metadataBarHeight = 5,
+    metadataBarFontsize = 8,
+    legend_row = 2,
+    fontSizeGene = 11,
+    metadataColumns = c("pathology", "lymphgen", "sex"),
+    sortByColumns = c("pathology", "lymphgen", "sex")
+)
 
 }

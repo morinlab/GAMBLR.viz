@@ -12,7 +12,7 @@
 #' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
-#' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified.
+#' @param keepSampleOrder Set to TRUE if you want to preserve the sample order specified. The default value is FALSE and respects all of the specified ordering.
 #' @param highlightHotspots Set to TRUE to highlight hot spots. Default is FALSE.
 #' @param these_samples_metadata Data frame containing metadata for your samples.
 #' @param metadataColumns A vector containing the categorical column names you want to plot below.
@@ -42,6 +42,7 @@
 #' @param groupNames optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param hide_annotations Hide annotations for specifc ashms. argument takes a list with annotations.
+#' @param hide_annotations_tracks When hide_annotations is supplied with a list of columns, this parameter can optionally also not display those columns as the annotation track. Accepts TRUE and FALSE (default).
 #' @param annotate_specific_genes Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).
 #' @param this_forest_object If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
@@ -61,60 +62,46 @@
 #' #load packages
 #' library(grid)
 #'
-#' #get some data
-#' maf_data = get_ssm_by_samples(these_samples_metadata = get_gambl_metadata())
-#' maf_metadata = get_gambl_metadata()
+#' maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") %>%
+#'     dplyr::filter(pathology %in% c("FL", "DLBCL"))
 #'
-#' #define some genes of interest
-#' bl_genes = c("NFKBIZ", "ID3", "TP53", "ARID1A", "FBXO11",
-#'              "GNA13", "TCF3", "TFAP4", "HNRNPU", "FOXO1",
-#'              "CCND3", "SMARCA4", "DDX3X")
+#' maf_data <- get_ssm_by_samples(
+#'     these_samples_metadata = maf_metadata
+#' )
 #'
-#' dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CREBBP", "MYD88")
+#define some genes of interest
+#' fl_genes = c("RRAGC", "CREBBP", "VMA21", "ATP6V1B2")
 #'
-#' genes = c(bl_genes, dlbcl_genes)
+#' dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CD79B", "MYD88", "TP53")
 #'
-#' #define gene groups
-#' gene_groups = c(rep("BL", length(bl_genes)), rep("DLBCL", length(dlbcl_genes)))
+#' genes = c(fl_genes, dlbcl_genes)
+#'
+#define gene groups
+#' gene_groups = c(rep("FL", length(fl_genes)), rep("DLBCL", length(dlbcl_genes)))
 #' names(gene_groups) = genes
 #'
-#' #filter metadata
-#' maf_metadata = dplyr::filter(maf_metadata,!lymphgen %in% c("COMPOSITE"))
-#'
-#' #convert metadata column into factor
-#' maf_metadata$pathology = as.factor(maf_metadata$pathology)
-#'
-#' #define order of factors for selected metadata column
-#' maf_metadata$pathology = factor(maf_metadata$pathology,
-#'                                 levels = c("DLBCL", "BL",
-#'                                            "B-ALL", "CLL",
-#'                                            "COMFL", "DLBCL-BL-like",
-#'                                            "FL", "HGBL",
-#'                                            "MCL", "PBL",
-#'                                            "SCBC", "UNSPECIFIED"))
-#'
-#' maf_metadata = with(maf_metadata, maf_metadata[order(pathology),])
-#'
-#' #create prettyOncoplot
-#' prettyOncoplot(maf_df = maf_data,
-#'                genes = genes,
-#'                these_samples_metadata = maf_metadata,
-#'                splitGeneGroups = gene_groups,
-#'                keepGeneOrder = TRUE,
-#'                splitColumnName = "pathology",
-#'                metadataBarHeight = 5,
-#'                metadataBarFontsize = 8,
-#'                legend_row = 2,
-#'                fontSizeGene = 11,
-#'                metadataColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"),
-#'                sortByColumns = c("pathology", "lymphgen", "sex", "EBV_status_inf", "cohort"))
+#' prettyOncoplot(
+#'     maf_df = maf_data,
+#'     genes = genes,
+#'     these_samples_metadata = maf_metadata %>%
+#'         arrange(patient_id),
+#'     splitGeneGroups = gene_groups,
+#'     keepGeneOrder = TRUE,
+#'     splitColumnName = "pathology",
+#'     metadataBarHeight = 5,
+#'     metadataBarFontsize = 8,
+#'     legend_row = 2,
+#'     fontSizeGene = 11,
+#'     metadataColumns = c("pathology", "lymphgen", "sex"),
+#'     sortByColumns = c("pathology", "lymphgen", "sex")
+#' )
 #'
 prettyOncoplot = function(maf_df,
                           onco_matrix_path,
                           genes,
                           include_noncoding = NULL,
                           keepGeneOrder = FALSE,
-                          keepSampleOrder = TRUE,
+                          keepSampleOrder = FALSE,
                           highlightHotspots = FALSE,
                           these_samples_metadata,
                           metadataColumns,
@@ -132,6 +119,7 @@ prettyOncoplot = function(maf_df,
                           showTumorSampleBarcode = FALSE,
                           groupNames,
                           hide_annotations,
+                          hide_annotations_tracks = FALSE,
                           annotate_specific_genes = FALSE,
                           this_forest_object = NULL,
                           custom_colours = NULL,
@@ -679,6 +667,28 @@ prettyOncoplot = function(maf_df,
       }
   }
 
+  if(missing(hide_annotations)){
+    metadata_df = metadata_df
+  }else if (hide_annotations_tracks){
+    metadata_df = metadata_df %>%
+        dplyr:: select(-all_of(hide_annotations))
+  }
+
+  if(keepSampleOrder){
+    patients_kept <- patients_kept[order(
+        match(
+            patients_kept,
+            these_samples_metadata %>%
+                filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+                pull(Tumor_Sample_Barcode)
+        )
+    )]
+    metadata_df <- metadata_df[
+        order(match(rownames(metadata_df), patients_kept)),
+        ,
+        drop = FALSE
+    ]
+  }
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,
