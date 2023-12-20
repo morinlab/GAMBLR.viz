@@ -28,7 +28,7 @@
 #'
 #' @examples
 #' #get data for plotting
-#' meta = GAMBLR.data::gambl_metadata
+#' meta = GAMBLR.data::get_gambl_metadata()
 #' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
 #' ssm = GAMBLR.data::get_coding_ssm(
 #'     these_samples_metadata = meta,
