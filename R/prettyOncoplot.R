@@ -62,6 +62,7 @@
 #' #load packages
 #' library(grid)
 #' library(GAMBLR.data)
+#' library(dplyr)
 #'
 #' maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") %>%
 #'     dplyr::filter(pathology %in% c("FL", "DLBCL"))
