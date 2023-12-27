@@ -166,45 +166,18 @@ heatmap_mutation_frequency_bin <- function(
       maf_data <- NULL
     }
     
-    # check whether using GAMBLR.results or GAMBLR.data
-    cmfbr_pkg <- environmentName(environment(calc_mutation_frequency_bin_regions))
-    
-    if(cmfbr_pkg == "GAMBLR.data"){
-      # using GAMBLR.data
-      # if either `from_indexed_flatfile` or `mode` is not the default, print a message
-      are_default <- formals(heatmap_mutation_frequency_bin) %>% 
-        .[c("from_indexed_flatfile", "mode")] %>% 
-        { . == c(from_indexed_flatfile, mode) }
-      if( any(!are_default) ){
-        message("Warning: You are using the bundled data. In this case, the default values of from_indexed_flatfile (TRUE) and mode (\"slms-3\") arguments are used instead of the user-specified ones.")
-      }
-      
-      all_wide <- calc_mutation_frequency_bin_regions(
-        maf_data = maf_data,
-        regions_bed = regions_bed,
-        these_samples_metadata = metadata,
-        projection = projection,
-        slide_by = slide_by,
-        window_size = window_size,
-        drop_unmutated = drop_unmutated,
-        return_format = "wide"
-      )
-      
-    } else{
-      # using GAMBLR.results
-      all_wide <- calc_mutation_frequency_bin_regions(
-        maf_data = maf_data,
-        regions_bed = regions_bed,
-        these_samples_metadata = metadata,
-        projection = projection,
-        slide_by = slide_by,
-        window_size = window_size,
-        drop_unmutated = drop_unmutated,
-        return_format = "wide",
-        from_indexed_flatfile = from_indexed_flatfile,
-        mode = mode
-      )
-    }
+    all_wide <- calc_mutation_frequency_bin_regions(
+      maf_data = maf_data,
+      regions_bed = regions_bed,
+      these_samples_metadata = metadata,
+      projection = projection,
+      slide_by = slide_by,
+      window_size = window_size,
+      drop_unmutated = drop_unmutated,
+      return_format = "wide",
+      from_indexed_flatfile = from_indexed_flatfile,
+      mode = mode
+    )
     
     # Convert to a matrix with samples in colnames and bins in rownames
     all_matrix <- data.frame(t(select(all_wide, -sample_id)))
