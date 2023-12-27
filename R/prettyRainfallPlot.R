@@ -21,8 +21,6 @@
 #'      "chromosome:start-end" to zoom in to a specific region.
 #' @param label_sv Boolean argument to specify whether label SVs or not with
 #'      green line on rainfall plot.
-#' @param annotate_sv Boolean argument to specify whether to restrict SVs to
-#'      those annotated with the annotate_sv function (i.e. relevant oncogenes).
 #' @param this_seq_type Specify one of "genome" or "capture" when relying on the
 #'      function to obtain mutations from a region (i.e. if you haven't provided
 #'      a MAF or single sample_id)
@@ -39,10 +37,33 @@
 #' @export
 #'
 #' @examples
+#' # Will annotate and label SVs
 #' prettyRainfallPlot(
 #'      this_sample_id = "DOHH-2",
 #'      this_seq_type = "genome",
 #'      zoom_in_region = "8:125252796-135253201",
+#'      label_sv = TRUE
+#' )
+#'
+#' # Will not annotate SVs (use raw bedpe) but still label them
+#' prettyRainfallPlot(
+#'      this_sample_id = "DOHH-2",
+#'      this_seq_type = "genome",
+#'      zoom_in_region = "8:125252796-135253201",
+#'      label_sv = TRUE,
+#'      annotate_sv = FALSE
+#' )
+#'
+#' # Will use user-specified SV data
+#' sv <- get_manta_sv(
+#'     these_sample_ids = "DOHH-2"
+#' )
+#'
+#' prettyRainfallPlot(
+#'      this_sample_id = "DOHH-2",
+#'      this_seq_type = "genome",
+#'      zoom_in_region = "8:125252796-135253201",
+#'      sv_data = sv,
 #'      label_sv = TRUE
 #' )
 #'
@@ -51,6 +72,7 @@ prettyRainfallPlot = function(
     label_ashm_genes = TRUE,
     projection = "grch37",
     chromosome,
+    sv_data = NULL,
     this_maf = NULL,
     maf_path,
     zoom_in_region,
@@ -326,13 +348,19 @@ prettyRainfallPlot = function(
     }
 
     if (label_sv) {
-        message(
-            "Getting combined manta + GRIDSS SVs using GAMBLR ..."
-        )
-        these_sv <- get_manta_sv(
-            these_sample_ids = this_sample_id,
-            projection = projection
-        )
+
+        if(missing(sv_data)){
+            message(
+                "Getting combined manta + GRIDSS SVs using GAMBLR ..."
+            )
+            these_sv <- get_manta_sv(
+                these_sample_ids = this_sample_id,
+                projection = projection
+            )
+        } else {
+            these_sv <- sv_data
+        }
+
         if ("SCORE" %in% colnames(these_sv)) {
             these_sv <- these_sv %>%
                 rename("SOMATIC_SCORE" = "SCORE")

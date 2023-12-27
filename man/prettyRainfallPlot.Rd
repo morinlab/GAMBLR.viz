@@ -9,6 +9,7 @@ prettyRainfallPlot(
   label_ashm_genes = TRUE,
   projection = "grch37",
   chromosome,
+  sv_data = NULL,
   this_maf = NULL,
   maf_path,
   zoom_in_region,
@@ -65,10 +66,33 @@ Create a sample-level rainfall plot visualizing single nucleotide
      substitutions mutations for selected chromosomes.
 }
 \examples{
+# Will annotate and label SVs
 prettyRainfallPlot(
      this_sample_id = "DOHH-2",
      this_seq_type = "genome",
      zoom_in_region = "8:125252796-135253201",
+     label_sv = TRUE
+)
+
+# Will not annotate SVs (use raw bedpe) but still label them
+prettyRainfallPlot(
+     this_sample_id = "DOHH-2",
+     this_seq_type = "genome",
+     zoom_in_region = "8:125252796-135253201",
+     label_sv = TRUE,
+     annotate_sv = FALSE
+)
+
+# Will use user-specified SV data
+sv <- get_manta_sv(
+    these_sample_ids = "DOHH-2"
+)
+
+prettyRainfallPlot(
+     this_sample_id = "DOHH-2",
+     this_seq_type = "genome",
+     zoom_in_region = "8:125252796-135253201",
+     sv_data = sv,
      label_sv = TRUE
 )
 
