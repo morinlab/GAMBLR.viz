@@ -131,7 +131,7 @@ library(GAMBLR.data)
 library(dplyr)
 
 # get meta data
-my_meta <- get_gambl_metadata() \%>\% 
+my_meta <- get_gambl_metadata() \%>\%
   filter(sample_id \%in\% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 
 # get ashm regions of a set of genes.

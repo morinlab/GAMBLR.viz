@@ -37,7 +37,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr cowplot GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -77,16 +77,16 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #grch37 coordinates
-  grch37_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>% 
-    dplyr::filter(chromosome != "Y") %>% 
+  grch37_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>%
+    dplyr::filter(chromosome != "Y") %>%
     pull(end)
-  grch37_cent_start = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "p") %>% 
-    dplyr::filter(chromosome != "Y") %>% 
+  grch37_cent_start = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "p") %>%
+    dplyr::filter(chromosome != "Y") %>%
     pull(end)
-  grch37_cent_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>% 
-    dplyr::filter(chromosome != "Y") %>% 
+  grch37_cent_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>%
+    dplyr::filter(chromosome != "Y") %>%
     pull(start)
-  
+
   #additional regions to plot
   if(!missing(gene_annotation)){
     gene = GAMBLR.utils::gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
@@ -137,7 +137,7 @@ fancy_ideogram = function(this_sample_id,
 
   # ignore y chromosome
   cn_states = dplyr::filter(cn_states, chrom != "Y")
-  
+
   #convert chr into y coordinates
   cn_states$ycoord = cn_states$chrom
 
@@ -202,9 +202,9 @@ fancy_ideogram = function(this_sample_id,
 
   #convert data types
   cn_states$chrom = as.factor(cn_states$chrom)
-  
+
   # correct y coordinate for X chromosome
-  cn_states$ycoord = dplyr::recode(cn_states$ycoord, X="23") %>% 
+  cn_states$ycoord = dplyr::recode(cn_states$ycoord, X="23") %>%
     as.integer
 
   #subset on CN state
@@ -226,7 +226,7 @@ fancy_ideogram = function(this_sample_id,
       colnames(maf)[start_col_maf] = "Start_Position"
       colnames(maf)[end_col_maf] = "End_Position"
     }else if (!is.null(maf_path)){
-      maf = fread_maf(maf_path)
+      maf = GAMBLR.utils::fread_maf(maf_path)
       maf = as.data.frame(maf)
       colnames(maf)[variant_type_col_maf] = "Variant_Type"
       colnames(maf)[chromosome_col_maf] = "Chromosome"
@@ -235,7 +235,7 @@ fancy_ideogram = function(this_sample_id,
     }
 
     if(missing(maf_data) && is.null(maf_path)){
-      maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
+      maf = get_ssm_by_sample(this_sample_id = this_sample_id,
                               projection = "grch37", #currently only supported reference build.
                               this_seq_type = this_seq_type)
     }
@@ -248,7 +248,7 @@ fancy_ideogram = function(this_sample_id,
 
     #convert chr into y coordinates
     maf_trans$ystart = maf_trans$yend = dplyr::recode(maf_trans$Chromosome, X="23")
-    
+
     #paste chr in maf, if not there
     if(!str_detect(maf_trans$Chromosome[1], "chr")){
       maf_trans = mutate(maf_trans, Chromosome = paste0("chr", Chromosome))

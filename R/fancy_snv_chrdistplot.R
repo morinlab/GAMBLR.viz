@@ -26,12 +26,12 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr cowplot GAMBLR.utils
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #plot SNVs
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 #'
@@ -60,7 +60,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
     colnames(maf)[chromosome_col] = "Chromosome"
 
   }else if (!is.null(maf_path)){
-    maf = fread_maf(maf_path)
+    maf = GAMBLR.utils::fread_maf(maf_path)
     maf = as.data.frame(maf)
     colnames(maf)[variant_type_col] = "Variant_Type"
     colnames(maf)[chromosome_col] = "Chromosome"
@@ -68,8 +68,8 @@ fancy_snv_chrdistplot = function(this_sample_id,
 
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
-    maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
-                            this_seq_type = this_seq_type, 
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id,
+                            this_seq_type = this_seq_type,
                             projection = projection)
   }
 

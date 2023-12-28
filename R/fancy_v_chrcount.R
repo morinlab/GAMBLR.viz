@@ -29,12 +29,12 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr cowplot GAMBLR.utils
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #plot ssm
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
 #'                  y_interval = 10)
@@ -62,7 +62,7 @@ fancy_v_chrcount = function(this_sample_id,
     colnames(plot_data)[chromosome_col] = "Chromosome"
 
   }else if(!is.null(maf_path)){
-    plot_data = fread_maf(maf_path)
+    plot_data = GAMBLR.utils::fread_maf(maf_path)
     plot_data = as.data.frame(plot_data)
     colnames(plot_data)[variant_type_col] = "Variant_Type"
     colnames(plot_data)[chromosome_col] = "Chromosome"
@@ -71,19 +71,19 @@ fancy_v_chrcount = function(this_sample_id,
   #get maf data for a specific sample.
   if(missing(maf_data) && is.null(maf_path)){
     if(ssm){
-      plot_data = get_ssm_by_sample(this_sample_id = this_sample_id, 
-                                    this_seq_type = this_seq_type, 
+      plot_data = get_ssm_by_sample(this_sample_id = this_sample_id,
+                                    this_seq_type = this_seq_type,
                                     projection = projection)
     }else{
-      plot_data = get_manta_sv(these_sample_ids = this_sample_id, 
-                               projection = projection, 
+      plot_data = get_manta_sv(these_sample_ids = this_sample_id,
+                               projection = projection,
                                min_vaf = min_vaf) %>%
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format
       plot_data = data.frame( plot_data$CHROM_A, plot_data$START_A, plot_data$END_A,
                               sub("^(.+?):.*", "\\1", plot_data$manta_name) )
-      
+
       #rename variables
       names(plot_data)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
 
@@ -94,7 +94,7 @@ fancy_v_chrcount = function(this_sample_id,
       #remove "Manta" from Variant_Type string
       plot_data$Variant_Type = gsub("^.{0,5}", "", plot_data$Variant_Type)
     }
-    
+
     if(nrow(plot_data) == 0){
       stop("No variants found for the selected sample")
     }

@@ -45,23 +45,23 @@
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import dplyr tidyr tibble ComplexHeatmap circlize grid
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
 #' library(dplyr)
-#' 
+#'
 #' # get meta data
-#' my_meta <- get_gambl_metadata() %>% 
+#' my_meta <- get_gambl_metadata() %>%
 #'   filter(sample_id %in% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
-#' 
+#'
 #' # get ashm regions of a set of genes.
 #' my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
 #'   rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") %>%
 #'   mutate( chrom = stringr::str_remove(chrom, "chr") )
-#' 
+#'
 #' # create heatmap of mutation counts for the specified regions
 #' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
 #' heatmap_mutation_frequency_bin(
@@ -109,11 +109,11 @@ heatmap_mutation_frequency_bin <- function(
   from_indexed_flatfile = TRUE,
   mode = "slms-3"
 ) {
-  
+
   # check arguments
-  stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." = 
+  stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." =
                any( c(is.null(regions_list), is.null(regions_bed) ) ) )
-  
+
   # Get region specifications
   if (missing(skip_regions)) {
     skip_regions <- NULL
@@ -165,7 +165,7 @@ heatmap_mutation_frequency_bin <- function(
     if (missing(maf_data)) {
       maf_data <- NULL
     }
-    
+
     all_wide <- calc_mutation_frequency_bin_regions(
       maf_data = maf_data,
       regions_bed = regions_bed,
@@ -178,7 +178,7 @@ heatmap_mutation_frequency_bin <- function(
       from_indexed_flatfile = from_indexed_flatfile,
       mode = mode
     )
-    
+
     # Convert to a matrix with samples in colnames and bins in rownames
     all_matrix <- data.frame(t(select(all_wide, -sample_id)))
     colnames(all_matrix) <- all_wide$sample_id

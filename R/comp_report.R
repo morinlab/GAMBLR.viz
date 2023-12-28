@@ -10,19 +10,19 @@
 #'
 #' @param this_sample_id Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
-#' @param out Path to output folder. The default is the working directory. 
+#' @param out Path to output folder. The default is the working directory.
 #' @param seg_data Optional parameter with copy number df already loaded into R.
 #' @param seg_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
 #' @param maf_path Optional parameter with path to external maf like file.
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param projection Specify the projection you want the returned plots to be in reference to. 
+#' @param projection Specify the projection you want the returned plots to be in reference to.
 #' Possible values are "grch37" and "hg38". Default is grch37.
 #'
 #' @return Nothing.
 #'
 #' @rawNamespace import(gridExtra, except = "combine")
-#' @import ggplot2 dplyr
+#' @import ggplot2 dplyr GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -52,7 +52,7 @@ comp_report = function(this_sample_id,
     colnames(maf)[end_col_maf] = "End_Position"
 
   }else if (!is.null(maf_path)){
-    maf = fread_maf(maf_path)
+    maf = GAMBLR.utils::fread_maf(maf_path)
     maf = as.data.frame(maf)
     colnames(maf)[variant_type_col_maf] = "Variant_Type"
     colnames(maf)[chromosome_col_maf] = "Chromosome"
@@ -79,7 +79,7 @@ comp_report = function(this_sample_id,
 
   #read maf and seg data into r (avoid calling assign_cn_to_ssm and get_cn_segments for every plotting function)
   if(missing(maf_data) && is.null(maf_path)){
-    maf = get_ssm_by_sample(this_sample_id = this_sample_id, 
+    maf = get_ssm_by_sample(this_sample_id = this_sample_id,
                             this_seq_type = this_seq_type,
                             projection = projection)
   }
@@ -88,19 +88,19 @@ comp_report = function(this_sample_id,
     seg = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       streamlined = FALSE,
-      this_seq_type = this_seq_type, 
+      this_seq_type = this_seq_type,
       projection = projection
     )
   }
-  
-  # check whether maf and seg are empty 
-  is_maf_seq_empty <- c( nrow(maf), nrow(seg) ) %>% 
+
+  # check whether maf and seg are empty
+  is_maf_seq_empty <- c( nrow(maf), nrow(seg) ) %>%
     {. == 0}
   if( all(is_maf_seq_empty) ){
     stop("The report could not be generated because neither SSMs nor CN segments were found for the specified sample.")
   }
   if( sum(is_maf_seq_empty) == 1 ){
-    k <- c("SSMs", "CN segments") [is_maf_seq_empty] %>% 
+    k <- c("SSMs", "CN segments") [is_maf_seq_empty] %>%
       gettextf("The report could not be generated because %s were not found for the specified sample.", .)
     stop(k)
   }

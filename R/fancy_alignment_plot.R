@@ -24,7 +24,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import ggplot2 cowplot dplyr
 #' @export
 #'
@@ -32,14 +32,14 @@
 #' #load packages
 #' library(dplyr)
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get sample IDs for available genome samples
-#' genome_collated = collate_results(seq_type_filter = "genome") %>% 
+#' genome_collated = collate_results(seq_type_filter = "genome") %>%
 #'   pull(sample_id)
 #'
 #' #subset the collated samples on BL samples
-#' my_samples = get_gambl_metadata() %>% 
-#'   dplyr::filter(sample_id %in% genome_collated) %>% 
+#' my_samples = get_gambl_metadata() %>%
+#'   dplyr::filter(sample_id %in% genome_collated) %>%
 #'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
 #' fancy_alignment_plot(these_sample_ids = my_samples)
