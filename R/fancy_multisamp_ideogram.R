@@ -23,12 +23,12 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot stringr
+#' @import ggplot2 dplyr cowplot stringr GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #two samples ideogram
 #' fancy_multisamp_ideogram(these_sample_ids = c("05-18426T", "05-18426T"),
 #'                          include_cn2 = TRUE,
@@ -141,14 +141,14 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   #first sample
   sample1 = samples[1]
   sample1_cn = dplyr::filter(cn_states, ID == sample1)
-  subset_cnstates(cn_segments = sample1_cn, samplen = 1, include_2 = include_cn2)
+  GAMBLR.helpers::subset_cnstates(cn_segments = sample1_cn, samplen = 1, include_2 = include_cn2)
   sample1_cn$CN = as.factor(sample1_cn$CN)
   sample1_cn = droplevels(sample1_cn)
 
   #second sample
   sample2 = samples[2]
   sample2_cn = dplyr::filter(cn_states, ID == sample2)
-  subset_cnstates(cn_segments = sample2_cn, samplen = 2, include_2 = include_cn2)
+  GAMBLR.helpers::subset_cnstates(cn_segments = sample2_cn, samplen = 2, include_2 = include_cn2)
   sample2_cn$CN = as.factor(sample2_cn$CN)
   sample2_cn = droplevels(sample2_cn)
 
@@ -156,7 +156,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   if(length(these_sample_ids) > 2){
     sample3 = samples[3]
     sample3_cn = dplyr::filter(cn_states, ID == sample3)
-    subset_cnstates(cn_segments = sample3_cn, samplen = 3, include_2 = include_cn2)
+    GAMBLR.helpers::subset_cnstates(cn_segments = sample3_cn, samplen = 3, include_2 = include_cn2)
     sample3_cn$CN = as.factor(sample3_cn$CN)
     sample3_cn = droplevels(sample3_cn)}
 
@@ -164,7 +164,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   if(length(these_sample_ids) > 3){
     sample4 = samples[4]
     sample4_cn = dplyr::filter(cn_states, ID == sample4)
-    subset_cnstates(cn_segments = sample4_cn, samplen = 4, include_2 = include_cn2)
+    GAMBLR.helpers::subset_cnstates(cn_segments = sample4_cn, samplen = 4, include_2 = include_cn2)
     sample4_cn$CN = as.factor(sample4_cn$CN)
     sample4_cn = droplevels(sample4_cn)}
 

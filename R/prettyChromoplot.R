@@ -19,7 +19,7 @@
 #'
 #' @return plot
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import dplyr ggplot2 ggrepel
 #' @export
 #'

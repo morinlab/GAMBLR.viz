@@ -25,20 +25,20 @@
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import dplyr cowplot forcats ggplot2 purrr tidyr broom
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' metadata = get_gambl_metadata()
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
-#' 
+#'
 #' maf = get_ssm_by_sample(these_samples_metadata = this_meta)
-#' 
+#'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = this_meta,
 #'                  genes = c("ATP6V1B2",
@@ -49,7 +49,7 @@
 #'                  comparison_values = c("DLBCL",
 #'                                        "FL"),
 #'                  separate_hotspots = FALSE,
-#'                  comparison_name = "FL vs DLBCL") 
+#'                  comparison_name = "FL vs DLBCL")
 #'
 prettyForestPlot = function(maf,
                             mutmat,

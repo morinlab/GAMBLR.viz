@@ -80,6 +80,6 @@ prettyForestPlot(maf = maf,
                  comparison_values = c("DLBCL",
                                        "FL"),
                  separate_hotspots = FALSE,
-                 comparison_name = "FL vs DLBCL") 
+                 comparison_name = "FL vs DLBCL")
 
 }

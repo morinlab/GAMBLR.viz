@@ -14,6 +14,8 @@
 #'      is grch37.
 #' @param chromosome Provide one or more chromosomes to plot. The chr prefix can
 #'      be inconsistent with projection and will be handled.
+#' @param sv_data Optionally provide the SV data to be used for plotting instead
+#'      of retreiving SVs through GAMBLR on the fly.
 #' @param this_maf Specify custom MAF data frame of mutations.
 #' @param maf_path Specify path to MAF file if it is not already loaded into
 #'      data frame.
@@ -32,8 +34,8 @@
 #'
 #' @return a ggplot2 object
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import ggplot2 dplyr readr stringr tidyr GAMBLR.data GAMBLR.helpers
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
+#' @import ggplot2 dplyr readr stringr tidyr reshape2 GAMBLR.data GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -367,7 +369,7 @@ prettyRainfallPlot = function(
         }
         # annotate SV
         if (annotate_sv){
-            these_sv <- annotate_sv(
+            these_sv <- GAMBLR.utils::annotate_sv(
                 these_sv,
                 genome_build = projection
             )
@@ -393,7 +395,7 @@ prettyRainfallPlot = function(
         }
 
         # make SVs a long df with 1 record per SV corresponding to the strand
-        sv_to_label <- reshape2::melt(
+        sv_to_label <- melt(
             these_sv %>%
                 select(
                     chrom1,
@@ -427,7 +429,7 @@ prettyRainfallPlot = function(
         # are there any SVs on this chromosome/region?
         if (nrow(sv_to_label) > 0) {
         sv_to_label <- sv_to_label %>%
-            reshape2::melt(
+            melt(
                 .,
                 id.vars = c(
                     "tumour_sample_id",

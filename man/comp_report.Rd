@@ -33,7 +33,7 @@ comp_report(
 
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
-\item{projection}{Specify the projection you want the returned plots to be in reference to. 
+\item{projection}{Specify the projection you want the returned plots to be in reference to.
 Possible values are "grch37" and "hg38". Default is grch37.}
 }
 \value{

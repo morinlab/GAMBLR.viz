@@ -32,6 +32,9 @@ is grch37.}
 \item{chromosome}{Provide one or more chromosomes to plot. The chr prefix can
 be inconsistent with projection and will be handled.}
 
+\item{sv_data}{Optionally provide the SV data to be used for plotting instead
+of retreiving SVs through GAMBLR on the fly.}
+
 \item{this_maf}{Specify custom MAF data frame of mutations.}
 
 \item{maf_path}{Specify path to MAF file if it is not already loaded into
