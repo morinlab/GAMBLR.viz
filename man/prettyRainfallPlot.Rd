@@ -9,52 +9,91 @@ prettyRainfallPlot(
   label_ashm_genes = TRUE,
   projection = "grch37",
   chromosome,
+  sv_data = NULL,
   this_maf = NULL,
   maf_path,
   zoom_in_region,
   this_seq_type,
   label_sv = FALSE,
-  plot_title = "my_plot"
+  plot_title = "my_plot",
+  annotate_sv = TRUE
 )
 }
 \arguments{
-\item{this_sample_id}{Sample id for the sample to display. This is argument is not required if you want a multi-sample plot but is otherwise needed.}
+\item{this_sample_id}{Sample id for the sample to display. This is argument
+is not required if you want a multi-sample plot but is otherwise needed.}
 
-\item{label_ashm_genes}{Boolean argument indicating whether the aSHM regions will be labeled or not.}
+\item{label_ashm_genes}{Boolean argument indicating whether the aSHM regions
+will be labeled or not.}
 
-\item{projection}{Specify projection (grch37 or hg38) of mutations. Default is grch37.}
+\item{projection}{Specify projection (grch37 or hg38) of mutations. Default
+is grch37.}
 
-\item{chromosome}{Provide one or more chromosomes to plot. The chr prefix can be inconsistent with projection and will be handled.}
+\item{chromosome}{Provide one or more chromosomes to plot. The chr prefix can
+be inconsistent with projection and will be handled.}
 
 \item{this_maf}{Specify custom MAF data frame of mutations.}
 
-\item{maf_path}{Specify path to MAF file if it is not already loaded into data frame.}
+\item{maf_path}{Specify path to MAF file if it is not already loaded into
+data frame.}
 
-\item{zoom_in_region}{Provide a specific region in the format "chromosome:start-end" to zoom in to a specific region.}
+\item{zoom_in_region}{Provide a specific region in the format
+"chromosome:start-end" to zoom in to a specific region.}
 
-\item{this_seq_type}{Specify one of "genome" or "capture" when relying on the function to obtain mutations from a region (i.e. if you haven't provided a MAF or single sample_id)}
+\item{this_seq_type}{Specify one of "genome" or "capture" when relying on the
+function to obtain mutations from a region (i.e. if you haven't provided
+a MAF or single sample_id)}
 
-\item{label_sv}{Boolean argument to specify whether label SVs or not. Only supported if a specific chromosome or zoom in region are specified.}
+\item{label_sv}{Boolean argument to specify whether label SVs or not with
+green line on rainfall plot.}
 
-\item{plot_title}{Specify the title for the returned plot, default is "my_plot".}
+\item{plot_title}{Specify the title for the returned plot, default is
+"my_plot".}
+
+\item{annotate_sv}{Optionally annotate intrachromosomal SVs to label the gene
+and partner information on the plot. Default is TRUE (perform
+annotation).}
 }
 \value{
-a ggplot2 plot. Print it using print() or save it using ggsave()
+a ggplot2 object
 }
 \description{
-Plot a rainfall plot for one sample. This function takes in the MAF data frame, or path to a custom MAF file.
+Plot a rainfall plot for one sample. This function takes in the
+     MAF data frame, or path to a custom MAF file.
 }
 \details{
-Create a sample-level rainfall plot visualizing single nucleotide substitutions mutations for selected chromosomes.
+Create a sample-level rainfall plot visualizing single nucleotide
+     substitutions mutations for selected chromosomes.
 }
 \examples{
-\dontrun{
-library(GAMBLR.data)
+# Will annotate and label SVs
+prettyRainfallPlot(
+     this_sample_id = "DOHH-2",
+     this_seq_type = "genome",
+     zoom_in_region = "8:125252796-135253201",
+     label_sv = TRUE
+)
 
-prettyRainfallPlot(this_sample_id = "DOHH-2",
-                   this_seq_type = "genome",
-                   zoom_in_region = "8:125252796-135253201",
-                   label_sv = TRUE)
-}
+# Will not annotate SVs (use raw bedpe) but still label them
+prettyRainfallPlot(
+     this_sample_id = "DOHH-2",
+     this_seq_type = "genome",
+     zoom_in_region = "8:125252796-135253201",
+     label_sv = TRUE,
+     annotate_sv = FALSE
+)
+
+# Will use user-specified SV data
+sv <- get_manta_sv(
+    these_sample_ids = "DOHH-2"
+)
+
+prettyRainfallPlot(
+     this_sample_id = "DOHH-2",
+     this_seq_type = "genome",
+     zoom_in_region = "8:125252796-135253201",
+     sv_data = sv,
+     label_sv = TRUE
+)
 
 }
