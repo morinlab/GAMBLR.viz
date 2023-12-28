@@ -19,8 +19,8 @@ fancy_sv_sizedens(
   hide_legend = FALSE,
   chr_select = paste0("chr", c(1:22)),
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = paste0("SV sizes for Manta calls. \\n                                                    Dashed line annotates mean \\n                                                    variant size.\\nVAF cut off: \\n                                                    ",
+  plot_subtitle =
+    paste0("SV sizes for Manta calls. \\n                                                    Dashed line annotates mean \\n                                                    variant size.\\nVAF cut off: \\n                                                    ",
     vaf_cutoff,
     ", SV size \\n                                                    cut off: ",
     size_cutoff),
@@ -78,6 +78,9 @@ This function also allows the user to customize the returned plot. For more info
 parameters; `hide_legend`, `plot_title`, `plot_subtitle`, `adjust_value` and `trim`.
 }
 \examples{
+\dontrun{
+library(GAMBLR.data)
+
 #build plot sith default parameters
 fancy_sv_sizedens(this_sample_id = "SP116715")
 
@@ -85,5 +88,6 @@ fancy_sv_sizedens(this_sample_id = "SP116715")
 fancy_sv_sizedens(this_sample_id = "SP116715",
                   size_cutoff = 0,
                   chr_select = c("chr1", "chr2"))
+}
 
 }

@@ -10,7 +10,7 @@
 #'
 #' @param this_sample_id Sample ID to be plotted in report.
 #' @param export_individual_plots Boolean parameter, set to TRUE to export individual plots.
-#' @param out Path to output folder.
+#' @param out Path to output folder. The default is the working directory. 
 #' @param seg_data Optional parameter with copy number df already loaded into R.
 #' @param seg_path Optional parameter with path to external cn file.
 #' @param maf_data Optional parameter with maf like df already loaded into R.
@@ -28,14 +28,14 @@
 #' @examples
 #' \dontrun{
 #' #create a PDF report for one sample, as well as exporting all individual plots.
-#' comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
-#'             out = "reports/",
+#' comp_report(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+#'             out = "./",
 #'             export_individual_plots = TRUE)
 #' }
 #'
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
-                       out,
+                       out = "./",
                        seg_data,
                        seg_path = NULL,
                        maf_data,
@@ -91,6 +91,18 @@ comp_report = function(this_sample_id,
       this_seq_type = this_seq_type, 
       projection = projection
     )
+  }
+  
+  # check whether maf and seg are empty 
+  is_maf_seq_empty <- c( nrow(maf), nrow(seg) ) %>% 
+    {. == 0}
+  if( all(is_maf_seq_empty) ){
+    stop("The report could not be generated because neither SSMs nor CN segments were found for the specified sample.")
+  }
+  if( sum(is_maf_seq_empty) == 1 ){
+    k <- c("SSMs", "CN segments") [is_maf_seq_empty] %>% 
+      gettextf("The report could not be generated because %s were not found for the specified sample.", .)
+    stop(k)
   }
 
   #execute a collection of sample-level plots with default parameters

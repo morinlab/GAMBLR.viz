@@ -24,6 +24,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #' 
 #' #basic usage
@@ -32,6 +33,7 @@
 #'
 #' ashm_rainbow_plot(metadata = this_metadata,
 #'                   region = this_region)
+#' }
 #'
 ashm_rainbow_plot = function(mutations_maf,
                              metadata,

@@ -27,6 +27,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #get data for plotting
 #' meta = GAMBLR.data::get_gambl_metadata()
 #' meta = dplyr::filter(meta, cohort %in% c("BL_Adult", "BL_Pediatric"))
@@ -55,6 +56,7 @@
 #'                  legend_row = 2,
 #'                  label1 = "Adult",
 #'                  label2 = "Pediatric")
+#' }
 #'
 prettyCoOncoplot = function(maf,
                             metadata,

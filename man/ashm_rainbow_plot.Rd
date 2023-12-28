@@ -49,6 +49,7 @@ Lastly, this function has a variety of parameters that can be used to further cu
 Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #basic usage
@@ -57,5 +58,6 @@ this_metadata = get_gambl_metadata()
 
 ashm_rainbow_plot(metadata = this_metadata,
                   region = this_region)
+}
 
 }

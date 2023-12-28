@@ -13,8 +13,8 @@ fancy_cnbar(
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+  plot_subtitle =
+    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
   include_cn2 = TRUE,
@@ -68,7 +68,9 @@ This function also computes the number of affected bases for each copy number st
 useful for overviewing the extent of each copy number state, in the context of the full genome.
 }
 \examples{
+library(GAMBLR.data)
+
 #Return a plot for one sample, with default parameters.
-my_plot = fancy_cnbar(this_sample_id = "DOHH-2")
+fancy_cnbar(this_sample_id = "DOHH-2")
 
 }

@@ -48,6 +48,8 @@ with `gene`. If so, the function will internally retrieve the region for the spe
 Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 }
 \examples{
+library(GAMBLR.data)
+
 #get metadata
 this_metadata = get_gambl_metadata()
 

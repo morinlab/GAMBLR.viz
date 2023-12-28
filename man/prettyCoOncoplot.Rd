@@ -47,6 +47,7 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
+\dontrun{
 #get data for plotting
 meta = GAMBLR.data::get_gambl_metadata()
 meta = dplyr::filter(meta, cohort \%in\% c("BL_Adult", "BL_Pediatric"))
@@ -75,5 +76,6 @@ prettyCoOncoplot(maf = ssm,
                  legend_row = 2,
                  label1 = "Adult",
                  label2 = "Pediatric")
+}
 
 }

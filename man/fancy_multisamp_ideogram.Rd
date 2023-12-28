@@ -54,6 +54,8 @@ In order to only plot segments that are concordant between the selected samples,
 To instead plot discordant CN segments, set this parameter to FALSE.
 }
 \examples{
+library(GAMBLR.data)
+
 #two samples ideogram
 fancy_multisamp_ideogram(these_sample_ids = c("05-18426T", "05-18426T"),
                          include_cn2 = TRUE,

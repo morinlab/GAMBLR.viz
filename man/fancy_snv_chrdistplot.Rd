@@ -61,6 +61,8 @@ argument (Boolean) for if variants of this subtype should be included or not. La
 also have convenient parameters for customizing the returned plot, e.g `plot_title`, `y_interval`, `hide_legend`, and`plot_subtitle`.
 }
 \examples{
+library(GAMBLR.data)
+
 #plot SNVs
 fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 

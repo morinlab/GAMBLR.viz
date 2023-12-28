@@ -7,7 +7,7 @@
 comp_report(
   this_sample_id,
   export_individual_plots = FALSE,
-  out,
+  out = "./",
   seg_data,
   seg_path = NULL,
   maf_data,
@@ -21,7 +21,7 @@ comp_report(
 
 \item{export_individual_plots}{Boolean parameter, set to TRUE to export individual plots.}
 
-\item{out}{Path to output folder.}
+\item{out}{Path to output folder. The default is the working directory.}
 
 \item{seg_data}{Optional parameter with copy number df already loaded into R.}
 
@@ -52,8 +52,8 @@ file on disk with the `seg_path` and `maf_path` parameters.
 \examples{
 \dontrun{
 #create a PDF report for one sample, as well as exporting all individual plots.
-comp_report(this_sample = "HTMCP-01-06-00422-01A-01D",
-            out = "reports/",
+comp_report(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+            out = "./",
             export_individual_plots = TRUE)
 }
 

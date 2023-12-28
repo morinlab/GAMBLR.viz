@@ -18,6 +18,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #get metadata (Fl and DLBCL)
 #' metadata = get_gambl_metadata()
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")

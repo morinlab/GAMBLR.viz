@@ -35,6 +35,8 @@ Returned plot is interactive, meaning the user can hover over individual points 
 The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
 }
 \examples{
+library(GAMBLR.data)
+
 #get metadata (Fl and DLBCL)
 metadata = get_gambl_metadata()
 this_meta = dplyr::filter(metadata, pairing_status == "matched")
