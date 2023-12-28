@@ -35,6 +35,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' library(GAMBLR.data)
+#' 
 #' #build plot sith default parameters
 #' fancy_sv_sizedens(this_sample_id = "SP116715")
 #'
@@ -42,6 +45,7 @@
 #' fancy_sv_sizedens(this_sample_id = "SP116715",
 #'                   size_cutoff = 0,
 #'                   chr_select = c("chr1", "chr2"))
+#' }
 #'
 fancy_sv_sizedens = function(this_sample_id,
                              maf_data,
@@ -88,8 +92,9 @@ fancy_sv_sizedens = function(this_sample_id,
   }
 
   #split manta_name variable
-  svs_df = data.frame(svs$CHROM_A, svs$START_A, svs$END_A, do.call(rbind, strsplit(svs$manta_name, split = ":", fixed = TRUE)))
-
+  svs_df = data.frame( svs$CHROM_A,   svs$START_A, svs$END_A,
+                       sub("^(.+?):.*", "\\1", svs$manta_name) )
+  
   #rename variables
   names(svs_df)[1] = "chrom"
   names(svs_df)[2] = "start"
@@ -99,11 +104,35 @@ fancy_sv_sizedens = function(this_sample_id,
   #subset df on SV type
   manta_sv = dplyr::filter(svs_df, type %in% c("MantaDEL", "MantaDUP")) %>%
     dplyr::select(chrom, start, end, type)
-
+  
+  # check whether enough variants
+  check_whether_enough_vars = function(manta_type, string1, string2){
+    type_table = table(manta_type)
+    var_num_message = "%i MantaDEL and %i MantaDUP variants were"
+    if( is.null(string2) ){
+      var_num_message = gettextf("%s %s.", var_num_message, string1)
+    }else{
+      var_num_message = gettextf("%s %s after filtering by %s.", 
+                                 var_num_message, string1, string2)
+    }
+    type_table = table(manta_type)
+    k <- gettextf(var_num_message, type_table["MantaDEL"], type_table["MantaDUP"])
+    message(k)
+    stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
+                any(type_table > 1))
+  }
+  
+  manta_sv = mutate( manta_sv, type = factor(type, levels = c("MantaDEL", "MantaDUP")) )
+  
+  if( missing(maf_data) && is.null(maf_path) ){
+    check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = "vaf_cutoff")
+  }else{
+    check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = NULL)
+  }
+  
   #calculate sizes
   manta_sv$size = manta_sv$end - manta_sv$start
-  manta_sv$type = as.factor(manta_sv$type)
-
+  
   #add chr prefix, if missing
   if(!str_detect(manta_sv$chrom, "chr")[1]){
     manta_sv = mutate(manta_sv, chrom = paste0("chr", chrom))
@@ -112,10 +141,23 @@ fancy_sv_sizedens = function(this_sample_id,
   #subset on selected chromosomes
   manta_sv = manta_sv[manta_sv$chrom %in% chr_select, ]
 
-  #filter out varaints < 50 bp
+  #filter out variants < 50 bp
   manta_sv = dplyr::filter(manta_sv, size >= size_cutoff)
-  manta_sv$row_num = seq.int(nrow(manta_sv))
-
+  
+  # check whether enough variants
+  check_whether_enough_vars(manta_type = manta_sv$type, string1 = "left", string2 = "size_cutoff")
+  
+  # groups (MantaDEL or MantaDUP) with only 1 variant are dropped.
+  if(type_table["MantaDEL"] == 1){
+    manta_sv = filter(manta_sv, type != "MantaDEL")
+    message("Warning: At least 2 data points are needed to calculate density estimates. MantaDEL group was dropped because it contains only 1 variant.")
+  }
+  if(type_table["MantaDUP"] == 1){
+    manta_sv = filter(manta_sv, type != "MantaDUP")
+    message("Warning: At least 2 data points are needed to calculate density estimates. MantaDUP group was dropped because it contains only 1 variant.")
+  }
+  manta_sv = mutate(manta_sv, type = droplevels(type))
+  
   del_col = GAMBLR.helpers::get_gambl_colours("indels")[[1]]
   dup_col = GAMBLR.helpers::get_gambl_colours("indels")[[2]]
 

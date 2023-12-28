@@ -5,7 +5,7 @@
 #' @details This function generates genome-wide ideograms, visualizing SSM data as well as CN segments.
 #' It is also possible to superimpose the plot with gene annotations. Offering a comprehensive overview of all SSM and CN segments of different aneuploidy.
 #' The plotting of SSM can be toggled with setting `include_ssm` to TRUE. If so, it is also possible to count the number of SSMs per chromosome with `ssm_count = TRUE`.
-#' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample`
+#' To get data for plotting, there are a few different options available; like all `fanncy_x_plots` a sample ID can be provided to the `this_sample_id`
 #' parameter. If done so, the function will retrieve data (SSm and CN segments) by wrapping the appropriate functions.
 #' This data can also be provided with `seg_data`, `seg_path`, `maf_data` and `maf_path`.
 #' For more info on how to run with these parameters, refer to the parameter descriptions.
@@ -77,10 +77,16 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #grch37 coordinates
-  grch37_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),3]
-  grch37_cent_start = GAMBLR.data::chromosome_arms_grch37[c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43),3]
-  grch37_cent_end = GAMBLR.data::chromosome_arms_grch37[c(2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44),2]
-
+  grch37_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>% 
+    dplyr::filter(chromosome != "Y") %>% 
+    pull(end)
+  grch37_cent_start = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "p") %>% 
+    dplyr::filter(chromosome != "Y") %>% 
+    pull(end)
+  grch37_cent_end = dplyr::filter(GAMBLR.data::chromosome_arms_grch37, arm == "q") %>% 
+    dplyr::filter(chromosome != "Y") %>% 
+    pull(start)
+  
   #additional regions to plot
   if(!missing(gene_annotation)){
     gene = GAMBLR.utils::gene_to_region(gene_symbol = gene_annotation, genome_build = "grch37", return_as = "df")
@@ -90,13 +96,13 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #build chr table for segment plotting
-  chr = paste0("chr", c(1:22))
+  chr = c( paste0("chr", c(1:22)), "chrX" )
   chr_start = c(0)
   chr_end = grch37_end
   cent_start = grch37_cent_start
   cent_end =  grch37_cent_end
-  y = c(1:22)
-  yend = c(1:22)
+  y = c(1:23)
+  yend = c(1:23)
 
   #transform to data frame
   segment_data = data.frame(chr, chr_start, chr_end, cent_start, cent_end, y, yend)
@@ -129,6 +135,9 @@ fancy_ideogram = function(this_sample_id,
     )
   }
 
+  # ignore y chromosome
+  cn_states = dplyr::filter(cn_states, chrom != "Y")
+  
   #convert chr into y coordinates
   cn_states$ycoord = cn_states$chrom
 
@@ -192,10 +201,11 @@ fancy_ideogram = function(this_sample_id,
   }
 
   #convert data types
-  cols.int = c("start", "end", "ycoord")
-  cn_states[cols.int] = sapply(cn_states[cols.int], as.integer)
   cn_states$chrom = as.factor(cn_states$chrom)
-  cn_states$CN = as.factor(cn_states$CN)
+  
+  # correct y coordinate for X chromosome
+  cn_states$ycoord = dplyr::recode(cn_states$ycoord, X="23") %>% 
+    as.integer
 
   #subset on CN state
   cn_states$CN[cn_states$CN > 6] = 6
@@ -237,9 +247,8 @@ fancy_ideogram = function(this_sample_id,
     maf_trans$mid = ((maf_trans$End_Position - maf_trans$Start_Position) / 2) + maf_trans$Start_Position
 
     #convert chr into y coordinates
-    maf_trans$ystart = maf_trans$Chromosome
-    maf_trans$yend = maf_trans$Chromosome
-
+    maf_trans$ystart = maf_trans$yend = dplyr::recode(maf_trans$Chromosome, X="23")
+    
     #paste chr in maf, if not there
     if(!str_detect(maf_trans$Chromosome[1], "chr")){
       maf_trans = mutate(maf_trans, Chromosome = paste0("chr", Chromosome))
@@ -280,7 +289,7 @@ fancy_ideogram = function(this_sample_id,
     }
 
     #subset on variant type
-    if(nrow(maf_trans > 0)){
+    if(nrow(maf_trans) > 0){
       maf_del = dplyr::filter(maf_trans, Variant_Type == "DEL")
       maf_ins = dplyr::filter(maf_trans, Variant_Type == "INS")
 
@@ -305,25 +314,25 @@ fancy_ideogram = function(this_sample_id,
 
   #plot
   p = ggplot() +
-    {if(include_ssm && nrow(maf_del > 0)) geom_segment(data = maf_del, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#53B1FC", size = 5, stat = "identity", position = position_dodge())} + #del
-    {if(include_ssm && nrow(maf_del > 0)) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge())} + #del
-    {if(include_ssm && nrow(maf_del > 0)) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "DEL"), lineend = "round", size = 3, stat = "identity", position = position_dodge())} + #del
-    {if(include_ssm && nrow(maf_ins > 0)) geom_segment(data = maf_ins, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#FC9C6D", size = 5, stat = "identity", position = position_dodge())} + #ins
-    {if(include_ssm && nrow(maf_ins > 0)) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge())} + #ins
-    {if(include_ssm && nrow(maf_ins > 0)) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "INS"), lineend = "round", size = 3, stat = "identity", position = position_dodge())} + #ins
-    {if(ssm_count && nrow(maf_del > 0)) annotate(geom = "text", x = -4000000, y = del_count$yend, label = del_count$n, color = "#3A8799", size = 3)} + #count del
-    {if(ssm_count && nrow(maf_trans > 0)) annotate(geom = "text", x = -2300000, y = segment_data$y, label = " | ", color = "black", size = 3)} + #count sep
-    {if(ssm_count && nrow(maf_ins > 0)) annotate(geom = "text", x = -1000000, y = ins_count$yend, label = ins_count$n, color = "#E6856F", size = 3)} + #count ins
-    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y, yend = yend, label = chr), color = "#99A1A6", lineend = "butt", size = 5, stat = "identity", position = position_dodge()) + #chr contigs
-    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y, yend = yend), color = "white", size = 6, stat = "identity", position = position_dodge()) + #centromeres
-    {if("cn_0" %in% levels(cn_states$CN)) geom_segment(data = cn_0, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN0"), size = 4.7, stat = "identity", position = position_dodge())} + #cn3
-    {if("cn_1" %in% levels(cn_states$CN)) geom_segment(data = cn_1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN1"), size = 4.7, stat = "identity", position = position_dodge())} + #cn3
-    {if("cn_3" %in% levels(cn_states$CN)) geom_segment(data = cn_3, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN3"), size = 4.7, stat = "identity", position = position_dodge())} + #cn3
-    {if("cn_4" %in% levels(cn_states$CN)) geom_segment(data = cn_4, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 4.7, stat = "identity", position = position_dodge())} + #cn4
-    {if("cn_5" %in% levels(cn_states$CN)) geom_segment(data = cn_5, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 4.7, stat = "identity", position = position_dodge())} + #cn5
-    {if("cn_6" %in% levels(cn_states$CN)) geom_segment(data = cn_6, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6+"), size = 4.7, stat = "identity", position = position_dodge())} + #cn6 and more
-    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chromosome - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge())} + #gene annotation
-    {if(!missing(gene_annotation)) geom_label(data = gene.annotate, aes((x = end - start) / 2 + start, y = chromosome - 0.52, label = hugo_symbol), fontface = "bold", color = "white", fill = "#A63932", size = 3, check_overlap = TRUE)} + #gene annotation text
+    {if(include_ssm && nrow(maf_del) > 0) geom_segment(data = maf_del, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#53B1FC", size = 5, stat = "identity", position = position_dodge(width = 0))} + #del
+    {if(include_ssm && nrow(maf_del) > 0) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge(width = 0))} + #del
+    {if(include_ssm && nrow(maf_del) > 0) geom_segment(data = maf_del, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "DEL"), lineend = "round", size = 3, stat = "identity", position = position_dodge(width = 0))} + #del
+    {if(include_ssm && nrow(maf_ins) > 0) geom_segment(data = maf_ins, aes(x = mid - 100000, xend = mid + 100000, y = ystart - 0.27, yend = yend - 0.27), color = "#FC9C6D", size = 5, stat = "identity", position = position_dodge(width = 0))} + #ins
+    {if(include_ssm && nrow(maf_ins) > 0) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35), color = "black", lineend = "round", size = 3.5, stat = "identity", position = position_dodge(width = 0))} + #ins
+    {if(include_ssm && nrow(maf_ins) > 0) geom_segment(data = maf_ins, aes(x = mid, xend = mid, y = ystart - 0.35, yend = yend - 0.35, color = "INS"), lineend = "round", size = 3, stat = "identity", position = position_dodge(width = 0))} + #ins
+    {if(ssm_count && nrow(maf_del) > 0) annotate(geom = "text", x = -4000000, y = del_count$yend, label = del_count$n, color = "#3A8799", size = 3)} + #count del
+    {if(ssm_count && nrow(maf_trans) > 0) annotate(geom = "text", x = -2300000, y = segment_data$y, label = " | ", color = "black", size = 3)} + #count sep
+    {if(ssm_count && nrow(maf_ins) > 0) annotate(geom = "text", x = -1000000, y = ins_count$yend, label = ins_count$n, color = "#E6856F", size = 3)} + #count ins
+    geom_segment(data = segment_data, aes(x = chr_start, xend = chr_end, y = y, yend = yend), color = "#99A1A6", lineend = "butt", size = 5, stat = "identity", position = position_dodge(width = 0)) + #chr contigs
+    geom_segment(data = segment_data, aes(x = cent_start, xend = cent_end, y = y, yend = yend), color = "white", size = 6, stat = "identity", position = position_dodge(width = 0)) + #centromeres
+    {if("cn_0" %in% levels(cn_states$CN)) geom_segment(data = cn_0, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN0"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn3
+    {if("cn_1" %in% levels(cn_states$CN)) geom_segment(data = cn_1, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN1"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn3
+    {if("cn_3" %in% levels(cn_states$CN)) geom_segment(data = cn_3, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN3"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn3
+    {if("cn_4" %in% levels(cn_states$CN)) geom_segment(data = cn_4, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN4"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn4
+    {if("cn_5" %in% levels(cn_states$CN)) geom_segment(data = cn_5, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN5"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn5
+    {if("cn_6" %in% levels(cn_states$CN)) geom_segment(data = cn_6, aes(x = start, xend = end, y = ycoord, yend = ycoord, color = "CN6+"), size = 4.7, stat = "identity", position = position_dodge(width = 0))} + #cn6 and more
+    {if(!missing(gene_annotation)) geom_point(data = gene.annotate, aes(x = ((end - start) / 2) + start, y = chromosome - 0.28), shape = 25, color = "#A63932", fill = "#A63932", stat = "identity", position = position_dodge(width = 0))} + #gene annotation
+    {if(!missing(gene_annotation)) geom_label(data = gene.annotate, aes((x = end - start) / 2 + start, y = chromosome - 0.52, label = hugo_symbol), fontface = "bold", color = "white", fill = "#A63932", size = 3)} + #gene annotation text
     geom_text(aes(x = -10000000 , y = yend, label = segment_data$chr), color = "black", size = 5) + #chr labels
     labs(title = plot_title, subtitle = plot_subtitle) + #plot titles
     scale_colour_manual(name = "", values = selected_colours) + #legend/colours

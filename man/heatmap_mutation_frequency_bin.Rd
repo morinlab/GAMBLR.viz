@@ -44,9 +44,9 @@ heatmap_mutation_frequency_bin(
 )
 }
 \arguments{
-\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
+\item{regions_list}{Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or none) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.}
 
-\item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name).}
+\item{regions_bed}{Data frame of regions with four columns (chrom, start, end, name). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided.}
 
 \item{these_samples_metadata}{Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.}
 
@@ -127,20 +127,25 @@ This function takes a metadata table with `these_samples_metadata` parameter and
 to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 }
 \examples{
-#load metadata.
-metadata = GAMBLR.data::gambl_metadata
-dlbcl_bl_meta = dplyr::filter(metadata, pathology \%in\% c("DLBCL", "BL"))
+library(GAMBLR.data)
+library(dplyr)
 
-#bring together all derived sample-level results from many GAMBL pipelines.
-dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
-                                these_samples_metadata = dlbcl_bl_meta)
+# get meta data
+my_meta <- get_gambl_metadata() \%>\% 
+  filter(sample_id \%in\% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 
-#get ashm regions
-some_regions = GAMBLR.data::grch37_ashm_regions
+# get ashm regions of a set of genes.
+my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\%
+  rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") \%>\%
+  mutate( chrom = stringr::str_remove(chrom, "chr") )
 
-mut_count_matrix <- calc_mutation_frequency_bin_by_regions(
-   these_samples_metadata = dlbcl_bl_meta,
-   regions_bed = some_regions
+# create heatmap of mutation counts for the specified regions
+meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
+heatmap_mutation_frequency_bin(
+  regions_bed = my_regions,
+  these_samples_metadata = my_meta,
+  metadataColumns = meta_columns,
+  sortByColumns = meta_columns
 )
 
 }

@@ -60,6 +60,7 @@ mean values for all plotted metrics and corrected coverage. To enable these feat
 \examples{
 #load packages
 library(dplyr)
+library(GAMBLR.data)
 
 #get sample IDs for available genome samples
 genome_collated = collate_results(seq_type_filter = "genome") \%>\% 

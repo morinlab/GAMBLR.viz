@@ -5,8 +5,8 @@
 #' @details This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
 #' to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 #'
-#' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). If neither regions nor regions_bed is specified, the function will use GAMBLR aSHM region information.
-#' @param regions_bed Data frame of regions with four columns (chrom, start, end, name).
+#' @param regions_list Named vector of regions in the format c(name1 = "chr:start-end", name2 = "chr:start-end"). Only one (or none) between `regions_list` and `regions_bed` arguments should be provided. If neither regions_list nor regions_bed is specified, the function will use GAMBLR aSHM region information.
+#' @param regions_bed Data frame of regions with four columns (chrom, start, end, name). Only one (or nome) between `regions_list` and `regions_bed` arguments should be provided.
 #' @param these_samples_metadata Metadata with at least sample_id column. If not providing a maf data frame, seq_type is also required.
 #' @param these_sample_ids Vector of sample IDs. Metadata will be subset to sample IDs present in this vector.
 #' @param this_seq_type Optional vector of seq_types to include in heatmap. Default c("genome", "capture"). Uses default seq_type priority for samples with >1 seq_type.
@@ -50,20 +50,25 @@
 #' @export
 #'
 #' @examples
-#' #load metadata.
-#' metadata = GAMBLR.data::gambl_metadata
-#' dlbcl_bl_meta = dplyr::filter(metadata, pathology %in% c("DLBCL", "BL"))
-#'
-#' #bring together all derived sample-level results from many GAMBL pipelines.
-#' dlbcl_bl_meta = collate_results(join_with_full_metadata = TRUE,
-#'                                 these_samples_metadata = dlbcl_bl_meta)
-#'
-#' #get ashm regions
-#' some_regions = GAMBLR.data::grch37_ashm_regions
-#'
-#' mut_count_matrix <- calc_mutation_frequency_bin_by_regions(
-#'    these_samples_metadata = dlbcl_bl_meta,
-#'    regions_bed = some_regions
+#' library(GAMBLR.data)
+#' library(dplyr)
+#' 
+#' # get meta data
+#' my_meta <- get_gambl_metadata() %>% 
+#'   filter(sample_id %in% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
+#' 
+#' # get ashm regions of a set of genes.
+#' my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
+#'   rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") %>%
+#'   mutate( chrom = stringr::str_remove(chrom, "chr") )
+#' 
+#' # create heatmap of mutation counts for the specified regions
+#' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
+#' heatmap_mutation_frequency_bin(
+#'   regions_bed = my_regions,
+#'   these_samples_metadata = my_meta,
+#'   metadataColumns = meta_columns,
+#'   sortByColumns = meta_columns
 #' )
 #'
 heatmap_mutation_frequency_bin <- function(
@@ -104,7 +109,11 @@ heatmap_mutation_frequency_bin <- function(
   from_indexed_flatfile = TRUE,
   mode = "slms-3"
 ) {
-
+  
+  # check arguments
+  stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." = 
+               any( c(is.null(regions_list), is.null(regions_bed) ) ) )
+  
   # Get region specifications
   if (missing(skip_regions)) {
     skip_regions <- NULL
@@ -156,6 +165,7 @@ heatmap_mutation_frequency_bin <- function(
     if (missing(maf_data)) {
       maf_data <- NULL
     }
+    
     all_wide <- calc_mutation_frequency_bin_regions(
       maf_data = maf_data,
       regions_bed = regions_bed,
@@ -168,7 +178,7 @@ heatmap_mutation_frequency_bin <- function(
       from_indexed_flatfile = from_indexed_flatfile,
       mode = mode
     )
-
+    
     # Convert to a matrix with samples in colnames and bins in rownames
     all_matrix <- data.frame(t(select(all_wide, -sample_id)))
     colnames(all_matrix) <- all_wide$sample_id
@@ -200,7 +210,7 @@ heatmap_mutation_frequency_bin <- function(
   }
   meta_show <- meta_show[rownames(meta_show) %in% samples_show, , drop = FALSE]
   matrix_show <- all_matrix[which(rowSums(all_matrix) > min_bin_recurrence), rownames(meta_show)]
-  identical(rownames(meta_show), colnames(matrix_show))
+  stopifnot( identical(rownames(meta_show), colnames(matrix_show)) )
 
   # Set heatmap colour function
   bin_col_fun <- colorRamp2(

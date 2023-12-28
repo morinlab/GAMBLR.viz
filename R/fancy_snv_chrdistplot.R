@@ -30,6 +30,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #plot SNVs
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 #'

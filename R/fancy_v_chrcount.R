@@ -33,6 +33,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #plot ssm
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
 #'                  y_interval = 10)
@@ -79,8 +81,9 @@ fancy_v_chrcount = function(this_sample_id,
         dplyr::select(CHROM_A, START_A, END_A, manta_name)
 
       #get manta results in required format
-      plot_data = data.frame(plot_data$CHROM_A, plot_data$START_A, plot_data$END_A, do.call(rbind, strsplit(plot_data$manta_name, split = ":", fixed = TRUE)))
-
+      plot_data = data.frame( plot_data$CHROM_A, plot_data$START_A, plot_data$END_A,
+                              sub("^(.+?):.*", "\\1", plot_data$manta_name) )
+      
       #rename variables
       names(plot_data)[1:4] = c("Chromosome", "Start_Position", "End_Position","Variant_Type")
 

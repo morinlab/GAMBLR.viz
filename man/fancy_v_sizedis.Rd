@@ -79,6 +79,8 @@ In addition, plot aesthetics can also be controlled with `plot_title`, `plot_sub
 For more info on how to run with these parameters, refer to the parameter descriptions.
 }
 \examples{
+library(GAMBLR.data)
+
 #plot SSM size distributions:
 fancy_v_sizedis(this_sample_id = "DOHH-2")
 
