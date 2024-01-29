@@ -38,9 +38,9 @@ Imports:
     tidyr,
     wordcloud
 Remotes:
-    morinLab/GAMBLR.data,
-    morinLab/GAMBLR.helpers,
-    morinLab/GAMBLR.utils,
+    morinlab/GAMBLR.data,
+    morinlab/GAMBLR.helpers,
+    morinlab/GAMBLR.utils,
     morinlab/g3viz,
     morinlab/ggsci
 Encoding: UTF-8
