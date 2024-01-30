@@ -691,6 +691,13 @@ prettyOncoplot = function(maf_df,
         drop = FALSE
     ]
   }
+  
+  # Only keep the annotation colors for the remaining patients
+  for(column in colnames(metadata_df)){
+    remaining <- unique(metadata_df[column] %>% mutate_if(is.factor, as.character)) %>% pull()
+    colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+  }
+
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,
