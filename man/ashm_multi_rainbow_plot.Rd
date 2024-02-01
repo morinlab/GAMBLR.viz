@@ -13,11 +13,12 @@ ashm_multi_rainbow_plot(
   custom_colours,
   classification_column = "lymphgen",
   maf_data,
+  projection = "grch37",
   verbose = TRUE
 )
 }
 \arguments{
-\item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names).}
+\item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.}
 
 \item{regions_to_display}{Optional vector of names from default regions_bed to use.}
 
@@ -31,7 +32,9 @@ ashm_multi_rainbow_plot(
 
 \item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
 
-\item{maf_data}{An already loaded maf, if no provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`.}
+\item{maf_data}{An already loaded maf. If not provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`. Ensure your maf matches the genome projection.}
+
+\item{projection}{Provide genome build; default is grch37. Bonus regions are only available in grch37.}
 
 \item{verbose}{Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.}
 }
