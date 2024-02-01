@@ -35,7 +35,7 @@
 #' @return a ggplot2 object
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import ggplot2 dplyr readr stringr tidyr reshape2 GAMBLR.data GAMBLR.helpers GAMBLR.utils
+#' @import ggplot2 dplyr readr stringr tidyr reshape2 GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -110,7 +110,7 @@ prettyRainfallPlot = function(
     # allow to zoom in to a specific region
     if (!missing(zoom_in_region)) {
         region <- zoom_in_region
-        zoom_in_region <- GAMBLR.data::region_to_chunks(zoom_in_region)
+        zoom_in_region <- region_to_chunks(zoom_in_region)
         zoom_in_region$chromosome <- GAMBLR.helpers::standardize_chr_prefix(
             incoming_vector = zoom_in_region$chromosome,
             projection = projection
@@ -121,7 +121,7 @@ prettyRainfallPlot = function(
 
     if (label_ashm_genes) {
         if (projection == "grch37") {
-        ashm_regions <- GAMBLR.data::grch37_ashm_regions %>%
+        ashm_regions <- grch37_ashm_regions %>%
             dplyr::rename(
                 "start" = "hg19_start",
                 "end" = "hg19_end",
@@ -134,7 +134,7 @@ prettyRainfallPlot = function(
                 )
             )
         } else if (projection == "hg38") {
-        ashm_regions <- GAMBLR.data::hg38_ashm_regions %>%
+        ashm_regions <- hg38_ashm_regions %>%
             dplyr::rename(
                 "start" = "hg38_start",
                 "end" = "hg38_end",
