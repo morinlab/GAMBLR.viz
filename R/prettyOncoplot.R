@@ -55,7 +55,7 @@
 #'
 #' @return Nothing
 #'
-#' @import tidyr dplyr circlize ComplexHeatmap ggsci ggplot2 GAMBLR.helpers tibble
+#' @import tidyr dplyr circlize ComplexHeatmap ggplot2 GAMBLR.helpers tibble
 #' @export
 #'
 #' @examples
@@ -410,7 +410,7 @@ prettyOncoplot = function(maf_df,
   #TO DO: convert the loop below into a "map_metadata_to_colours" function HAS THIS BEEN RESOLVED?
   blood_cols = GAMBLR.helpers::get_gambl_colours("blood", alpha = annoAlpha)
   colours = list()
-  clinical_colours = ggsci::get_ash("clinical")
+  clinical_colours = GAMBLR.helpers::get_gambl_colours("clinical")
   all_gambl_colours = GAMBLR.helpers::get_gambl_colours()
   for(column in metadataColumns){
     these_samples_metadata[[column]] = factor(these_samples_metadata[[column]], levels = unique(these_samples_metadata[[column]]))
