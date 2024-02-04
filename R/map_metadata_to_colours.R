@@ -33,7 +33,7 @@ map_metadata_to_colours = function(metadataColumns,
                                    verbose = FALSE,
                                    annoAlpha = 1){
 
-  clinical_colours = ggsci::get_ash("clinical")
+  clinical_colours = GAMBLR.helpers::get_gambl_colours("clinical")
   all_gambl_colours = GAMBLR.helpers::get_gambl_colours()
   colours = list()
   colvec = c()
