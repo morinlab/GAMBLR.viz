@@ -9,7 +9,7 @@
 #'
 #' @return Either a vector or list of colours.
 #'
-#' @import dplyr ggsci
+#' @import dplyr
 #'
 #' @examples
 #' library(GAMBLR.data)
