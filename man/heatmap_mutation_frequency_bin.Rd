@@ -33,6 +33,7 @@ heatmap_mutation_frequency_bin(
   cluster_cols_heatmap = FALSE,
   show_gene_colours = FALSE,
   label_regions_by = "name",
+  label_regions_rotate = 0,
   legend_row = 3,
   legend_col = 3,
   legend_direction = "horizontal",
@@ -99,6 +100,8 @@ heatmap_mutation_frequency_bin(
 \item{show_gene_colours}{Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.}
 
 \item{label_regions_by}{Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.}
+
+\item{label_regions_rotate}{Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation).}
 
 \item{legend_row}{Control aesthetics of the heatmap legend. Default 3.}
 
