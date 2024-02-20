@@ -101,7 +101,7 @@ heatmap_mutation_frequency_bin(
 
 \item{label_regions_by}{Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.}
 
-\item{label_regions_rotate}{Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation).}
+\item{label_regions_rotate}{Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation). The accepted values are 0, 90, 270.}
 
 \item{legend_row}{Control aesthetics of the heatmap legend. Default 3.}
 

@@ -33,7 +33,7 @@
 #' @param cluster_cols_heatmap Boolean.  Default FALSE.
 #' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.
 #' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.
-#' @param label_regions_rotate Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation).
+#' @param label_regions_rotate Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation). The accepted values are 0, 90, 270.
 #' @param legend_row Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_col Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal".
