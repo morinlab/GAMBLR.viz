@@ -89,7 +89,7 @@ prettyOncoplot(
 
 \item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools.}
 
-\item{splitColumnName}{Optional argument to indicate which metadata column to split on. Default is set to pathology.}
+\item{splitColumnName}{Optional argument to indicate which metadata column to split on.}
 
 \item{splitGeneGroups}{Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.}
 

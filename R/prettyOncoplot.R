@@ -34,7 +34,7 @@
 #' @param tally_all_mutations Optional argument. Set to TRUE to tally all mutations. Default is FALSE.
 #' @param tally_all_mutations_max Optional argument. Default is 1000.
 #' @param hideSideBarplot Optional argument for removing side bar plot. Default value is FALSE.
-#' @param splitColumnName Optional argument to indicate which metadata column to split on. Default is set to pathology.
+#' @param splitColumnName Optional argument to indicate which metadata column to split on.
 #' @param splitGeneGroups Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.
 #' @param legend_row Fiddle with these to widen or narrow your legend.
 #' @param legend_col Fiddle with these to widen or narrow your legend.
@@ -691,10 +691,12 @@ prettyOncoplot = function(maf_df,
         drop = FALSE
     ]
   }
-  
+  metadata_df <- metadata_df %>%
+    mutate_if(is.factor, as.character) %>%
+    replace(is.na(.), "NA")
   # Only keep the annotation colors for the remaining patients
   for(column in colnames(metadata_df)){
-    remaining <- unique(metadata_df[column] %>% mutate_if(is.factor, as.character)) %>% pull()
+    remaining <- unique(metadata_df[column]) %>% pull()
     colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
   }
 

@@ -33,6 +33,7 @@
 #' @param cluster_cols_heatmap Boolean.  Default FALSE.
 #' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.
 #' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.
+#' @param label_regions_rotate Specify degree by which the label in the previous parameter will be rotated. Default 0 (no rotation). The accepted values are 0, 90, 270.
 #' @param legend_row Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_col Control aesthetics of the heatmap legend. Default 3.
 #' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal".
@@ -100,6 +101,7 @@ heatmap_mutation_frequency_bin <- function(
   cluster_cols_heatmap = FALSE,
   show_gene_colours = FALSE,
   label_regions_by = "name",
+  label_regions_rotate = 0,
   legend_row = 3,
   legend_col = 3,
   legend_direction = "horizontal",
@@ -344,7 +346,7 @@ heatmap_mutation_frequency_bin <- function(
       show_column_names = F,
       column_split = factor(bin_annot$label),
       column_title_gp = gpar(fontsize = region_fontsize),
-      column_title_rot = 0,
+      column_title_rot = label_regions_rotate,
       row_title_gp = gpar(fontsize = 10),
       heatmap_legend_param = heatmap_legend_param
     )
@@ -378,7 +380,7 @@ heatmap_mutation_frequency_bin <- function(
       show_column_names = F,
       row_split = factor(bin_annot$label),
       row_title_gp = gpar(fontsize = region_fontsize),
-      row_title_rot = 0,
+      row_title_rot = label_regions_rotate,
       column_title_gp = gpar(fontsize = 8),
       heatmap_legend_param = heatmap_legend_param
     )
