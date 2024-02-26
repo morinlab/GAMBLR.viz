@@ -60,9 +60,9 @@
 #'   filter(sample_id %in% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 #'
 #' # get ashm regions of a set of genes.
-#' my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
-#'   rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") %>%
-#'   mutate( chrom = stringr::str_remove(chrom, "chr") )
+#' my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
+#'   rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") %>%
+#'   mutate(chrom = stringr::str_remove(chrom, "chr"))
 #'
 #' # create heatmap of mutation counts for the specified regions
 #' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
@@ -73,14 +73,49 @@
 #'   sortByColumns = meta_columns
 #' )
 #'
+heatmap_mutation_frequency_bin <- function(regions_list = NULL,
+                                           regions_bed = NULL,
+                                           these_samples_metadata = NULL,
+                                           these_sample_ids = NULL,
+                                           this_seq_type = c("genome", "capture"),
+                                           maf_data,
+                                           mut_freq_matrix,
+                                           projection = "grch37",
+                                           region_padding = 1000,
+                                           drop_unmutated = FALSE,
                                            metadataColumns = c("pathology"),
                                            sortByColumns = NULL,
                                            expressionColumns = NULL,
+                                           orientation = "sample_rows",
+                                           skip_regions,
+                                           only_regions,
+                                           customColours = NULL,
                                            naColour = "white",
                                            backgroundColour = "grey90",
+                                           slide_by = 100,
+                                           window_size = 500,
+                                           min_count_per_bin = 0,
+                                           min_bin_recurrence = 5,
+                                           min_mut_tumour = 0,
+                                           region_fontsize = 8,
+                                           cluster_rows_heatmap = FALSE,
+                                           cluster_cols_heatmap = FALSE,
+                                           show_gene_colours = FALSE,
+                                           label_regions_by = "name",
+                                           label_regions_rotate = 0,
+                                           legend_row = 3,
+                                           legend_col = 3,
+                                           legend_direction = "horizontal",
+                                           legendFontSize = 10,
+                                           legend_side = "bottom",
+                                           return_heatmap_obj = FALSE,
+                                           from_indexed_flatfile = TRUE,
+                                           mode = "slms-3") {
   # check arguments
-  stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." =
-               any( c(is.null(regions_list), is.null(regions_bed) ) ) )
+  stopifnot(
+    "Only one (or none) between regions_list and regions_bed arguments should be provided." =
+      any(c(is.null(regions_list), is.null(regions_bed)))
+  )
 
   # Get region specifications
   if (missing(skip_regions)) {
@@ -184,7 +219,7 @@
   }
   meta_show <- meta_show[rownames(meta_show) %in% samples_show, , drop = FALSE]
   matrix_show <- all_matrix[which(rowSums(all_matrix) > min_bin_recurrence), rownames(meta_show)]
-  stopifnot( identical(rownames(meta_show), colnames(matrix_show)) )
+  stopifnot(identical(rownames(meta_show), colnames(matrix_show)))
 
   # Set heatmap colour function
   bin_col_fun <- colorRamp2(
