@@ -24,6 +24,7 @@
 #' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.
 #' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.
 #' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.
+#' @param naColour Colour to use for NA values in metadata/expression. Default "white".
 #' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.
 #' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.
 #' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.
@@ -75,6 +76,8 @@
                                            metadataColumns = c("pathology"),
                                            sortByColumns = NULL,
                                            expressionColumns = NULL,
+                                           naColour = "white",
+                                           backgroundColour = "grey90",
   # check arguments
   stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." =
                any( c(is.null(regions_list), is.null(regions_bed) ) ) )
@@ -292,6 +295,7 @@
       show_legend = T,
       which = "row",
       col = annoColours,
+      na_col = naColour,
       annotation_legend_param = annotation_legend_param
     )
     if (show_gene_colours) {
@@ -325,6 +329,7 @@
       show_legend = T,
       which = "col",
       col = annoColours,
+      na_col = naColour,
       annotation_legend_param = annotation_legend_param
     )
     if (show_gene_colours) {
