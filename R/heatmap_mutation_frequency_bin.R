@@ -198,9 +198,7 @@ heatmap_mutation_frequency_bin <- function(
 
   meta_show <- metadata %>%
     select(sample_id, all_of(allMetaCols)) %>%
-    drop_na() %>%
     mutate(across(all_of(allMetaCols), ~ factor(.x))) %>%
-    arrange(across(all_of(sortByColumns))) %>%
     dplyr::filter(sample_id %in% colnames(all_matrix)) %>%
     column_to_rownames(var = "sample_id")
 
