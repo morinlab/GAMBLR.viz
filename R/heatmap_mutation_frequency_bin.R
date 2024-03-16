@@ -20,10 +20,11 @@
 #' @param slide_by Slide size for sliding window. Default 100.
 #' @param window_size Size of sliding window. Default 500.
 #' @param metadataColumns Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").
-#' @param sortByColumns Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").
+#' @param sortByColumns Optional character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default NULL.
 #' @param expressionColumns Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.
 #' @param orientation Specify whether heatmap should have samples in rows ("sample_rows") or in columns ("sample_cols"). Default sample_rows.
 #' @param customColours Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.
+#' @param naColour Colour to use for NA values in metadata/expression. Default "white".
 #' @param backgroundColour Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.
 #' @param min_count_per_bin Specify the minimum number of mutations per bin to be included in the heatmap. Only bins with all samples falling below this threshold will be dropped. Default 0.
 #' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.
@@ -59,9 +60,9 @@
 #'   filter(sample_id %in% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 #'
 #' # get ashm regions of a set of genes.
-#' my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
-#'   rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") %>%
-#'   mutate( chrom = stringr::str_remove(chrom, "chr") )
+#' my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
+#'   rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") %>%
+#'   mutate(chrom = stringr::str_remove(chrom, "chr"))
 #'
 #' # create heatmap of mutation counts for the specified regions
 #' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
@@ -72,49 +73,49 @@
 #'   sortByColumns = meta_columns
 #' )
 #'
-heatmap_mutation_frequency_bin <- function(
-  regions_list = NULL,
-  regions_bed = NULL,
-  these_samples_metadata = NULL,
-  these_sample_ids = NULL,
-  this_seq_type = c("genome", "capture"),
-  maf_data,
-  mut_freq_matrix,
-  projection = "grch37",
-  region_padding = 1000,
-  drop_unmutated = FALSE,
-  metadataColumns = c("pathology"),
-  sortByColumns = c("pathology"),
-  expressionColumns = NULL,
-  orientation = "sample_rows",
-  skip_regions,
-  only_regions,
-  customColours = NULL,
-  backgroundColour = "grey90",
-  slide_by = 100,
-  window_size = 500,
-  min_count_per_bin = 0,
-  min_bin_recurrence = 5,
-  min_mut_tumour = 0,
-  region_fontsize = 8,
-  cluster_rows_heatmap = FALSE,
-  cluster_cols_heatmap = FALSE,
-  show_gene_colours = FALSE,
-  label_regions_by = "name",
-  label_regions_rotate = 0,
-  legend_row = 3,
-  legend_col = 3,
-  legend_direction = "horizontal",
-  legendFontSize = 10,
-  legend_side = "bottom",
-  return_heatmap_obj = FALSE,
-  from_indexed_flatfile = TRUE,
-  mode = "slms-3"
-) {
-
+heatmap_mutation_frequency_bin <- function(regions_list = NULL,
+                                           regions_bed = NULL,
+                                           these_samples_metadata = NULL,
+                                           these_sample_ids = NULL,
+                                           this_seq_type = c("genome", "capture"),
+                                           maf_data,
+                                           mut_freq_matrix,
+                                           projection = "grch37",
+                                           region_padding = 1000,
+                                           drop_unmutated = FALSE,
+                                           metadataColumns = c("pathology"),
+                                           sortByColumns = NULL,
+                                           expressionColumns = NULL,
+                                           orientation = "sample_rows",
+                                           skip_regions,
+                                           only_regions,
+                                           customColours = NULL,
+                                           naColour = "white",
+                                           backgroundColour = "grey90",
+                                           slide_by = 100,
+                                           window_size = 500,
+                                           min_count_per_bin = 0,
+                                           min_bin_recurrence = 5,
+                                           min_mut_tumour = 0,
+                                           region_fontsize = 8,
+                                           cluster_rows_heatmap = FALSE,
+                                           cluster_cols_heatmap = FALSE,
+                                           show_gene_colours = FALSE,
+                                           label_regions_by = "name",
+                                           label_regions_rotate = 0,
+                                           legend_row = 3,
+                                           legend_col = 3,
+                                           legend_direction = "horizontal",
+                                           legendFontSize = 10,
+                                           legend_side = "bottom",
+                                           return_heatmap_obj = FALSE,
+                                           from_indexed_flatfile = TRUE,
+                                           mode = "slms-3") {
   # check arguments
-  stopifnot( "Only one (or none) between regions_list and regions_bed arguments should be provided." =
-               any( c(is.null(regions_list), is.null(regions_bed) ) ) )
+  stopifnot(
+    "Only one (or none) between regions_list and regions_bed arguments should be provided." =
+      any(c(is.null(regions_list), is.null(regions_bed)))
+  )
 
   # Get region specifications
   if (missing(skip_regions)) {
@@ -198,11 +199,17 @@ heatmap_mutation_frequency_bin <- function(
 
   meta_show <- metadata %>%
     select(sample_id, all_of(allMetaCols)) %>%
-    drop_na() %>%
     mutate(across(all_of(allMetaCols), ~ factor(.x))) %>%
-    arrange(across(all_of(sortByColumns))) %>%
     dplyr::filter(sample_id %in% colnames(all_matrix)) %>%
     column_to_rownames(var = "sample_id")
+
+  # Sort metadata by columns specified in sortByColumn
+  if (!is.null(sortByColumns)) {
+    meta_show <- arrange(
+      meta_show,
+      across(all_of(sortByColumns))
+    )
+  }
 
   message(paste("starting with", length(colnames(all_matrix)), "samples"))
   samples_show <- colnames(all_matrix)[which(colSums(all_matrix) >= min_mut_tumour)]
@@ -212,7 +219,7 @@ heatmap_mutation_frequency_bin <- function(
   }
   meta_show <- meta_show[rownames(meta_show) %in% samples_show, , drop = FALSE]
   matrix_show <- all_matrix[which(rowSums(all_matrix) > min_bin_recurrence), rownames(meta_show)]
-  stopifnot( identical(rownames(meta_show), colnames(matrix_show)) )
+  stopifnot(identical(rownames(meta_show), colnames(matrix_show)))
 
   # Set heatmap colour function
   bin_col_fun <- colorRamp2(
@@ -323,6 +330,7 @@ heatmap_mutation_frequency_bin <- function(
       show_legend = T,
       which = "row",
       col = annoColours,
+      na_col = naColour,
       annotation_legend_param = annotation_legend_param
     )
     if (show_gene_colours) {
@@ -356,6 +364,7 @@ heatmap_mutation_frequency_bin <- function(
       show_legend = T,
       which = "col",
       col = annoColours,
+      na_col = naColour,
       annotation_legend_param = annotation_legend_param
     )
     if (show_gene_colours) {
