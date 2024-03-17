@@ -231,8 +231,8 @@ prettyRainfallPlot = function(
             "MAF df or path to custom MAF file was not provided, getting SSM using GAMBLR ..."
         )
 
-        these_ssm <- get_ssm_by_sample(
-            this_sample_id = this_sample_id,
+        these_ssm <- get_ssm_by_samples(
+            these_sample_ids = this_sample_id,
             projection = projection,
             this_seq_type = this_seq_type
         )
@@ -245,9 +245,9 @@ prettyRainfallPlot = function(
                 zoom_in_region
             )
         )
-
-        these_ssm <- get_ssm_by_region(
-            region = region,
+        print("will use regions")
+        these_ssm <- get_ssm_by_regions(
+            regions_list = region,
             this_seq_type = this_seq_type,
             projection = projection
         )
