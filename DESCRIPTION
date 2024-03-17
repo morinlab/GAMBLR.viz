@@ -31,7 +31,6 @@ Imports:
     RCircos,
     RColorBrewer,
     readr,
-    reshape2,
     stringr,
     tibble,
     tidyr,

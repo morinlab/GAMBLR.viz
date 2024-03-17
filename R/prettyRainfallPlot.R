@@ -35,7 +35,7 @@
 #' @return a ggplot2 object
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import ggplot2 dplyr readr stringr tidyr reshape2 GAMBLR.helpers GAMBLR.utils
+#' @import ggplot2 dplyr readr stringr tidyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -395,51 +395,39 @@ prettyRainfallPlot = function(
         }
 
         # make SVs a long df with 1 record per SV corresponding to the strand
-        sv_to_label <- melt(
-            these_sv %>%
-                select(
-                    chrom1,
-                    start1,
-                    end1,
-                    chrom2,
-                    start2,
-                    end2,
-                    tumour_sample_id,
-                    gene,
-                    partner,
-                    fusion
-            ),
-            id.vars = c(
-                "tumour_sample_id",
-                "gene",
-                "partner",
-                "fusion",
-                "start1",
-                "end1",
-                "start2",
-                "end2"
-            ),
-            variable.name = "chromosomeN",
-            value.name = "Chromosome"
-        ) %>%
-        dplyr::filter(
-            Chromosome %in% sv_chromosome
-        )
+
+        sv_to_label <- these_sv %>%
+            select(
+                chrom1,
+                start1,
+                end1,
+                chrom2,
+                start2,
+                end2,
+                tumour_sample_id,
+                gene,
+                partner,
+                fusion
+            ) %>%
+            tidyr::pivot_longer(
+                cols = c("chrom1", "chrom2"),
+                names_to = "chromosomeN",
+                values_to = "Chromosome"
+            ) %>%
+            as.data.frame %>%
+            dplyr::filter(
+                Chromosome %in% sv_chromosome
+            )
 
         # are there any SVs on this chromosome/region?
         if (nrow(sv_to_label) > 0) {
         sv_to_label <- sv_to_label %>%
-            melt(
-                .,
-                id.vars = c(
-                    "tumour_sample_id",
-                    "gene",
-                    "partner",
-                    "fusion",
-                    "chromosomeN",
-                    "Chromosome"
-                )
+            tidyr::pivot_longer(
+                cols = c("start1", "end1", "start2", "end2"),
+                names_to = "variable",
+                values_to = "value"
             ) %>%
+            as.data.frame %>%
             group_by(fusion, chromosomeN) %>%
             dplyr::filter(
                 if (grepl("1", chromosomeN))
