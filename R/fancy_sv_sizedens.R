@@ -31,13 +31,13 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot stringr
+#' @import dplyr ggplot2 GAMBLR.helpers stringr
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' library(GAMBLR.data)
-#' 
+#'
 #' #build plot sith default parameters
 #' fancy_sv_sizedens(this_sample_id = "SP116715")
 #'
@@ -61,10 +61,10 @@ fancy_sv_sizedens = function(this_sample_id,
                              hide_legend = FALSE,
                              chr_select = paste0("chr", c(1:22)),
                              plot_title = paste0(this_sample_id),
-                             plot_subtitle = paste0("SV sizes for Manta calls. 
-                                                    Dashed line annotates mean 
-                                                    variant size.\nVAF cut off: 
-                                                    ", vaf_cutoff,", SV size 
+                             plot_subtitle = paste0("SV sizes for Manta calls.
+                                                    Dashed line annotates mean
+                                                    variant size.\nVAF cut off:
+                                                    ", vaf_cutoff,", SV size
                                                     cut off: ", size_cutoff),
                              projection = "grch37"){
   if(!missing(maf_data)){
@@ -94,7 +94,7 @@ fancy_sv_sizedens = function(this_sample_id,
   #split manta_name variable
   svs_df = data.frame( svs$CHROM_A,   svs$START_A, svs$END_A,
                        sub("^(.+?):.*", "\\1", svs$manta_name) )
-  
+
   #rename variables
   names(svs_df)[1] = "chrom"
   names(svs_df)[2] = "start"
@@ -104,7 +104,7 @@ fancy_sv_sizedens = function(this_sample_id,
   #subset df on SV type
   manta_sv = dplyr::filter(svs_df, type %in% c("MantaDEL", "MantaDUP")) %>%
     dplyr::select(chrom, start, end, type)
-  
+
   # check whether enough variants
   check_whether_enough_vars = function(manta_type, string1, string2){
     type_table = table(manta_type)
@@ -112,7 +112,7 @@ fancy_sv_sizedens = function(this_sample_id,
     if( is.null(string2) ){
       var_num_message = gettextf("%s %s.", var_num_message, string1)
     }else{
-      var_num_message = gettextf("%s %s after filtering by %s.", 
+      var_num_message = gettextf("%s %s after filtering by %s.",
                                  var_num_message, string1, string2)
     }
     type_table = table(manta_type)
@@ -121,18 +121,18 @@ fancy_sv_sizedens = function(this_sample_id,
     stopifnot("Plot couldn't be made. At least 2 variants of either type are needed." =
                 any(type_table > 1))
   }
-  
+
   manta_sv = mutate( manta_sv, type = factor(type, levels = c("MantaDEL", "MantaDUP")) )
-  
+
   if( missing(maf_data) && is.null(maf_path) ){
     check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = "vaf_cutoff")
   }else{
     check_whether_enough_vars(manta_type = manta_sv$type, string1 = "found", string2 = NULL)
   }
-  
+
   #calculate sizes
   manta_sv$size = manta_sv$end - manta_sv$start
-  
+
   #add chr prefix, if missing
   if(!str_detect(manta_sv$chrom, "chr")[1]){
     manta_sv = mutate(manta_sv, chrom = paste0("chr", chrom))
@@ -143,10 +143,10 @@ fancy_sv_sizedens = function(this_sample_id,
 
   #filter out variants < 50 bp
   manta_sv = dplyr::filter(manta_sv, size >= size_cutoff)
-  
+
   # check whether enough variants
   check_whether_enough_vars(manta_type = manta_sv$type, string1 = "left", string2 = "size_cutoff")
-  
+
   # groups (MantaDEL or MantaDUP) with only 1 variant are dropped.
   if(type_table["MantaDEL"] == 1){
     manta_sv = filter(manta_sv, type != "MantaDEL")
@@ -157,7 +157,7 @@ fancy_sv_sizedens = function(this_sample_id,
     message("Warning: At least 2 data points are needed to calculate density estimates. MantaDUP group was dropped because it contains only 1 variant.")
   }
   manta_sv = mutate(manta_sv, type = droplevels(type))
-  
+
   del_col = GAMBLR.helpers::get_gambl_colours("indels")[[1]]
   dup_col = GAMBLR.helpers::get_gambl_colours("indels")[[2]]
 
@@ -169,7 +169,7 @@ fancy_sv_sizedens = function(this_sample_id,
         scale_y_continuous(expand = c(0, 0)) +
         scale_x_continuous(expand = c(0, 0)) +
         {if(hide_legend)theme(legend.position = "none")} +
-        theme_cowplot()
+        theme_Morons()
 
   return(p)
 }

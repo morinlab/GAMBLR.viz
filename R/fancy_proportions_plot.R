@@ -20,21 +20,21 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot
+#' @import dplyr ggplot2 GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' #load packages
 #' library(dplyr)
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get sample IDs for available genome samples
-#' genome_collated = collate_results(seq_type_filter = "genome") %>% 
+#' genome_collated = collate_results(seq_type_filter = "genome") %>%
 #'   pull(sample_id)
 #'
 #' #subset the collated samples on BL samples
-#' my_samples = get_gambl_metadata() %>% 
-#'   dplyr::filter(sample_id %in% genome_collated) %>% 
+#' my_samples = get_gambl_metadata() %>%
+#'   dplyr::filter(sample_id %in% genome_collated) %>%
 #'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
 #' fancy_proportions_plot(these_sample_ids = my_samples)
@@ -115,12 +115,7 @@ fancy_proportions_plot = function(these_sample_ids,
     scale_fill_manual(values = these_colors) +
     scale_color_manual(values = these_colors) +
     labs(fill = "Metrics", color = "Mean") +
-    theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5),
-          axis.ticks.x = element_blank(), panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(),
-          panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank(), panel.background = element_blank(),
-          axis.line.x = element_line(color = "black", size = 0.5, linetype = 1),
-          axis.line.y = element_line(color = "black", size = 0.5, linetype = 1),
-          axis.ticks.y = element_line(color = "black", size = 0.5, linetype = 1))
+    theme_Morons()
 
   return(p)
 }

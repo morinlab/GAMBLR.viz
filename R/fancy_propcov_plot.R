@@ -20,21 +20,21 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot
+#' @import dplyr ggplot2 GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' #load packages
 #' library(dplyr)
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get sample IDs for available genome samples
-#' genome_collated = collate_results(seq_type_filter = "genome") %>% 
+#' genome_collated = collate_results(seq_type_filter = "genome") %>%
 #'   pull(sample_id)
 #'
 #' #subset the collated samples on BL samples
-#' my_samples = get_gambl_metadata() %>% 
-#'   dplyr::filter(sample_id %in% genome_collated) %>% 
+#' my_samples = get_gambl_metadata() %>%
+#'   dplyr::filter(sample_id %in% genome_collated) %>%
 #'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
 #' fancy_propcov_plot(these_sample_ids = my_samples)
@@ -117,11 +117,8 @@ fancy_propcov_plot = function(these_sample_ids,
     stat_summary(fun = mean, geom = "point", shape = 23, size = 2, fill = "white") +
     ylim(0, 1) +
     labs(title = "Proportion Coverage", subtitle = plot_subtitle, x = "", y = "Fraction") +
-    theme_cowplot() +
-    scale_fill_manual(values = c("#dda15e", "#606c38", "#433D6B", "#6B3254")) +
-    theme(legend.position = "right", legend.title = element_blank(), axis.title.x = element_blank(),
-          axis.text.x = element_blank(), axis.ticks.x = element_blank(), panel.grid.minor = element_blank(),
-          panel.grid.major = element_blank(), panel.background = element_blank())
+    theme_Morons() +
+    scale_fill_manual(values = c("#dda15e", "#606c38", "#433D6B", "#6B3254"))
 
   return(p)
 }

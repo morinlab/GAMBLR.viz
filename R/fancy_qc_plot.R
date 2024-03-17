@@ -26,7 +26,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 cowplot ggbeeswarm
+#' @import dplyr ggplot2 GAMBLR.helpers ggbeeswarm
 #' @export
 #'
 #' @examples
@@ -144,10 +144,8 @@ fancy_qc_plot = function(these_sample_ids,
     geom_boxplot(mapping = aes(x = group), outlier.shape = NA) +
     geom_quasirandom() +
     labs(title = plot_title, x = "", y = y_axis_lab) +
-    theme_cowplot() +
-    scale_fill_manual(values = c(list_col)) +
-    theme(legend.position = "right", axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-          panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+    theme_Morons() +
+    scale_fill_manual(values = c(list_col))
 
   return(p)
 }

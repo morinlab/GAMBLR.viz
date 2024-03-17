@@ -37,7 +37,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot GAMBLR.utils
+#' @import ggplot2 dplyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -338,8 +338,7 @@ fancy_ideogram = function(this_sample_id,
     scale_colour_manual(name = "", values = selected_colours) + #legend/colours
     scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #set x-axis boundaries
     scale_y_reverse() + #reverse y axis
-    theme_cowplot() + #themes
-    ideogram_theme() #themes
+    theme_Morons()
 
   return(p)
 }

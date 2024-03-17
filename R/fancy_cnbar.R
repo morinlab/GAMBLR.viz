@@ -30,12 +30,12 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot
+#' @import ggplot2 dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #Return a plot for one sample, with default parameters.
 #' fancy_cnbar(this_sample_id = "DOHH-2")
 #'
@@ -139,7 +139,7 @@ fancy_cnbar = function(this_sample_id,
     scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("copy_number")) +
     scale_x_discrete(limits = cn_levels) +
     geom_text(aes(x = CN, y = count, label = count), colour = "#000000", size = 5, position = position_stack(vjust = 0.5)) +
-    theme_cowplot() +
+    theme_Morons() +
     theme(legend.position = "none")
 
   return(p)

@@ -25,7 +25,7 @@
 #' @return A plot as a ggplot object (grob).
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import ggplot2 cowplot dplyr
+#' @import ggplot2 GAMBLR.helpers dplyr
 #' @export
 #'
 #' @examples
@@ -139,9 +139,8 @@ fancy_alignment_plot = function(these_sample_ids,
     scale_linetype_manual(values = c("TotalReads" = "solid", "TotalUniquelyMapped" = "dashed", "TotalDuplicatedreads" = "dotted")) +
     scale_shape_manual(values = c("MeanCorrectedCoverage" = 21)) +
     scale_color_manual(values = c(this_color_palette)) +
-    theme_cowplot() +
-    labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)") +
-    theme(legend.position = "right", axis.text.x = element_text(angle = 90, vjust = 0.5), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+    theme_Morons() +
+    labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)")
 
   return(p)
 }

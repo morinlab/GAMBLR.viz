@@ -23,7 +23,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot stringr GAMBLR.helpers
+#' @import ggplot2 dplyr stringr GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -218,8 +218,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       scale_colour_manual(name = "", values = selected_colours) + #colours and legend
       scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
       scale_y_reverse() + #flip ideogram
-      theme_cowplot() +  #theme
-      ideogram_theme() #more theme
+      theme_Morons()
 
     #plotting has its own plotting chunk, due to re-scaling of geom_segments and segment widths etc.
   }else if(length(these_sample_ids) == 4){
@@ -270,8 +269,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
       scale_colour_manual(name = "", values = selected_colours) + #colours and legend
       scale_x_continuous(breaks = seq(0, max(segment_data$chr_end), by = 30000000)) + #x-axis boundaries
       scale_y_reverse() + #flip ideogram
-      theme_cowplot() +  #theme
-      ideogram_theme() #more theme
+      theme_Morons()
   }
   return(p)
 }

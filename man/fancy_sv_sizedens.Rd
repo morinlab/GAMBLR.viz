@@ -20,9 +20,9 @@ fancy_sv_sizedens(
   chr_select = paste0("chr", c(1:22)),
   plot_title = paste0(this_sample_id),
  
-    plot_subtitle = paste0("SV sizes for Manta calls. \\n                                                    Dashed line annotates mean \\n                                                    variant size.\\nVAF cut off: \\n                                                    ",
+    plot_subtitle = paste0("SV sizes for Manta calls.\\n                                                    Dashed line annotates mean\\n                                                    variant size.\\nVAF cut off:\\n                                                    ",
     vaf_cutoff,
-    ", SV size \\n                                                    cut off: ",
+    ", SV size\\n                                                    cut off: ",
     size_cutoff),
   projection = "grch37"
 )

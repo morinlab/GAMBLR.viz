@@ -33,7 +33,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot GAMBLR.utils
+#' @import ggplot2 dplyr GAMBLR.utils GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -139,7 +139,7 @@ fancy_v_count = function(this_sample_id,
     {if(log10_y)scale_y_log10(expand = c(0, 0))} +
     {if(!log10_y)scale_y_continuous(expand = c(0, 0))} +
     {if(hide_legend)theme(legend.position = "none")} +
-    theme_cowplot()
+    theme_Morons()
 
   return(p)
 }
