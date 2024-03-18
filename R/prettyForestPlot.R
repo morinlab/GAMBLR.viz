@@ -266,12 +266,12 @@ prettyForestPlot = function(maf,
     theme(axis.text.y = element_blank(), legend.position = "bottom")
 
   arranged_plot = ggarrange(
-    replica$forest,
-    replica$bar,
+    forest,
+    bar,
     widths = c(1, 0.6),
     common.legend = TRUE,
     align = "h"
   )
 
-  return(list(fisher = fish_test, forest = forest, bar = bar, legend = legend, arranged = arranged_plot, mutmat = mutmat))
+  return(list(fisher = fish_test, forest = forest, bar = bar, arranged = arranged_plot, mutmat = mutmat))
 }
