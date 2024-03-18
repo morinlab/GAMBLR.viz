@@ -36,7 +36,7 @@
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_ssm_by_sample(these_samples_metadata = this_meta)
+#' maf = get_ssm_by_samples(these_samples_metadata = this_meta)
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = this_meta,
