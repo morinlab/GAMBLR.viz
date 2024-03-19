@@ -1,0 +1,44 @@
+[
+  {
+    "objectID": "concepts/GAMBLR_family.html",
+    "href": "concepts/GAMBLR_family.html",
+    "title": "GAMBLR family of packages",
+    "section": "",
+    "text": "GAMBLR.viz is the top-most member of the GAMBLR family of packages that is designed to be used outside of GSC and for users who are not members of Morin Lab. It mostly serves the purpose of providing functions for high-level visualizations of genomic data, including simple somatic mutations, structural variations, copy number alterations, and combinations of these data.\nThe GAMBLR family includes:\n\nGAMBLR.data - collection of genomic data for analysis of Mature B-cell neoplasms\nGAMBLR.helpers - a set of low-level functions for data operation\nGAMBLR.utils - higher level set of functions to operate on genomic data\nGAMBLR.viz - this package\nGAMBLR.results - used to access the full data in GAMBL project. Only available for members of the Morin Lab and requires access to GSC, but can also be run locally once properly configured and synced.\n\nThis diagram illustrates in a simplified way the dependency relationship of different packages in the GAMBLR.family:\n\n\n\n\nflowchart LR\n  A(\"GAMBLR.data\") --&gt; B(\"GAMBLR.helpers\")\n  B --&gt; C(\"GAMBLR.utils\")\n  C --&gt; D(\"GAMBLR.viz\")\n  D --&gt; E{\"Morin Lab member?\"}\n  E -- YES --&gt; F(\"GAMBLR.results\")\n  E -- NO --&gt; A\n\n\n\n\n\nAll dependencies should be installed automatically for you, just like with any other R package. If not, please report the issue in the appropriate GitHub repo.\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
+    "section": "",
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+  },
+  {
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+  },
+  {
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+  },
+  {
+    "objectID": "concepts/glossary.html",
+    "href": "concepts/glossary.html",
+    "title": "GAMBLR.viz glossary",
+    "section": "",
+    "text": "There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:\n\nthese_samples_metadata: This is a data frame with a set of minimal required columns: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.\n\n\n\n\n Back to top"
+  }
+]
