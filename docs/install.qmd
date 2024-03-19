@@ -1,0 +1,24 @@
+---
+hide:
+  - toc
+  - navigation
+  - footer
+---
+
+# Installation
+
+We recommend installing the package directly from GitHub (requires `devtools` dependency).
+
+```r
+if (!require("devtools")) install.packages("devtools")
+
+devtools::install_github(
+    "morinlab/GAMBLR.viz",
+    repos = BiocManager::repositories()
+)
+```
+
+You can confirm successful installation by running a simple info command:
+```r
+viz_info() #Prints general info to the console
+```
