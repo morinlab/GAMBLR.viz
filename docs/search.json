@@ -35,6 +35,48 @@
     "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
   },
   {
+    "objectID": "why.html",
+    "href": "why.html",
+    "title": "Why GAMBLR.viz?",
+    "section": "",
+    "text": "GAMBLR.viz is an open-source portable R library.\nIf you dream of generating oncoplot with great flexibility of annotations but don’t have enough time or skill to look at ComplexHeatmap, need to have a simple function to look at hypermutated regions from birds-eye view or under microscope but don’t know how to approach this, or if you find yourself always struggling to adjusting your code for simple comparison of mutation frequency between two groups, GAMBLR.viz is for you.\nGAMBLR stands for Genomic Analysis of Mature B-cell Lymphomas in R, and is part of the family of R packages for lymphoma cancer research developed in the Morin Lab at the Simon Fraser University."
+  },
+  {
+    "objectID": "why.html#gamblr-family",
+    "href": "why.html#gamblr-family",
+    "title": "Why GAMBLR.viz?",
+    "section": "GAMBLR family",
+    "text": "GAMBLR family\nGAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data.\nIt is designed to provide simple and straightfoward ways to visualize genomic data and works well with other tools in the GAMBLR family. We continue to develop more visualization tools, as well as improve their functionality.\nFor more details, please refer to the GAMBLR family section."
+  },
+  {
+    "objectID": "why.html#local-experience",
+    "href": "why.html#local-experience",
+    "title": "Why GAMBLR.viz?",
+    "section": "Local experience",
+    "text": "Local experience\nThe functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations."
+  },
+  {
+    "objectID": "why.html#use-cases",
+    "href": "why.html#use-cases",
+    "title": "Why GAMBLR.viz?",
+    "section": "Use cases",
+    "text": "Use cases\nYou can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.\nGAMBLR.viz helps with:\n\ngenerate manuscript-ready plots in a simple and reproducible manner.\none-stop shop to generate high-level or region-specific visualizations for genomic data analysis.\nimplement consistent coloring scheme and pallettes for different types of annotations.\novercome learning curve using individual packages commonly implemented in the data visualization field.\n\nFor more details, please refer to the tutorials section."
+  },
+  {
+    "objectID": "why.html#community",
+    "href": "why.html#community",
+    "title": "Why GAMBLR.viz?",
+    "section": "Community",
+    "text": "Community\nCommunity discussions primarily happen through issue submission on GitHub."
+  },
+  {
+    "objectID": "why.html#getting-started",
+    "href": "why.html#getting-started",
+    "title": "Why GAMBLR.viz?",
+    "section": "Getting started",
+    "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
+  },
+  {
     "objectID": "concepts/glossary.html",
     "href": "concepts/glossary.html",
     "title": "GAMBLR.viz glossary",

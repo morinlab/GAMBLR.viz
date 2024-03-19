@@ -1,0 +1,64 @@
+---
+title: "Why GAMBLR.viz?"
+---
+
+GAMBLR.viz is an open-source portable R library.
+
+
+If you dream of generating oncoplot with great flexibility of annotations but
+don't have enough time or skill to look at ComplexHeatmap, need to have a simple
+function to look at hypermutated regions from birds-eye view or under microscope
+but don't know how to approach this, or if you find yourself always struggling
+to adjusting your code for simple comparison of mutation frequency between two
+groups, GAMBLR.viz is for you.
+
+GAMBLR stands for **G**enomic **A**nalysis of **M**ature **B**-cell **L**ymphomas
+in **R**, and is part of the family of R packages for lymphoma cancer research
+developed in the [Morin Lab](https://morinlab.github.io/) at the Simon Fraser
+University.
+
+
+## GAMBLR family
+
+GAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma
+genomic data.
+
+It is designed to provide simple and straightfoward ways to visualize genomic
+data and works well with other tools in the GAMBLR family. We continue to
+develop more visualization tools, as well as improve their functionality.
+
+For more details, please refer to the [GAMBLR family](./concepts/GAMBLR_family.html)
+section.
+
+## Local experience
+
+The functions provided with GAMBLR.viz, including all dependencies, are
+immediately available upon package installation and do not require internet
+connection or ssh access to GSC resources. It can run anywhere that R is
+available without restrictions and limitations.
+
+## Use cases
+
+You can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from
+initial data exploration to preparation of manuscript-ready figures.
+
+GAMBLR.viz helps with:
+
+* generate manuscript-ready plots in a simple and reproducible manner.
+* one-stop shop to generate high-level or region-specific visualizations for
+genomic data analysis.
+* implement consistent coloring scheme and pallettes for different types of
+annotations.
+* overcome learning curve using individual packages commonly implemented in the
+data visualization field.
+
+For more details, please refer to the [tutorials](./tutorials/getting_started.html)
+section.
+
+## Community
+
+Community discussions primarily happen through issue submission on [GitHub](https://github.com/morinlab/GAMBLR.viz/issues).
+
+## Getting started
+
+If you're interested in trying GAMBLR.viz we recommend the [getting started tutorial](./tutorials/getting_started.html).
