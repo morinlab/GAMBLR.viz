@@ -1,45 +1,66 @@
 [
   {
-    "objectID": "concepts/GAMBLR_family.html",
-    "href": "concepts/GAMBLR_family.html",
-    "title": "GAMBLR family of packages",
+    "objectID": "resources/functions.html",
+    "href": "resources/functions.html",
+    "title": "Functions overview",
     "section": "",
-    "text": "GAMBLR.viz is the top-most member of the GAMBLR family of packages that is designed to be used outside of GSC and for users who are not members of Morin Lab. It mostly serves the purpose of providing functions for high-level visualizations of genomic data, including simple somatic mutations, structural variations, copy number alterations, and combinations of these data.\nThe GAMBLR family includes:\n\nGAMBLR.data - collection of genomic data for analysis of Mature B-cell neoplasms\nGAMBLR.helpers - a set of low-level functions for data operation\nGAMBLR.utils - higher level set of functions to operate on genomic data\nGAMBLR.viz - this package\nGAMBLR.results - used to access the full data in GAMBL project. Only available for members of the Morin Lab and requires access to GSC, but can also be run locally once properly configured and synced.\n\nThis diagram illustrates in a simplified way the dependency relationship of different packages in the GAMBLR.family:\n\n\n\n\nflowchart LR\n  A(\"GAMBLR.data\") --&gt; B(\"GAMBLR.helpers\")\n  B --&gt; C(\"GAMBLR.utils\")\n  C --&gt; D(\"GAMBLR.viz\")\n  D --&gt; E{\"Morin Lab member?\"}\n  E -- YES --&gt; F(\"GAMBLR.results\")\n  E -- NO --&gt; A\n\n\n\n\n\nAll dependencies should be installed automatically for you, just like with any other R package. If not, please report the issue in the appropriate GitHub repo.\n\n\n\n Back to top"
+    "text": "The GAMBLR.viz package proveds a set of function families to visualize and plot a wide range of different types of genomic data and their combinations. Below is the summary overview of the functions available with GAMBLR.viz:"
   },
   {
-    "objectID": "install.html",
-    "href": "install.html",
-    "title": "Installation",
+    "objectID": "resources/functions.html#pretty-functions",
+    "href": "resources/functions.html#pretty-functions",
+    "title": "Functions overview",
+    "section": "pretty functions",
+    "text": "pretty functions\n\nprettyChromoplot Chromosome plot displaying the frequency of CNVs across genome using GISTIC2.0 scores output.\nprettyOncoplot Oncoplot displaying frequency and type of coding mutations.\nprettyCoOncoplot Side-by-side oncoplots for two comparisons groups. This function is a convenient wrapper around the prettyOncoplot function.\nprettyForestPlot Compare frequrncy of mutations between two different groups ans generate summary forest plot.\nprettyGeneCloud Gene cloud plot.\nprettyRainfallPlot Visualize intermutational distance between individual mutations and compare it to the position of structural variants.\npretty_lollipop_plot Lollipop Plot (generates HTML output)."
+  },
+  {
+    "objectID": "resources/functions.html#fancy-functions",
+    "href": "resources/functions.html#fancy-functions",
+    "title": "Functions overview",
+    "section": "fancy functions",
+    "text": "fancy functions\n\nfancy_alignment_plot Plot Alignment Metrics\nfancy_circos_plot SSM and SV Circos Plot.\nfancy_cnbar Copy Number states barplot.\nfancy_ideogram Genome-wide ideogram annotated with SSM and CN information.\nfancy_multisamp_ideogram Genome-wide ideogram (CN segments) for multiple samples.\nfancy_propcov_plot Proportional Coverage Plot.\nfancy_proportions_plot Proportional Metrics Plot.\nfancy_qc_plot Plot Quality Control Metrics.\nfancy_snv_chrdistplot n SNVs per chromosome plot.\nfancy_sv_sizedens Structural Variants Size Plot.\nfancy_v_chrcount Number of variants per chromosome plot.\nfancy_v_count Total number of variants count plot.\nfancy_v_sizedis Variant size distribution plot."
+  },
+  {
+    "objectID": "resources/functions.html#other-functions",
+    "href": "resources/functions.html#other-functions",
+    "title": "Functions overview",
+    "section": "Other functions",
+    "text": "Other functions\n\nashm_multi_rainbow_plot Multi-panel Rainbow Plot to display aSHM across several regions.\nashm_rainbow_plot Rainbow Plot to display aSHM across one region of interest.\ncomp_report Sample-level SV/SSM/CN reports in PDF\ncopy_number_vaf_plot Copy Number VAF Plot.\nfocal_cn_plot Copy Number Segments Plot.\nheatmap_mutation_frequency_bin Heatmap of mutation counts across sliding windows for multiple regions.\nmap_metadata_to_colours Assign a colour palette to metadata columns automatically and consistently.\nplot_sample_circos Sample-level Circos Plot.\nsplendidHeatmap Heatmap of features to visualize NMF and random forest classifiers."
+  },
+  {
+    "objectID": "concepts/glossary.html",
+    "href": "concepts/glossary.html",
+    "title": "GAMBLR.viz glossary",
     "section": "",
-    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
+    "text": "There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:\n\nthese_samples_metadata: This is a data frame with a set of minimal required columns: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "GAMBLR.viz",
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Qestions",
     "section": "",
-    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
   },
   {
-    "objectID": "index.html#install",
-    "href": "index.html#install",
-    "title": "GAMBLR.viz",
-    "section": "Install",
-    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "title": "Frequently Asked Qestions",
+    "section": "Where can I get example data that works with this package?",
+    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
   },
   {
-    "objectID": "index.html#quickstart",
-    "href": "index.html#quickstart",
-    "title": "GAMBLR.viz",
-    "section": "Quickstart",
-    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own colors and not the ones the package offers?",
+    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
   },
   {
-    "objectID": "index.html#installation-for-developers",
-    "href": "index.html#installation-for-developers",
-    "title": "GAMBLR.viz",
-    "section": "Installation for developers",
-    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own data we generated in our lab?",
+    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
   },
   {
     "objectID": "why.html",
@@ -84,38 +105,45 @@
     "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
   },
   {
-    "objectID": "faq.html",
-    "href": "faq.html",
-    "title": "Frequently Asked Qestions",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
     "section": "",
-    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
   },
   {
-    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "title": "Frequently Asked Qestions",
-    "section": "Where can I get example data that works with this package?",
-    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own colors and not the ones the package offers?",
-    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own data we generated in our lab?",
-    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
   },
   {
-    "objectID": "concepts/glossary.html",
-    "href": "concepts/glossary.html",
-    "title": "GAMBLR.viz glossary",
+    "objectID": "install.html",
+    "href": "install.html",
+    "title": "Installation",
     "section": "",
-    "text": "There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:\n\nthese_samples_metadata: This is a data frame with a set of minimal required columns: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.\n\n\n\n\n Back to top"
+    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "concepts/GAMBLR_family.html",
+    "href": "concepts/GAMBLR_family.html",
+    "title": "GAMBLR family of packages",
+    "section": "",
+    "text": "GAMBLR.viz is the top-most member of the GAMBLR family of packages that is designed to be used outside of GSC and for users who are not members of Morin Lab. It mostly serves the purpose of providing functions for high-level visualizations of genomic data, including simple somatic mutations, structural variations, copy number alterations, and combinations of these data.\nThe GAMBLR family includes:\n\nGAMBLR.data - collection of genomic data for analysis of Mature B-cell neoplasms\nGAMBLR.helpers - a set of low-level functions for data operation\nGAMBLR.utils - higher level set of functions to operate on genomic data\nGAMBLR.viz - this package\nGAMBLR.results - used to access the full data in GAMBL project. Only available for members of the Morin Lab and requires access to GSC, but can also be run locally once properly configured and synced.\n\nThis diagram illustrates in a simplified way the dependency relationship of different packages in the GAMBLR.family:\n\n\n\n\nflowchart LR\n  A(\"GAMBLR.data\") --&gt; B(\"GAMBLR.helpers\")\n  B --&gt; C(\"GAMBLR.utils\")\n  C --&gt; D(\"GAMBLR.viz\")\n  D --&gt; E{\"Morin Lab member?\"}\n  E -- YES --&gt; F(\"GAMBLR.results\")\n  E -- NO --&gt; A\n\n\n\n\n\nAll dependencies should be installed automatically for you, just like with any other R package. If not, please report the issue in the appropriate GitHub repo.\n\n\n\n Back to top"
   }
 ]

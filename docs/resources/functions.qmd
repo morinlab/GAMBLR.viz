@@ -1,0 +1,56 @@
+---
+title: "Functions overview"
+---
+
+The GAMBLR.viz package proveds a set of function families to visualize and plot
+a wide range of different types of genomic data and their combinations. Below is
+the summary overview of the functions available with GAMBLR.viz:
+
+
+## `pretty` functions
+
+* `prettyChromoplot` Chromosome plot displaying the frequency of CNVs across
+genome using GISTIC2.0 `scores` output.
+* `prettyOncoplot` Oncoplot displaying frequency and type of coding mutations.
+* `prettyCoOncoplot` Side-by-side oncoplots for two comparisons groups. This
+function is a convenient wrapper around the `prettyOncoplot` function.
+* `prettyForestPlot` Compare frequrncy of mutations between two different groups
+ans generate summary forest plot.
+* `prettyGeneCloud` Gene cloud plot.
+* `prettyRainfallPlot` Visualize intermutational distance between individual
+mutations and compare it to the position of structural variants.
+* `pretty_lollipop_plot` Lollipop Plot (generates HTML output).
+
+## `fancy` functions
+
+* `fancy_alignment_plot` Plot Alignment Metrics
+* `fancy_circos_plot` SSM and SV Circos Plot.
+* `fancy_cnbar` Copy Number states barplot.
+* `fancy_ideogram` Genome-wide ideogram annotated with SSM and CN information.
+* `fancy_multisamp_ideogram` Genome-wide ideogram (CN segments) for multiple
+samples.
+* `fancy_propcov_plot` Proportional Coverage Plot.
+* `fancy_proportions_plot` Proportional Metrics Plot.
+* `fancy_qc_plot` Plot Quality Control Metrics.
+* `fancy_snv_chrdistplot` n SNVs per chromosome plot.
+* `fancy_sv_sizedens` Structural Variants Size Plot.
+* `fancy_v_chrcount` Number of variants per chromosome plot.
+* `fancy_v_count` Total number of variants count plot.
+* `fancy_v_sizedis` Variant size distribution plot.
+
+
+## Other functions
+
+* `ashm_multi_rainbow_plot` Multi-panel Rainbow Plot to display aSHM across
+several regions.
+* `ashm_rainbow_plot` Rainbow Plot to display aSHM across one region of interest.
+* `comp_report` Sample-level SV/SSM/CN reports in PDF
+* `copy_number_vaf_plot` Copy Number VAF Plot.
+* `focal_cn_plot` Copy Number Segments Plot.
+* `heatmap_mutation_frequency_bin` Heatmap of mutation counts across sliding
+windows for multiple regions.
+* `map_metadata_to_colours` Assign a colour palette to metadata columns
+automatically and consistently.
+* `plot_sample_circos` Sample-level Circos Plot.
+* `splendidHeatmap` Heatmap of features to visualize NMF and random forest
+classifiers.
