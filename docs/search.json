@@ -14,6 +14,34 @@
     "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
   },
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
+    "section": "",
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+  },
+  {
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+  },
+  {
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+  },
+  {
     "objectID": "why.html",
     "href": "why.html",
     "title": "Why GAMBLR.viz?",
@@ -56,32 +84,32 @@
     "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "GAMBLR.viz",
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Qestions",
     "section": "",
-    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
   },
   {
-    "objectID": "index.html#install",
-    "href": "index.html#install",
-    "title": "GAMBLR.viz",
-    "section": "Install",
-    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "title": "Frequently Asked Qestions",
+    "section": "Where can I get example data that works with this package?",
+    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
   },
   {
-    "objectID": "index.html#quickstart",
-    "href": "index.html#quickstart",
-    "title": "GAMBLR.viz",
-    "section": "Quickstart",
-    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own colors and not the ones the package offers?",
+    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
   },
   {
-    "objectID": "index.html#installation-for-developers",
-    "href": "index.html#installation-for-developers",
-    "title": "GAMBLR.viz",
-    "section": "Installation for developers",
-    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own data we generated in our lab?",
+    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
   },
   {
     "objectID": "concepts/glossary.html",

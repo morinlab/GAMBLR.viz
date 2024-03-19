@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>GAMBLR.viz - Why GAMBLR.viz?</title>
+<title>GAMBLR.viz - Frequently Asked Qestions</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -65,7 +65,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="GAMBLR.viz - Why GAMBLR.viz?">
+<meta property="og:title" content="GAMBLR.viz - Frequently Asked Qestions">
 <meta property="og:description" content="">
 <meta property="og:image" content="logo.png">
 <meta property="og:site-name" content="GAMBLR.viz">
@@ -169,7 +169,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./why.html">Why GAMBLR.viz?</a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./faq.html">Frequently Asked Qestions</a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
     </div>
@@ -183,20 +183,14 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./why.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Why GAMBLR.viz?</span></a>
+  <a href="./install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Installation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./concepts/GAMBLR_family.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GAMBLR family of packages</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./concepts/glossary.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GAMBLR.viz glossary</span></a>
+  <a href="./faq.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Frequently Asked Qestions</span></a>
   </div>
 </li>
     </ul>
@@ -209,20 +203,16 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#gamblr-family" id="toc-gamblr-family" class="nav-link active" data-scroll-target="#gamblr-family">GAMBLR family</a></li>
-  <li><a href="#local-experience" id="toc-local-experience" class="nav-link" data-scroll-target="#local-experience">Local experience</a></li>
-  <li><a href="#use-cases" id="toc-use-cases" class="nav-link" data-scroll-target="#use-cases">Use cases</a></li>
-  <li><a href="#community" id="toc-community" class="nav-link" data-scroll-target="#community">Community</a></li>
-  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting started</a></li>
+  <li><a href="#section" id="toc-section" class="nav-link active" data-scroll-target="#section"></a></li>
   </ul>
-<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/why.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/faq.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Why GAMBLR.viz?</h1>
+<h1 class="title">Frequently Asked Qestions</h1>
 </div>
 
 
@@ -237,41 +227,29 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>GAMBLR.viz is an open-source portable R library.</p>
-<p>If you dream of generating oncoplot with great flexibility of annotations but don’t have enough time or skill to look at ComplexHeatmap, need to have a simple function to look at hypermutated regions from birds-eye view or under microscope but don’t know how to approach this, or if you find yourself always struggling to adjusting your code for simple comparison of mutation frequency between two groups, GAMBLR.viz is for you.</p>
-<p>GAMBLR stands for <strong>G</strong>enomic <strong>A</strong>nalysis of <strong>M</strong>ature <strong>B</strong>-cell <strong>L</strong>ymphomas in <strong>R</strong>, and is part of the family of R packages for lymphoma cancer research developed in the <a href="https://morinlab.github.io/">Morin Lab</a> at the Simon Fraser University.</p>
-<section id="gamblr-family" class="level2">
-<h2 class="anchored" data-anchor-id="gamblr-family">GAMBLR family</h2>
-<p>GAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data.</p>
-<p>It is designed to provide simple and straightfoward ways to visualize genomic data and works well with other tools in the GAMBLR family. We continue to develop more visualization tools, as well as improve their functionality.</p>
-<p>For more details, please refer to the <a href="./concepts/GAMBLR_family.html">GAMBLR family</a> section.</p>
+<p>This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an <a href="https://github.com/morinlab/GAMBLR.viz/issues/new">issue</a> and we will be happy to add it to this page.</p>
+<section id="section" class="level3">
+<h3 class="anchored" data-anchor-id="section"></h3>
+<div class="d-grid gap-2">
+<a class="btn btn-lg btn-primary" data-bs-toggle="collapse" href="#General" role="button" aria-expanded="false" aria-controls="General">General questions</a>
+</div>
 </section>
-<section id="local-experience" class="level2">
-<h2 class="anchored" data-anchor-id="local-experience">Local experience</h2>
-<p>The functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations.</p>
+<div id="General" class="collapse multi-collapse">
+<section id="where-can-i-get-example-data-that-works-with-this-package" class="level2">
+<h2 class="anchored" data-anchor-id="where-can-i-get-example-data-that-works-with-this-package">Where can I get example data that works with this package?</h2>
+<p>The example data of all types is available with one of GAMBLR.viz dependencies (<a href="https://github.com/morinlab/GAMBLR.data">GAMBLR.data</a>). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g.&nbsp;sample_id).</p>
 </section>
-<section id="use-cases" class="level2">
-<h2 class="anchored" data-anchor-id="use-cases">Use cases</h2>
-<p>You can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.</p>
-<p>GAMBLR.viz helps with:</p>
-<ul>
-<li>generate manuscript-ready plots in a simple and reproducible manner.</li>
-<li>one-stop shop to generate high-level or region-specific visualizations for genomic data analysis.</li>
-<li>implement consistent coloring scheme and pallettes for different types of annotations.</li>
-<li>overcome learning curve using individual packages commonly implemented in the data visualization field.</li>
-</ul>
-<p>For more details, please refer to the <a href="./tutorials/getting_started.html">tutorials</a> section.</p>
+<section id="can-i-use-my-own-colors-and-not-the-ones-the-package-offers" class="level2">
+<h2 class="anchored" data-anchor-id="can-i-use-my-own-colors-and-not-the-ones-the-package-offers">Can I use my own colors and not the ones the package offers?</h2>
+<p>Absolutely! Most functions will accept argument <code>custom_colours</code> where list of color mappings can be used to specify your own pallette.</p>
 </section>
-<section id="community" class="level2">
-<h2 class="anchored" data-anchor-id="community">Community</h2>
-<p>Community discussions primarily happen through issue submission on <a href="https://github.com/morinlab/GAMBLR.viz/issues">GitHub</a>.</p>
+<section id="can-i-use-my-own-data-we-generated-in-our-lab" class="level2">
+<h2 class="anchored" data-anchor-id="can-i-use-my-own-data-we-generated-in-our-lab">Can I use my own data we generated in our lab?</h2>
+<p>Absolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data.</p>
 </section>
-<section id="getting-started" class="level2">
-<h2 class="anchored" data-anchor-id="getting-started">Getting started</h2>
-<p>If you’re interested in trying GAMBLR.viz we recommend the <a href="./tutorials/getting_started.html">getting started tutorial</a>.</p>
+</div>
 
 
-</section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
