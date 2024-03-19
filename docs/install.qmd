@@ -18,7 +18,30 @@ devtools::install_github(
 )
 ```
 
-You can confirm successful installation by running a simple info command:
+You can confirm successful installation by running one of the most popular
+functions:
 ```r
-viz_info() #Prints general info to the console
+library(GAMBLR.data)
+
+maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") %>%
+    dplyr::filter(pathology %in% c("FL", "DLBCL"))
+
+maf_data <- get_ssm_by_samples(
+    these_samples_metadata = maf_metadata
+)
+
+#define some genes of interest
+fl_genes = c("RRAGC", "CREBBP", "VMA21", "ATP6V1B2")
+dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CD79B", "MYD88", "TP53")
+genes = c(fl_genes, dlbcl_genes)
+
+prettyOncoplot(
+    maf_df = maf_data,
+    genes = genes,
+    these_samples_metadata = maf_metadata
+)
 ```
+
+There is a lot of functionality to hand-craft this plot exactly in the way you
+want. Interested? Read more in the [tutorials](./tutorials/prettyoncoplot.html)
+section.
