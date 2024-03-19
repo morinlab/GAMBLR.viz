@@ -19,12 +19,12 @@
 #'
 #' @return Nothing
 #'
-#' @import dplyr cowplot tidyr ggplot2
+#' @import dplyr GAMBLR.helpers tidyr ggplot2
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get metadata
 #' this_metadata = get_gambl_metadata()
 #'
@@ -81,6 +81,7 @@ focal_cn_plot = function(region,
 
   ggplot(all_not_dip, aes(x = start, xend = end, y = ID, yend = ID, colour = lymphgen)) +
     geom_vline(aes(xintercept = as.numeric(chunks$start)), alpha = 0.5, colour = GAMBLR.helpers::get_gambl_colours()[type]) +
-    geom_segment(size = segment_size) + theme_cowplot() +
+    geom_segment(size = segment_size) +
+    theme_Morons() +
     theme(axis.text.y = element_blank())
 }

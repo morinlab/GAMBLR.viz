@@ -26,7 +26,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot GAMBLR.utils
+#' @import ggplot2 dplyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -94,7 +94,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
       scale_x_discrete(expand = c(0, 0.7), limits = chr_select) +
       geom_bar(position = "stack", stat = "identity", fill = "#2B9971", width = 0.75) +
       scale_y_continuous(expand = c(0, 0)) +
-      theme_cowplot() +
+      theme_Morons() +
       coord_flip()
   }
 
@@ -118,7 +118,7 @@ fancy_snv_chrdistplot = function(this_sample_id,
       geom_bar(position = "stack", stat = "identity", width = 0.75) +
       scale_fill_manual("", values = c("SNP" = "#2B9971", "DNP" = "#993F2B")) +
       scale_y_continuous(expand = c(0, 0)) +
-      theme_cowplot() +
+      theme_Morons() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
       {if(hide_legend)theme(legend.position = "none")} +
       coord_flip()

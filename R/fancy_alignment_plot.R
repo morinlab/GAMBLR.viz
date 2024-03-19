@@ -25,7 +25,7 @@
 #' @return A plot as a ggplot object (grob).
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import ggplot2 cowplot dplyr
+#' @import ggplot2 GAMBLR.helpers dplyr tidyr
 #' @export
 #'
 #' @examples
@@ -98,8 +98,12 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #subset alignment metrics
   melt_align = dplyr::select(qc_metrics, c(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads)) %>%
-    as.data.table() %>%
-    melt(id.var = "sample_id") %>%
+    as.data.frame() %>%
+    tidyr::pivot_longer(
+        !sample_id,
+        names_to = "variable",
+        values_to = "value"
+    ) %>%
     arrange(sample_id)
 
   mean_cov_df = data.frame(Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
@@ -110,8 +114,12 @@ fancy_alignment_plot = function(these_sample_ids,
   if(!missing(comparison_group)){
     comp_data = collate_results(sample_table = comparison_group, seq_type_filter = seq_type) %>%
       dplyr::select(sample_id, TotalReads, TotalUniquelyMapped, TotalDuplicatedreads) %>%
-      as.data.table() %>%
-      melt(id.var = "sample_id") %>%
+      as.data.frame() %>%
+      tidyr::pivot_longer(
+        !sample_id,
+        names_to = "variable",
+        values_to = "value"
+      ) %>%
       arrange(sample_id)
 
     mean_cov_df_comp = data.frame(Metric = c("TotalReads", "TotalUniquelyMapped", "TotalDuplicatedreads"),
@@ -122,8 +130,12 @@ fancy_alignment_plot = function(these_sample_ids,
 
   #corrected mean coverage
   melt_cov = dplyr::select(qc_metrics, c(sample_id, MeanCorrectedCoverage)) %>%
-    as.data.table() %>%
-    melt(id.var = "sample_id") %>%
+    as.data.frame() %>%
+    tidyr::pivot_longer(
+        !sample_id,
+        names_to = "variable",
+        values_to = "value"
+    ) %>%
     arrange(sample_id)
 
   #plot alignment data
@@ -139,9 +151,8 @@ fancy_alignment_plot = function(these_sample_ids,
     scale_linetype_manual(values = c("TotalReads" = "solid", "TotalUniquelyMapped" = "dashed", "TotalDuplicatedreads" = "dotted")) +
     scale_shape_manual(values = c("MeanCorrectedCoverage" = 21)) +
     scale_color_manual(values = c(this_color_palette)) +
-    theme_cowplot() +
-    labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)") +
-    theme(legend.position = "right", axis.text.x = element_text(angle = 90, vjust = 0.5), panel.grid.minor = element_blank(), panel.grid.major = element_blank(), panel.background = element_blank())
+    theme_Morons() +
+    labs(linetype = "Comparison Group", shape = "Corrected Coverage (right y-axis)", fill = "Alignment Metrics", color = "Alignment Metrics (Mean)")
 
   return(p)
 }

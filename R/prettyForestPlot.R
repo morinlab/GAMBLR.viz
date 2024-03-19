@@ -26,8 +26,7 @@
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @rawNamespace import(ggpubr, except = "get_legend")
-#' @import dplyr cowplot forcats ggplot2 purrr tidyr broom
+#' @import dplyr ggpubr forcats ggplot2 purrr tidyr broom GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -37,7 +36,7 @@
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_ssm_by_sample(these_samples_metadata = this_meta)
+#' maf = get_ssm_by_samples(these_samples_metadata = this_meta)
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = this_meta,
@@ -216,7 +215,7 @@ prettyForestPlot = function(maf,
     geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
     ylab("ln(Odds Ratio)") +
     xlab("Mutated Genes") +
-    cowplot::theme_cowplot() +
+    theme_Morons() +
     theme(axis.text.y = element_text(size = font_size))
 
   if(comparison_name == FALSE){
@@ -263,15 +262,16 @@ prettyForestPlot = function(maf,
     xlab("") + ylab("% Mutated") +
     coord_flip() +
     scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
-    cowplot::theme_cowplot() +
+    theme_Morons() +
     theme(axis.text.y = element_blank(), legend.position = "bottom")
 
-  legend = cowplot::get_legend(bar)
+  arranged_plot = ggarrange(
+    forest,
+    bar,
+    widths = c(1, 0.6),
+    common.legend = TRUE,
+    align = "h"
+  )
 
-  plots = plot_grid(forest, bar +
-                      theme(legend.position = "none"), rel_widths = c(1, 0.6), nrow = 1)
-
-  arranged_plot = cowplot::plot_grid(plot_grid(NULL, legend, NULL, nrow = 1), plots, nrow = 2, rel_heights = c(0.1, 1))
-
-  return(list(fisher = fish_test, forest = forest, bar = bar, legend = legend, arranged = arranged_plot, mutmat = mutmat))
+  return(list(fisher = fish_test, forest = forest, bar = bar, arranged = arranged_plot, mutmat = mutmat))
 }

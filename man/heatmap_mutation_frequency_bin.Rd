@@ -16,12 +16,13 @@ heatmap_mutation_frequency_bin(
   region_padding = 1000,
   drop_unmutated = FALSE,
   metadataColumns = c("pathology"),
-  sortByColumns = c("pathology"),
+  sortByColumns = NULL,
   expressionColumns = NULL,
   orientation = "sample_rows",
   skip_regions,
   only_regions,
   customColours = NULL,
+  naColour = "white",
   backgroundColour = "grey90",
   slide_by = 100,
   window_size = 500,
@@ -67,7 +68,7 @@ heatmap_mutation_frequency_bin(
 
 \item{metadataColumns}{Mandatory character vector of metadata columns to use in heatmap annotation. Default c("pathology").}
 
-\item{sortByColumns}{Mandatory character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default c("pathology").}
+\item{sortByColumns}{Optional character vector of metadata columns to order annotations by. Will be ordered by factor levels and sorted in the order specified. Default NULL.}
 
 \item{expressionColumns}{Optional character vector of numeric metadata columns, usually gene expression, for heatmap annotation.}
 
@@ -78,6 +79,8 @@ heatmap_mutation_frequency_bin(
 \item{only_regions}{Optional character vector of genes to include from the default aSHM regions.}
 
 \item{customColours}{Optional list of character vectors specifying colours for heatmap annotation with metadataColumns, e.g. list(pathology = c(DLBCL = "green", BL = "purple")). If left blank, the function will attempt to match heatmap annotations with existing colours from [GAMBLR::get_gambl_colours], or will default to the Blood colour palette.}
+
+\item{naColour}{Colour to use for NA values in metadata/expression. Default "white".}
 
 \item{backgroundColour}{Optionally specify the colour for heatmap bins with 0 mutations. Default grey90.}
 
@@ -138,9 +141,9 @@ my_meta <- get_gambl_metadata() \%>\%
   filter(sample_id \%in\% c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4"))
 
 # get ashm regions of a set of genes.
-my_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\%
-  rename( "chrom"="chr_name", "start"="hg19_start", "end"="hg19_end", "name"="gene") \%>\%
-  mutate( chrom = stringr::str_remove(chrom, "chr") )
+my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\%
+  rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") \%>\%
+  mutate(chrom = stringr::str_remove(chrom, "chr"))
 
 # create heatmap of mutation counts for the specified regions
 meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")

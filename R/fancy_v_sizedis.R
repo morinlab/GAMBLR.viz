@@ -35,7 +35,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr cowplot GAMBLR.utils
+#' @import ggplot2 dplyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -144,7 +144,7 @@ fancy_v_sizedis = function(this_sample_id,
         {if(ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("indels"))} +
         {if(!ssm)scale_fill_manual(values = GAMBLR.helpers::get_gambl_colours("svs"))} +
         {if(log_10)scale_y_log10()} +
-        theme_cowplot() +
+        theme_Morons() +
         theme(legend.position = "none")
 
   return(p)

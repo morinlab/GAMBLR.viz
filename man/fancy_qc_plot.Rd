@@ -13,8 +13,6 @@ fancy_qc_plot(
   these_samples_metadata,
   plot_data,
   fill_by = "pathology",
-  labels = c("sample_id", "cohort"),
-  interactive = FALSE,
   comparison_samples,
   plot_title = "",
   y_axis_lab = "",
@@ -38,10 +36,6 @@ fancy_qc_plot(
 
 \item{fill_by}{Parameter for specifying fill variable for grouped bar plot. Can be any factor from incoming metadata, e.g pathology, cohort, etc.}
 
-\item{labels}{If HTML plot version is rendered, you can specify what labels should be visible when hovering over the dots. Default is sample id and cohort. This parameter expects a vector of charachters.}
-
-\item{interactive}{Boolean parameter for generating interactive plot (HTML). Default is FALSE.}
-
 \item{comparison_samples}{Optional parameter, give the function a vector of sample IDs to be compared against the main plotting group. Pathology is default.}
 
 \item{plot_title}{Plotting parameter, plot title.}
@@ -63,8 +57,6 @@ This function also lets the user provide a data frame with sample IDs to be incl
 If none of the two parameters are supplied, the user can easily restrict the plot to any cohort and/or pathology of their liking. This is done by calling `keep_cohort` and `keep_pathology`.
 If these parameters are used, the function will retrieve metadata for all available GAMBL sample IDs and then subset to the specified cohort or pathology.
 The layout of the returned plot can also be further customized with `sort_by`. This parameter controls the order in which samples would appear. Similarly, `fill_by` allows the user to control on what factor the plot will be filled by.
-In addition, the generated plot can also be returned as an interactive HTML rendering, allowing the user to easily hover over any of the points in the plot and get expanded information on each data point. To toggle this function, set the `interactive` parameter to TRUE.
-If an interactive plot is generated, it is also possible to dictate what information should be available in the plotted data points. Default for this parameter is sample ID and cohort.
 Sometimes it can also be useful to see how a subset of samples compares to another group; to do this one could call the function with a vector of additional sample IDs given to the `comparison_samples` parameter (see examples for more information).
 lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
 }
@@ -74,12 +66,12 @@ library(dplyr)
 library(GAMBLR.data)
 
 #get sample IDs for available genome samples
-genome_collated = collate_results(seq_type_filter = "genome") \%>\% 
+genome_collated = collate_results(seq_type_filter = "genome") \%>\%
   pull(sample_id)
 
 #subset the collated samples on BL samples
-my_samples = get_gambl_metadata() \%>\% 
-  dplyr::filter(sample_id \%in\% genome_collated) \%>\% 
+my_samples = get_gambl_metadata() \%>\%
+  dplyr::filter(sample_id \%in\% genome_collated) \%>\%
   dplyr::filter(pathology == "BL") \%>\% pull(sample_id)
 
 fancy_qc_plot(these_sample_ids = my_samples, plot_data = "AverageBaseQuality")
