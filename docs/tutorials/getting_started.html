@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>GAMBLR.viz - GAMBLR.viz glossary</title>
+<title>GAMBLR.viz - Getting Started</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -65,7 +99,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="GAMBLR.viz - GAMBLR.viz glossary">
+<meta property="og:title" content="GAMBLR.viz - Getting Started">
 <meta property="og:description" content="">
 <meta property="og:image" content="logo.png">
 <meta property="og:site-name" content="GAMBLR.viz">
@@ -177,7 +211,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../concepts/glossary.html">GAMBLR.viz glossary</a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/getting_started.html">Getting Started</a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
     </div>
@@ -191,20 +225,20 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../why.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Why GAMBLR.viz?</span></a>
+  <a href="../install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Installation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../concepts/GAMBLR_family.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GAMBLR family of packages</span></a>
+  <a href="../faq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Frequently Asked Qestions</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../concepts/glossary.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">GAMBLR.viz glossary</span></a>
+  <a href="../tutorials/getting_started.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Getting Started</span></a>
   </div>
 </li>
     </ul>
@@ -213,14 +247,24 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-are-standartized-colours" id="toc-what-are-standartized-colours" class="nav-link active" data-scroll-target="#what-are-standartized-colours">What are standartized colours?</a></li>
+  <li><a href="#hex-codes-for-b-cell-lymphomas" id="toc-hex-codes-for-b-cell-lymphomas" class="nav-link" data-scroll-target="#hex-codes-for-b-cell-lymphomas">Hex codes for B-cell lymphomas</a></li>
+  <li><a href="#hex-codes-for-genetic-subgroups" id="toc-hex-codes-for-genetic-subgroups" class="nav-link" data-scroll-target="#hex-codes-for-genetic-subgroups">Hex codes for genetic subgroups</a></li>
+  <li><a href="#hex-codes-for-clinical-variables" id="toc-hex-codes-for-clinical-variables" class="nav-link" data-scroll-target="#hex-codes-for-clinical-variables">Hex codes for clinical variables</a></li>
+  <li><a href="#hex-codes-for-mutation-types" id="toc-hex-codes-for-mutation-types" class="nav-link" data-scroll-target="#hex-codes-for-mutation-types">Hex codes for Mutation types</a></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/tutorials/getting_started.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">GAMBLR.viz glossary</h1>
+<h1 class="title">Getting Started</h1>
 </div>
 
 
@@ -235,12 +279,116 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:</p>
-<ul>
-<li><strong>these_samples_metadata:</strong> This is a data frame with a set of minimal required columns: <code>patient_id</code>, <code>Tumor_Sample_Barcode</code>, <code>sample_id</code>, <code>seq_type</code>, <code>sex</code>, <code>cohort</code>, and <code>pathology</code>. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns <code>Tumor_Sample_Barcode</code> and <code>sample_id</code> are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.</li>
-</ul>
+<p>This is a quick tour of some basic commands and usage patterns, just to get you started.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.data)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.helpers)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.viz)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data.</p>
+<section id="what-are-standartized-colours" class="level2">
+<h2 class="anchored" data-anchor-id="what-are-standartized-colours">What are standartized colours?</h2>
+<p>First, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (<a href="https://github.com/morinlab/GAMBLR.helpers/blob/master/R/get_gambl_colours.R">GAMBLR.helpers</a>) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>all_c <span class="ot">&lt;-</span> <span class="fu">get_gambl_colours</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">as_dataframe =</span> <span class="cn">TRUE</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>What are the colours available?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(all_c)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   268 obs. of  3 variables:
+ $ group : chr  "seq_type" "seq_type" "seq_type" "type" ...
+ $ name  : chr  "mrna" "genome" "capture" "gain" ...
+ $ colour: chr  "#E41A1C" "#377EB8" "#4DAF4A" "#0000FF" ...</code></pre>
+</div>
+</div>
+<p>What are the colour groups?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(all_c<span class="sc">$</span>group)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+               BL             blood chapuy_classifier          clinical 
+                7                15                 6                47 
+           cohort               coo       copy_number               EBV 
+               16                12                17                 4 
+               FL  genetic_subgroup              hmrn            indels 
+                3                24                 8                 2 
+  lacy_classifier          lymphgen    lymphgenerator          mutation 
+                8                14                10                13 
+        pathology           pos_neg          rainfall          seq_type 
+               31                11                 7                 3 
+              sex               svs              type 
+                6                 2                 2 </code></pre>
+</div>
+</div>
+<p>Many of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for <code>UNCLASS</code>, <code>U</code>, <code>UNC</code>, <code>Unclassified</code> etc.</p>
+<p>Just for the purpose of this guide, we will define a simple function to display some of these colour pallettes:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>show_col <span class="ot">&lt;-</span> <span class="cf">function</span>(data, group){</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    data <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>            <span class="sc">!!</span><span class="fu">sym</span>(<span class="st">"group"</span>) <span class="sc">==</span> {{group}}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">x =</span> name,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">y =</span> <span class="dv">0</span>,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">fill =</span> colour,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                <span class="at">label =</span> name</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">+</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_tile</span>(<span class="at">width =</span> <span class="fl">0.9</span>, <span class="at">height =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_text</span>(<span class="at">color =</span> <span class="st">"white"</span>, <span class="at">fontface=</span><span class="st">"bold"</span>) <span class="sc">+</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_fill_identity</span>(<span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">toupper</span>(group)) <span class="sc">+</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">lineheight =</span> <span class="fl">0.9</span>,<span class="at">hjust=</span><span class="fl">0.5</span>,<span class="at">face=</span><span class="st">"bold"</span>))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="hex-codes-for-b-cell-lymphomas" class="level2">
+<h2 class="anchored" data-anchor-id="hex-codes-for-b-cell-lymphomas">Hex codes for B-cell lymphomas</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_col</span>(all_c, <span class="st">"pathology"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="getting_started_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="hex-codes-for-genetic-subgroups" class="level2">
+<h2 class="anchored" data-anchor-id="hex-codes-for-genetic-subgroups">Hex codes for genetic subgroups</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_col</span>(all_c, <span class="st">"genetic_subgroup"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="getting_started_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="hex-codes-for-clinical-variables" class="level2">
+<h2 class="anchored" data-anchor-id="hex-codes-for-clinical-variables">Hex codes for clinical variables</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_col</span>(all_c, <span class="st">"clinical"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="getting_started_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="hex-codes-for-mutation-types" class="level2">
+<h2 class="anchored" data-anchor-id="hex-codes-for-mutation-types">Hex codes for Mutation types</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_col</span>(all_c, <span class="st">"mutation"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="getting_started_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
 
 
+</section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -664,7 +812,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/concepts/glossary.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action">Report an issue</a></p></div></div></div>
+    </div>
     <div class="nav-footer-right">
       <ul class="footer-items list-unstyled">
     <li class="nav-item compact">

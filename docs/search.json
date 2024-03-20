@@ -35,32 +35,39 @@
     "text": "There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:\n\nthese_samples_metadata: This is a data frame with a set of minimal required columns: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "faq.html",
-    "href": "faq.html",
-    "title": "Frequently Asked Qestions",
+    "objectID": "install.html",
+    "href": "install.html",
+    "title": "Installation",
     "section": "",
-    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
+    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "title": "Frequently Asked Qestions",
-    "section": "Where can I get example data that works with this package?",
-    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
+    "section": "",
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own colors and not the ones the package offers?",
-    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own data we generated in our lab?",
-    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+  },
+  {
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
   },
   {
     "objectID": "why.html",
@@ -105,39 +112,74 @@
     "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "GAMBLR.viz",
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Qestions",
     "section": "",
-    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
   },
   {
-    "objectID": "index.html#install",
-    "href": "index.html#install",
-    "title": "GAMBLR.viz",
-    "section": "Install",
-    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "title": "Frequently Asked Qestions",
+    "section": "Where can I get example data that works with this package?",
+    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
   },
   {
-    "objectID": "index.html#quickstart",
-    "href": "index.html#quickstart",
-    "title": "GAMBLR.viz",
-    "section": "Quickstart",
-    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own colors and not the ones the package offers?",
+    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
   },
   {
-    "objectID": "index.html#installation-for-developers",
-    "href": "index.html#installation-for-developers",
-    "title": "GAMBLR.viz",
-    "section": "Installation for developers",
-    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own data we generated in our lab?",
+    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
   },
   {
-    "objectID": "install.html",
-    "href": "install.html",
-    "title": "Installation",
+    "objectID": "tutorials/getting_started.html",
+    "href": "tutorials/getting_started.html",
+    "title": "Getting Started",
     "section": "",
-    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
+    "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
+  },
+  {
+    "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
+    "href": "tutorials/getting_started.html#what-are-standartized-colours",
+    "title": "Getting Started",
+    "section": "What are standartized colours?",
+    "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "title": "Getting Started",
+    "section": "Hex codes for B-cell lymphomas",
+    "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "title": "Getting Started",
+    "section": "Hex codes for genetic subgroups",
+    "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "title": "Getting Started",
+    "section": "Hex codes for clinical variables",
+    "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "title": "Getting Started",
+    "section": "Hex codes for Mutation types",
+    "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
   },
   {
     "objectID": "concepts/GAMBLR_family.html",

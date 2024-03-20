@@ -1,0 +1,104 @@
+---
+title: "Getting Started"
+from: markdown+emoji
+warning: false
+fig.width: 7
+fig.height: 5
+fig.align: "center"
+---
+
+This is a quick tour of some basic commands and usage patterns, just to get you
+started.
+
+```{r load_packages}
+#| message: false
+
+# Load packages
+library(GAMBLR.data)
+library(GAMBLR.helpers)
+library(GAMBLR.viz)
+library(tidyverse)
+```
+
+This tutorial explores how to generate some basic and most common plots,
+commonly occurring arguments across different functions, best practices and
+recommendations in the scope of visualizing data.
+
+## What are standartized colours?
+First, let's explore the standartized color pallettes in the GAMBLR.viz. They
+are stored as list in one of the GAMBLR.viz dependencies
+([GAMBLR.helpers](https://github.com/morinlab/GAMBLR.helpers/blob/master/R/get_gambl_colours.R))
+and are an integral part of visualizations.
+For demonstration purposes, we will obtain all of the standartized colours:
+
+```{r}
+all_c <- get_gambl_colours(
+    as_dataframe = TRUE
+)
+
+```
+
+What are the colours available?
+```{r}
+str(all_c)
+```
+
+What are the colour groups?
+```{r}
+table(all_c$group)
+```
+
+Many of these colours are conviniently provided for you to ensure consistency
+that is independent of formatting and case: for example, when the color for
+DLBCL COO is returned, the same color will be used for `UNCLASS`, `U`, `UNC`,
+`Unclassified` etc.
+
+Just for the purpose of this guide, we will define a simple function to display
+some of these colour pallettes:
+```{r}
+show_col <- function(data, group){
+    data %>%
+        filter(
+            !!sym("group") == {{group}}
+        ) %>%
+        ggplot(
+            aes(
+                x = name,
+                y = 0,
+                fill = colour,
+                label = name
+            )
+        ) +
+        geom_tile(width = 0.9, height = 1) +
+        geom_text(color = "white", fontface="bold") +
+        scale_fill_identity(guide = "none") +
+        coord_flip() +
+        theme_void() +
+        labs(title = toupper(group)) +
+        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face="bold"))
+}
+```
+
+## Hex codes for B-cell lymphomas
+```{r}
+#| fig-height: 12
+show_col(all_c, "pathology")
+```
+
+## Hex codes for genetic subgroups
+```{r}
+#| fig-height: 10
+show_col(all_c, "genetic_subgroup")
+```
+
+## Hex codes for clinical variables
+```{r}
+#| fig-height: 15
+show_col(all_c, "clinical")
+```
+
+## Hex codes for Mutation types
+```{r}
+
+show_col(all_c, "mutation")
+```
