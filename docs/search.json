@@ -35,39 +35,74 @@
     "text": "There are several key concepts underlying the logic behind the GAMBLR.viz package. The main terms are:\n\nthese_samples_metadata: This is a data frame with a set of minimal required columns: patient_id, Tumor_Sample_Barcode, sample_id, seq_type, sex, cohort, and pathology. The columns like sex and cohort can contain NA values but must be present in the metadata. The main purpose of this data frame is to provide a structure for the metadata that is always expected to be available and provides linkage between unique sample identifiers and associated basic metadata values. The columns Tumor_Sample_Barcode and sample_id are expected to share the same values, but are required to be present for direct operation on the outputs of different upstream tools.\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "install.html",
-    "href": "install.html",
-    "title": "Installation",
+    "objectID": "tutorials/getting_started.html",
+    "href": "tutorials/getting_started.html",
+    "title": "Getting Started",
     "section": "",
-    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
+    "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "GAMBLR.viz",
+    "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
+    "href": "tutorials/getting_started.html#what-are-standartized-colours",
+    "title": "Getting Started",
+    "section": "What are standartized colours?",
+    "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "title": "Getting Started",
+    "section": "Hex codes for B-cell lymphomas",
+    "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "title": "Getting Started",
+    "section": "Hex codes for genetic subgroups",
+    "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "title": "Getting Started",
+    "section": "Hex codes for clinical variables",
+    "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "title": "Getting Started",
+    "section": "Hex codes for Mutation types",
+    "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
+  },
+  {
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Qestions",
     "section": "",
-    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
   },
   {
-    "objectID": "index.html#install",
-    "href": "index.html#install",
-    "title": "GAMBLR.viz",
-    "section": "Install",
-    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "title": "Frequently Asked Qestions",
+    "section": "Where can I get example data that works with this package?",
+    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
   },
   {
-    "objectID": "index.html#quickstart",
-    "href": "index.html#quickstart",
-    "title": "GAMBLR.viz",
-    "section": "Quickstart",
-    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own colors and not the ones the package offers?",
+    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
   },
   {
-    "objectID": "index.html#installation-for-developers",
-    "href": "index.html#installation-for-developers",
-    "title": "GAMBLR.viz",
-    "section": "Installation for developers",
-    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own data we generated in our lab?",
+    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
   },
   {
     "objectID": "why.html",
@@ -112,74 +147,137 @@
     "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
   },
   {
-    "objectID": "faq.html",
-    "href": "faq.html",
-    "title": "Frequently Asked Qestions",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
     "section": "",
-    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
   },
   {
-    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "title": "Frequently Asked Qestions",
-    "section": "Where can I get example data that works with this package?",
-    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own colors and not the ones the package offers?",
-    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
   },
   {
-    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own data we generated in our lab?",
-    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
   },
   {
-    "objectID": "tutorials/getting_started.html",
-    "href": "tutorials/getting_started.html",
-    "title": "Getting Started",
+    "objectID": "install.html",
+    "href": "install.html",
+    "title": "Installation",
     "section": "",
-    "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
+    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
-    "href": "tutorials/getting_started.html#what-are-standartized-colours",
-    "title": "Getting Started",
-    "section": "What are standartized colours?",
-    "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
+    "objectID": "tutorials/oncoplot.html",
+    "href": "tutorials/oncoplot.html",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "",
+    "text": "One of the main features and integral parts of this package is the display of coding mutations across a set of genes in a given cohort. Because it outperforms other tools and generates display items with a lot of supported features and flexibility, it is called prettyOncoplot and it belongs to the pretty family of GAMBLR.viz functions. This tutorial will demonstate how to prepare inputs for it (spoiler alert: no specific formatting is necessary) and what is the format of metadata expected by prettyOncoplot (spoiler alert: just Tumor_Sample_Barcode column and column for any annotation you want to display)."
   },
   {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
-    "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
-    "title": "Getting Started",
-    "section": "Hex codes for B-cell lymphomas",
-    "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
+    "objectID": "tutorials/oncoplot.html#prepare-setup",
+    "href": "tutorials/oncoplot.html#prepare-setup",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Prepare setup",
+    "text": "Prepare setup\nWe will first import the necessary packages:\n\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.viz)\nlibrary(dplyr)\n\nNext, we will get some data to display. The metadata is expected to be a data frame with one required column: Tumor_Sample_Barcode and any other optional column that you want to display as annotation track. In this example, we will use as example the data set and variant calls from the study that identified genetic subgroup of Follicular lymphoma (FL) associated with histologic transformation to DLBCL.\n\nmetadata &lt;- get_gambl_metadata() %&gt;%\n    filter(cohort == \"FL_Dreval\")\n\nNext, we will obtain the coding mutations that will be used in the plotting. The data is a data frame in a standartized maf format.\n\nmaf &lt;- get_ssm_by_samples(\n    these_samples_metadata = metadata,\n    tool_name = \"publication\"\n)\n\n# How does it look like?\ndim(maf)\n\n[1] 44777    45\n\nhead(maf) %&gt;%\n    select(\n        Tumor_Sample_Barcode,\n        Hugo_Symbol,\n        Variant_Classification\n    )\n\n   Tumor_Sample_Barcode Hugo_Symbol Variant_Classification\n1:             FL1001T1       AIFM1      Nonsense_Mutation\n2:             FL1001T1       USP24      Missense_Mutation\n3:             FL1001T1        LYST            Splice_Site\n4:             FL1001T1        GCKR      Missense_Mutation\n5:             FL1001T1      ORMDL1      Missense_Mutation\n6:             FL1001T1        BCL6      Missense_Mutation\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nYou do not have to subset your maf data frame to coding mutations only before using it with the prettyOncoplot. Much like other tools, it will be automatically handled for you to only display coding mutations.\n\n\nNow we have our metadata and mutations we want to explore, so we are ready to start visualizing the data."
   },
   {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
-    "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
-    "title": "Getting Started",
-    "section": "Hex codes for genetic subgroups",
-    "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
+    "objectID": "tutorials/oncoplot.html#the-simplest-oncoplot",
+    "href": "tutorials/oncoplot.html#the-simplest-oncoplot",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "The simplest oncoplot",
+    "text": "The simplest oncoplot\nThere is a number of options how to customize your oncoplot, but it is ready for you to use with just the metadata and maf. Here is an example of the output with all default parameters:\n\nminMutationPercent &lt;- 10 # only show genes mutated in at least 10% of samples\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    minMutationPercent = minMutationPercent\n)\n\n[1] \"numcases: 441\""
   },
   {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
-    "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
-    "title": "Getting Started",
-    "section": "Hex codes for clinical variables",
-    "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
+    "objectID": "tutorials/oncoplot.html#adding-annotation-tracks",
+    "href": "tutorials/oncoplot.html#adding-annotation-tracks",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Adding annotation tracks",
+    "text": "Adding annotation tracks\nWe can customize this and add some of the annotation tracks for more informative display of the metadata we ate interested in:\n\nmetadataColumns &lt;- c(\n    \"pathology\",\n    \"lymphgen\",\n    \"genetic_subgroup\",\n    \"COO_consensus\",\n    \"sex\"\n)\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    minMutationPercent = minMutationPercent,\n    metadataColumns = metadataColumns\n)\n\n[1] \"numcases: 441\""
   },
   {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
-    "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
-    "title": "Getting Started",
-    "section": "Hex codes for Mutation types",
-    "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
+    "objectID": "tutorials/oncoplot.html#changing-font-sizes",
+    "href": "tutorials/oncoplot.html#changing-font-sizes",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Changing font sizes",
+    "text": "Changing font sizes\nYou may notice that as more (or less) genes and annotations are displayed with the oncoplot we may want to modify the size of the gene names and/or the annotation tracks with their labels. There are several parameters available for you to do so: - metadataBarHeight: will change the height of the annotation tracks at the bottom of the oncoplot - metadataBarFontsize: will change the font size of the annotation tracks at the bottom of the oncoplot - fontSizeGene: will change the font size of both percentage labels to the right of the oncoplot and gene names to the left of it - legendFontSize: will change the font size of the legend at the bottom of the plot Let’s see these parameters in action:\n\nmetadataBarHeight &lt;- 5\nmetadataBarFontsize &lt;- 10\nfontSizeGene &lt;- 12\nlegendFontSize &lt;- 7\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    minMutationPercent = minMutationPercent,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize\n)\n\n[1] \"numcases: 441\""
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#show-samples-ordered-on-annotations",
+    "href": "tutorials/oncoplot.html#show-samples-ordered-on-annotations",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Show samples ordered on annotations",
+    "text": "Show samples ordered on annotations\nWe can notice that the default setting generates the classic “rainfall” style of the plot - but what if we want to add some structure to it and sort sample order in some way? It is easy to do so with the parameter sortByColumns. We can sort on the same annotations as we use to display with the oncoplot:\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    minMutationPercent = minMutationPercent,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns\n)\n\n[1] \"numcases: 441\"\n\n\n\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nThe ordering occurs sequentially according to the order of individual columns we have specified with the sortByColumns parameter. The ordering is in ascending order, and can be toggled with additional boolean parameter arrange_descending."
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#displaying-only-specific-genes",
+    "href": "tutorials/oncoplot.html#displaying-only-specific-genes",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Displaying only specific genes",
+    "text": "Displaying only specific genes\nThere can be scenarion where we might want to diplay genes not based on their recurrence, but out of interest in specific genes. Sure so, one way to do it is to pre-filter your maf data to the genes of interest. But this might have some unexpected consequences and limit your flexibility in doing more things, so the better way is to take advantage of the genes parameter:\n\nfl_genes &lt;- c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\", \"EZH2\", \"KMT2D\")\ndlbcl_genes &lt;- c(\"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes &lt;- c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns,\n    genes = genes\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\"\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nNote that we removed the minMutationPercent in the last function call since we wanted to see the genes that we specifically requested.\n\n\nNow we are only looking at some specific genes of interest but they are arranged in the decreasing order of their recurrence in this cohort. What if we want to enforce the gene order on the oncoplot to be exactly the same as we specified it in our gene variable? We can take advantage of the keepGeneOrder parameter:\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns,\n    genes = genes,\n    keepGeneOrder = TRUE\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\""
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#grouping-genes-into-categories",
+    "href": "tutorials/oncoplot.html#grouping-genes-into-categories",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Grouping genes into categories",
+    "text": "Grouping genes into categories\nWe can also group genes into specific categories. To do so, we need to have a named list where name of the list element corresponds to the gene name, and the list element corresponds to the gene group. We alreade have the genes variable, so we can convert it to the appropriate format:\n\ngene_groups &lt;- c(\n    rep(\"FL\", length(fl_genes)),\n    rep(\"DLBCL\", length(dlbcl_genes))\n)\nnames(gene_groups) &lt;- genes\n\ngene_groups\n\n   RRAGC   CREBBP    VMA21 ATP6V1B2     EZH2    KMT2D    MEF2B    CD79B \n    \"FL\"     \"FL\"     \"FL\"     \"FL\"     \"FL\"     \"FL\"  \"DLBCL\"  \"DLBCL\" \n   MYD88     TP53 \n \"DLBCL\"  \"DLBCL\" \n\n\nNow we can use it to split the genes on the oncoplot into the groups:\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns,\n    genes = genes,\n    splitGeneGroups = gene_groups\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\"\n\n\n\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nYou can provide more than two groups of genes - any number of groups is supported as long as they are specified in the gene_groups.\n\n\n\n\n\n\n\n\nNote\n\n\n\nWithin each group, the genes are ordered in decreasing order of their recurrence, but the keepGeneOrder parameter is still supported and if specified, will keep the specified order within each group."
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#grouping-samples-into-categories",
+    "href": "tutorials/oncoplot.html#grouping-samples-into-categories",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Grouping samples into categories",
+    "text": "Grouping samples into categories\nSimilar to the grouping of genes, we can also group samples into certain categories. Typically, it is done based on one of the annotations tracks. By default, there will be no labels for each sample category, but we also have an option of specifying these labels:\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns,\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\")\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\""
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#tallying-mutation-burden",
+    "href": "tutorials/oncoplot.html#tallying-mutation-burden",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Tallying mutation burden",
+    "text": "Tallying mutation burden\nPreviously, we noted that the maf data we were supplying to the prettyOncoplot was not subset to contain only coding mutations, and also discouraged from pre-filtering maf to a subset of genes if we are insterested only looking at some of them. Here is why this is important: if we want to layer on additional information like total mutation burden per sample, any subsetting or filtering of the maf would generate inaccurate and misleading results. Therefore, prettyOncoplot handles all of this for you! So if we were to go ahead with tallying the total mutation burden, we could just add some additional parameters to the function call:\n\nhideTopBarplot &lt;- FALSE # will display TMB annotations at the top\ntally_all_mutations &lt;- TRUE # will tally all mutations per sample\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = metadataColumns,\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\"\n\n\n\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nIf the dynamic range of total mutation burden is too big and there are some extreme outliers, the bar chart at the top of the oncoplot can be capped of at any numeric value by providing tally_all_mutations_max parameter.\n\n\nWhat if we want to additionally force the ordering based on the total number of mutations, so they are nicely arranged in the decreasing order? We can do so by adding the mutation counts as one of the annotation tracks and using it to sort the samples:\n\n# Count all muts to define the order of samples\ntotal_mut_burden &lt;- maf %&gt;%\n    count(Tumor_Sample_Barcode)\n\nhead(total_mut_burden)\n\n   Tumor_Sample_Barcode   n\n1:            01-20260T  71\n2:            02-13135T  98\n3:            02-20170T  67\n4:            02-22991T  53\n5:            03-34157T  26\n6:            04-24937T 146\n\n# Add this info to metadata\nmetadata &lt;- left_join(\n    metadata,\n    total_mut_burden\n) \n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\"\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nWe have modified here the sortByColumns parameter, and provided two additional parameters numericMetadataColumns and arrange_descending.\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nThe top annotation and n annotation at the bottom are the same thing? Remove n from the legend by adding hide_annotations = \"n\" and remove display of annotation track while keeping the ordering by adding hide_annotations_tracks = TRUE."
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#annotating-significance-of-mutation-frequencies-in-sample-groups",
+    "href": "tutorials/oncoplot.html#annotating-significance-of-mutation-frequencies-in-sample-groups",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Annotating significance of mutation frequencies in sample groups",
+    "text": "Annotating significance of mutation frequencies in sample groups\nWhen looking at our sample plots, we can notice that the frequency of mutations in RRAGC, ATP6V1B2, VMA21 and others is different between FL and DLBCL. But is this difference significant? Can we layer on this diffenerence to the display panel? Yes we can, and this is very easy with GAMBLR family! To do so we will first use another function from GAMBLR.viz to run Fisher’s test and find which genes are significantly different between the FL and DLBCL:\n\nfisher_test &lt;- prettyForestPlot(\n    maf = maf,\n    metadata = metadata,\n    genes = genes,\n    comparison_column = \"pathology\",\n    comparison_values = c(\"DLBCL\", \"FL\"), # we have three pathologies in data\n    comparison_name = \"FL vs DLBCL\"\n)\nfisher_test$arranged\n\n\n\n\nIn fact, there are genes that are mutated at significantly different frequencies! Now let’s layer on this information to our oncoplot:\n\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\""
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#annotating-genes-with-hotspots",
+    "href": "tutorials/oncoplot.html#annotating-genes-with-hotspots",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Annotating genes with hotspots",
+    "text": "Annotating genes with hotspots\nSome genes are mutated at certain positions more often that at others, therefore creating the mutational hotspots - and it we can layer on this level of information to our oncoplot. First, we will need to process our maf data to add a new column called hot_spot which will contain a boolean value showing whether or not particular mutation is a hotspot. If you don’t know how to do it, there is a function for exactly this purpose in the GAMBLR.data, and we will use it in this example:\n\n# Annotate hotspots\nmaf &lt;- annotate_hotspots(maf)\n\n# What are the hotspots?\nmaf %&gt;%\n    filter(hot_spot) %&gt;%\n    select(Hugo_Symbol, hot_spot) %&gt;%\n    table()\n\n           hot_spot\nHugo_Symbol TRUE\n     CREBBP   76\n     EZH2     86\n     FOXO1    20\n     MEF2B    23\n     MYD88    46\n     STAT6    51\n\n\n\n\n\n\n\n\nNote\n\n\n\nThe GAMBLR.data version of the annotate_hotspots only handles very specific genes and does not have functionality to annotate all hotspots.\n\n\nNow, we can add annotation of the hotspots to the oncoplot display by toggling the highlightHotspots parameter:\n\nhighlightHotspots &lt;- TRUE\nprettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\""
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#co-oncoplot-two-plots-side-by-side",
+    "href": "tutorials/oncoplot.html#co-oncoplot-two-plots-side-by-side",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Co-oncoplot: two plots side-by-side",
+    "text": "Co-oncoplot: two plots side-by-side\nIt may also be informative to generate a display panel where there are two oncoplots displayed side-by-side, so it is possible to visually compare the specific groups of samples while maintaining all annotations and ordering we built so far. For this purpose, the GAMBLR.viz has another function in the pretty family: prettyCoOncoplot. It accepts all of the same parameters as prettyOncoplot with addition of some unique additions. For example, lets break down our sample oncoplot we created so far by the genetic_subgroup and see how cFL compares to dFL:\n\nprettyCoOncoplot(\n    metadata = metadata,\n    maf = maf,\n    comparison_column = \"genetic_subgroup\",\n    label1 = \"cFL\",\n    label2 = \"dFL\",\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    keepGeneOrder = TRUE,\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots,\n    legend_row = 2,\n    annotation_row = 2\n)\n\n[1] \"numcases: 110\"\n[1] \"numgenes: 10\"\n\n\n[1] \"numcases: 331\"\n[1] \"numgenes: 10\"\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nIt is only possible to display two groups side-by-side. If the metadata column you want to split on contains more groups, the specific values can be specified with comparison_values parameter.\n\n\n\n\n\n\n\n\nDid you know?\n\n\n\nNotice that we did not need to create individual maf or metadata objects to supply to prettyCoOncoplot - the same objects we used before are also supported here, but specified with differen parameters metadata and maf.\n\n\nIn the above example, we forced the order of genes to be exaclty as we specified so that the same gene is is displayed on the same row for both oncoplots, othervise they wold not be on the same row due to the different frequencies in each group. In addition to specifying this parameter, we have also enforced specific number of rows in the legend below the plot, so they nicely align between the display items."
+  },
+  {
+    "objectID": "tutorials/oncoplot.html#using-oncoplot-in-multi-panel-figure",
+    "href": "tutorials/oncoplot.html#using-oncoplot-in-multi-panel-figure",
+    "title": "Tutorial: The prettiest oncoplot",
+    "section": "Using oncoplot in multi-panel figure",
+    "text": "Using oncoplot in multi-panel figure\nWhen arranging items for the multi-panel figure when preparing manuscript or experiment report, it may be needed to use the generated oncoplot on the same page as other display items. The prettyOncoplot (and, therefore, prettyCoOncoplot), handles the ComplexHeatmap under the hood to generate graphics, and it is not readily available to be combined with the plots generated with other tools, for example ggplot2. Not readily available - but definitely not impossible! The output of prettyCoOncoplot is directly compatible with the arrangement on multi-panel figure since it uses the trick shown below under the hood to put two panels side-by-side, but the otuput of prettyOncoplot is a ComplexHeatmap object so needs some extra steps to allow multi-panel arrangement. First, lets store the returned oncoplot in a variable:\n\nmy_oncoplot &lt;- prettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots\n)\n\nNext, we will import some of the packages needed to handle the trick:\n\nlibrary(ComplexHeatmap) # to handle the ComplexHeatmap object\nlibrary(ggpubr) # to arrange multiple panels\n\nAfter that, we will capture the display of the oncoplot:\n\nmy_oncoplot = grid.grabExpr(\n    draw(my_oncoplot),\n    width = 10,\n    height = 17\n)\n\nNow, it is ready for us to arrange in multi-panel figure. We can use the forest plot we already looked at as an example, and put it to the right of the oncoplot:\n\nmultipanel_figure &lt;- ggarrange(\n    my_oncoplot, # left panel\n    fisher_test$arranged, # right panel\n    widths = c(1.5, 1), # so the oncoplot is a little wider than the forest\n    labels = c(\"A\", \"B\"), # labels for the panels\n    font.label = list( # make labels bold face\n        color = \"black\",\n        face = \"bold\"\n    )\n)\n\nmultipanel_figure\n\n\n\n\nFinal note: it would be nice to have the genes in the forest plot directly aligned with the genes as they are displayed on the oncoplot, and we can do this by providing consistent ordering and adding some white space below forest plot to match the height of the oncoplot:\n\nmy_oncoplot &lt;- prettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = rev(fisher_test$fisher$gene),\n    keepGeneOrder = TRUE,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots\n)\n\n[1] \"numcases: 441\"\n[1] \"numgenes: 10\"\n\nmy_oncoplot = grid.grabExpr(\n    draw(my_oncoplot),\n    width = 10,\n    height = 17\n)\n\nmultipanel_figure &lt;- ggarrange(\n    my_oncoplot, # left panel\n    ggarrange( # right panel\n        NULL, # empty space at the top\n        fisher_test$arranged, # forest on the top\n        NULL, # empty space at the bottom\n        nrow = 3, # arrange vertically\n        heights = c(0.1, 2.5, 1) # match height of the oncoplot\n    ),\n    widths = c(1.5, 1), # so the oncoplot is a little wider than the forest\n    labels = c(\"A\", \"B\"), # labels for the panels\n    font.label = list( # make labels bold face\n        color = \"black\",\n        face = \"bold\"\n    )\n)\n\nmultipanel_figure"
   },
   {
     "objectID": "concepts/GAMBLR_family.html",
