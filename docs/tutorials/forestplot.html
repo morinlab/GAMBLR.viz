@@ -273,6 +273,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#prepare-setup" id="toc-prepare-setup" class="nav-link active" data-scroll-target="#prepare-setup">Prepare setup</a></li>
   <li><a href="#the-default-forest-plot" id="toc-the-default-forest-plot" class="nav-link" data-scroll-target="#the-default-forest-plot">The default forest plot</a></li>
+  <li><a href="#report-only-significant-differences" id="toc-report-only-significant-differences" class="nav-link" data-scroll-target="#report-only-significant-differences">Report only significant differences</a></li>
+  <li><a href="#comparing-categories-with-more-than-two-groups" id="toc-comparing-categories-with-more-than-two-groups" class="nav-link" data-scroll-target="#comparing-categories-with-more-than-two-groups">Comparing categories with more than two groups</a></li>
+  <li><a href="#separating-genes-with-hotspots" id="toc-separating-genes-with-hotspots" class="nav-link" data-scroll-target="#separating-genes-with-hotspots">Separating genes with hotspots</a></li>
+  <li><a href="#using-binary-matrix-as-input" id="toc-using-binary-matrix-as-input" class="nav-link" data-scroll-target="#using-binary-matrix-as-input">Using binary matrix as input</a></li>
   </ul>
 <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/tutorials/forestplot.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
@@ -303,8 +307,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.data)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.viz)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.utils)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.viz)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, we will get some data to display. The metadata is expected to be a data frame with one required column: <code>sample_id</code> and another column that will contain sample annotations according to the comparison group. In this example, we will use as example the data set and variant calls from the <a href="https://doi.org/10.1182/blood.2022016534">study</a> that identified genetic subgroup of Burkitt lymphoma (BL).</p>
 <div class="cell">
@@ -361,6 +367,227 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes =</span> genes,</span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_column =</span> comparison_column</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The output of the function is a list containing the following objects: - <code>fisher</code>: a data frame with detailed statistics of the Fisher’s test for each gene - <code>mutmat</code>: a binary matrix used for the Fisher’s test - <code>forest</code>: a ggplot2 object with the forest plot of the ORs from the Fisher’s test for each gene - <code>bar</code>: a ggplot2 object wiht mutation frequencies for each Gene - <code>arranged</code>: a display item where both the forest and bar plots are nicely arranged side-by-side</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(fp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "fisher"   "forest"   "bar"      "arranged" "mutmat"  </code></pre>
+</div>
+</div>
+</section>
+<section id="report-only-significant-differences" class="level2">
+<h2 class="anchored" data-anchor-id="report-only-significant-differences">Report only significant differences</h2>
+<p>By default, all of the genes of interest are reported in the output. After the Fisher’s test is performed, the <code>prettyForestPlot</code> also calculates FDR and we can use it to only report significant differences by providing a significance cutoff with the parameter <code>max_q</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>max_q <span class="ot">&lt;-</span> <span class="fl">0.1</span> <span class="co"># only those qith Q value &lt;= 0.1 will be reported</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">prettyForestPlot</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">metadata =</span> metadata,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">maf =</span> maf,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes =</span> genes,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_column =</span> comparison_column,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_q =</span> max_q</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now can take a look at what genes are passing the significance cutoff:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fp<span class="sc">$</span>arranged</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="forestplot_files/figure-html/fdr_plot-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="comparing-categories-with-more-than-two-groups" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-categories-with-more-than-two-groups">Comparing categories with more than two groups</h2>
+<p>As the <code>prettyForestPlot</code> construcst the 2x2 contingency tables to run Fisher’s test to find significant differences, it can only operate on comparing 2 groups between themselves - but what if you have more than that and want to see the difference between some of them? To handle this scenario, we can take advantage of the <code>comparison_values</code> parameter, which will be used to subset the metadata to only requested groups and only perform testing and plotting on this subset. Let’s see it in action:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>comparison_column <span class="ot">&lt;-</span> <span class="st">"genetic_subgroup"</span> <span class="co"># change the comparison column</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>comparison_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"IC-BL"</span>, <span class="st">"Q53-BL"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">prettyForestPlot</span>(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">metadata =</span> metadata,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">maf =</span> maf,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes =</span> genes,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_column =</span> comparison_column,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_values =</span> comparison_values,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_q =</span> max_q</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>fp<span class="sc">$</span>arranged</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="forestplot_files/figure-html/comp_groups-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>This plot is exactly reproducing the Supplemmental Figure 12D from the <a href="https://doi.org/10.1182/blood.2022016534">Thomas et al</a> study!</p>
+</section>
+<section id="separating-genes-with-hotspots" class="level2">
+<h2 class="anchored" data-anchor-id="separating-genes-with-hotspots">Separating genes with hotspots</h2>
+<p>We can additionally separate hotspots from the other mutations and compare those separately. First, we need to annotate the maf data, for which we will use the <code>annotate_hotspots</code> from GAMBLR family. This function will add a new column to the maf named <code>hot_spot</code> indicating whether or not the specific mutation is in the hotspot region.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Annotate hotspots</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>maf <span class="ot">&lt;-</span> <span class="fu">annotate_hotspots</span>(maf)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># What are the hotspots?</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>maf <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(hot_spot) <span class="sc">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(Hugo_Symbol, hot_spot) <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">table</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt; table of extent 0 x 0 &gt;</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The GAMBLR.data version of the <code>annotate_hotspots</code> only handles very specific genes and does not have functionality to annotate all hotspots.</p>
+</div>
+</div>
+<p>Oh no! Looks like there is no hotspots in this maf data. This does not make sense, so what happened? Aha, the hotspot annotation in GAMBLR.data works only on the data in grch37 projection. But our maf is in hg38, so what should we do? One way is to lift the maf data to another projection using the UCSC’s liftOver, and GAMBLR family has exactly the function that serves this purpose:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>maf_grch37 <span class="ot">&lt;-</span> <span class="fu">liftover</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    maf,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">mode =</span> <span class="st">"maf"</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_build =</span> <span class="st">"grch37"</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mutate</span>(<span class="at">Chromosome =</span> <span class="fu">gsub</span>(<span class="st">"chr"</span>, <span class="st">""</span>, Chromosome)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">select</span>(<span class="sc">-</span>hot_spot) <span class="co"># since it is empty we can just drop it</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Can we annotate the hotspots now?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>maf_grch37 <span class="ot">&lt;-</span> <span class="fu">annotate_hotspots</span>(maf_grch37)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># What are the hotspots?</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>maf_grch37 <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(hot_spot) <span class="sc">%&gt;%</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(Hugo_Symbol, hot_spot) <span class="sc">%&gt;%</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">table</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>           hot_spot
+Hugo_Symbol TRUE
+     CREBBP    1
+     EZH2      1
+     FOXO1    60
+     MYD88     2
+     STAT6     4</code></pre>
+</div>
+</div>
+<p>Indeed, the hotspots are properly annotated once we have maf in correct projection. Now, we can simply toggle the <code>separate_hotspots</code> parameter to perform separate comparisons within hotspots:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>comparison_column <span class="ot">&lt;-</span> <span class="st">"EBV_status_inf"</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">prettyForestPlot</span>(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">metadata =</span> metadata,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">maf =</span> maf_grch37,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes =</span> genes,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_column =</span> comparison_column,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_q =</span> max_q,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">separate_hotspots =</span> <span class="cn">TRUE</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>fp<span class="sc">$</span>arranged</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="forestplot_files/figure-html/comp_hotspots-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="using-binary-matrix-as-input" class="level2">
+<h2 class="anchored" data-anchor-id="using-binary-matrix-as-input">Using binary matrix as input</h2>
+<p>Sometimes it might be useful to have different input format instead of maf - for example, binary matrix of features. Can we use the <code>prettyForestPlot</code> in this case? Yes, sure we can!</p>
+<p>First, let’s construct the binary matrix. We will supplement our maf with the non-coding mutations to look at the aSHM regions in addition to coding mutations, and this will already give us the data in correct projection:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>maf <span class="ot">&lt;-</span> <span class="fu">get_ssm_by_samples</span>(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">these_samples_metadata =</span> metadata</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>maf<span class="sc">$</span>Variant_Classification <span class="sc">%&gt;%</span> table</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>.
+               3'Flank                  3'UTR                5'Flank 
+                  1457                    513                   2957 
+                 5'UTR        Frame_Shift_Del        Frame_Shift_Ins 
+                  1102                    124                     97 
+                   IGR           In_Frame_Del           In_Frame_Ins 
+                   457                     40                     14 
+                Intron      Missense_Mutation      Nonsense_Mutation 
+                 44397                   1859                    286 
+      Nonstop_Mutation                    RNA                 Silent 
+                     6                     74                    481 
+         Splice_Region            Splice_Site Translation_Start_Site 
+                   148                    114                     22 </code></pre>
+</div>
+</div>
+<p>Now we convert this maf into binary matrix:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate binary matrix</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>coding_matrix <span class="ot">&lt;-</span> <span class="fu">get_coding_ssm_status</span>(</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">these_samples_metadata =</span> metadata,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">maf_data =</span> maf,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">gene_symbols =</span> genes,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">include_hotspots =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">review_hotspots =</span> <span class="cn">TRUE</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, supplement this with the matrix of non-coding mutation across aSHM regions</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use aSHM regions from GAMBLR.data</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>regions_bed <span class="ot">&lt;-</span> somatic_hypermutation_locations_GRCh37_v0<span class="fl">.2</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Add convenient name column</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>regions_bed <span class="ot">&lt;-</span> regions_bed <span class="sc">%&gt;%</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> <span class="fu">paste</span>(gene, region, <span class="at">sep =</span> <span class="st">"-"</span>)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate matrix of mutations per each site</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>ashm_matrix <span class="ot">&lt;-</span> <span class="fu">get_ashm_count_matrix</span>(</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">regions_bed =</span> regions_bed,</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">maf_data =</span> maf,</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">these_samples_metadata =</span> metadata</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Binarize matrix using arbitrary 3 muts/region cutoff</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>ashm_matrix[ashm_matrix <span class="sc">&lt;=</span> <span class="dv">3</span>] <span class="ot">=</span> <span class="dv">0</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>ashm_matrix[ashm_matrix <span class="sc">&gt;</span> <span class="dv">3</span>] <span class="ot">=</span> <span class="dv">1</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>ashm_matrix <span class="ot">&lt;-</span> ashm_matrix <span class="sc">%&gt;%</span></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="st">"sample_id"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can now combine both coding and non-coding features into single matrix:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>feature_matrix <span class="ot">&lt;-</span> <span class="fu">left_join</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    coding_matrix,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    ashm_matrix</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Drop any fearures absent across at least 10 samples to clean any noise</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>feature_matrix <span class="ot">&lt;-</span> feature_matrix <span class="sc">%&gt;%</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select_if</span>(is.numeric) <span class="sc">%&gt;%</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="fu">sum</span>(. <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">&gt;=</span> <span class="dv">10</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bind_cols</span>(</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>        feature_matrix <span class="sc">%&gt;%</span> <span class="fu">select</span>(sample_id),</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>        .</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we can provide the binary matrix to the <code>prettyForestPlot</code> and regenerate the Supplemmental Figure 12C from the <a href="https://doi.org/10.1182/blood.2022016534">Thomas et al</a> study!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>comparison_column <span class="ot">&lt;-</span> <span class="st">"genetic_subgroup"</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>comparison_values <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"DGG-BL"</span>, <span class="st">"Q53-BL"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">prettyForestPlot</span>(</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">metadata =</span> metadata,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">mutmat =</span> feature_matrix,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">genes =</span> genes,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_column =</span> comparison_column,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">comparison_values =</span> comparison_values,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_q =</span> max_q</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>fp<span class="sc">$</span>arranged</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="forestplot_files/figure-html/comp_mat-1.png" class="img-fluid" width="672"></p>
+</div>
 </div>
 
 

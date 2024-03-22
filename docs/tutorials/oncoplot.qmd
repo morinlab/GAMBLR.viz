@@ -328,7 +328,7 @@ prettyOncoplot(
 ## Did you know?
 If the dynamic range of total mutation burden is too big and there are some
 extreme outliers, the bar chart at the top of the oncoplot can be capped of at
-any numeric value by providing `tally_all_mutations_max` parameter. 
+any numeric value by providing `tally_all_mutations_max` parameter.
 :::
 
 What if we want to additionally force the ordering based on the total number of
@@ -348,7 +348,7 @@ head(total_mut_burden)
 metadata <- left_join(
     metadata,
     total_mut_burden
-) 
+)
 
 prettyOncoplot(
     these_samples_metadata = metadata,
@@ -612,7 +612,7 @@ my_oncoplot = grid.grabExpr(
 
 Now, it is ready for us to arrange in multi-panel figure. We can use the forest
 plot we already looked at as an example, and put it to the right of the
-oncoplot: 
+oncoplot:
 ```{r multi_panel}
 #| fig-height: 8
 #| fig-width: 13
@@ -688,4 +688,9 @@ multipanel_figure <- ggarrange(
 )
 
 multipanel_figure
+```
+
+```{r cleaup_om}
+#| echo: false
+unlink("onco_matrix.txt")
 ```
