@@ -191,42 +191,42 @@
   {
     "objectID": "tutorials/getting_started.html",
     "href": "tutorials/getting_started.html",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "",
     "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
   },
   {
     "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
     "href": "tutorials/getting_started.html#what-are-standartized-colours",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "What are standartized colours?",
     "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
   },
   {
     "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
     "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "Hex codes for B-cell lymphomas",
     "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
   },
   {
     "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
     "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "Hex codes for genetic subgroups",
     "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
   },
   {
     "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
     "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "Hex codes for clinical variables",
     "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
   },
   {
     "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
     "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
-    "title": "Getting Started",
+    "title": "Tutorial: Getting started",
     "section": "Hex codes for Mutation types",
     "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
   },

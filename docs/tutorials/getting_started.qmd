@@ -1,5 +1,5 @@
 ---
-title: "Getting Started"
+title: "Tutorial: Getting started"
 from: markdown+emoji
 warning: false
 fig.width: 7
