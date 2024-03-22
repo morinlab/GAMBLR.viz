@@ -200,7 +200,9 @@ prettyOncoplot = function(maf_df,
         group_by(Tumor_Sample_Barcode) %>%
         summarize(total = n(), .groups = "drop") %>%
         arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-      print(paste("numcases:", length(tsbs)))
+      if(verbose){
+        print(paste("numcases:", length(tsbs)))
+      }
 
       if(!removeNonMutated){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
@@ -238,8 +240,10 @@ prettyOncoplot = function(maf_df,
         group_by(Tumor_Sample_Barcode) %>%
         summarize(total = n(), .groups = "drop") %>%
         arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-      print(paste("numcases:",length(tsbs)))
-      print(paste("numgenes:",length(mat_origin[,1])))
+      if(verbose){
+        print(paste("numcases:",length(tsbs)))
+        print(paste("numgenes:",length(mat_origin[,1])))
+      }
       if(!removeNonMutated){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
