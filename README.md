@@ -1,6 +1,17 @@
+[![Build check](https://github.com/morinlab/GAMBLR.viz/actions/workflows/badge.svg)](https://github.com/morinlab/GAMBLR.viz/actions)
+![GitHub R package version](https://img.shields.io/github/r-package/v/morinlab/GAMBLR.viz)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/morinlab/GAMBLR.viz)
+![GitHub last commit](https://img.shields.io/github/last-commit/morinlab/GAMBLR.viz)
+
+
 # GAMBLR.viz
 
-Collection of functions to make plots for Genomic Analysis of Mature B-cell Lymphomas in R
+Collection of functions to make plots for Genomic Analysis of Mature B-cell
+Lymphomas in R.
+
+For detailed information about how to install, bundled resources, functionality
+overview, tutorials, frequently asked questions and much more please visit the
+website [morinlab.github.io/GAMBLR.viz](morinlab.github.io/GAMBLR.viz)
 
 # Contributing
 
