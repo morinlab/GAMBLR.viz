@@ -648,12 +648,12 @@ prettyOncoplot = function(maf_df,
         is.na(estimate) ~ "NA",
         estimate<=1 & q.value <= 0.1 ~ these_comparisons[2],
         estimate > 1 & q.value <= 0.1 ~ these_comparisons[1],
-        TRUE ~ "Both"
+        TRUE ~ "Neither"
       )) %>%
       pull("Enriched in")
 
     right_annotation = rowAnnotation(" " = enrichment_label,
-                             col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], Both = "#ACADAF", "NA" = "#000000")),
+                             col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], Neither = "#ACADAF", "NA" = "#000000")),
                              simple_anno_size = unit(metadataBarHeight, "mm"),
                              annotation_legend_param =
                                list(title = "Enriched in",
