@@ -2,6 +2,7 @@
 title: "Contribution guidelines"
 ---
 
+
 ## Cloning repo for the code development
 
 The easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning
