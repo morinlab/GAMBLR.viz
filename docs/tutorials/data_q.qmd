@@ -14,8 +14,10 @@ acceptable standards to library preparation, sequencing, data quality control,
 variant calling and analysis. More discussion on this can be found in the
 [Dreval et al](https://doi.org/10.1182/blood.2022016095) Blood spotlight
 published in 2022.
+<br>
 Can we use GAMBLR.viz to conduct similar investigation and take advantage of
 the bundled data and the visualizations available with this package?
+<br>
 This tutorial will demonstate the example of the inputs and showcase the main
 features of such analysis, replicating some panels and figures from that study.
 
@@ -114,7 +116,7 @@ quality affects the ability to detect coding mutations in lymphoma genes?
 ## Correlation between coverage and mutation discovery
 
 Next, we can see whether there is any limitation to detect somatic mutations in
-the relevant genes when the sample is of a very poor quality. Indded, the plot
+the relevant genes when the sample is of a very poor quality. Indeed, the plot
 below replicates the panel C of Figure 1 in the manuscript and shows that there
 is direct effect:
 ```{r}

@@ -12,7 +12,7 @@ number alterations, and combinations of these data.
 
 The GAMBLR family includes:
 
-* [GAMBLR.data](https://github.com/morinlab/GAMBLR.viz) - collection of genomic
+* [GAMBLR.data](https://github.com/morinlab/GAMBLR.data) - collection of genomic
 data for analysis of Mature B-cell neoplasms
 * [GAMBLR.helpers](https://github.com/morinlab/GAMBLR.helpers) - a set of
 low-level functions for data operation
