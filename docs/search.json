@@ -28,6 +28,237 @@
     "text": "GAMBLR.viz is the top-most member of the GAMBLR family of packages that is designed to be used outside of GSC and for users who are not members of Morin Lab. It mostly serves the purpose of providing functions for high-level visualizations of genomic data, including simple somatic mutations, structural variations, copy number alterations, and combinations of these data.\nThe GAMBLR family includes:\n\nGAMBLR.data - collection of genomic data for analysis of Mature B-cell neoplasms\nGAMBLR.helpers - a set of low-level functions for data operation\nGAMBLR.utils - higher level set of functions to operate on genomic data\nGAMBLR.viz - this package\nGAMBLR.results - used to access the full data in GAMBL project. Only available for members of the Morin Lab and requires access to GSC, but can also be run locally once properly configured and synced.\n\nThis diagram illustrates in a simplified way the dependency relationship of different packages in the GAMBLR.family:\n\n\n\n\nflowchart LR\n  A(\"GAMBLR.data\") --&gt; B(\"GAMBLR.helpers\")\n  B --&gt; C(\"GAMBLR.utils\")\n  C --&gt; D(\"GAMBLR.viz\")\n  D --&gt; E{\"Morin Lab member?\"}\n  E -- YES --&gt; F(\"GAMBLR.results\")\n  E -- NO --&gt; A\n\n\n\n\n\nAll dependencies should be installed automatically for you, just like with any other R package. If not, please report the issue in the appropriate GitHub repo.\n\n\n\n Back to top"
   },
   {
+    "objectID": "tutorials/data_q.html",
+    "href": "tutorials/data_q.html",
+    "title": "Tutorial: Exploring data quality",
+    "section": "",
+    "text": "When comparing the mutation data from different sources, it is important to consider different underlying biases that may lead to unexpected results or incorrect conclusions. Different centers and groups may have different acceptable standards to library preparation, sequencing, data quality control, variant calling and analysis. More discussion on this can be found in the Dreval et al Blood spotlight published in 2022. Can we use GAMBLR.viz to conduct similar investigation and take advantage of the bundled data and the visualizations available with this package? This tutorial will demonstate the example of the inputs and showcase the main features of such analysis, replicating some panels and figures from that study."
+  },
+  {
+    "objectID": "tutorials/data_q.html#prepare-setup",
+    "href": "tutorials/data_q.html#prepare-setup",
+    "title": "Tutorial: Exploring data quality",
+    "section": "Prepare setup",
+    "text": "Prepare setup\nWe will first import the necessary packages:\n\n# Load packages\nlibrary(ggbeeswarm)\nlibrary(ggExtra)\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\n\nNext, we will get some data to display. We have explored before how to obrain data bundled with GAMBLR.data and the difference between the available objects, so here we will use the demonstrated approaches to retreive metadata and simple somatic mutations. For demonstration purposes, we will focus on the largest whole exome sequencing studies.\n\n# Get metadata\nmetadata &lt;- gambl_metadata %&gt;%\n    filter(\n        cohort %in% c(\"dlbcl_chapuy\", \"dlbcl_reddy\", \"dlbcl_schmitz\")\n    )\n\n# Get mutations\nmaf &lt;- get_coding_ssm(\n    these_samples_metadata = metadata,\n    this_seq_type = \"capture\"\n)\n\nNext, we can take advantage of the collate_results() function in GAMBLR.data to add all the necessary QC metrics that were directly reported in the MIRAGE manuscript.\n\nmetadata &lt;- collate_results(\n    sample_table = metadata\n) %&gt;%\nleft_join(metadata, ., by = \"sample_id\")\n\nNow we have our metadata and mutations we want to explore, so we are ready to start exploring and visualizing the data."
+  },
+  {
+    "objectID": "tutorials/data_q.html#target-space-coverage-across-the-studies",
+    "href": "tutorials/data_q.html#target-space-coverage-across-the-studies",
+    "title": "Tutorial: Exploring data quality",
+    "section": "Target space coverage across the studies",
+    "text": "Target space coverage across the studies\nThe original manuscript highlights a striking difference in the effective nonredundant coverage across the target space (MeanCorrectedCoverage). Let’s see how that plot was generated:\n\nmetadata %&gt;%\n    ggplot(\n        aes(\n            x = study,\n            y = MeanCorrectedCoverage,\n            colour = ffpe_or_frozen\n        )\n    ) +\n    geom_boxplot(outlier.shape = NA) +\n    geom_quasirandom(\n        dodge.width = 0.8,\n        alpha = 0.5\n    ) +\n    coord_flip() +\n    facet_wrap(\n        ~seq_type,\n        ncol = 1,\n        scales = \"free\"\n    ) +\n    scale_colour_manual(values = get_gambl_colours()) +\n    theme_Morons(\n        my_legend_position = \"right\",\n        my_legend_direction = \"vertical\"\n    )\n\n\n\n\nIndeed, the coverage in one of the studies is very different from the rest. This plot, also shown on panel B of Figure 1 in the manuscript, also shows that there are only 5/999 samples in the study by Reddy et al that have coverage figher the sample with the lowest coverage in the study from Schmitz et al! Seeing this, the logical question arises: does this difference in the sample quality affects the ability to detect coding mutations in lymphoma genes?"
+  },
+  {
+    "objectID": "tutorials/data_q.html#correlation-between-coverage-and-mutation-discovery",
+    "href": "tutorials/data_q.html#correlation-between-coverage-and-mutation-discovery",
+    "title": "Tutorial: Exploring data quality",
+    "section": "Correlation between coverage and mutation discovery",
+    "text": "Correlation between coverage and mutation discovery\nNext, we can see whether there is any limitation to detect somatic mutations in the relevant genes when the sample is of a very poor quality. Indded, the plot below replicates the panel C of Figure 1 in the manuscript and shows that there is direct effect:\n\n# reformat naming of the standard colors\ncols &lt;- get_gambl_colours()[c(\"Schmitz\", \"Chapuy\", \"Reddy\")]\nnames(cols) &lt;- c(\"Schmitz, 2018\", \"Chapuy, 2018\", \"Reddy, 2017\")\n\n# plot\np &lt;- metadata %&gt;%\n    ggplot(\n        aes(\n            x = MeanCorrectedCoverage,\n            y = coding_mutations,\n            colour = study\n        )\n    ) +\n    geom_point(alpha = 0.5) +\n    scale_color_manual(values = cols) +\n    ylim(c(0, 1000)) +\n    xlim(c(0, 200)) +\n    theme_Morons(\n        base_size = 8,\n        my_legend_position = \"bottom\",\n        my_legend_direction = \"horizontal\"\n    )\n\n# display density\nggMarginal(\n    p,\n    type = \"density\",\n    groupColour = TRUE,\n    groupFill = TRUE\n)"
+  },
+  {
+    "objectID": "tutorials/data_q.html#find-significant-differences-between-low-and-high-coverage-groups",
+    "href": "tutorials/data_q.html#find-significant-differences-between-low-and-high-coverage-groups",
+    "title": "Tutorial: Exploring data quality",
+    "section": "Find significant differences between low and high coverage groups",
+    "text": "Find significant differences between low and high coverage groups\nNext, we can explore whether or not there are any significant differences in the frequency of mutations as detected in those of high and low coverage. As a cutoff, we arbitrarily selected a value of 25X for the sample to be considered in of the “High” or “Low” groups. We will here reformat the metadata to a more convenient format:\n\nmirage_meta &lt;- metadata %&gt;%\n    mutate(\n        good_coverage = ifelse(MeanCorrectedCoverage &gt; 25 , \"TRUE\", \"FALSE\")\n    ) %&gt;%\n    as.data.frame %&gt;%\n    mutate(\n        sample_id = Tumor_Sample_Barcode,\n        `DNA source` = ifelse(\n            ffpe_or_frozen == \"ffpe\",\n            toupper(ffpe_or_frozen),\n            ffpe_or_frozen\n        ),\n        Pathology = pathology,\n        Study = study,\n        `Pairing status` = pairing_status,\n        Protocol = seq_type\n    )\n\nFor the demonstation purposes, let’s focus only on a set of genes reported as significantly mutated in the Reddy et al study. To find out these genes, we do not need search Pubmed for the gene lists, but can convently retreive from one of the GAMBLR.data objects:\n\ngenes &lt;- lymphoma_genes_dlbcl_v_latest %&gt;%\n    filter(Reddy) %&gt;%\n    pull(Gene)\n\nWe now can take a look at what genes are significantly different between high and low coverage groups:\n\nforest &lt;- prettyForestPlot(\n    maf = maf,\n    genes = genes,\n    metadata = mirage_meta,\n    comparison_column = \"good_coverage\",\n    max_q = 0.1\n)\nforest$arranged\n\n\n\n\nThat’s a lot of difference! We can easily display this information in the form of oncoplot:\n\n# display genes in the order of decreasing difference\ngene_order &lt;- forest$fisher %&gt;%\n    arrange(desc(estimate)) %&gt;%\n    pull(gene)\n\n\nprettyCoOncoplot(\n    metadata = mirage_meta,\n    maf = maf,\n    comparison_column = \"good_coverage\",\n    label1 = paste0(\n        \"High coverage (&gt;25X, N=\",\n        nrow(mirage_meta %&gt;% filter(good_coverage == \"TRUE\")),\n        \")\"\n    ),\n    label2 = paste0(\n        \"Low coverage (&lt;25X, N=\",\n        nrow(mirage_meta %&gt;% filter(good_coverage == \"FALSE\")),\n        \")\"\n    ),\n    metadataColumns = c(\n        \"Pairing status\",\n        \"DNA source\",\n        \"Protocol\",\n        \"Study\",\n        \"MeanCorrectedCoverage\"\n    ),\n    numericMetadataColumns = \"MeanCorrectedCoverage\",\n    sortByColumns = \"MeanCorrectedCoverage\",\n    metadataBarHeight = 5,\n    metadataBarFontsize = 10,\n    fontSizeGene = 12,\n    legendFontSize = 7,\n    genes = gene_order,\n    keepGeneOrder = TRUE,\n    arrange_descending = TRUE,\n    legend_row = 2,\n    annotation_row = 2\n)"
+  },
+  {
+    "objectID": "tutorials/forestplot.html",
+    "href": "tutorials/forestplot.html",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "",
+    "text": "One of the integral parts of this package is the analysis and display of the differences in the frequency of mutations for two different groups in a given cohort. Because it is easy to use, conducts flexible comparisons, and generates easy-to-follow display items, it is called prettyForestPlot and it belongs to the pretty family of GAMBLR.viz functions. There is no specific formatting or data preparation needed for the analysis and visualization, and the only required inputs are the mutation data (can be maf format or binary feature matrix), metadata (containing sample identifiers in sample_id column and annotation of the group that will be used in comparison), and a character of the column name in metadata where the sample annotations are specified. This tutorial will demonstate the example of the inputs and showcase the main features of this function."
+  },
+  {
+    "objectID": "tutorials/forestplot.html#prepare-setup",
+    "href": "tutorials/forestplot.html#prepare-setup",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "Prepare setup",
+    "text": "Prepare setup\nWe will first import the necessary packages:\n\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.utils)\nlibrary(GAMBLR.viz)\nlibrary(tibble)\nlibrary(dplyr)\n\nNext, we will get some data to display. The metadata is expected to be a data frame with one required column: sample_id and another column that will contain sample annotations according to the comparison group. In this example, we will use as example the data set and variant calls from the study that identified genetic subgroup of Burkitt lymphoma (BL).\n\nmetadata &lt;- get_gambl_metadata() %&gt;%\n    filter(cohort == \"BL_Thomas\")\n\nNext, we will obtain the coding mutations that will be used in the plotting. The data is a data frame in a standartized maf format.\n\nmaf &lt;- get_ssm_by_samples(\n    these_samples_metadata = metadata,\n    tool_name = \"publication\",\n    projection = \"hg38\"\n)\n\n# How does it look like?\ndim(maf)\n\n[1] 47043    45\n\nhead(maf) %&gt;%\n    select(\n        Tumor_Sample_Barcode,\n        Hugo_Symbol,\n        Variant_Classification\n    )\n\n   Tumor_Sample_Barcode Hugo_Symbol Variant_Classification\n1:                Akata        CPTP      Missense_Mutation\n2:                Akata      FNDC10      Missense_Mutation\n3:                Akata       MORN1      Missense_Mutation\n4:                Akata       MEGF6      Missense_Mutation\n5:                Akata       NPHP4                 Silent\n6:                Akata      GPR157      Missense_Mutation\n\n\nFor the purpose of this tutorial, we will focus on a small subset of genes known to be significantly mutated in BL.\n\ngenes &lt;- lymphoma_genes_bl_v_latest$Gene\nhead(genes)\n\n[1] \"ALPK2\"   \"ARHGEF1\" \"ARID1A\"  \"B2M\"     \"BACH2\"   \"BCL10\"  \n\n\nNow we have our metadata and mutations we want to explore, so we are ready to start visualizing the data."
+  },
+  {
+    "objectID": "tutorials/forestplot.html#the-default-forest-plot",
+    "href": "tutorials/forestplot.html#the-default-forest-plot",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "The default forest plot",
+    "text": "The default forest plot\nThe forest plot is ready to be called with the default parameters after just providing the metadata and data frame with mutations in standard maf format. Here is an example of the output with all default parameters:\n\ncomparison_column &lt;- \"EBV_status_inf\" # character of column name for comparison\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column\n)\n\nThe output of the function is a list containing the following objects: - fisher: a data frame with detailed statistics of the Fisher’s test for each gene - mutmat: a binary matrix used for the Fisher’s test - forest: a ggplot2 object with the forest plot of the ORs from the Fisher’s test for each gene - bar: a ggplot2 object wiht mutation frequencies for each Gene - arranged: a display item where both the forest and bar plots are nicely arranged side-by-side\n\nnames(fp)\n\n[1] \"fisher\"   \"forest\"   \"bar\"      \"arranged\" \"mutmat\""
+  },
+  {
+    "objectID": "tutorials/forestplot.html#report-only-significant-differences",
+    "href": "tutorials/forestplot.html#report-only-significant-differences",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "Report only significant differences",
+    "text": "Report only significant differences\nBy default, all of the genes of interest are reported in the output. After the Fisher’s test is performed, the prettyForestPlot also calculates FDR and we can use it to only report significant differences by providing a significance cutoff with the parameter max_q:\n\nmax_q &lt;- 0.1 # only those qith Q value &lt;= 0.1 will be reported\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column,\n    max_q = max_q\n)\n\nWe now can take a look at what genes are passing the significance cutoff:\n\nfp$arranged"
+  },
+  {
+    "objectID": "tutorials/forestplot.html#comparing-categories-with-more-than-two-groups",
+    "href": "tutorials/forestplot.html#comparing-categories-with-more-than-two-groups",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "Comparing categories with more than two groups",
+    "text": "Comparing categories with more than two groups\nAs the prettyForestPlot construcst the 2x2 contingency tables to run Fisher’s test to find significant differences, it can only operate on comparing 2 groups between themselves - but what if you have more than that and want to see the difference between some of them? To handle this scenario, we can take advantage of the comparison_values parameter, which will be used to subset the metadata to only requested groups and only perform testing and plotting on this subset. Let’s see it in action:\n\ncomparison_column &lt;- \"genetic_subgroup\" # change the comparison column\ncomparison_values &lt;- c(\"IC-BL\", \"Q53-BL\")\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column,\n    comparison_values = comparison_values,\n    max_q = max_q\n)\n\nfp$arranged\n\n\n\n\nThis plot is exactly reproducing the Supplemmental Figure 12D from the Thomas et al study!"
+  },
+  {
+    "objectID": "tutorials/forestplot.html#separating-genes-with-hotspots",
+    "href": "tutorials/forestplot.html#separating-genes-with-hotspots",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "Separating genes with hotspots",
+    "text": "Separating genes with hotspots\nWe can additionally separate hotspots from the other mutations and compare those separately. First, we need to annotate the maf data, for which we will use the annotate_hotspots from GAMBLR family. This function will add a new column to the maf named hot_spot indicating whether or not the specific mutation is in the hotspot region.\n\n# Annotate hotspots\nmaf &lt;- annotate_hotspots(maf)\n\n# What are the hotspots?\nmaf %&gt;%\n    filter(hot_spot) %&gt;%\n    select(Hugo_Symbol, hot_spot) %&gt;%\n    table()\n\n&lt; table of extent 0 x 0 &gt;\n\n\n\n\n\n\n\n\nNote\n\n\n\nThe GAMBLR.data version of the annotate_hotspots only handles very specific genes and does not have functionality to annotate all hotspots.\n\n\nOh no! Looks like there is no hotspots in this maf data. This does not make sense, so what happened? Aha, the hotspot annotation in GAMBLR.data works only on the data in grch37 projection. But our maf is in hg38, so what should we do? One way is to lift the maf data to another projection using the UCSC’s liftOver, and GAMBLR family has exactly the function that serves this purpose:\n\nmaf_grch37 &lt;- liftover(\n    maf,\n    mode = \"maf\",\n    target_build = \"grch37\"\n) %&gt;%\nmutate(Chromosome = gsub(\"chr\", \"\", Chromosome)) %&gt;%\nselect(-hot_spot) # since it is empty we can just drop it\n\nCan we annotate the hotspots now?\n\nmaf_grch37 &lt;- annotate_hotspots(maf_grch37)\n\n# What are the hotspots?\nmaf_grch37 %&gt;%\n    filter(hot_spot) %&gt;%\n    select(Hugo_Symbol, hot_spot) %&gt;%\n    table()\n\n           hot_spot\nHugo_Symbol TRUE\n     CREBBP    1\n     EZH2      1\n     FOXO1    60\n     MYD88     2\n     STAT6     4\n\n\nIndeed, the hotspots are properly annotated once we have maf in correct projection. Now, we can simply toggle the separate_hotspots parameter to perform separate comparisons within hotspots:\n\ncomparison_column &lt;- \"EBV_status_inf\"\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf_grch37,\n    genes = genes,\n    comparison_column = comparison_column,\n    max_q = max_q,\n    separate_hotspots = TRUE\n)\n\nfp$arranged"
+  },
+  {
+    "objectID": "tutorials/forestplot.html#using-binary-matrix-as-input",
+    "href": "tutorials/forestplot.html#using-binary-matrix-as-input",
+    "title": "Tutorial: The prettiest forestplot",
+    "section": "Using binary matrix as input",
+    "text": "Using binary matrix as input\nSometimes it might be useful to have different input format instead of maf - for example, binary matrix of features. Can we use the prettyForestPlot in this case? Yes, sure we can!\nFirst, let’s construct the binary matrix. We will supplement our maf with the non-coding mutations to look at the aSHM regions in addition to coding mutations, and this will already give us the data in correct projection:\n\nmaf &lt;- get_ssm_by_samples(\n    these_samples_metadata = metadata\n)\nmaf$Variant_Classification %&gt;% table\n\n.\n               3'Flank                  3'UTR                5'Flank \n                  1457                    513                   2957 \n                 5'UTR        Frame_Shift_Del        Frame_Shift_Ins \n                  1102                    124                     97 \n                   IGR           In_Frame_Del           In_Frame_Ins \n                   457                     40                     14 \n                Intron      Missense_Mutation      Nonsense_Mutation \n                 44397                   1859                    286 \n      Nonstop_Mutation                    RNA                 Silent \n                     6                     74                    481 \n         Splice_Region            Splice_Site Translation_Start_Site \n                   148                    114                     22 \n\n\nNow we convert this maf into binary matrix:\n\n# Generate binary matrix\ncoding_matrix &lt;- get_coding_ssm_status(\n    these_samples_metadata = metadata,\n    maf_data = maf,\n    gene_symbols = genes,\n    include_hotspots = TRUE,\n    review_hotspots = TRUE\n)\n\nNext, supplement this with the matrix of non-coding mutation across aSHM regions\n\n# Use aSHM regions from GAMBLR.data\nregions_bed &lt;- somatic_hypermutation_locations_GRCh37_v0.2\n\n# Add convenient name column\nregions_bed &lt;- regions_bed %&gt;%\n    mutate(\n        name = paste(gene, region, sep = \"-\")\n    )\n\n# Generate matrix of mutations per each site\nashm_matrix &lt;- get_ashm_count_matrix(\n    regions_bed = regions_bed,\n    maf_data = maf,\n    these_samples_metadata = metadata\n)\n\n# Binarize matrix using arbitrary 3 muts/region cutoff\nashm_matrix[ashm_matrix &lt;= 3] = 0\nashm_matrix[ashm_matrix &gt; 3] = 1\nashm_matrix &lt;- ashm_matrix %&gt;%\n    rownames_to_column(\"sample_id\")\n\nWe can now combine both coding and non-coding features into single matrix:\n\nfeature_matrix &lt;- left_join(\n    coding_matrix,\n    ashm_matrix\n)\n\n# Drop any fearures absent across at least 10 samples to clean any noise\nfeature_matrix &lt;- feature_matrix %&gt;%\n    select_if(is.numeric) %&gt;%\n    select(where(~ sum(. &gt; 0, na.rm = TRUE) &gt;= 10)) %&gt;%\n    bind_cols(\n        feature_matrix %&gt;% select(sample_id),\n        .\n    )\n\nNow we can provide the binary matrix to the prettyForestPlot and regenerate the Supplemmental Figure 12C from the Thomas et al study!\n\ncomparison_column &lt;- \"genetic_subgroup\"\ncomparison_values &lt;- c(\"DGG-BL\", \"Q53-BL\")\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    mutmat = feature_matrix,\n    genes = genes,\n    comparison_column = comparison_column,\n    comparison_values = comparison_values,\n    max_q = max_q\n)\n\nfp$arranged"
+  },
+  {
+    "objectID": "install.html",
+    "href": "install.html",
+    "title": "Installation",
+    "section": "",
+    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "GAMBLR.viz",
+    "section": "",
+    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "GAMBLR.viz",
+    "section": "Install",
+    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
+  },
+  {
+    "objectID": "index.html#quickstart",
+    "href": "index.html#quickstart",
+    "title": "GAMBLR.viz",
+    "section": "Quickstart",
+    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
+  },
+  {
+    "objectID": "index.html#installation-for-developers",
+    "href": "index.html#installation-for-developers",
+    "title": "GAMBLR.viz",
+    "section": "Installation for developers",
+    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
+  },
+  {
+    "objectID": "why.html",
+    "href": "why.html",
+    "title": "Why GAMBLR.viz?",
+    "section": "",
+    "text": "GAMBLR.viz is an open-source portable R library.\nIf you dream of generating oncoplot with great flexibility of annotations but don’t have enough time or skill to look at ComplexHeatmap, need to have a simple function to look at hypermutated regions from birds-eye view or under microscope but don’t know how to approach this, or if you find yourself always struggling to adjusting your code for simple comparison of mutation frequency between two groups, GAMBLR.viz is for you.\nGAMBLR stands for Genomic Analysis of Mature B-cell Lymphomas in R, and is part of the family of R packages for lymphoma cancer research developed in the Morin Lab at the Simon Fraser University."
+  },
+  {
+    "objectID": "why.html#gamblr-family",
+    "href": "why.html#gamblr-family",
+    "title": "Why GAMBLR.viz?",
+    "section": "GAMBLR family",
+    "text": "GAMBLR family\nGAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data.\nIt is designed to provide simple and straightfoward ways to visualize genomic data and works well with other tools in the GAMBLR family. We continue to develop more visualization tools, as well as improve their functionality.\nFor more details, please refer to the GAMBLR family section."
+  },
+  {
+    "objectID": "why.html#local-experience",
+    "href": "why.html#local-experience",
+    "title": "Why GAMBLR.viz?",
+    "section": "Local experience",
+    "text": "Local experience\nThe functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations."
+  },
+  {
+    "objectID": "why.html#use-cases",
+    "href": "why.html#use-cases",
+    "title": "Why GAMBLR.viz?",
+    "section": "Use cases",
+    "text": "Use cases\nYou can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.\nGAMBLR.viz helps with:\n\ngenerate manuscript-ready plots in a simple and reproducible manner.\none-stop shop to generate high-level or region-specific visualizations for genomic data analysis.\nimplement consistent coloring scheme and pallettes for different types of annotations.\novercome learning curve using individual packages commonly implemented in the data visualization field.\n\nFor more details, please refer to the tutorials section."
+  },
+  {
+    "objectID": "why.html#community",
+    "href": "why.html#community",
+    "title": "Why GAMBLR.viz?",
+    "section": "Community",
+    "text": "Community\nCommunity discussions primarily happen through issue submission on GitHub."
+  },
+  {
+    "objectID": "why.html#getting-started",
+    "href": "why.html#getting-started",
+    "title": "Why GAMBLR.viz?",
+    "section": "Getting started",
+    "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
+  },
+  {
+    "objectID": "faq.html",
+    "href": "faq.html",
+    "title": "Frequently Asked Qestions",
+    "section": "",
+    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
+  },
+  {
+    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
+    "title": "Frequently Asked Qestions",
+    "section": "Where can I get example data that works with this package?",
+    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
+  },
+  {
+    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own colors and not the ones the package offers?",
+    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
+  },
+  {
+    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
+    "title": "Frequently Asked Qestions",
+    "section": "Can I use my own data we generated in our lab?",
+    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
+  },
+  {
+    "objectID": "tutorials/getting_started.html",
+    "href": "tutorials/getting_started.html",
+    "title": "Tutorial: Getting started",
+    "section": "",
+    "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
+  },
+  {
+    "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
+    "href": "tutorials/getting_started.html#what-are-standartized-colours",
+    "title": "Tutorial: Getting started",
+    "section": "What are standartized colours?",
+    "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
+    "title": "Tutorial: Getting started",
+    "section": "Hex codes for B-cell lymphomas",
+    "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
+    "title": "Tutorial: Getting started",
+    "section": "Hex codes for genetic subgroups",
+    "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
+    "title": "Tutorial: Getting started",
+    "section": "Hex codes for clinical variables",
+    "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
+  },
+  {
+    "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
+    "title": "Tutorial: Getting started",
+    "section": "Hex codes for Mutation types",
+    "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
+  },
+  {
     "objectID": "tutorials/oncoplot.html",
     "href": "tutorials/oncoplot.html",
     "title": "Tutorial: The prettiest oncoplot",
@@ -124,202 +355,6 @@
     "title": "Tutorial: The prettiest oncoplot",
     "section": "Using oncoplot in multi-panel figure",
     "text": "Using oncoplot in multi-panel figure\nWhen arranging items for the multi-panel figure when preparing manuscript or experiment report, it may be needed to use the generated oncoplot on the same page as other display items. The prettyOncoplot (and, therefore, prettyCoOncoplot), handles the ComplexHeatmap under the hood to generate graphics, and it is not readily available to be combined with the plots generated with other tools, for example ggplot2. Not readily available - but definitely not impossible! The output of prettyCoOncoplot is directly compatible with the arrangement on multi-panel figure since it uses the trick shown below under the hood to put two panels side-by-side, but the otuput of prettyOncoplot is a ComplexHeatmap object so needs some extra steps to allow multi-panel arrangement. First, lets store the returned oncoplot in a variable:\n\nmy_oncoplot &lt;- prettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = genes,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots\n)\n\nNext, we will import some of the packages needed to handle the trick:\n\nlibrary(ComplexHeatmap) # to handle the ComplexHeatmap object\nlibrary(ggpubr) # to arrange multiple panels\n\nAfter that, we will capture the display of the oncoplot:\n\nmy_oncoplot = grid.grabExpr(\n    draw(my_oncoplot),\n    width = 10,\n    height = 17\n)\n\nNow, it is ready for us to arrange in multi-panel figure. We can use the forest plot we already looked at as an example, and put it to the right of the oncoplot:\n\nmultipanel_figure &lt;- ggarrange(\n    my_oncoplot, # left panel\n    fisher_test$arranged, # right panel\n    widths = c(1.5, 1), # so the oncoplot is a little wider than the forest\n    labels = c(\"A\", \"B\"), # labels for the panels\n    font.label = list( # make labels bold face\n        color = \"black\",\n        face = \"bold\"\n    )\n)\n\nmultipanel_figure\n\n\n\n\nFinal note: it would be nice to have the genes in the forest plot directly aligned with the genes as they are displayed on the oncoplot, and we can do this by providing consistent ordering and adding some white space below forest plot to match the height of the oncoplot:\n\nmy_oncoplot &lt;- prettyOncoplot(\n    these_samples_metadata = metadata,\n    maf_df = maf,\n    metadataColumns = metadataColumns,\n    metadataBarHeight = metadataBarHeight,\n    metadataBarFontsize = metadataBarFontsize,\n    fontSizeGene = fontSizeGene,\n    legendFontSize = legendFontSize,\n    sortByColumns = c(\"n\", metadataColumns),\n    genes = rev(fisher_test$fisher$gene),\n    keepGeneOrder = TRUE,\n    splitGeneGroups = gene_groups,\n    splitColumnName = \"pathology\",\n    groupNames = c(\"Follicular lymphoma\", \"DLBCL\", \"COMFL\"),\n    hideTopBarplot = hideTopBarplot,\n    tally_all_mutations = tally_all_mutations,\n    numericMetadataColumns = \"n\",\n    arrange_descending = TRUE,\n    hide_annotations = \"n\",\n    hide_annotations_tracks = TRUE,\n    annotate_specific_genes = TRUE,\n    this_forest_object = fisher_test,\n    highlightHotspots = highlightHotspots\n)\n\nmy_oncoplot = grid.grabExpr(\n    draw(my_oncoplot),\n    width = 10,\n    height = 17\n)\n\nmultipanel_figure &lt;- ggarrange(\n    my_oncoplot, # left panel\n    ggarrange( # right panel\n        NULL, # empty space at the top\n        fisher_test$arranged, # forest on the top\n        NULL, # empty space at the bottom\n        nrow = 3, # arrange vertically\n        heights = c(0.1, 2.5, 1) # match height of the oncoplot\n    ),\n    widths = c(1.5, 1), # so the oncoplot is a little wider than the forest\n    labels = c(\"A\", \"B\"), # labels for the panels\n    font.label = list( # make labels bold face\n        color = \"black\",\n        face = \"bold\"\n    )\n)\n\nmultipanel_figure"
-  },
-  {
-    "objectID": "tutorials/getting_started.html",
-    "href": "tutorials/getting_started.html",
-    "title": "Tutorial: Getting started",
-    "section": "",
-    "text": "This is a quick tour of some basic commands and usage patterns, just to get you started.\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.helpers)\nlibrary(GAMBLR.viz)\nlibrary(tidyverse)\nThis tutorial explores how to generate some basic and most common plots, commonly occurring arguments across different functions, best practices and recommendations in the scope of visualizing data."
-  },
-  {
-    "objectID": "tutorials/getting_started.html#what-are-standartized-colours",
-    "href": "tutorials/getting_started.html#what-are-standartized-colours",
-    "title": "Tutorial: Getting started",
-    "section": "What are standartized colours?",
-    "text": "What are standartized colours?\nFirst, let’s explore the standartized color pallettes in the GAMBLR.viz. They are stored as list in one of the GAMBLR.viz dependencies (GAMBLR.helpers) and are an integral part of visualizations. For demonstration purposes, we will obtain all of the standartized colours:\n\nall_c &lt;- get_gambl_colours(\n    as_dataframe = TRUE\n)\n\nWhat are the colours available?\n\nstr(all_c)\n\n'data.frame':   268 obs. of  3 variables:\n $ group : chr  \"seq_type\" \"seq_type\" \"seq_type\" \"type\" ...\n $ name  : chr  \"mrna\" \"genome\" \"capture\" \"gain\" ...\n $ colour: chr  \"#E41A1C\" \"#377EB8\" \"#4DAF4A\" \"#0000FF\" ...\n\n\nWhat are the colour groups?\n\ntable(all_c$group)\n\n\n               BL             blood chapuy_classifier          clinical \n                7                15                 6                47 \n           cohort               coo       copy_number               EBV \n               16                12                17                 4 \n               FL  genetic_subgroup              hmrn            indels \n                3                24                 8                 2 \n  lacy_classifier          lymphgen    lymphgenerator          mutation \n                8                14                10                13 \n        pathology           pos_neg          rainfall          seq_type \n               31                11                 7                 3 \n              sex               svs              type \n                6                 2                 2 \n\n\nMany of these colours are conviniently provided for you to ensure consistency that is independent of formatting and case: for example, when the color for DLBCL COO is returned, the same color will be used for UNCLASS, U, UNC, Unclassified etc.\nJust for the purpose of this guide, we will define a simple function to display some of these colour pallettes:\n\nshow_col &lt;- function(data, group){\n    data %&gt;%\n        filter(\n            !!sym(\"group\") == {{group}}\n        ) %&gt;%\n        ggplot(\n            aes(\n                x = name,\n                y = 0,\n                fill = colour,\n                label = name\n            )\n        ) +\n        geom_tile(width = 0.9, height = 1) +\n        geom_text(color = \"white\", fontface=\"bold\") +\n        scale_fill_identity(guide = \"none\") +\n        coord_flip() +\n        theme_void() +\n        labs(title = toupper(group)) +\n        theme(plot.title = element_text(lineheight = 0.9,hjust=0.5,face=\"bold\"))\n}"
-  },
-  {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
-    "href": "tutorials/getting_started.html#hex-codes-for-b-cell-lymphomas",
-    "title": "Tutorial: Getting started",
-    "section": "Hex codes for B-cell lymphomas",
-    "text": "Hex codes for B-cell lymphomas\n\nshow_col(all_c, \"pathology\")"
-  },
-  {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
-    "href": "tutorials/getting_started.html#hex-codes-for-genetic-subgroups",
-    "title": "Tutorial: Getting started",
-    "section": "Hex codes for genetic subgroups",
-    "text": "Hex codes for genetic subgroups\n\nshow_col(all_c, \"genetic_subgroup\")"
-  },
-  {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
-    "href": "tutorials/getting_started.html#hex-codes-for-clinical-variables",
-    "title": "Tutorial: Getting started",
-    "section": "Hex codes for clinical variables",
-    "text": "Hex codes for clinical variables\n\nshow_col(all_c, \"clinical\")"
-  },
-  {
-    "objectID": "tutorials/getting_started.html#hex-codes-for-mutation-types",
-    "href": "tutorials/getting_started.html#hex-codes-for-mutation-types",
-    "title": "Tutorial: Getting started",
-    "section": "Hex codes for Mutation types",
-    "text": "Hex codes for Mutation types\n\nshow_col(all_c, \"mutation\")"
-  },
-  {
-    "objectID": "faq.html",
-    "href": "faq.html",
-    "title": "Frequently Asked Qestions",
-    "section": "",
-    "text": "This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an issue and we will be happy to add it to this page."
-  },
-  {
-    "objectID": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "href": "faq.html#where-can-i-get-example-data-that-works-with-this-package",
-    "title": "Frequently Asked Qestions",
-    "section": "Where can I get example data that works with this package?",
-    "text": "Where can I get example data that works with this package?\nThe example data of all types is available with one of GAMBLR.viz dependencies (GAMBLR.data). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id)."
-  },
-  {
-    "objectID": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "href": "faq.html#can-i-use-my-own-colors-and-not-the-ones-the-package-offers",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own colors and not the ones the package offers?",
-    "text": "Can I use my own colors and not the ones the package offers?\nAbsolutely! Most functions will accept argument custom_colours where list of color mappings can be used to specify your own pallette."
-  },
-  {
-    "objectID": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "href": "faq.html#can-i-use-my-own-data-we-generated-in-our-lab",
-    "title": "Frequently Asked Qestions",
-    "section": "Can I use my own data we generated in our lab?",
-    "text": "Can I use my own data we generated in our lab?\nAbsolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data."
-  },
-  {
-    "objectID": "why.html",
-    "href": "why.html",
-    "title": "Why GAMBLR.viz?",
-    "section": "",
-    "text": "GAMBLR.viz is an open-source portable R library.\nIf you dream of generating oncoplot with great flexibility of annotations but don’t have enough time or skill to look at ComplexHeatmap, need to have a simple function to look at hypermutated regions from birds-eye view or under microscope but don’t know how to approach this, or if you find yourself always struggling to adjusting your code for simple comparison of mutation frequency between two groups, GAMBLR.viz is for you.\nGAMBLR stands for Genomic Analysis of Mature B-cell Lymphomas in R, and is part of the family of R packages for lymphoma cancer research developed in the Morin Lab at the Simon Fraser University."
-  },
-  {
-    "objectID": "why.html#gamblr-family",
-    "href": "why.html#gamblr-family",
-    "title": "Why GAMBLR.viz?",
-    "section": "GAMBLR family",
-    "text": "GAMBLR family\nGAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data.\nIt is designed to provide simple and straightfoward ways to visualize genomic data and works well with other tools in the GAMBLR family. We continue to develop more visualization tools, as well as improve their functionality.\nFor more details, please refer to the GAMBLR family section."
-  },
-  {
-    "objectID": "why.html#local-experience",
-    "href": "why.html#local-experience",
-    "title": "Why GAMBLR.viz?",
-    "section": "Local experience",
-    "text": "Local experience\nThe functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations."
-  },
-  {
-    "objectID": "why.html#use-cases",
-    "href": "why.html#use-cases",
-    "title": "Why GAMBLR.viz?",
-    "section": "Use cases",
-    "text": "Use cases\nYou can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.\nGAMBLR.viz helps with:\n\ngenerate manuscript-ready plots in a simple and reproducible manner.\none-stop shop to generate high-level or region-specific visualizations for genomic data analysis.\nimplement consistent coloring scheme and pallettes for different types of annotations.\novercome learning curve using individual packages commonly implemented in the data visualization field.\n\nFor more details, please refer to the tutorials section."
-  },
-  {
-    "objectID": "why.html#community",
-    "href": "why.html#community",
-    "title": "Why GAMBLR.viz?",
-    "section": "Community",
-    "text": "Community\nCommunity discussions primarily happen through issue submission on GitHub."
-  },
-  {
-    "objectID": "why.html#getting-started",
-    "href": "why.html#getting-started",
-    "title": "Why GAMBLR.viz?",
-    "section": "Getting started",
-    "text": "Getting started\nIf you’re interested in trying GAMBLR.viz we recommend the getting started tutorial."
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "GAMBLR.viz",
-    "section": "",
-    "text": "Why use GAMBLR.viz?\n  \n  \n    \n     How to install?\n  \n  \n    \n     How to use?\n  \n  \n    \n     Release notes\n  \n  \n    \n     GitHub"
-  },
-  {
-    "objectID": "index.html#install",
-    "href": "index.html#install",
-    "title": "GAMBLR.viz",
-    "section": "Install",
-    "text": "Install\nWe recommend installing the package directly from GitHub (requires devtools dependency).\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\n\n\n\nShow quickstart"
-  },
-  {
-    "objectID": "index.html#quickstart",
-    "href": "index.html#quickstart",
-    "title": "GAMBLR.viz",
-    "section": "Quickstart",
-    "text": "Quickstart\nThe quick and easy way to get started is to make sure the devtools dependency is installed, then install the GAMBLR.viz:\n# Verify devtools is installed\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\n# Install GAMBLR.viz\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)"
-  },
-  {
-    "objectID": "index.html#installation-for-developers",
-    "href": "index.html#installation-for-developers",
-    "title": "GAMBLR.viz",
-    "section": "Installation for developers",
-    "text": "Installation for developers\nThe easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning the repository\ncd\ngit clone git@github.com:morinlab/GAMBLR.viz.git\nIn your R editor of choice (which is hopefully VS Code now), set your working directory to the place you just cloned the repo.\nsetwd(\"~/GAMBLR.viz\")\nInstall the package in R by running the following command (requires the devtools package):\ndevtools::install()\nAfter applying your modifications to the code, use the following command to quickly test your changes without directly installing the packaage (requires the devtools dependency):\ndevtools::load_all()\nGAMBLR.viz is a free open-source package, but the Master branch is protected. We welcome contributions (pull request, bug report, feature request, PR review) from all levels of users. All commits must be submitted via pull request on a branch. Please refer to the GitHub documentation for details on how to do pull request."
-  },
-  {
-    "objectID": "install.html",
-    "href": "install.html",
-    "title": "Installation",
-    "section": "",
-    "text": "Installation\nWe recommend installing the package directly from GitHub (requires devtools dependency).\nif (!require(\"devtools\")) install.packages(\"devtools\")\n\ndevtools::install_github(\n    \"morinlab/GAMBLR.viz\",\n    repos = BiocManager::repositories()\n)\nYou can confirm successful installation by running one of the most popular functions:\nlibrary(GAMBLR.data)\n\nmaf_metadata &lt;- get_gambl_metadata(seq_type_filter = \"genome\") %&gt;%\n    dplyr::filter(pathology %in% c(\"FL\", \"DLBCL\"))\n\nmaf_data &lt;- get_ssm_by_samples(\n    these_samples_metadata = maf_metadata\n)\n\n#define some genes of interest\nfl_genes = c(\"RRAGC\", \"CREBBP\", \"VMA21\", \"ATP6V1B2\")\ndlbcl_genes = c(\"EZH2\", \"KMT2D\", \"MEF2B\", \"CD79B\", \"MYD88\", \"TP53\")\ngenes = c(fl_genes, dlbcl_genes)\n\nprettyOncoplot(\n    maf_df = maf_data,\n    genes = genes,\n    these_samples_metadata = maf_metadata\n)\nThere is a lot of functionality to hand-craft this plot exactly in the way you want. Interested? Read more in the tutorials section.\n\n\n\n\n Back to top"
-  },
-  {
-    "objectID": "tutorials/forestplot.html",
-    "href": "tutorials/forestplot.html",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "",
-    "text": "One of the integral parts of this package is the analysis and display of the differences in the frequency of mutations for two different groups in a given cohort. Because it is easy to use, conducts flexible comparisons, and generates easy-to-follow display items, it is called prettyForestPlot and it belongs to the pretty family of GAMBLR.viz functions. There is no specific formatting or data preparation needed for the analysis and visualization, and the only required inputs are the mutation data (can be maf format or binary feature matrix), metadata (containing sample identifiers in sample_id column and annotation of the group that will be used in comparison), and a character of the column name in metadata where the sample annotations are specified. This tutorial will demonstate the example of the inputs and showcase the main features of this function."
-  },
-  {
-    "objectID": "tutorials/forestplot.html#prepare-setup",
-    "href": "tutorials/forestplot.html#prepare-setup",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "Prepare setup",
-    "text": "Prepare setup\nWe will first import the necessary packages:\n\n# Load packages\nlibrary(GAMBLR.data)\nlibrary(GAMBLR.utils)\nlibrary(GAMBLR.viz)\nlibrary(tibble)\nlibrary(dplyr)\n\nNext, we will get some data to display. The metadata is expected to be a data frame with one required column: sample_id and another column that will contain sample annotations according to the comparison group. In this example, we will use as example the data set and variant calls from the study that identified genetic subgroup of Burkitt lymphoma (BL).\n\nmetadata &lt;- get_gambl_metadata() %&gt;%\n    filter(cohort == \"BL_Thomas\")\n\nNext, we will obtain the coding mutations that will be used in the plotting. The data is a data frame in a standartized maf format.\n\nmaf &lt;- get_ssm_by_samples(\n    these_samples_metadata = metadata,\n    tool_name = \"publication\",\n    projection = \"hg38\"\n)\n\n# How does it look like?\ndim(maf)\n\n[1] 47043    45\n\nhead(maf) %&gt;%\n    select(\n        Tumor_Sample_Barcode,\n        Hugo_Symbol,\n        Variant_Classification\n    )\n\n   Tumor_Sample_Barcode Hugo_Symbol Variant_Classification\n1:                Akata        CPTP      Missense_Mutation\n2:                Akata      FNDC10      Missense_Mutation\n3:                Akata       MORN1      Missense_Mutation\n4:                Akata       MEGF6      Missense_Mutation\n5:                Akata       NPHP4                 Silent\n6:                Akata      GPR157      Missense_Mutation\n\n\nFor the purpose of this tutorial, we will focus on a small subset of genes known to be significantly mutated in BL.\n\ngenes &lt;- lymphoma_genes_bl_v_latest$Gene\nhead(genes)\n\n[1] \"ALPK2\"   \"ARHGEF1\" \"ARID1A\"  \"B2M\"     \"BACH2\"   \"BCL10\"  \n\n\nNow we have our metadata and mutations we want to explore, so we are ready to start visualizing the data."
-  },
-  {
-    "objectID": "tutorials/forestplot.html#the-default-forest-plot",
-    "href": "tutorials/forestplot.html#the-default-forest-plot",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "The default forest plot",
-    "text": "The default forest plot\nThe forest plot is ready to be called with the default parameters after just providing the metadata and data frame with mutations in standard maf format. Here is an example of the output with all default parameters:\n\ncomparison_column &lt;- \"EBV_status_inf\" # character of column name for comparison\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column\n)\n\nThe output of the function is a list containing the following objects: - fisher: a data frame with detailed statistics of the Fisher’s test for each gene - mutmat: a binary matrix used for the Fisher’s test - forest: a ggplot2 object with the forest plot of the ORs from the Fisher’s test for each gene - bar: a ggplot2 object wiht mutation frequencies for each Gene - arranged: a display item where both the forest and bar plots are nicely arranged side-by-side\n\nnames(fp)\n\n[1] \"fisher\"   \"forest\"   \"bar\"      \"arranged\" \"mutmat\""
-  },
-  {
-    "objectID": "tutorials/forestplot.html#report-only-significant-differences",
-    "href": "tutorials/forestplot.html#report-only-significant-differences",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "Report only significant differences",
-    "text": "Report only significant differences\nBy default, all of the genes of interest are reported in the output. After the Fisher’s test is performed, the prettyForestPlot also calculates FDR and we can use it to only report significant differences by providing a significance cutoff with the parameter max_q:\n\nmax_q &lt;- 0.1 # only those qith Q value &lt;= 0.1 will be reported\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column,\n    max_q = max_q\n)\n\nWe now can take a look at what genes are passing the significance cutoff:\n\nfp$arranged"
-  },
-  {
-    "objectID": "tutorials/forestplot.html#comparing-categories-with-more-than-two-groups",
-    "href": "tutorials/forestplot.html#comparing-categories-with-more-than-two-groups",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "Comparing categories with more than two groups",
-    "text": "Comparing categories with more than two groups\nAs the prettyForestPlot construcst the 2x2 contingency tables to run Fisher’s test to find significant differences, it can only operate on comparing 2 groups between themselves - but what if you have more than that and want to see the difference between some of them? To handle this scenario, we can take advantage of the comparison_values parameter, which will be used to subset the metadata to only requested groups and only perform testing and plotting on this subset. Let’s see it in action:\n\ncomparison_column &lt;- \"genetic_subgroup\" # change the comparison column\ncomparison_values &lt;- c(\"IC-BL\", \"Q53-BL\")\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf,\n    genes = genes,\n    comparison_column = comparison_column,\n    comparison_values = comparison_values,\n    max_q = max_q\n)\n\nfp$arranged\n\n\n\n\nThis plot is exactly reproducing the Supplemmental Figure 12D from the Thomas et al study!"
-  },
-  {
-    "objectID": "tutorials/forestplot.html#separating-genes-with-hotspots",
-    "href": "tutorials/forestplot.html#separating-genes-with-hotspots",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "Separating genes with hotspots",
-    "text": "Separating genes with hotspots\nWe can additionally separate hotspots from the other mutations and compare those separately. First, we need to annotate the maf data, for which we will use the annotate_hotspots from GAMBLR family. This function will add a new column to the maf named hot_spot indicating whether or not the specific mutation is in the hotspot region.\n\n# Annotate hotspots\nmaf &lt;- annotate_hotspots(maf)\n\n# What are the hotspots?\nmaf %&gt;%\n    filter(hot_spot) %&gt;%\n    select(Hugo_Symbol, hot_spot) %&gt;%\n    table()\n\n&lt; table of extent 0 x 0 &gt;\n\n\n\n\n\n\n\n\nNote\n\n\n\nThe GAMBLR.data version of the annotate_hotspots only handles very specific genes and does not have functionality to annotate all hotspots.\n\n\nOh no! Looks like there is no hotspots in this maf data. This does not make sense, so what happened? Aha, the hotspot annotation in GAMBLR.data works only on the data in grch37 projection. But our maf is in hg38, so what should we do? One way is to lift the maf data to another projection using the UCSC’s liftOver, and GAMBLR family has exactly the function that serves this purpose:\n\nmaf_grch37 &lt;- liftover(\n    maf,\n    mode = \"maf\",\n    target_build = \"grch37\"\n) %&gt;%\nmutate(Chromosome = gsub(\"chr\", \"\", Chromosome)) %&gt;%\nselect(-hot_spot) # since it is empty we can just drop it\n\nCan we annotate the hotspots now?\n\nmaf_grch37 &lt;- annotate_hotspots(maf_grch37)\n\n# What are the hotspots?\nmaf_grch37 %&gt;%\n    filter(hot_spot) %&gt;%\n    select(Hugo_Symbol, hot_spot) %&gt;%\n    table()\n\n           hot_spot\nHugo_Symbol TRUE\n     CREBBP    1\n     EZH2      1\n     FOXO1    60\n     MYD88     2\n     STAT6     4\n\n\nIndeed, the hotspots are properly annotated once we have maf in correct projection. Now, we can simply toggle the separate_hotspots parameter to perform separate comparisons within hotspots:\n\ncomparison_column &lt;- \"EBV_status_inf\"\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    maf = maf_grch37,\n    genes = genes,\n    comparison_column = comparison_column,\n    max_q = max_q,\n    separate_hotspots = TRUE\n)\n\nfp$arranged"
-  },
-  {
-    "objectID": "tutorials/forestplot.html#using-binary-matrix-as-input",
-    "href": "tutorials/forestplot.html#using-binary-matrix-as-input",
-    "title": "Tutorial: The prettiest forestplot",
-    "section": "Using binary matrix as input",
-    "text": "Using binary matrix as input\nSometimes it might be useful to have different input format instead of maf - for example, binary matrix of features. Can we use the prettyForestPlot in this case? Yes, sure we can!\nFirst, let’s construct the binary matrix. We will supplement our maf with the non-coding mutations to look at the aSHM regions in addition to coding mutations, and this will already give us the data in correct projection:\n\nmaf &lt;- get_ssm_by_samples(\n    these_samples_metadata = metadata\n)\nmaf$Variant_Classification %&gt;% table\n\n.\n               3'Flank                  3'UTR                5'Flank \n                  1457                    513                   2957 \n                 5'UTR        Frame_Shift_Del        Frame_Shift_Ins \n                  1102                    124                     97 \n                   IGR           In_Frame_Del           In_Frame_Ins \n                   457                     40                     14 \n                Intron      Missense_Mutation      Nonsense_Mutation \n                 44397                   1859                    286 \n      Nonstop_Mutation                    RNA                 Silent \n                     6                     74                    481 \n         Splice_Region            Splice_Site Translation_Start_Site \n                   148                    114                     22 \n\n\nNow we convert this maf into binary matrix:\n\n# Generate binary matrix\ncoding_matrix &lt;- get_coding_ssm_status(\n    these_samples_metadata = metadata,\n    maf_data = maf,\n    gene_symbols = genes,\n    include_hotspots = TRUE,\n    review_hotspots = TRUE\n)\n\nNext, supplement this with the matrix of non-coding mutation across aSHM regions\n\n# Use aSHM regions from GAMBLR.data\nregions_bed &lt;- somatic_hypermutation_locations_GRCh37_v0.2\n\n# Add convenient name column\nregions_bed &lt;- regions_bed %&gt;%\n    mutate(\n        name = paste(gene, region, sep = \"-\")\n    )\n\n# Generate matrix of mutations per each site\nashm_matrix &lt;- get_ashm_count_matrix(\n    regions_bed = regions_bed,\n    maf_data = maf,\n    these_samples_metadata = metadata\n)\n\n# Binarize matrix using arbitrary 3 muts/region cutoff\nashm_matrix[ashm_matrix &lt;= 3] = 0\nashm_matrix[ashm_matrix &gt; 3] = 1\nashm_matrix &lt;- ashm_matrix %&gt;%\n    rownames_to_column(\"sample_id\")\n\nWe can now combine both coding and non-coding features into single matrix:\n\nfeature_matrix &lt;- left_join(\n    coding_matrix,\n    ashm_matrix\n)\n\n# Drop any fearures absent across at least 10 samples to clean any noise\nfeature_matrix &lt;- feature_matrix %&gt;%\n    select_if(is.numeric) %&gt;%\n    select(where(~ sum(. &gt; 0, na.rm = TRUE) &gt;= 10)) %&gt;%\n    bind_cols(\n        feature_matrix %&gt;% select(sample_id),\n        .\n    )\n\nNow we can provide the binary matrix to the prettyForestPlot and regenerate the Supplemmental Figure 12C from the Thomas et al study!\n\ncomparison_column &lt;- \"genetic_subgroup\"\ncomparison_values &lt;- c(\"DGG-BL\", \"Q53-BL\")\nfp &lt;- prettyForestPlot(\n    metadata = metadata,\n    mutmat = feature_matrix,\n    genes = genes,\n    comparison_column = comparison_column,\n    comparison_values = comparison_values,\n    max_q = max_q\n)\n\nfp$arranged"
   },
   {
     "objectID": "concepts/glossary.html",

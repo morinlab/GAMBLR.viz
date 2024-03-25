@@ -8,7 +8,7 @@ title: "Contribution guidelines"
 The easiest way to obtain and contribute to GAMBLR.viz is to do this via cloning
 the repository
 
-```
+```bash
 cd
 git clone git@github.com:morinlab/GAMBLR.viz.git
 ```
@@ -16,14 +16,14 @@ git clone git@github.com:morinlab/GAMBLR.viz.git
 In your R editor of choice, set your working directory to the place you just
 cloned the repo.
 
-```
+```r
 setwd("~/GAMBLR.viz")
 ```
 
 Install the package in R by running the following command (requires the devtools
 package)
 
-```
+```r
 devtools::install()
 ```
 
