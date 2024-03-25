@@ -5,7 +5,6 @@ message: false
 fig.width: 10
 fig.height: 8
 fig.align: "center"
-fig.keep: "last"
 ---
 
 When comparing the mutation data from different sources, it is important to
@@ -211,7 +210,8 @@ That's a lot of difference! We can easily display this information in the form
 of oncoplot:
 
 ```{r coonco}
-#| fig-height: 8
+#| fig-keep: last
+#| fig-height: 12
 #| fig-width: 15
 
 # display genes in the order of decreasing difference
