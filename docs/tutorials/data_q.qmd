@@ -256,3 +256,8 @@ prettyCoOncoplot(
     annotation_row = 2
 )
 ```
+
+```{r cleaup_om}
+#| echo: false
+unlink("onco_matrix.txt")
+```
