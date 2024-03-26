@@ -12,8 +12,7 @@ visual identity throughout display items. With GAMBLR.viz, it is easy to keep
 up with a consistent theme, color pallette, fonts and font sizes.
 <br>
 This tutorial will demonstate how to regenerate figures from some of the
-manuscripts previously published by Morin Lab, in particular stides by
-[Thomas et al](https://doi.org/10.1182/blood.2022016534) and
+manuscripts previously published by Morin Lab, in particular study by
 [Dreval et al.](https://doi.org/10.1182/blood.2022018719)
 
 ## Prepare setup
@@ -131,7 +130,6 @@ pwc <- pwc %>%
 
 The Plot!
 ```{r ge_plot}
-#| fig-height: 14
 p <- expression %>%
     ggplot(
         aes(
@@ -277,7 +275,7 @@ some_regions$name <- factor(
 Now, we can plot the heatmap of mutations using the GAMBLR.viz function
 `heatmap_mutation_frequency_bin`:
 ```{r ashm_plot}
-#| fig-height: 14
+#| fig-height: 10
 ashm_heatmap <- heatmap_mutation_frequency_bin(
     these_samples_metadata = metadata,
     maf_data = maf,

@@ -361,7 +361,7 @@
     "href": "tutorials/recap_figures.html",
     "title": "Tutorial: Regenerating figures from published manuscripts",
     "section": "",
-    "text": "When preparing a manuscript for publication, it is important to maintain a visual identity throughout display items. With GAMBLR.viz, it is easy to keep up with a consistent theme, color pallette, fonts and font sizes.  This tutorial will demonstate how to regenerate figures from some of the manuscripts previously published by Morin Lab, in particular stides by Thomas et al and Dreval et al."
+    "text": "When preparing a manuscript for publication, it is important to maintain a visual identity throughout display items. With GAMBLR.viz, it is easy to keep up with a consistent theme, color pallette, fonts and font sizes.  This tutorial will demonstate how to regenerate figures from some of the manuscripts previously published by Morin Lab, in particular study by Dreval et al."
   },
   {
     "objectID": "tutorials/recap_figures.html#prepare-setup",
