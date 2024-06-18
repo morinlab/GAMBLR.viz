@@ -700,7 +700,10 @@ prettyOncoplot = function(maf_df,
     replace(is.na(.), "NA")
   # Only keep the annotation colors for the remaining patients
   for(column in colnames(metadata_df)){
-    if((!missing(numericMetadataColumns)) & (!column %in% numericMetadataColumns)){
+    if(missing(numericMetadataColumns)){
+        remaining <- unique(metadata_df[column]) %>% pull()
+        colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+    }else if(!column %in% numericMetadataColumns){
         remaining <- unique(metadata_df[column]) %>% pull()
         colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
     }
