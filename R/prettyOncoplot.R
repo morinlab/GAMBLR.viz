@@ -257,7 +257,7 @@ prettyOncoplot = function(maf_df,
             filter(
                 Tumor_Sample_Barcode %in% patients,
                 Hugo_Symbol %in% names(include_noncoding),
-                Variant_Classification %in% unname(include_noncoding)
+                Variant_Classification %in% unlist(unname(include_noncoding))
             ) %>%
             distinct(
                 Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position
