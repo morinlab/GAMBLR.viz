@@ -143,11 +143,13 @@ dependencies:
   - r-magrittr=2.0.3
   - r-mass=7.3_58.3
   - r-matrix=1.5_4.1
+  - r-matrixmodels=0.5_0
   - r-memoise=2.0.1
   - r-mime=0.12
   - r-miniui=0.1.1.1
   - r-openssl=2.0.6
   - r-pillar=1.9.0
+  - r-pbkrtest=0.5.2
   - r-pkgbuild=1.4.0
   - r-pkgconfig=2.0.3
   - r-pkgdown=2.0.7
