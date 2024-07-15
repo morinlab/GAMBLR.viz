@@ -249,6 +249,24 @@ prettyOncoplot = function(maf_df,
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
         rownames(tsb.include) = rownames(mat_origin)
         mat_origin = cbind(mat_origin, tsb.include)
+      }else if(length(include_noncoding) > 0){
+        print(
+            "You requested to include noncoding mutations and remove non-mutated patients ..."
+        )
+        these_have_noncoding <- maf_df %>%
+            filter(
+                Tumor_Sample_Barcode %in% patients,
+                Hugo_Symbol %in% names(include_noncoding),
+                Variant_Classification %in% unlist(unname(include_noncoding))
+            ) %>%
+            distinct(
+                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position
+            ) %>%
+            pull(Tumor_Sample_Barcode)
+        tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]))
+        colnames(tsb.include) = these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]
+        rownames(tsb.include) = rownames(mat_origin)
+        mat_origin = cbind(mat_origin, tsb.include)
       }
       write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
     }
@@ -700,8 +718,13 @@ prettyOncoplot = function(maf_df,
     replace(is.na(.), "NA")
   # Only keep the annotation colors for the remaining patients
   for(column in colnames(metadata_df)){
-    remaining <- unique(metadata_df[column]) %>% pull()
-    colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+    if(missing(numericMetadataColumns)){
+        remaining <- unique(metadata_df[column]) %>% pull()
+        colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+    }else if(!column %in% numericMetadataColumns){
+        remaining <- unique(metadata_df[column]) %>% pull()
+        colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+    }
   }
 
   ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
