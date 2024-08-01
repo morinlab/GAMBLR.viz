@@ -79,6 +79,14 @@ prettyForestPlot = function(maf,
     if(length(comparison_values) != 2)
       stop(paste0("Your comparison must have two values. \nEither specify comparison_values as a vector of length 2 or subset your metadata so your comparison_column has only two unique values or factor levels."))
   }
+
+  # Need to properly sort the genes later
+  if(missing(genes)){
+    user_provided_gene_order = FALSE
+  }else{
+    user_provided_gene_order = TRUE
+  }
+
   #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
   metadata = metadata[metadata[[comparison_column]] %in% comparison_values, ]
 
@@ -196,7 +204,7 @@ prettyForestPlot = function(maf,
   mutate_at(c(2:10), as.numeric)
 
 
-  if(keepGeneOrder){
+  if(keepGeneOrder & user_provided_gene_order){
     # account for possible gene loss due to the max_q cutoff
     message(
         "Supporting the custom-provided gene order instead of ordering on OR"
