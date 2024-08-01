@@ -197,9 +197,9 @@ prettyForestPlot = function(maf,
 
 
   if(keepGeneOrder){
-    # account for possible gene loss due to the nax_q cutoff
+    # account for possible gene loss due to the max_q cutoff
     message(
-        "Supporthing the custom-provided gene order instead of ordering on OR"
+        "Supporting the custom-provided gene order instead of ordering on OR"
     )
     genes <- genes[genes %in% fish_test$gene]
     # now order
