@@ -2,10 +2,9 @@
 #'
 #' @description Generates a visually appealing lollipop plot.
 #'
-#' @details Retrieve meta data of a specific sample or a set of samples. A gene of interest
+#' @details Retrieve maf data of a specific sample or a set of samples. A gene of interest
 #' can then be visualized with the given maf data. Silent mutations can be visualized setting
-#' include_silent to TRUE. The resulting plot can be downloaded as a PNG file format inside 
-#' the editor view of the lollipop plot.
+#' include_silent to TRUE. 
 #'
 #' @param maf_df A data frame containing the mutation data.
 #' @param gene The gene symbol to plot.
@@ -67,7 +66,6 @@ pretty_lollipop_plot <- function(
 
     # Filter for the specific gene 
     gene_df <- nc_maf_df %>% 
-        filter(Hugo_Symbol == gene) %>%
         mutate(
             AA = as.numeric(
                 gsub(
