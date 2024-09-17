@@ -421,7 +421,7 @@ prettyOncoplot = function(maf_df,
 
       h_obj = pheatmap(any_hit,
                        clustering_distance_rows = clustering_distance_rows,
-                       clustering_distance_cols = clustering_distance_cols,
+                       cluster_cols=F,
                        fontsize_row = 6,show_colnames = F)
       if(dry_run){
         print(h_obj)
@@ -434,7 +434,7 @@ prettyOncoplot = function(maf_df,
     }else{
       row_dend = NULL
     }
-    mat_list = list(Missense=as.matrix(snv_df),Truncating=as.matrix(trunc_df),Splice_Site = as.matrix(splice_df))
+    
    
   }else{
     alter_fun = list(
@@ -829,6 +829,9 @@ prettyOncoplot = function(maf_df,
     print("Calling ComplexHeatmap::oncoPrint")
   }
   if(simplify){
+    mat_list = list(Missense=as.matrix(snv_df[,patients_kept]),
+                    Truncating=as.matrix(trunc_df[,patients_kept]),
+                    Splice_Site = as.matrix(splice_df[,patients_kept]))
     mat_input = mat_list
   }else{
     mat_input = mat[intersect(genes, genes_kept),patients_kept]
