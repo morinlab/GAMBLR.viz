@@ -46,14 +46,19 @@
 #' @param annotate_specific_genes Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).
 #' @param this_forest_object If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.
-#' @param legend_direction Direction of lgend, defualt is "horizontal".
+#' @param legend_direction Direction of legend, default is "horizontal".
 #' @param ylim Limit for y-axis.
 #' @param legend_position Position of legend, default is "bottom".
 #' @param annotation_row Row for annotations, default is 2.
 #' @param annotation_col Column for annotations, default is 1.
 #' @param legendFontSize Font size for legend, default is 10.
+#' @param cluster_rows Enables clustering of genes with correlated mutation patterns 
+#' @param cluster_cols Enables clustering of samples with correlated mutation patterns 
+#' @param clustering_distance_rows Distance metric used for clustering when cluster_rows = TRUE
+#' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
+#' @param simplify Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
 #'
-#' @return Nothing
+#' @return When using the simplify option, the function returns a logical matrix indicating the mutation status of each gene and patient shown in the heatmap.
 #'
 #' @import tidyr dplyr circlize ComplexHeatmap ggplot2 GAMBLR.helpers tibble
 #' @export
@@ -142,21 +147,26 @@ prettyOncoplot = function(maf_df,
                           fontSizeGene = 6,
                           annotation_row = 2,
                           annotation_col = 1,
-                          verbose = FALSE){
-
+                          verbose = FALSE,
+                          cluster_rows = FALSE,
+                          cluster_cols = FALSE,
+                          clustering_distance_rows = "binary",
+                          dry_run = FALSE,
+                          simplify= TRUE){
+  
   patients = pull(these_samples_metadata, sample_id)
   if(missing(maf_df)){
     stop(
-        "You must provide maf data frame."
+      "You must provide maf data frame."
     )
   }
   onco_matrix_coding <- GAMBLR.helpers::coding_class[
     !GAMBLR.helpers::coding_class %in% c("Silent", "Splice_Region", "Targeted_Region")
   ]
   #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
-  if(!recycleOncomatrix & missing(onco_matrix_path)){
+  if(missing(onco_matrix_path)){
     onco_matrix_path = "onco_matrix.txt"
-  #order the data frame the way you want the patients shown
+    #order the data frame the way you want the patients shown
     maf_patients = unique(as.character(maf_df$Tumor_Sample_Barcode))
     if(any(!maf_patients %in% patients)){
       extra = maf_patients[which(!maf_patients %in% patients)]
@@ -168,83 +178,87 @@ prettyOncoplot = function(maf_df,
     if(missing(genes)){
       #check that our MAFtools object only contains samples in the supplied metadata
       gene_summary = maf_df %>%
-            distinct(
-                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
-                Start_Position, End_Position
-            ) %>%
-            filter(
-                Tumor_Sample_Barcode %in% patients,
-                Variant_Classification %in% onco_matrix_coding
-            ) %>%
-            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
-            group_by(Hugo_Symbol) %>%
-            summarize(MutatedSamples = n(), .groups = "drop") %>%
-            arrange(desc(MutatedSamples))
+        distinct(
+          Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+          Start_Position, End_Position
+        ) %>%
+        filter(
+          Tumor_Sample_Barcode %in% patients,
+          Variant_Classification %in% onco_matrix_coding
+        ) %>%
+        distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+        group_by(Hugo_Symbol) %>%
+        summarize(MutatedSamples = n(), .groups = "drop") %>%
+        arrange(desc(MutatedSamples))
       genes = gene_summary
       colnames(genes)[2] = "mutload"
       totSamps = as.numeric(length(unique(maf_df$Tumor_Sample_Barcode)))
       genes$fractMutated = genes$mutload / totSamps
       genes = genes %>% filter(fractMutated * 100 >= minMutationPercent) %>% pull(Hugo_Symbol)
-
+      
       lg = length(genes)
-      message(paste("creating oncomatrix with", lg, "genes"))
-      mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-      mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
-
-      tsbs = maf_df %>%
-        distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
-        filter(
+      if(!recycleOncomatrix){
+        message(paste("creating oncomatrix with", lg, "genes"))
+        mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+        mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+        tsbs = maf_df %>%
+          distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+          filter(
             Tumor_Sample_Barcode %in% patients,
             Variant_Classification %in% onco_matrix_coding
-        ) %>%
-        group_by(Tumor_Sample_Barcode) %>%
-        summarize(total = n(), .groups = "drop") %>%
-        arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-      if(verbose){
-        print(paste("numcases:", length(tsbs)))
+          ) %>%
+          group_by(Tumor_Sample_Barcode) %>%
+          summarize(total = n(), .groups = "drop") %>%
+          arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
+        if(!removeNonMutated){
+          tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
+          colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
+          rownames(tsb.include) = rownames(mat_origin)
+          mat_origin = cbind(mat_origin, tsb.include)
+        }
+        write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
+        if(verbose){
+          print(paste("numcases:", length(tsbs)))
+        }
       }
-
-      if(!removeNonMutated){
-        tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
-        colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
-        rownames(tsb.include) = rownames(mat_origin)
-        mat_origin = cbind(mat_origin, tsb.include)
-      }
-      write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
+      
     }else{
       if(any(duplicated(genes))){
         stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
       }
       gene_summary = maf_df %>%
-            distinct(
-                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
-                Start_Position, End_Position
-            ) %>%
-            filter(
-                Hugo_Symbol %in% genes,
-                Tumor_Sample_Barcode %in% patients,
-                Variant_Classification %in% onco_matrix_coding
-            ) %>%
-            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
-            group_by(Hugo_Symbol) %>%
-            summarize(MutatedSamples = n(), .groups = "drop") %>%
-            arrange(desc(MutatedSamples))
-      mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-      mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
-      tsbs = maf_df %>%
-        distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+        distinct(
+          Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+          Start_Position, End_Position
+        ) %>%
         filter(
+          Hugo_Symbol %in% genes,
+          Tumor_Sample_Barcode %in% patients,
+          Variant_Classification %in% onco_matrix_coding
+        ) %>%
+        distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+        group_by(Hugo_Symbol) %>%
+        summarize(MutatedSamples = n(), .groups = "drop") %>%
+        arrange(desc(MutatedSamples))
+      if(!recycleOncomatrix){
+        mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+        mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+        tsbs = maf_df %>%
+          distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+          filter(
             Tumor_Sample_Barcode %in% patients,
             Variant_Classification %in% onco_matrix_coding
-        ) %>%
-        group_by(Tumor_Sample_Barcode) %>%
-        summarize(total = n(), .groups = "drop") %>%
-        arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-      if(verbose){
-        print(paste("numcases:",length(tsbs)))
-        print(paste("numgenes:",length(mat_origin[,1])))
+          ) %>%
+          group_by(Tumor_Sample_Barcode) %>%
+          summarize(total = n(), .groups = "drop") %>%
+          arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
+        if(verbose){
+          print(paste("numcases:",length(tsbs)))
+          print(paste("numgenes:",length(mat_origin[,1])))
+        }
       }
-      if(!removeNonMutated){
+      
+      if(!removeNonMutated & !recycleOncomatrix){
         tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
         colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
         rownames(tsb.include) = rownames(mat_origin)
@@ -293,9 +307,9 @@ prettyOncoplot = function(maf_df,
       for(this_vc in unname(include_noncoding[[gene]])){
         message(paste(gene, "and", this_vc))
         these_samples = dplyr::filter(
-            maf_df,
-            Hugo_Symbol == gene & Variant_Classification == this_vc
-          ) %>%
+          maf_df,
+          Hugo_Symbol == gene & Variant_Classification == this_vc
+        ) %>%
           dplyr::select(Tumor_Sample_Barcode, Variant_Classification) %>%
           unique() %>%
           pull(Tumor_Sample_Barcode)
@@ -328,15 +342,20 @@ prettyOncoplot = function(maf_df,
     message(patients_dropped)
   }
   genes_kept = genes[which(genes %in% rownames(mat))]
-  genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
-  for (g in genes_dropped) {
-    gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+  if(recycleOncomatrix){
+    gene_summary_list = apply(mat,1,function(x){sum(!is.na(x))})
+    gene_summary = data.frame(Hugo_Symbol = names(gene_summary_list),MutatedSamples=as.numeric(unname(gene_summary_list)))
+    gene_summary = arrange(gene_summary,desc(MutatedSamples))
+  }else{
+    genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
+    for (g in genes_dropped) {
+      gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+    }
+    gene_summary <- gene_summary %>% replace(is.na(.), 0)
   }
-  gene_summary <- gene_summary %>% replace(is.na(.), 0)
-
   if(!missing(minMutationPercent)){
-    if(! onco_matrix_path == "onco_matrix.txt"){
-
+    if(recycleOncomatrix){
+      
       warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
       return()
     }
@@ -347,87 +366,163 @@ prettyOncoplot = function(maf_df,
     genes_keep = mutation_counts %>%
       dplyr::filter(percent_mutated >= minMutationPercent) %>%
       pull(Hugo_Symbol)
-
+    
     genes_kept = genes[genes %in% genes_keep]
   }
   mat = mat[,patients_kept]
   mat = mat[which(rownames(mat) %in% genes_kept),]
   spacing = 0
   height_scaling = 1
-  alter_fun = list(
-    background = function(x, y, w, h) {
-      grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
-                gp = gpar(fill = "#e6e6e6", col = box_col))
-    },
-    RNA = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = "#F2ED36", col = box_col))
-    },
-    `3'UTR` = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = "#F2ED36", col = box_col))
-    },
-    Intron = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
-                gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
-    },
-    #big blue
-    Nonsense_Mutation = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = "#D8A7CA", col = box_col))
-    },
-    Splice_Site = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Splice_Site"], col = box_col))
-    },
-    Splice_Region = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Splice_Region"], col = box_col))
-    },
-    Nonstop_Mutation = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Nonstop_Mutation"], col = box_col))
-    },
-    Translation_Start_Site = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Translation_Start_Site"], col = box_col))
-    },
-    In_Frame_Ins = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["In_Frame_Ins"], col = box_col))
-    },
-    In_Frame_Del = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["In_Frame_Del"], col = box_col))
-    },
-    #all frame shifts will be the same colour, magenta
-    Frame_Shift_Del = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Frame_Shift_Del"], col = box_col))
-    },
-    Frame_Shift_Ins = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Frame_Shift_Ins"], col = box_col))
-    },
-    #big red
-    Multi_Hit = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Multi_Hit"], col = box_col))
-    },
-    #small green
-    Missense_Mutation = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                gp = gpar(fill = col["Missense_Mutation"], col = box_col))
-    },
-    hot_spot = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
-                gp = gpar(fill = "white", col = box_col))
-    },
-    Silent = function(x, y, w, h) {
-      grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
-                gp = gpar(fill = col["Silent"], col = box_col))
+  if(simplify){
+    #make oncomatrix individually from the MAF
+    
+    summarize_mutation_by_class = function(mutation_set){
+      snv_maf = filter(maf_df,Variant_Classification %in% mutation_set) %>%
+        filter(Hugo_Symbol %in% rownames(mat)) %>%
+        select(Hugo_Symbol,Tumor_Sample_Barcode) %>% unique()  %>% #keep at most one per group/gene combo
+        mutate(Mutated = TRUE)
+      
+      snv_wide = pivot_wider(snv_maf,names_from = "Tumor_Sample_Barcode",values_from = "Mutated",values_fill = FALSE) %>%
+        column_to_rownames("Hugo_Symbol")
+      missing_g = rownames(mat)[which(!rownames(mat) %in% rownames(snv_wide))]
+      missing_s = colnames(mat)[which(!colnames(mat) %in% colnames(snv_wide))]
+      #add missing rows
+      for(g in missing_g){
+        snv_wide[g,] = FALSE
+      }
+      #add missing cols
+      for(s in missing_s){
+        snv_wide[,s] = FALSE
+      }
+      return(snv_wide[rownames(mat),colnames(mat)])
     }
-  )
+    
+    col["Missense"] = col["Missense_Mutation"]
+    col["Truncating"] = col["Nonsense_Mutation"]
+    
+    
+    alter_fun = function(x, y, w, h, v) {
+      n = sum(v)  # how many alterations for current gene in current sample
+      h = h*0.9
+      # use `names(which(v))` to correctly map between `v` and `col`
+      if(n) grid.rect(x, y - h*0.5 + 1:n/n*h, w*0.9, 1/n*h, 
+                      gp = gpar(fill = col[names(which(v))], col = NA), just = "top")
+    }
+
+    snv_df = summarize_mutation_by_class(mutation_set=c("Missense_Mutation","In_Frame_Del", "In_Frame_Ins","Translation_Start_Site"))
+  
+    trunc_df = summarize_mutation_by_class(mutation_set=c("Nonsense_Mutation","Frame_Shift_Del","Frame_Shift_Ins","Nonstop_Mutation"))
+    splice_df = summarize_mutation_by_class(mutation_set = "Splice_Site")
+    
+    snv_df[trunc_df==TRUE | splice_df==TRUE] = FALSE
+    splice_df[trunc_df==TRUE] = FALSE
+    any_hit = trunc_df
+    any_hit[snv_df == TRUE] = TRUE
+    any_hit[splice_df == TRUE] = TRUE
+    if(cluster_rows | cluster_cols){
+      if(!cluster_cols){
+        h_obj = pheatmap(any_hit,
+                       clustering_distance_rows = clustering_distance_rows,
+                       cluster_cols=F,
+                       fontsize_row = 6,show_colnames = F)
+      }else if(!cluster_rows){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else{
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         fontsize_row = 6,show_colnames = F)
+      }
+      if(dry_run){
+        print(h_obj)
+        return(h_obj)
+      }
+      row_dend = row_dend(h_obj)
+      col_dend = column_dend(h_obj)
+    }else{
+      row_dend = NULL
+    }
+    
+   
+  }else{
+    alter_fun = list(
+      background = function(x, y, w, h) {
+        grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+                  gp = gpar(fill = "#e6e6e6", col = box_col))
+      },
+      RNA = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = "#F2ED36", col = box_col))
+      },
+      `3'UTR` = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = "#F2ED36", col = box_col))
+      },
+      Intron = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
+                  gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
+      },
+      Nonsense_Mutation = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = "#D8A7CA", col = box_col))
+      },
+      Splice_Site = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Splice_Site"], col = box_col))
+      },
+      Splice_Region = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Splice_Region"], col = box_col))
+      },
+      Nonstop_Mutation = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Nonstop_Mutation"], col = box_col))
+      },
+      Translation_Start_Site = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Translation_Start_Site"], col = box_col))
+      },
+      In_Frame_Ins = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["In_Frame_Ins"], col = box_col))
+      },
+      In_Frame_Del = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["In_Frame_Del"], col = box_col))
+      },
+      #all frame shifts will be the same colour, magenta
+      Frame_Shift_Del = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Frame_Shift_Del"], col = box_col))
+      },
+      Frame_Shift_Ins = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Frame_Shift_Ins"], col = box_col))
+      },
+      #big red
+      Multi_Hit = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Multi_Hit"], col = box_col))
+      },
+      #small green
+      Missense_Mutation = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                  gp = gpar(fill = col["Missense_Mutation"], col = box_col))
+      }
+      ,
+      hot_spot = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+                  gp = gpar(fill = "white", col = box_col))
+      },
+      Silent = function(x, y, w, h) {
+        grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+                  gp = gpar(fill = col["Silent"], col = box_col))
+      }
+    )
+  }
+  
   #automagically assign colours for other metadata columns.
   #TO DO: convert the loop below into a "map_metadata_to_colours" function HAS THIS BEEN RESOLVED?
   blood_cols = GAMBLR.helpers::get_gambl_colours("blood", alpha = annoAlpha)
@@ -441,7 +536,7 @@ prettyOncoplot = function(maf_df,
       dplyr::filter(!is.na(column)) %>%
       pull(column) %>%
       unique()
-
+    
     options = options[!is.na(options)]
     if(verbose){
       print(">>>>>>>")
@@ -511,7 +606,7 @@ prettyOncoplot = function(maf_df,
     }else if(length(levels(options)) > 15){
       these = rainbow(length(levels(options)), alpha = annoAlpha)
       names(these) = levels(options)
-        colours[[column]] = these
+      colours[[column]] = these
     }else{
       these = blood_cols[sample(c(1:length(blood_cols)), size = length(levels(options)))]
       names(these) = levels(options)
@@ -524,13 +619,13 @@ prettyOncoplot = function(maf_df,
   if (! is.null(custom_colours)){
     colours = custom_colours
   }
-
+  
   if(highlightHotspots){
     hot_samples = dplyr::filter(maf_df, hot_spot == TRUE & Hugo_Symbol %in% genes) %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
       mutate(mutated = "hot_spot") %>%
       unique()
-
+    
     all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
     all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
     hs = left_join(all_samples_df, hot_samples)
@@ -539,7 +634,7 @@ prettyOncoplot = function(maf_df,
       left_join(all_genes_df,.) %>%
       column_to_rownames("Hugo_Symbol") %>%
       as.matrix()
-
+    
     #annotate hotspots in matrix
     for (i in colnames(mat)){
       mat[genes, i][!is.na(hot_mat[genes, i])] = paste0(mat[genes, i][!is.na(hot_mat[genes, i])], ";", hot_mat[genes, i][!is.na(hot_mat[genes, i])])
@@ -553,10 +648,10 @@ prettyOncoplot = function(maf_df,
     metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
       column_to_rownames("sample_id") %>%
       dplyr::select(all_of(c(metadataColumns, numericMetadataColumns, expressionColumns)))
-
+    
     if(!missing(numericMetadataMax)){
       max_list = setNames(numericMetadataMax, numericMetadataColumns)
-
+      
       metadata_df = metadata_df %>%
         mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
     }
@@ -614,15 +709,27 @@ prettyOncoplot = function(maf_df,
   }else{
     column_order = patients_kept
   }
-  heatmap_legend_param = list(title = "Alterations",
-                         at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
-                         "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"),
-                         labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
-                         "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
-                         "Multi Hit", "Missense Mutation", "Silent", "Hotspot"),
-                         nrow = annotation_row, ncol = annotation_col,
-                         legend_direction = legend_direction,
-                         labels_gp = gpar(fontsize = legendFontSize))
+  if(simplify){
+
+    heatmap_legend_param = list(title = "Alterations",
+                                at = c("Missense","Truncating","Splice_Site"),
+                                labels = c("Missense","Truncating","Splice_Site"),
+                                nrow = annotation_row, ncol = annotation_col,
+                                legend_direction = legend_direction,
+                                labels_gp = gpar(fontsize = legendFontSize))
+    
+  }else{
+    heatmap_legend_param = list(title = "Alterations",
+                                at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
+                                       "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"),
+                                labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
+                                           "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
+                                           "Multi Hit", "Missense Mutation", "Silent", "Hotspot"),
+                                nrow = annotation_row, ncol = annotation_col,
+                                legend_direction = legend_direction,
+                                labels_gp = gpar(fontsize = legendFontSize))
+  }
+  
   if(hideTopBarplot){
     top_annotation = NULL
   }else{
@@ -636,29 +743,29 @@ prettyOncoplot = function(maf_df,
       mutate(n_mutations = ifelse(n_mutations > tally_all_mutations_max,
                                   tally_all_mutations_max,
                                   n_mutations))
-
+    
     if(is.null(ylim) & ! tally_all_mutations){
       top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
-
+      
     }else if (!is.null(ylim) & ! tally_all_mutations){
       top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
-
+      
     } else if (is.null(ylim) & tally_all_mutations) {
       top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations))
     } else if (! is.null(ylim) & tally_all_mutations) {
       top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations, ylim=ylim))
     }
   }
-
+  
   # Handle right annotation for specific genes
   if (annotate_specific_genes & is.null(this_forest_object)) {
     message("WARNING: You requested right annotation, but forgot to provide output of GAMBLR::prettyForestPlot")
     message("No right annotation will be drawn.")
     right_annotation = NULL
   } else if (annotate_specific_genes) {
-
+    
     these_comparisons = this_forest_object$mutmat$comparison %>% levels
-
+    
     enrichment_label =
       mat[intersect(genes, genes_kept),patients_kept] %>%
       rownames_to_column("gene") %>%
@@ -673,44 +780,45 @@ prettyOncoplot = function(maf_df,
         TRUE ~ "Neither"
       )) %>%
       pull("Enriched in")
-
+    
     right_annotation = rowAnnotation(" " = enrichment_label,
-                             col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], Neither = "#ACADAF", "NA" = "#000000")),
-                             simple_anno_size = unit(metadataBarHeight, "mm"),
-                             annotation_legend_param =
-                               list(title = "Enriched in",
-                                    nrow=legend_row,
-                                    ncol = legend_col,
-                                    direction=legend_direction,
-                                    labels_gp = gpar(fontsize = legendFontSize)))
+                                     col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], 
+                                                        Neither = "#ACADAF", "NA" = "#000000")),
+                                     simple_anno_size = unit(metadataBarHeight, "mm"),
+                                     annotation_legend_param =
+                                       list(title = "Enriched in",
+                                            nrow=legend_row,
+                                            ncol = legend_col,
+                                            direction=legend_direction,
+                                            labels_gp = gpar(fontsize = legendFontSize)))
   } else {
-      if(hideSideBarplot){
-        right_annotation = NULL
-      }else{
-        right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
-      }
+    if(hideSideBarplot){
+      right_annotation = NULL
+    }else{
+      right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
+    }
   }
-
+  
   if(missing(hide_annotations)){
     metadata_df = metadata_df
   }else if (hide_annotations_tracks){
     metadata_df = metadata_df %>%
-        dplyr:: select(-all_of(hide_annotations))
+      dplyr:: select(-all_of(hide_annotations))
   }
-
+  
   if(keepSampleOrder){
     patients_kept <- patients_kept[order(
-        match(
-            patients_kept,
-            these_samples_metadata %>%
-                filter(Tumor_Sample_Barcode %in% patients_kept) %>%
-                pull(Tumor_Sample_Barcode)
-        )
+      match(
+        patients_kept,
+        these_samples_metadata %>%
+          filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+          pull(Tumor_Sample_Barcode)
+      )
     )]
     metadata_df <- metadata_df[
-        order(match(rownames(metadata_df), patients_kept)),
-        ,
-        drop = FALSE
+      order(match(rownames(metadata_df), patients_kept)),
+      ,
+      drop = FALSE
     ]
   }
   metadata_df <- metadata_df %>%
@@ -726,8 +834,110 @@ prettyOncoplot = function(maf_df,
         colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
     }
   }
-
-  ch = ComplexHeatmap::oncoPrint(mat[intersect(genes, genes_kept),patients_kept],
+  if(verbose){
+    print("Calling ComplexHeatmap::oncoPrint")
+  }
+  if(simplify){
+    mat_list = list(Missense=as.matrix(snv_df[,patients_kept]),
+                    Truncating=as.matrix(trunc_df[,patients_kept]),
+                    Splice_Site = as.matrix(splice_df[,patients_kept]))
+    mat_input = mat_list
+  }else{
+    mat_input = mat[intersect(genes, genes_kept),patients_kept]
+    any_hit = mat_input
+    any_hit[] = FALSE
+    any_hit[mat_input != ""] = TRUE
+    if(cluster_rows | cluster_cols){
+      if(!cluster_cols){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else if(!cluster_rows){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else{
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         fontsize_row = 6,show_colnames = F)
+      }
+      if(dry_run){
+        print(h_obj)
+        return(h_obj)
+      }
+      row_dend = row_dend(h_obj)
+      col_dend = column_dend(h_obj)
+    }else{
+      row_dend = NULL
+    }
+  }
+  if(cluster_rows){
+    if(cluster_cols){
+      if(!missing(splitColumnName)){
+        message("ignoring splitColumnName because it is incompatible with cluster_cols")
+        ch = ComplexHeatmap::oncoPrint(mat_input,
+                                       alter_fun = alter_fun,
+                                       top_annotation = top_annotation,
+                                       right_annotation = right_annotation,
+                                       col = col,
+                                       row_order = gene_order,
+                                       column_order = column_order,
+                                       column_labels = NULL,
+                                       show_column_names = showTumorSampleBarcode,
+                                       #column_split = column_split,
+                                       column_title = column_title,
+                                       row_title = NULL,
+                                       heatmap_legend_param = heatmap_legend_param,
+                                       row_names_gp = gpar(fontsize = fontSizeGene),
+                                       pct_gp = gpar(fontsize = fontSizeGene),
+                                       cluster_rows = row_dend,
+                                       cluster_columns = col_dend,
+                                       bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
+                                                                                             show_legend = show_legend,
+                                                                                             col = colours,
+                                                                                             simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                                                             gap = unit(0.25 * metadataBarHeight, "mm"),
+                                                                                             annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                                                                             annotation_legend_param = list(nrow = legend_row,
+                                                                                                                            col_fun = col_fun,
+                                                                                                                            ncol = legend_col,
+                                                                                                                            direction = legend_direction,
+                                                                                                                            labels_gp = gpar(fontsize = legendFontSize))))
+      }
+    }else{
+      ch = ComplexHeatmap::oncoPrint(mat_input,
+                                   alter_fun = alter_fun,
+                                   top_annotation = top_annotation,
+                                   right_annotation = right_annotation,
+                                   col = col,
+                                   row_order = gene_order,
+                                   column_order = column_order,
+                                   column_labels = NULL,
+                                   show_column_names = showTumorSampleBarcode,
+                                   column_split = column_split,
+                                   column_title = column_title,
+                                   row_title = NULL,
+                                   heatmap_legend_param = heatmap_legend_param,
+                                   row_names_gp = gpar(fontsize = fontSizeGene),
+                                   pct_gp = gpar(fontsize = fontSizeGene),
+                                   cluster_rows = row_dend,
+                                   #cluster_columns = col_dend,
+                                   bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
+                                                                                         show_legend = show_legend,
+                                                                                         col = colours,
+                                                                                         simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                                                         gap = unit(0.25 * metadataBarHeight, "mm"),
+                                                                                         annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                                                                         annotation_legend_param = list(nrow = legend_row,
+                                                                                                                        col_fun = col_fun,
+                                                                                                                        ncol = legend_col,
+                                                                                                                        direction = legend_direction,
+                                                                                                                        labels_gp = gpar(fontsize = legendFontSize))))
+    }
+  }else{
+    ch = ComplexHeatmap::oncoPrint(mat_input,
                                  alter_fun = alter_fun,
                                  top_annotation = top_annotation,
                                  right_annotation = right_annotation,
@@ -743,6 +953,7 @@ prettyOncoplot = function(maf_df,
                                  heatmap_legend_param = heatmap_legend_param,
                                  row_names_gp = gpar(fontsize = fontSizeGene),
                                  pct_gp = gpar(fontsize = fontSizeGene),
+                                 
                                  bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
                                                                                        show_legend = show_legend,
                                                                                        col = colours,
@@ -754,6 +965,10 @@ prettyOncoplot = function(maf_df,
                                                                                                                       ncol = legend_col,
                                                                                                                       direction = legend_direction,
                                                                                                                       labels_gp = gpar(fontsize = legendFontSize))))
-
-    draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
+  }
+  
+  draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
+  if(simplify){
+    return(any_hit)
+  }
 }
