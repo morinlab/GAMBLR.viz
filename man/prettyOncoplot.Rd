@@ -49,7 +49,12 @@ prettyOncoplot(
   fontSizeGene = 6,
   annotation_row = 2,
   annotation_col = 1,
-  verbose = FALSE
+  verbose = FALSE,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  clustering_distance_rows = "binary",
+  dry_run = FALSE,
+  simplify = TRUE
 )
 }
 \arguments{
@@ -119,7 +124,7 @@ prettyOncoplot(
 
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
 
-\item{legend_direction}{Direction of lgend, defualt is "horizontal".}
+\item{legend_direction}{Direction of legend, default is "horizontal".}
 
 \item{ylim}{Limit for y-axis.}
 
@@ -142,9 +147,19 @@ prettyOncoplot(
 \item{annotation_col}{Column for annotations, default is 1.}
 
 \item{verbose}{Set to TRUE to enable verbose mode (debugging messages.}
+
+\item{cluster_rows}{Enables clustering of genes with correlated mutation patterns}
+
+\item{cluster_cols}{Enables clustering of samples with correlated mutation patterns}
+
+\item{clustering_distance_rows}{Distance metric used for clustering when cluster_rows = TRUE}
+
+\item{dry_run}{Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows}
+
+\item{simplify}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
 }
 \value{
-Nothing
+When using the simplify option, the function returns a logical matrix indicating the mutation status of each gene and patient shown in the heatmap.
 }
 \description{
 Create a highly customizable oncoplot.
