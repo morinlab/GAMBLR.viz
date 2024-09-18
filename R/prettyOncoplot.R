@@ -893,5 +893,7 @@ prettyOncoplot = function(maf_df,
   }
   
   draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
-  return(any_hit)
+  if(simplify){
+    return(any_hit)
+  }
 }
