@@ -52,7 +52,8 @@
 #' @param annotation_row Row for annotations, default is 2.
 #' @param annotation_col Column for annotations, default is 1.
 #' @param legendFontSize Font size for legend, default is 10.
-#' @param cluster_rows Enables clustering of genes with correlated mutation patterns (only works when simplify = TRUE)
+#' @param cluster_rows Enables clustering of genes with correlated mutation patterns 
+#' @param cluster_cols Enables clustering of samples with correlated mutation patterns 
 #' @param clustering_distance_rows Distance metric used for clustering when cluster_rows = TRUE
 #' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
 #' @param simplify Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
@@ -148,6 +149,7 @@ prettyOncoplot = function(maf_df,
                           annotation_col = 1,
                           verbose = FALSE,
                           cluster_rows = FALSE,
+                          cluster_cols = FALSE,
                           clustering_distance_rows = "binary",
                           dry_run = FALSE,
                           simplify= TRUE){
@@ -417,12 +419,22 @@ prettyOncoplot = function(maf_df,
     any_hit = trunc_df
     any_hit[snv_df == TRUE] = TRUE
     any_hit[splice_df == TRUE] = TRUE
-    if(cluster_rows){
-
-      h_obj = pheatmap(any_hit,
+    if(cluster_rows | cluster_cols){
+      if(!cluster_cols){
+        h_obj = pheatmap(any_hit,
                        clustering_distance_rows = clustering_distance_rows,
                        cluster_cols=F,
                        fontsize_row = 6,show_colnames = F)
+      }else if(!cluster_rows){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else{
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         fontsize_row = 6,show_colnames = F)
+      }
       if(dry_run){
         print(h_obj)
         return(h_obj)
@@ -832,9 +844,70 @@ prettyOncoplot = function(maf_df,
     mat_input = mat_list
   }else{
     mat_input = mat[intersect(genes, genes_kept),patients_kept]
+    any_hit = mat_input
+    any_hit[] = FALSE
+    any_hit[mat_input != ""] = TRUE
+    if(cluster_rows | cluster_cols){
+      if(!cluster_cols){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else if(!cluster_rows){
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         cluster_cols=F,
+                         fontsize_row = 6,show_colnames = F)
+      }else{
+        h_obj = pheatmap(any_hit,
+                         clustering_distance_rows = clustering_distance_rows,
+                         fontsize_row = 6,show_colnames = F)
+      }
+      if(dry_run){
+        print(h_obj)
+        return(h_obj)
+      }
+      row_dend = row_dend(h_obj)
+      col_dend = column_dend(h_obj)
+    }else{
+      row_dend = NULL
+    }
   }
   if(cluster_rows){
-    ch = ComplexHeatmap::oncoPrint(mat_input,
+    if(cluster_cols){
+      if(!missing(splitColumnName)){
+        message("ignoring splitColumnName because it is incompatible with cluster_cols")
+        ch = ComplexHeatmap::oncoPrint(mat_input,
+                                       alter_fun = alter_fun,
+                                       top_annotation = top_annotation,
+                                       right_annotation = right_annotation,
+                                       col = col,
+                                       row_order = gene_order,
+                                       column_order = column_order,
+                                       column_labels = NULL,
+                                       show_column_names = showTumorSampleBarcode,
+                                       #column_split = column_split,
+                                       column_title = column_title,
+                                       row_title = NULL,
+                                       heatmap_legend_param = heatmap_legend_param,
+                                       row_names_gp = gpar(fontsize = fontSizeGene),
+                                       pct_gp = gpar(fontsize = fontSizeGene),
+                                       cluster_rows = row_dend,
+                                       cluster_columns = col_dend,
+                                       bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
+                                                                                             show_legend = show_legend,
+                                                                                             col = colours,
+                                                                                             simple_anno_size = unit(metadataBarHeight, "mm"),
+                                                                                             gap = unit(0.25 * metadataBarHeight, "mm"),
+                                                                                             annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                                                                             annotation_legend_param = list(nrow = legend_row,
+                                                                                                                            col_fun = col_fun,
+                                                                                                                            ncol = legend_col,
+                                                                                                                            direction = legend_direction,
+                                                                                                                            labels_gp = gpar(fontsize = legendFontSize))))
+      }
+    }else{
+      ch = ComplexHeatmap::oncoPrint(mat_input,
                                    alter_fun = alter_fun,
                                    top_annotation = top_annotation,
                                    right_annotation = right_annotation,
@@ -850,6 +923,7 @@ prettyOncoplot = function(maf_df,
                                    row_names_gp = gpar(fontsize = fontSizeGene),
                                    pct_gp = gpar(fontsize = fontSizeGene),
                                    cluster_rows = row_dend,
+                                   #cluster_columns = col_dend,
                                    bottom_annotation = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
                                                                                          show_legend = show_legend,
                                                                                          col = colours,
@@ -861,6 +935,7 @@ prettyOncoplot = function(maf_df,
                                                                                                                         ncol = legend_col,
                                                                                                                         direction = legend_direction,
                                                                                                                         labels_gp = gpar(fontsize = legendFontSize))))
+    }
   }else{
     ch = ComplexHeatmap::oncoPrint(mat_input,
                                  alter_fun = alter_fun,
