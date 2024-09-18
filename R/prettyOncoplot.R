@@ -428,9 +428,7 @@ prettyOncoplot = function(maf_df,
         return(h_obj)
       }
       row_dend = row_dend(h_obj)
-      print(class(row_dend))
       col_dend = column_dend(h_obj)
-      print(class(col_dend))
     }else{
       row_dend = NULL
     }
@@ -700,8 +698,7 @@ prettyOncoplot = function(maf_df,
     column_order = patients_kept
   }
   if(simplify){
-    legend_row = 1
-    legend_col = 12
+
     heatmap_legend_param = list(title = "Alterations",
                                 at = c("Missense","Truncating","Splice_Site"),
                                 labels = c("Missense","Truncating","Splice_Site"),
