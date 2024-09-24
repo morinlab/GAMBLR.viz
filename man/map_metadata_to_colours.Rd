@@ -8,7 +8,6 @@ map_metadata_to_colours(
   metadataColumns,
   these_samples_metadata,
   column_alias = list(),
-  as_vector = TRUE,
   verbose = FALSE,
   annoAlpha = 1
 )
@@ -20,11 +19,11 @@ map_metadata_to_colours(
 
 \item{column_alias}{A list of column_names with values indicating what gambl colour scheme they should use (e.g. pos_neg, pathology, lymphgen).}
 
-\item{as_vector}{Boolean statement that is set to TRUE per default.}
-
 \item{verbose}{Set to TRUE to enable verbose mode (debugging messages.}
 
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
+
+\item{as_vector}{Boolean statement that is set to TRUE per default.}
 }
 \value{
 Either a vector or list of colours.
