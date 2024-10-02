@@ -773,7 +773,9 @@ prettyOncoplot = function(maf_df,
     print(genes_kept)
   }
   col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
-  
+  if(numeric_heatmap_type=="CNV"){
+    col_fun = circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red"))
+  }
   
   for(exp in expressionColumns){
     colours[[exp]] = col_fun
@@ -1036,8 +1038,19 @@ prettyOncoplot = function(maf_df,
   }
   if(stacked){
     #need to prepare the second heatmap from the numericmetadata (e.g. aSHM)
-    metadata_df = metadata_df %>%
-      mutate(across(all_of(numericMetadataColumns), ~ trim_scale_expression(.x)))
+    if(numeric_heatmap_type=="CNV"){
+      trim_cn = function(x){
+        x = ifelse(x >5,5,x)
+        return(x)
+      }
+      
+      metadata_df = metadata_df %>%
+        mutate(across(all_of(numericMetadataColumns), ~ trim_cn(.x)))
+    }else{
+      metadata_df = metadata_df %>%
+        mutate(across(all_of(numericMetadataColumns), ~ trim_scale_expression(.x)))
+    }
+    
     
     #drop any columns that result in NaN after scaling
     cm = colMeans(metadata_df[,numericMetadataColumns])
@@ -1210,16 +1223,19 @@ make_prettyoncoplot = function(mat_input,
                             col= circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red")),
                             row_names_gp = gpar(fontsize = fontSizeGene))
         
-      }else{
+      }else if(numeric_heatmap_type == "CNV"){
+        heatmap_args = list(heat_mat,
+                            name="Copy Number",
+                            #cluster_columns =cluster_numeric_cols,
+                            cluster_rows=cluster_numeric_rows,
+                            show_column_names = F,
+                            col= circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red")),
+                            row_names_gp = gpar(fontsize = fontSizeGene))
+      }
+      else{
         stop("numeric heatmap must be either aSHM or expression")
       }
-     
-      
-                   
-      #if(cluster_numeric_cols){
-      #  heatmap_args[["cluster_columns"]] = TRUE
-      #}
-      print("HERE")
+
       if(!missing(split_columns_kmeans)){
         if(!is.numeric(split_columns_kmeans)){
           stop("split_columns_kmeans must be a single number (K) for k-means clustering on columns")
