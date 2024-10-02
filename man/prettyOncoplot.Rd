@@ -209,7 +209,7 @@ library(GAMBLR.data)
 library(dplyr)
 
 maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") \%>\%
-    dplyr::filter(pathology \%in\% c("FL", "DLBCL"))
+    dplyr::filter(pathology \%in\% c("FL", "DLBCL"), cohort == "FL_Dreval")
 
 maf_data <- get_ssm_by_samples(
     these_samples_metadata = maf_metadata

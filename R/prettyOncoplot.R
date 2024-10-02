@@ -82,7 +82,7 @@
 #' library(dplyr)
 #'
 #' maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") %>%
-#'     dplyr::filter(pathology %in% c("FL", "DLBCL"))
+#'     dplyr::filter(pathology %in% c("FL", "DLBCL"), cohort == "FL_Dreval")
 #'
 #' maf_data <- get_ssm_by_samples(
 #'     these_samples_metadata = maf_metadata
@@ -955,7 +955,9 @@ prettyOncoplot = function(maf_df,
     if(highlightHotspots){
       mat_list[["HotSpot"]] = as.matrix(hotspot_df[genes_kept,patients_kept])
     }
-    message("done")
+    if(verbose){
+        message("done")
+    }
     mat_input = mat_list
   }else{ #end simplify
     if(missing(sortByColumns)){
@@ -1012,7 +1014,9 @@ prettyOncoplot = function(maf_df,
       patients_kept = rownames(metadata_df)
       
     }else{
-      print("NOT FACTOR")
+      if(verbose){
+        print("NOT FACTOR")
+      }
       #replace any NA values with "NA"
       metadata_df[is.na(metadata_df[,splitColumnName]),splitColumnName]="NA"
       column_split = factor(metadata_df[patients_kept, splitColumnName])
@@ -1075,7 +1079,9 @@ prettyOncoplot = function(maf_df,
   }else{
     plot_type = "original"
   }
-  message("calling make_prettyoncoplot()")
+  if(verbose){
+    message("calling make_prettyoncoplot()")
+  }
   returned = make_prettyoncoplot(mat_input,metadata_df,metadata_df_numeric,
                       cluster_oncoplot_rows = cluster_rows, 
                       cluster_oncoplot_cols = cluster_cols,
@@ -1281,8 +1287,10 @@ make_prettyoncoplot = function(mat_input,
           heatmap_args[['column_title_gp']] = gpar(fontsize=6)
           #Automatically clusters on columns within each split if cluster_columns = TRUE
         }
-        print(names(heatmap_args))
-        print(names(oncoprint_args))
+        if(verbose){
+            print(names(heatmap_args))
+            print(names(oncoprint_args))
+        }
         ht_list = 
           do.call("Heatmap",heatmap_args) %v%
           do.call("oncoPrint",oncoprint_args) %v%
