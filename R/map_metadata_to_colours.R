@@ -3,7 +3,6 @@
 #' @param metadataColumns Names of the metadata columns to assign colours for.
 #' @param these_samples_metadata Metadata for just the samples you need colours for.
 #' @param column_alias A list of column_names with values indicating what gambl colour scheme they should use (e.g. pos_neg, pathology, lymphgen).
-#' @param as_vector Boolean statement that is set to TRUE per default.
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #'
@@ -18,12 +17,14 @@
 #' all_meta = get_gambl_metadata()
 #'
 #' #get colours
-#' all_cols = map_metadata_to_colours(metadataColumns = c("lymphgen",
-#'                                                        "pathology",
-#'                                                        "genetic_subgroup"),
-#'                                    these_samples_metadata = all_meta,
-#'                                    column_alias = list("nothing" = "FL"),
-#'                                    as_vector = FALSE)
+#' all_cols = map_metadata_to_colours(
+#'      metadataColumns = c(
+#'          "lymphgen",
+#'          "pathology",
+#'          "genetic_subgroup"),
+#'      these_samples_metadata = all_meta,
+#'      column_alias = list("nothing" = "FL")
+#' )
 #'
 #' @export
 map_metadata_to_colours = function(metadataColumns,
