@@ -10,6 +10,13 @@
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE. 
+#' @param plotarg Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.
+#' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
+#' @param combined_gene_counts A dataframe containing data for a mirrored lollipop analysis.
+#' @param meta1_counter A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param meta2_counter A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param Sample1 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param Sample2 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' 
 #' @return A lollipop plot.
 #'
@@ -31,17 +38,24 @@
 #' lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
 #'
 pretty_lollipop_plot <- function(
-    maf_df, 
+    maf_df = NULL, 
     gene = NULL,
     plot_title,
-    include_silent = FALSE
+    include_silent = FALSE,
+    plotarg = TRUE,
+    mirrorarg = FALSE,
+    combined_gene_counts = NULL,
+    meta1_counter = NULL,
+    meta2_counter = NULL,
+    Sample1 = Sample1,
+    Sample2 = Sample2
 ) {
     if(missing(gene)){
         stop("Please provide a gene...")
     }
   
     if(missing(plot_title)){
-        plot_title=gene
+        plot_title = gene
     }
 
     maf_df <- as.data.frame(maf_df)
@@ -91,7 +105,13 @@ pretty_lollipop_plot <- function(
             Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
-        summarise(mutation_count = n()) 
+        mutate(mutation_count = n()) 
+
+    if (mirrorarg == TRUE){
+        gene_counts <- combined_gene_counts
+    } else {
+        gene_counts <- gene_counts
+    }
 
     # protein_domains a bundled object with GAMBLR.data
     protein_domain_subset <- subset(
@@ -120,22 +140,64 @@ pretty_lollipop_plot <- function(
 
     # get_gambl_colours() from GAMBLR.helpers
     colours_manual <- get_gambl_colours("mutation")
- 
+
     # Somatic mutation statistic
-    Somatic_Mutation_Numerator <- maf_df %>%
-        filter(
-            Hugo_Symbol == gene
-        ) %>% 
-        filter(
-            Variant_Classification %in% variants 
-        ) %>% 
-        distinct(Tumor_Sample_Barcode) %>% 
-        nrow()
+    if (mirrorarg == TRUE){
+        
+        # Initialize vectors
+        Somatic_Mutation_Numerator <- numeric(2)
+        Somatic_Mutation_Denominator <- numeric(2)
+        Somatic_Mutation_Rate <- numeric(2)
 
-    Somatic_Mutation_Denominator <- length(unique(maf_df$Tumor_Sample_Barcode))
+        # Somatic Mutation rate for lp1
+        Somatic_Mutation_Numerator[1] <- combined_gene_counts %>%
+            filter(
+                Hugo_Symbol == gene,
+                source == "Sample 1"
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
 
-    Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
-    Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
+        Somatic_Mutation_Denominator[1] <- meta1_counter
+
+        Somatic_Mutation_Rate[1] <- Somatic_Mutation_Numerator[1]/Somatic_Mutation_Denominator[1] *100
+        Somatic_Mutation_Rate[1] <- round(Somatic_Mutation_Rate[1], 2)
+
+        # Somatic Mutation rate for lp2
+        Somatic_Mutation_Numerator[2] <- combined_gene_counts %>%
+            filter(
+                Hugo_Symbol == gene,
+                source == "Sample 2"
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
+
+        Somatic_Mutation_Denominator[2] <- meta2_counter
+
+        Somatic_Mutation_Rate[2] <- Somatic_Mutation_Numerator[2]/Somatic_Mutation_Denominator[2] *100
+        Somatic_Mutation_Rate[2] <- round(Somatic_Mutation_Rate[2], 2)
+    } else {
+        Somatic_Mutation_Numerator <- maf_df %>%
+            filter(
+                Hugo_Symbol == gene
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
+
+        Somatic_Mutation_Denominator <- length(unique(maf_df$Tumor_Sample_Barcode))
+
+        Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
+        Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
+    }
 
     plot <- ggplot() +
         geom_segment(
@@ -153,7 +215,7 @@ pretty_lollipop_plot <- function(
                 x = AA, 
                 y = mutation_count, 
                 color = Variant_Classification, 
-                size = mutation_count
+                size = abs(mutation_count)
                 )
         ) +
         # Background rectangle for regions without domain data
@@ -192,26 +254,81 @@ pretty_lollipop_plot <- function(
             x = "AA Position", 
             y = "Mutation Count", 
             title = paste0(
-                plot_title, 
-                "\n[Somatic Mutation Rate: ", 
-                Somatic_Mutation_Rate, 
-                "%]"
+                plot_title
                 )
-        ) +
+        ) 
+
+        if (mirrorarg == TRUE) {
+            plot <- plot +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = max(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate[1], 
+                        "%", 
+                        "\n", 
+                        '"', 
+                        Sample1, 
+                        '"'
+                    ),
+                    hjust = 0
+                ) +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = min(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate[2], 
+                        "%", 
+                        "\n", 
+                        '"', 
+                        Sample2, 
+                        '"'
+                    ),
+                    hjust = 0
+                )
+        } else {
+            plot <- plot +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = max(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate, 
+                        "%"
+                    ),
+                    hjust = 0
+                )
+        }
+
+        plot <- plot +
+        scale_size_continuous(
+            name = "Mutation Count", 
+            labels = function(x) abs(x)  
+        ) + 
         theme_bw() +
         theme(
             plot.title = element_text(
                 hjust = 0.5
                 ),
             axis.text.x = element_text(
-              angle = 45, 
+              angle = 90, 
               hjust = 1
               )
         ) +
         scale_color_manual(
           name = "Legend", 
           values = colours_manual
-        )
+        ) 
 
-  return(plot)
+    if (plotarg == TRUE) {
+        return(plot)
+    } else {
+        return(gene_counts)
+    }
+
 }
