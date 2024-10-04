@@ -22,8 +22,6 @@ map_metadata_to_colours(
 \item{verbose}{Set to TRUE to enable verbose mode (debugging messages.}
 
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
-
-\item{as_vector}{Boolean statement that is set to TRUE per default.}
 }
 \value{
 Either a vector or list of colours.
@@ -38,11 +36,13 @@ library(GAMBLR.data)
 all_meta = get_gambl_metadata()
 
 #get colours
-all_cols = map_metadata_to_colours(metadataColumns = c("lymphgen",
-                                                       "pathology",
-                                                       "genetic_subgroup"),
-                                   these_samples_metadata = all_meta,
-                                   column_alias = list("nothing" = "FL"),
-                                   as_vector = FALSE)
+all_cols = map_metadata_to_colours(
+     metadataColumns = c(
+         "lymphgen",
+         "pathology",
+         "genetic_subgroup"),
+     these_samples_metadata = all_meta,
+     column_alias = list("nothing" = "FL")
+)
 
 }
