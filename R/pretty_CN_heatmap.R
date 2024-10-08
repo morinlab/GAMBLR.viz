@@ -347,13 +347,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
       
 
       if(!missing(hide_annotations)){
-        show_legend = rep(TRUE, length(colnames(row_df)))
-        names(show_legend) = colnames(row_df)
+        show_legend = rep(TRUE, length(colnames(anno_rows)))
+        names(show_legend) = colnames(anno_rows)
         show_legend[hide_annotations] = FALSE
       }else{
-        show_legend = rep(TRUE, length(colnames(row_df)))
+        show_legend = rep(TRUE, length(colnames(anno_rows)))
       }
-      print(show_legend)
+      #print(show_legend)
       left_anno = HeatmapAnnotation(df=anno_rows,
                                     col=colours,
                                     which="row",
@@ -369,11 +369,17 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }else{
       anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
       anno_rows$PGA = sample_average
-
+      if(!missing(hide_annotations)){
+        show_legend = rep(TRUE, length(colnames(anno_rows)))
+        names(show_legend) = colnames(anno_rows)
+        show_legend[hide_annotations] = FALSE
+      }else{
+        show_legend = rep(TRUE, length(colnames(anno_rows)))
+      }
       left_anno = HeatmapAnnotation(df=anno_rows,
                                     col=colours,
                                     which="row",
-                                    show_legend = F,
+                                    show_legend = show_legend,
                                     annotation_name_side = left_annotation_name_side,
                                     annotation_legend_param =
                                       list(
