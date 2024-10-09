@@ -524,7 +524,12 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   if(return_data){
-    return(list(heatmap_object=ho,data=cn_state_matrix,labels=bin_labels,bin_means=bin_average,local_optima=cn_av_df))
+    return(list(heatmap_object=ho,
+                data=cn_state_matrix,
+                labels=bin_labels,
+                chromosome_columns=column_chromosome,
+                bin_means=bin_average,
+                local_optima=cn_av_df))
   }
   
 }
