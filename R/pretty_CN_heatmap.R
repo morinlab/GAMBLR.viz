@@ -3,6 +3,7 @@
 #' Pretty Copy Number Heatmap
 #'
 #' @param cn_state_matrix The output of get_cn_states
+#' @param scale_by_sample Set to TRUE to scale CN values within each sample_id
 #' @param these_samples_metadata The output of get_gambl_metadata
 #' @param metadataColumns One or more columns from the metadata you want to display beside the heatmap
 #' @param expressionColumns Optional: One or more columns from the metadata that include gene expression values you want shown
@@ -11,6 +12,7 @@
 #' @param show_row_names Set to TRUE to display the ID of every bin (region) shown in the heatmap
 #' @param keep_these_chromosomes A vector of chromosome names to include (all others will be excluded)
 #' @param hide_these_chromosomes A vector of chromosome names to exclude (all others will be included unless keep_these_chromosomes is specified)
+#' @param keep_these_bins A vector of bin names to include (all others will be excluded)
 #' @param hide_annotations A vector of annotation names to suppress from legends in the plot
 #' @param cluster_columns Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
@@ -30,8 +32,11 @@
 #' @param legend_row How many rows for the legend layout
 #' @param legend_col How many columns for the legend layout
 #' @param boxplot_orientation Either "horizontal" or "vertical" (default: horizontal)
+#' @param left_annotation_name_side Which side to put the name of the metadata annotations (top or bottom)
+#' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded
+#' @param return_data Specify TRUE to get some of the internal data back including the heatmap object
 #'
-#' @return
+#' @return list (when return_data = TRUE)
 #' @export
 #'
 #' @examples
@@ -85,6 +90,7 @@
 #' 
 #' 
 pretty_CN_heatmap = function(cn_state_matrix,
+                             scale_by_sample=FALSE,
                              these_samples_metadata,
                              metadataColumns = c("pathology"),
                              expressionColumns,
@@ -94,8 +100,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              show_column_names=FALSE,
                              keep_these_chromosomes,
                              hide_these_chromosomes,
+                             keep_these_bins,
                              hide_annotations,
-                             column_chromosome,
                              sortByBins,
                              splitByBinState,
                              sortByMetadataColumns,
@@ -114,7 +120,21 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              legend_row=2,
                              legend_col=3,
                              boxplot_orientation="vertical",
-                             return_data = FALSE){
+                             return_data = FALSE,
+                             drop_bin_if_sd_below=0){
+  cn_state_matrix[cn_state_matrix>5] = 5
+  #determine variance of each bin across the entire data set
+  bin_vars = apply(cn_state_matrix,2,sd)
+  old_col = ncol(cn_state_matrix)
+  cn_state_matrix = cn_state_matrix[,which(bin_vars > drop_bin_if_sd_below)]
+  new_col = ncol(cn_state_matrix)
+  print(paste("original:",old_col,"new:",new_col))
+  if(scale_by_sample){
+    cn_state_matrix = cn_state_matrix - rowMeans(cn_state_matrix) + 2
+    cn_state_matrix = round(cn_state_matrix)
+    cn_state_matrix[cn_state_matrix<0]=0
+  }
+
   map_bin_to_bin = function(query_region,regions=colnames(cn_state_matrix),first=TRUE){
     these_coords = suppressMessages(region_to_chunks(query_region))
     these_coords$chromosome = str_remove(these_coords$chromosome,"chr")
@@ -169,6 +189,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       #print(paste(g,gene_region))
       if(is.na(this_gene_region)){
         message(paste("no region for",g))
+        next
       }
       if(this_gene_region %in% names(bin_labels)){
         message(paste("Gene",g, "and gene",bin_labels[[this_gene_region]], "share a region. I will only show the last one!"))
@@ -204,7 +225,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
     all_samples = rownames(cn_state_matrix)
     cn_state_matrix = cn_state_matrix[all_samples[all_samples %in% keep_samples],]
   }
-  colours = list()
+  
+  colours = map_metadata_to_colours(metadataColumns = metadataColumns, 
+                                    these_samples_metadata = these_samples_metadata)
   if(!missing(expressionColumns)){
     these_samples_metadata = these_samples_metadata %>%
       mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
@@ -298,7 +321,14 @@ pretty_CN_heatmap = function(cn_state_matrix,
     colours[["lymphgen"]]=get_gambl_colours("lymphgen")
     
     #print(colours)
-    
+    if(!missing(keep_these_bins)){
+      available_bins = keep_these_bins[which(keep_these_bins %in% colnames(cn_state_matrix))]
+      cn_state_matrix = cn_state_matrix[,available_bins]
+      print(colnames(cn_state_matrix))
+      column_chromosome = str_remove(colnames(cn_state_matrix),":.+")
+      total_gain = total_gain[available_bins]
+      total_loss = total_loss[available_bins]
+    }
     if(!missing(splitByBinState)){
       splits = round(cn_state_matrix[,splitByBinState])
       
@@ -306,6 +336,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
       anno_rows$CN_state = splits
       anno_rows$PGA = sample_average
+      
       if(!missing(geneBoxPlot)){
         rg = c(0,1)
         panel_fun = function(index, nm) {
@@ -369,6 +400,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }else{
       anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
       anno_rows$PGA = sample_average
+      
       if(!missing(hide_annotations)){
         show_legend = rep(TRUE, length(colnames(anno_rows)))
         names(show_legend) = colnames(anno_rows)
@@ -398,7 +430,23 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }else{
       show_legend=TRUE
     }
+    bin_average = colMeans(cn_state_matrix)
+    cn_av_df = tibble(x=bin_average,coordinate=names(bin_average))
+    cn_av_df = mutate(cn_av_df,
+                      local.minima=ifelse(lag(x,n=15)>x & lead(x,n=15)  > x & x < 2,TRUE,FALSE),
+                      local.maxima=ifelse(lag(x,n=15)<x & lead(x,n=15)< x & x > 2,TRUE,FALSE),
+                      extreme=ifelse(local.maxima | local.minima,TRUE,FALSE))
+    
+    average_anno = HeatmapAnnotation(Mean_CN = bin_average,
+                                     which = "column",
+                                     show_annotation_name = show_bottom_annotation_name,
+                                     annotation_name_side = bottom_annotation_name_side,
+                                     show_legend=show_legend,
+                                     col=list(Mean_CN=col_fun))
     cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+                                        
+                                        
+                                        
                                         Gain = anno_barplot(total_gain,
                                                             gp=gpar(fill="red",col="red")),
                                         loss=anno_barplot(total_loss,
@@ -431,7 +479,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    show_column_names = show_column_names,
                    col = col_fun,
                    bottom_annotation = cumulative_anno,
-                   #top_annotation = cumulative_anno,
+                   top_annotation = average_anno,
                    left_annotation=left_anno,
                    row_split=splits,
                    right_annotation = rowAnnotation(Expression=anno),
@@ -447,6 +495,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    show_column_names = show_column_names,
                    col = col_fun,
                    bottom_annotation = cumulative_anno,
+                   top_annotation = average_anno,
                    left_annotation=left_anno,
                    row_split=splits,
                    #right_annotation = sample_CN_anno,
@@ -475,7 +524,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   if(return_data){
-    return(list(heatmap_object=ho,data=cn_state_matrix,labels=bin_labels))
+    return(list(heatmap_object=ho,data=cn_state_matrix,labels=bin_labels,bin_means=bin_average,local_optima=cn_av_df))
   }
   
 }

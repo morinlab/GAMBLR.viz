@@ -6,6 +6,7 @@
 \usage{
 pretty_CN_heatmap(
   cn_state_matrix,
+  scale_by_sample = FALSE,
   these_samples_metadata,
   metadataColumns = c("pathology"),
   expressionColumns,
@@ -15,8 +16,8 @@ pretty_CN_heatmap(
   show_column_names = FALSE,
   keep_these_chromosomes,
   hide_these_chromosomes,
+  keep_these_bins,
   hide_annotations,
-  column_chromosome,
   sortByBins,
   splitByBinState,
   sortByMetadataColumns,
@@ -35,11 +36,14 @@ pretty_CN_heatmap(
   legend_row = 2,
   legend_col = 3,
   boxplot_orientation = "vertical",
-  return_data = FALSE
+  return_data = FALSE,
+  drop_bin_if_sd_below = 0
 )
 }
 \arguments{
 \item{cn_state_matrix}{The output of get_cn_states}
+
+\item{scale_by_sample}{Set to TRUE to scale CN values within each sample_id}
 
 \item{these_samples_metadata}{The output of get_gambl_metadata}
 
@@ -58,6 +62,8 @@ pretty_CN_heatmap(
 \item{keep_these_chromosomes}{A vector of chromosome names to include (all others will be excluded)}
 
 \item{hide_these_chromosomes}{A vector of chromosome names to exclude (all others will be included unless keep_these_chromosomes is specified)}
+
+\item{keep_these_bins}{A vector of bin names to include (all others will be excluded)}
 
 \item{hide_annotations}{A vector of annotation names to suppress from legends in the plot}
 
@@ -83,6 +89,8 @@ pretty_CN_heatmap(
 
 \item{bottom_annotation_name_side}{If using show_bottom_annotation_name, set this to "left" or "right" to relocate the names}
 
+\item{left_annotation_name_side}{Which side to put the name of the metadata annotations (top or bottom)}
+
 \item{bin_labels}{Instead of automatically labeling genes, you can instead explicitly provide a list of labels for any bins in the heatmap. The names of each element should match a bin. The value of each element is the label that will be shown. This option can be used to skip gene location look-ups (see examples).}
 
 \item{legend_direction}{Which orientation to use for the legend}
@@ -94,6 +102,13 @@ pretty_CN_heatmap(
 \item{legend_col}{How many columns for the legend layout}
 
 \item{boxplot_orientation}{Either "horizontal" or "vertical" (default: horizontal)}
+
+\item{return_data}{Specify TRUE to get some of the internal data back including the heatmap object}
+
+\item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
+}
+\value{
+list (when return_data = TRUE)
 }
 \description{
 Pretty Copy Number Heatmap
