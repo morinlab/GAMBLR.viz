@@ -526,6 +526,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
   if(return_data){
     return(list(heatmap_object=ho,
                 data=cn_state_matrix,
+                cumulative_gain = total_gain,
+                cumulative_loss = total_loss,
                 labels=bin_labels,
                 chromosome_columns=column_chromosome,
                 bin_means=bin_average,
