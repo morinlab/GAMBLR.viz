@@ -121,7 +121,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              legend_col=3,
                              boxplot_orientation="vertical",
                              return_data = FALSE,
-                             drop_bin_if_sd_below=0){
+                             drop_bin_if_sd_below=0,
+                             flip=FALSE){
   cn_state_matrix[cn_state_matrix>5] = 5
   #determine variance of each bin across the entire data set
   bin_vars = apply(cn_state_matrix,2,sd)
@@ -306,14 +307,50 @@ pretty_CN_heatmap = function(cn_state_matrix,
     samples_keep_PGA = which(sample_average > drop_if_PGA_below & sample_average < drop_if_PGA_above)
     cn_state_matrix = cn_state_matrix[samples_keep_PGA,]
     sample_average = sample_average[samples_keep_PGA]
+    
+    #REDO
+    gain_state = cn_state_matrix
+    gain_state[gain_state<=2]=0
+    gain_state[gain_state>0]=1
+    total_gain = colSums(gain_state)
+    loss_state = cn_state_matrix
+    loss_state[loss_state>=2]=0
+    loss_state[loss_state!=0]=1
+    total_loss = colSums(loss_state)
     #sample_CN_anno = HeatmapAnnotation(PGA=sample_average,which="row")
     
+
     if(!missing(keep_these_chromosomes)){
       keep_cols = which(column_chromosome %in% keep_these_chromosomes)
       cn_state_matrix = cn_state_matrix[,keep_cols]
       column_chromosome = column_chromosome[keep_cols]
       total_gain = total_gain[keep_cols]
       total_loss = total_loss[keep_cols]
+    }
+    
+    #erase (set to diploid) any value opposing the most common event in that bin
+    if(flip){
+    flipped_data = cn_state_matrix
+    for(i in c(1:length(total_gain))){
+      bin_name = names(total_gain)[i]
+      if(bin_name=="chr8:59271381-60481000"){
+        print(paste(total_gain[i],total_loss[i],i))
+        print(flipped_data[,i])
+      }
+      if(total_gain[i] > total_loss[i]){
+        flipped_data[cn_state_matrix[,i]<2,i]=2
+      }else{
+        flipped_data[cn_state_matrix[,i]>2,i]=2
+      }
+      if(bin_name=="chr8:59271381-60481000"){
+        print(paste(total_gain[i],total_loss[i],i))
+        print(flipped_data[,i])
+        print(table(flipped_data[,i],cn_state_matrix[,i]))
+      }
+    }
+
+    
+      cn_state_matrix = flipped_data
     }
     
     keep_rows = rownames(cn_state_matrix)
