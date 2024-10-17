@@ -292,6 +292,14 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 }
 
 
+#' Categorize arm-level and chromosomal CNV events
+#'
+#' @param pretty_CN_heatmap_output 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 categorize_CN_events = function(pretty_CN_heatmap_output){
   CN_mat = pretty_CN_heatmap_output$data
   labels = pretty_CN_heatmap_output$labels
@@ -299,6 +307,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   cytoband_df = circlize::read.cytoband()$df
   #whole chromosome, arm-level or focal
   chromosome_cols = pretty_CN_heatmap_output$chromosome_columns
+  unique_chrom = unique(chromosome_cols)
   if(is.null(chromosome_cols)){
     stop("problem with input")
   }
@@ -308,17 +317,28 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
     separate(coords,into=c("start","end"),sep="-") %>%
     mutate(start=as.integer(start),end=as.integer(end)) %>%
     mutate(arm=NA)
-  
+  chrom_arm_ranges = list()
+  arm_df = expand.grid(chromosome=chroms_u,arm=c("p","q")) %>% mutate(name=paste0(chromosome,arm)) %>%
+    column_to_rownames("name") %>%
+    mutate(start=0,end=0) 
   for(chrom in unique_chrom){
     these_col= which(chromosome_cols %in% chrom)
-    p_coords = filter(cytoband_df,V1==chrom,grepl("p",V4)) %>% 
-      pull(V2,V3) %>% range()
+    p_coords1 = filter(cytoband_df,V1==chrom,grepl("p",V4)) %>% 
+      pull(V2) 
+    p_coords2 = filter(cytoband_df,V1==chrom,grepl("p",V4)) %>% 
+      pull(V3) 
+    p_coords = range(c(p_coords1,p_coords2))
     q_coords1 = filter(cytoband_df,V1==chrom,grepl("q",V4)) %>% 
       pull(V2)
     q_coords2 = filter(cytoband_df,V1==chrom,grepl("q",V4)) %>% 
       pull(V3)
     q_coords = range(c(q_coords1,q_coords2))
-
+    
+    chrom_arm_ranges[[chrom]] = list(p=p_coords,q=q_coords)
+    arm_df[paste0(chrom,"p"),"start"] = p_coords[[1]] 
+    arm_df[paste0(chrom,"p"),"end"] = p_coords[[2]] 
+    arm_df[paste0(chrom,"q"),"start"] = q_coords[[1]] 
+    arm_df[paste0(chrom,"q"),"end"] = q_coords[[2]] 
     regions_df = mutate(regions_df,
                         arm=case_when(chromosome==chrom & start < p_coords[2] & start > p_coords[1] ~"p",
                                       chromosome==chrom & start < q_coords[2] & start > q_coords[1] ~"q",
@@ -392,6 +412,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
     chrom_events_df= do.call("bind_cols",chrom_events) %>% as.data.frame()
     rownames(chrom_events_df)= rownames(CN_mat)
   }
+  #convert to artificial/simplified segments
   
   return(chrom_events_df)
 }
