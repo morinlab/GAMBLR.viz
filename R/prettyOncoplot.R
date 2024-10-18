@@ -755,7 +755,14 @@ prettyOncoplot = function(maf_df,
     colours[["HotSpot"]] = "magenta"
   }
   if (! is.null(custom_colours)){
-    colours = custom_colours
+    for(colname in names(custom_colours)){
+      colours[[colname]] = custom_colours[[colname]]
+      print("adding:")
+      print(colname)
+      print(colours[[colname]])
+    }
+    print(names(colours))
+    
   }
   
   col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
@@ -788,7 +795,11 @@ prettyOncoplot = function(maf_df,
       print("-=-=-=")
       print(all_names[!all_names %in% names(colours[[annotation]])])
       print("-=-=-=")
-      stop(paste("No colour assigned for one or more values in annotation:\n Remove the offending rows or provide custom colours",annotation))
+      print(unique(all_names))
+      print("-=-=-=")
+      print(names(colours[[annotation]]))
+      print("-=-=-=")
+      stop(paste("No colour assigned for one or more values in annotation:", annotation ,"\n Remove the offending rows or provide custom colours",annotation))
     }
   }
   print(colours)
@@ -1143,7 +1154,8 @@ prettyOncoplot = function(maf_df,
                       return_inputs=return_inputs,
                       numeric_heatmap_location=numeric_heatmap_location,
                       split_rows_kmeans=split_rows_kmeans,
-                      split_columns_kmeans=split_columns_kmeans)
+                      split_columns_kmeans=split_columns_kmeans,
+                      verbose=verbose)
   if(return_inputs){
     return(returned)
   }
@@ -1190,7 +1202,8 @@ make_prettyoncoplot = function(mat_input,
                                return_inputs,
                                numeric_heatmap_location,
                                split_rows_kmeans,
-                               split_columns_kmeans){
+                               split_columns_kmeans,
+                               verbose){
   
 
   if(plot_type == "simplify"){

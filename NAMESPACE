@@ -2,6 +2,7 @@
 
 export(ashm_multi_rainbow_plot)
 export(ashm_rainbow_plot)
+export(categorize_CN_events)
 export(circular_CN_plot)
 export(comp_report)
 export(copy_number_vaf_plot)

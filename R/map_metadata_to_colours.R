@@ -52,6 +52,14 @@ map_metadata_to_colours = function(metadataColumns,
       print(levels(options))
       print("<<<<<<<")
     }
+    if(grepl("^chr",column)){
+      these = GAMBLR.helpers::get_gambl_colours("aneuploidy", alpha = annoAlpha)
+      these = these[levels(options)]
+      if(!"NA" %in% names(these)){
+        these = c(these, "NA" = "white")
+      }
+      colours[[column]] = these
+    }
     if(column == "sex"){
       these = GAMBLR.helpers::get_gambl_colours("sex", alpha = annoAlpha)
       these = these[levels(options)]
