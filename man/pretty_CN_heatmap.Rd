@@ -37,7 +37,8 @@ pretty_CN_heatmap(
   legend_col = 3,
   boxplot_orientation = "vertical",
   return_data = FALSE,
-  drop_bin_if_sd_below = 0
+  drop_bin_if_sd_below = 0,
+  flip = FALSE
 )
 }
 \arguments{
