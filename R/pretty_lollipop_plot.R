@@ -199,6 +199,92 @@ pretty_lollipop_plot <- function(
         Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
     }
 
+    # KS-Test 
+    if(mirrorarg == TRUE){
+        # Gene KS-Test
+        aa_frequency_data <- combined_gene_counts %>%
+            group_by(AA, source) %>%
+            summarise(freq = n())
+
+        ks_test_result <- ks.test(
+            aa_frequency_data$freq[aa_frequency_data$source == "Sample 1"], 
+            aa_frequency_data$freq[aa_frequency_data$source == "Sample 2"]
+        )
+
+        gene_p_value <- ks_test_result$p.value
+
+        # Domain(s) KS-Test
+        domain_names <- c()
+        domain_list <- list()
+        domain_data$p_value <- NA
+    
+        for (i in 1:nrow(domain_data)) {
+            domain_name <- domain_data$text.label[i]
+            min_val <- domain_data$start.points[i]
+            max_val <- domain_data$end.points[i]
+
+            # Subset data for the current domain
+            domain_subset <- combined_gene_counts %>%
+                filter(AA >= min_val & AA <= max_val)
+
+            if (nrow(domain_subset) > 0) {
+
+                # Mutation counts for Sample 1 and Sample 2
+                domain_mutation1 <- domain_subset %>%
+                    filter(
+                        Variant_Classification %in% variants, 
+                        source == "Sample 1"
+                    ) %>%
+                    nrow()
+
+                domain_mutation2 <- domain_subset %>%
+                    filter(
+                        Variant_Classification %in% variants, 
+                        source == "Sample 2"
+                    ) %>%
+                    nrow()
+
+                domain_frequency_data <- domain_subset %>%
+                    group_by(
+                        AA, 
+                        source
+                    ) %>%
+                    summarise(freq = n())
+
+                domain_ks_test <- tryCatch({
+                    ks.test(
+                        domain_frequency_data$freq[domain_frequency_data$source == "Sample 1"],
+                        domain_frequency_data$freq[domain_frequency_data$source == "Sample 2"]
+                    )
+                }, error = function(e) {
+                    list(p.value = NA)
+                })
+
+                # Save domain-specific results in a list
+                unique_domain_name <- paste0(
+                    "Domain_", 
+                    domain_name
+                )
+                domain_list[[unique_domain_name]] <- list(
+                    mutation_count_sample1 = domain_mutation1,
+                    mutation_count_sample2 = domain_mutation2,
+                    ks_p_value = domain_ks_test$p.value
+                )
+
+                # Store the p-value in domain_data
+                domain_data$p_value[i] <- domain_ks_test$p.value
+
+                # Store the unique domain name
+                domain_names <- c(domain_names, unique_domain_name)
+            } else {
+                print(paste(
+                    "No mutation data for domain", 
+                    domain_name
+                ))
+            }
+        }
+    }
+
     plot <- ggplot() +
         geom_segment(
             data = gene_counts, 
@@ -246,15 +332,8 @@ pretty_lollipop_plot <- function(
             data = domain_data, 
             aes(
                 x = text.position, 
-                y = 0, 
+                y = 0.1, 
                 label = text.label
-                )
-        ) +
-        labs(
-            x = "AA Position", 
-            y = "Mutation Count", 
-            title = paste0(
-                plot_title
                 )
         ) 
 
@@ -267,8 +346,10 @@ pretty_lollipop_plot <- function(
                     label = paste0(
                         "Somatic Mutation Rate ", 
                         Somatic_Mutation_Rate[1], 
-                        "%", 
-                        "\n", 
+                        "% N = ", 
+                        Somatic_Mutation_Denominator[1],
+                        "\n",
+                        "Comparison Value ", 
                         '"', 
                         Sample1, 
                         '"'
@@ -282,13 +363,36 @@ pretty_lollipop_plot <- function(
                     label = paste0(
                         "Somatic Mutation Rate ", 
                         Somatic_Mutation_Rate[2], 
-                        "%", 
+                        "% N = ",
+                        Somatic_Mutation_Denominator[2], 
                         "\n", 
+                        "Comparison Value ",
                         '"', 
                         Sample2, 
                         '"'
                     ),
                     hjust = 0
+                ) +
+                geom_text(
+                    data = domain_data, 
+                    aes(
+                        x = text.position, 
+                        y = -0.2, 
+                        label = paste0(
+                            "p = ", 
+                            round(p_value, 3)
+                        )  # Display domain-specific p-value
+                    )
+                ) +
+                labs(
+                    x = "AA Position", 
+                    y = "Mutation Count", 
+                    title = paste0(
+                        plot_title,
+                        "\n",
+                        "p = ",
+                        round(gene_p_value, 3)
+                    )
                 )
         } else {
             plot <- plot +
@@ -302,6 +406,13 @@ pretty_lollipop_plot <- function(
                         "%"
                     ),
                     hjust = 0
+                ) +
+                labs(
+                    x = "AA Position", 
+                    y = "Mutation Count", 
+                    title = paste0(
+                        plot_title
+                    )
                 )
         }
 
