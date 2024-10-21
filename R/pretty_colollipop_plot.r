@@ -176,9 +176,9 @@ pretty_colollipop_plot <- function(
             widths = c(1, 0.6),
             common.legend = TRUE,
             align = "h"),          
-            ncol = 1, 
-            nrow = 2,
-            heights = c(2, 1)            
+        ncol = 1, 
+        nrow = 2,
+        heights = c(2, 1)            
     )
     return(plot)
 }
