@@ -60,7 +60,7 @@ prettyOncoplot(
   split_rows_kmeans,
   split_columns_kmeans,
   dry_run = FALSE,
-  simplify = FALSE,
+  simplify_annotation = FALSE,
   stacked = FALSE,
   numeric_heatmap_type = "aSHM",
   numeric_heatmap_location = "top",
@@ -178,7 +178,7 @@ prettyOncoplot(
 
 \item{dry_run}{Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows}
 
-\item{simplify}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
+\item{simplify_annotation}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
 
 \item{stacked}{Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)}
 
@@ -242,7 +242,7 @@ gene_cnv = get_cnv_and_ssm_status(only_cnv="all",
      cluster_rows = T,
      metadataColumns = c("pathology","genetic_subgroup","seq_type","ffpe_or_frozen"),
      cluster_cols = F,
-     simplify=T,
+     simplify_annotation=T,
      cnv_df=gene_cnv,sortByColumns = c("pathology","genetic_subgroup"))
 
 gene_groups = c(rep("FL", length(fl_genes)), rep("DLBCL", length(dlbcl_genes)))

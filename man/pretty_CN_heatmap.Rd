@@ -20,6 +20,7 @@ pretty_CN_heatmap(
   hide_annotations,
   sortByBins,
   splitByBinState,
+  sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
   bin_label_fontsize = 5,
@@ -38,7 +39,8 @@ pretty_CN_heatmap(
   boxplot_orientation = "vertical",
   return_data = FALSE,
   drop_bin_if_sd_below = 0,
-  flip = FALSE
+  flip = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -116,16 +118,19 @@ Pretty Copy Number Heatmap
 }
 \examples{
 
-# Create the copy number matrix using the helper functions
-all_segments = get_cn_segments()
-all_states_binned = get_cn_states(n_bins_split=2500,
-                                 missing_data_as_diploid = T,
-                                 seg_data = all_segments)
 
 #get some metadata for subsetting the data to just one pathology (DLBCL)
 dlbcl_genome_meta = get_gambl_metadata() \%>\% 
                     filter(pathology=="DLBCL",
                     seq_type=="genome")
+                    
+# Create the copy number matrix using the helper functions
+all_segments = get_cn_segments()
+all_states_binned = get_cn_states(n_bins_split=2500,
+                                 missing_data_as_diploid = T,
+                                 seg_data = all_segments,
+                                 these_samples_metadata = dlbcl_genome_meta)
+
 
 # Generate a basic genome-wide CN heatmap
 pretty_CN_heatmap(cn_state_matrix=all_states_binned,
