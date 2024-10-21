@@ -48,9 +48,9 @@ map_metadata_to_colours = function(metadataColumns,
     
     options = options[!is.na(options)]
     if(verbose){
-      print(">>>>>>>")
+      print(">>>XX>>>")
       print(levels(options))
-      print("<<<<<<<")
+      print("<<<XX<<<")
     }
     if(grepl("^chr",column)){
       these = GAMBLR.helpers::get_gambl_colours("aneuploidy", alpha = annoAlpha)
@@ -89,18 +89,21 @@ map_metadata_to_colours = function(metadataColumns,
       colours[[column]] = these
     }else if("GCB" %in% options){
       these = GAMBLR.helpers::get_gambl_colours("COO", alpha = annoAlpha)
+      these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
       colours[[column]] = these
     }else if(column %in% c("pathology")){
       these = GAMBLR.helpers::get_gambl_colours(column, alpha = annoAlpha)
+      these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these,"NA" = "white")
       }
       colours[[column]] = these
     }else if(grepl("lymphgen", column, ignore.case = TRUE)){
       these = GAMBLR.helpers::get_gambl_colours("lymphgen", alpha = annoAlpha)
+      these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
@@ -108,6 +111,7 @@ map_metadata_to_colours = function(metadataColumns,
       
     }else if(column == "HMRN"){
       these = GAMBLR.helpers::get_gambl_colours("hmrn", alpha = annoAlpha)
+      these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
@@ -117,6 +121,7 @@ map_metadata_to_colours = function(metadataColumns,
         message(paste("found colours for", column, "in all_gambl_colours"))
       }
       these = all_gambl_colours[levels(options)]
+      these = these[levels(options)]
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
@@ -131,9 +136,63 @@ map_metadata_to_colours = function(metadataColumns,
       if(!"NA" %in% names(these)){
         these = c(these, "NA" = "white")
       }
+      
       colours[[column]] = these
     }
+    #check that our colour set is complete
+    
+    loptions = levels(options)
+    if(any(!loptions %in% names(these))){
+      #try the full set of colours  
+      if(!any(!loptions %in% names(all_gambl_colours))){
+        colours[[column]] = all_gambl_colours[loptions]
+      }else{
+        missing = options[!loptions %in% names(all_gambl_colours)]
+        #try to replace any "/"-containing strings with "-COMP"
+        missing_cols = c()
+        colours[[column]] = all_gambl_colours[loptions[loptions %in% names(all_gambl_colours)]]
+        if(verbose){
+          print("XXXXX")
+          print(colours[[column]])
+        }
+        for(colname in missing){
+          if(grepl("/",colname)){
+            prefix = str_remove(colname,"/.+")
+            if(verbose){
+              print(paste("trying to map:",colname,"using",prefix))
+            }
+            composite = paste0(prefix,"-COMP")
+            if(composite %in% names(all_gambl_colours)){
+              if(verbose){
+                print(paste("Success",all_gambl_colours[composite]))
+              }
+              this_col = all_gambl_colours[composite]
+              names(this_col)=colname
+              missing_cols = c(missing_cols,this_col)
+            }else{
+              if(verbose){
+                print(paste("FAIL",composite,all_gambl_colours[composite]))
+              }
+            }
+          }
+        }
+        if(verbose){
+          print(missing_cols)
+          print(colours[[column]])
+        }
+        if(length(missing_cols)< length(missing)){
+          #last-ditch effort (random)
+          fill_in_cols = rainbow(length(missing))
+          names(fill_in_cols) = missing
+          colours[[column]] = c(colours[[column]],fill_in_cols)
+        }else{
+          colours[[column]] = c(colours[[column]],missing_cols)
+        }
+      }
+    }
+    if(!"NA" %in% names(colours[[column]])){
+      colours[[column]] = c(colours[[column]], "NA" = "white")
+    }
   }
-  return(colours)
   return(colours)
 }
