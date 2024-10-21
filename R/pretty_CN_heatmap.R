@@ -17,6 +17,7 @@
 #' @param cluster_columns Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
+#' @param sortByPGA
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
 #' @param sortByMetadataColumns A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
@@ -41,16 +42,19 @@
 #'
 #' @examples
 #' 
-#' # Create the copy number matrix using the helper functions
-#' all_segments = get_cn_segments()
-#' all_states_binned = get_cn_states(n_bins_split=2500,
-#'                                  missing_data_as_diploid = T,
-#'                                  seg_data = all_segments)
-#'
+#' 
 #' #get some metadata for subsetting the data to just one pathology (DLBCL)
 #' dlbcl_genome_meta = get_gambl_metadata() %>% 
 #'                     filter(pathology=="DLBCL",
 #'                     seq_type=="genome")
+#'                     
+#' # Create the copy number matrix using the helper functions
+#' all_segments = get_cn_segments()
+#' all_states_binned = get_cn_states(n_bins_split=2500,
+#'                                  missing_data_as_diploid = T,
+#'                                  seg_data = all_segments,
+#'                                  these_samples_metadata = dlbcl_genome_meta)
+#'
 #'
 #' # Generate a basic genome-wide CN heatmap
 #' pretty_CN_heatmap(cn_state_matrix=all_states_binned,
@@ -104,6 +108,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              hide_annotations,
                              sortByBins,
                              splitByBinState,
+                             sortByPGA=FALSE,
                              sortByMetadataColumns,
                              labelTheseGenes,
                              bin_label_fontsize=5,
@@ -122,14 +127,15 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              boxplot_orientation="vertical",
                              return_data = FALSE,
                              drop_bin_if_sd_below=0,
-                             flip=FALSE){
+                             flip=FALSE,
+                             verbose=FALSE){
   cn_state_matrix[cn_state_matrix>5] = 5
   #determine variance of each bin across the entire data set
   bin_vars = apply(cn_state_matrix,2,sd)
   old_col = ncol(cn_state_matrix)
   cn_state_matrix = cn_state_matrix[,which(bin_vars > drop_bin_if_sd_below)]
   new_col = ncol(cn_state_matrix)
-  print(paste("original:",old_col,"new:",new_col))
+  #print(paste("original:",old_col,"new:",new_col))
   if(scale_by_sample){
     cn_state_matrix = cn_state_matrix - rowMeans(cn_state_matrix) + 2
     cn_state_matrix = round(cn_state_matrix)
@@ -225,10 +231,12 @@ pretty_CN_heatmap = function(cn_state_matrix,
     keep_samples = pull(these_samples_metadata,sample_id)
     all_samples = rownames(cn_state_matrix)
     cn_state_matrix = cn_state_matrix[all_samples[all_samples %in% keep_samples],]
+
   }
   
   colours = map_metadata_to_colours(metadataColumns = metadataColumns, 
-                                    these_samples_metadata = these_samples_metadata)
+                                    these_samples_metadata = these_samples_metadata,
+                                    verbose=verbose)
   if(!missing(expressionColumns)){
     these_samples_metadata = these_samples_metadata %>%
       mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
@@ -284,6 +292,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     cluster_rows = FALSE
     new_order = arrange(these_samples_metadata,across(sortByMetadataColumns)) %>% pull(sample_id)
     cn_state_matrix = cn_state_matrix[new_order,]
+
   }
   
   
@@ -304,8 +313,10 @@ pretty_CN_heatmap = function(cn_state_matrix,
     either_state = loss_state
     either_state[gain_state==1]=1
     sample_average = rowMeans(either_state)
-    samples_keep_PGA = which(sample_average > drop_if_PGA_below & sample_average < drop_if_PGA_above)
+    samples_keep_PGA = which(sample_average >= drop_if_PGA_below & sample_average <= drop_if_PGA_above)
+
     cn_state_matrix = cn_state_matrix[samples_keep_PGA,]
+
     sample_average = sample_average[samples_keep_PGA]
     
     #REDO
@@ -333,19 +344,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     flipped_data = cn_state_matrix
     for(i in c(1:length(total_gain))){
       bin_name = names(total_gain)[i]
-      if(bin_name=="chr8:59271381-60481000"){
-        print(paste(total_gain[i],total_loss[i],i))
-        print(flipped_data[,i])
-      }
+
       if(total_gain[i] > total_loss[i]){
         flipped_data[cn_state_matrix[,i]<2,i]=2
       }else{
         flipped_data[cn_state_matrix[,i]>2,i]=2
-      }
-      if(bin_name=="chr8:59271381-60481000"){
-        print(paste(total_gain[i],total_loss[i],i))
-        print(flipped_data[,i])
-        print(table(flipped_data[,i],cn_state_matrix[,i]))
       }
     }
 
@@ -353,26 +356,32 @@ pretty_CN_heatmap = function(cn_state_matrix,
       cn_state_matrix = flipped_data
     }
     
-    keep_rows = rownames(cn_state_matrix)
-    colours[["pathology"]]=get_gambl_colours("pathology")
-    colours[["lymphgen"]]=get_gambl_colours("lymphgen")
     
-    #print(colours)
+
     if(!missing(keep_these_bins)){
       available_bins = keep_these_bins[which(keep_these_bins %in% colnames(cn_state_matrix))]
       cn_state_matrix = cn_state_matrix[,available_bins]
-      print(colnames(cn_state_matrix))
+
       column_chromosome = str_remove(colnames(cn_state_matrix),":.+")
       total_gain = total_gain[available_bins]
       total_loss = total_loss[available_bins]
     }
+    
+    
+    
+    anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
+    
+    anno_rows$PGA = sample_average
+    
+    if(sortByPGA){
+      anno_rows = arrange(anno_rows,PGA)
+      cn_state_matrix = cn_state_matrix[rownames(anno_rows),]
+    }
+    
     if(!missing(splitByBinState)){
       splits = round(cn_state_matrix[,splitByBinState])
-      
-      #anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
-      anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
       anno_rows$CN_state = splits
-      anno_rows$PGA = sample_average
+
       
       if(!missing(geneBoxPlot)){
         rg = c(0,1)
@@ -421,7 +430,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }else{
         show_legend = rep(TRUE, length(colnames(anno_rows)))
       }
-      #print(show_legend)
+
       left_anno = HeatmapAnnotation(df=anno_rows,
                                     col=colours,
                                     which="row",
@@ -435,8 +444,6 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                            direction=legend_direction))
       
     }else{
-      anno_rows = row_df[rownames(cn_state_matrix),,drop=FALSE]
-      anno_rows$PGA = sample_average
       
       if(!missing(hide_annotations)){
         show_legend = rep(TRUE, length(colnames(anno_rows)))
@@ -445,6 +452,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }else{
         show_legend = rep(TRUE, length(colnames(anno_rows)))
       }
+
       left_anno = HeatmapAnnotation(df=anno_rows,
                                     col=colours,
                                     which="row",
@@ -568,7 +576,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                 labels=bin_labels,
                 chromosome_columns=column_chromosome,
                 bin_means=bin_average,
-                local_optima=cn_av_df))
+                local_optima=cn_av_df,
+                row_anno = anno_rows))
   }
   
 }
