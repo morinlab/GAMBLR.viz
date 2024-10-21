@@ -1,6 +1,7 @@
 #' @title Pretty CoLollipop Plot.
 #'
-#' @description Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored.
+#' @description Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored, and a 
+#' [GAMBLR.viz::prettyForestPlot] displayed below.
 #'
 #' @details Retrieve maf data of a specific sample or a set of samples for comparison. A gene of interest 
 #' can then be visualized with the given maf data files, and comparison commands. Silent mutations can be 
@@ -137,7 +138,7 @@ pretty_colollipop_plot <- function(
     meta2_counter <- length(unique(meta2$Tumor_Sample_Barcode))
 
     # Pass combined_gene_counts to pretty_lollipop_plot for plotting
-    combined_plot <- pretty_lollipop_plot(
+    colollipop_plot <- pretty_lollipop_plot(
         maf_df = maf_df, 
         gene = gene, 
         plot_title = plot_title,
@@ -151,5 +152,33 @@ pretty_colollipop_plot <- function(
         Sample2 = comparison_values[2]
     )
 
-    return(combined_plot)
+    forest_plot <- prettyForestPlot(
+        maf = maf_df,
+        metadata = metadata,
+        genes = gene,
+        comparison_column = comparison_column,
+        comparison_values = comparison_values,
+        separate_hotspots = FALSE,
+        comparison_name = paste0(
+            comparison_values[1],
+            " vs. ",
+            comparison_values[2]
+        ),
+        mirrorarg = TRUE
+    )
+
+    # arrange colollipop plot and forest plot together one over the other
+    plot <- ggarrange(
+        colollipop_plot,              
+        ggarrange(
+            forest_plot$forest,        
+            forest_plot$bar, 
+            widths = c(1, 0.6),
+            common.legend = TRUE,
+            align = "h"),          
+            ncol = 1, 
+            nrow = 2,
+            heights = c(2, 1)            
+    )
+    return(plot)
 }

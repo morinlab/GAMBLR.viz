@@ -33,7 +33,8 @@ pretty_colollipop_plot(
 A mirrored lollipop plot.
 }
 \description{
-Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored.
+Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored, and a 
+[GAMBLR.viz::prettyForestPlot] displayed below.
 }
 \details{
 Retrieve maf data of a specific sample or a set of samples for comparison. A gene of interest 

@@ -23,7 +23,8 @@
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
-#'
+#' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
+#' 
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
@@ -64,7 +65,8 @@ prettyForestPlot = function(maf,
                             comparison_name = FALSE,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
-                            max_q = 1){
+                            max_q = 1,
+                            mirrorarg = FALSE){
 
   #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
   if(comparison_values[1] == FALSE){
@@ -298,5 +300,9 @@ prettyForestPlot = function(maf,
     align = "h"
   )
 
-  return(list(fisher = fish_test, forest = forest, bar = bar, arranged = arranged_plot, mutmat = mutmat))
+  if (mirrorarg == FALSE) {
+    return(list(fisher = fish_test, forest = forest, bar = bar, arranged = arranged_plot, mutmat = mutmat))
+  } else {
+    return(list(forest = forest, bar = bar))
+  }
 }
