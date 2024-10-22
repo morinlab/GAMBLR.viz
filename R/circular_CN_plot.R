@@ -307,7 +307,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   cytoband_df = circlize::read.cytoband()$df
   #whole chromosome, arm-level or focal
   chromosome_cols = pretty_CN_heatmap_output$chromosome_columns
-  unique_chrom = unique(chromosome_cols)
+  chroms_u = unique(chromosome_cols)
   if(is.null(chromosome_cols)){
     stop("problem with input")
   }
@@ -321,7 +321,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   arm_df = expand.grid(chromosome=chroms_u,arm=c("p","q")) %>% mutate(name=paste0(chromosome,arm)) %>%
     column_to_rownames("name") %>%
     mutate(start=0,end=0) 
-  for(chrom in unique_chrom){
+  for(chrom in chroms_u){
     these_col= which(chromosome_cols %in% chrom)
     p_coords1 = filter(cytoband_df,V1==chrom,grepl("p",V4)) %>% 
       pull(V2) 
@@ -445,8 +445,23 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   rownames(chrom_events_df)= rownames(CN_mat)
   arm_events_df = do.call("bind_cols",chrom_arm_events) %>% as.data.frame()
   rownames(arm_events_df)= rownames(CN_mat)
-  #convert to artificial/simplified segments
-  
-  return(chrom_events_df)
+  # give arm-level events meaningful names and only report the most common event (drop the others) per arm
+  arm_events_simplified = arm_events_df
+  arm_means = colMeans(arm_events_df)
+  for(i in c(1:ncol(arm_events_simplified))){
+    arm = colnames(arm_events_simplified)[i]
+    if(arm_means[i]<0){
+      #deletion
+      new_name = paste0(arm,"_LOSS")
+      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i]<0,1,0)
+    }else if(arm_means[i]>0){
+      #gain 
+      new_name = paste0(arm,"_GAIN")
+      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i]>0,1,0)
+    }
+    colnames(arm_events_simplified)[i] = new_name
+    
+  }
+  return(list(chrom_events=chrom_events_df,arm_events=arm_events_df,arm_events_simplified=arm_events_simplified))
 }
 
