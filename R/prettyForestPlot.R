@@ -64,8 +64,7 @@ prettyForestPlot = function(maf,
                             comparison_name = FALSE,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
-                            max_q = 1,
-                            mirrorarg = FALSE){
+                            max_q = 1){
 
   #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
   if(comparison_values[1] == FALSE){

@@ -163,8 +163,7 @@ pretty_colollipop_plot <- function(
             comparison_values[1],
             " vs. ",
             comparison_values[2]
-        ),
-        mirrorarg = TRUE
+        )
     )
 
     # arrange colollipop plot and forest plot together one over the other
