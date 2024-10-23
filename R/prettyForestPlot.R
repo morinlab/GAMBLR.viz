@@ -23,7 +23,7 @@
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
-#'
+#' 
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
