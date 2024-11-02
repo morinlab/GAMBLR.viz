@@ -105,8 +105,8 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
           }
           region1 = names(pretty_CN_heatmap_output$cumulative_gain)[i]
           region2 = names(pretty_CN_heatmap_output$cumulative_gain)[j]
-          chunks1 = region_to_chunks(region1)
-          chunks2 = region_to_chunks(region2)
+          chunks1 = GAMBLR.data::region_to_chunks(region1)
+          chunks2 = GAMBLR.data::region_to_chunks(region2)
           if(chunks1$chromosome == chunks2$chromosome){
             print(paste("skipping",region1,region2,correlations[i,j]))
             next;
@@ -173,7 +173,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
   label_end = c()
   label_text = c()
   for(i in c(1:length(bins_to_label))){
-    chunks = region_to_chunks(bins_to_label[i])
+    chunks = GAMBLR.data::region_to_chunks(bins_to_label[i])
     
     if(!bins_to_label[i] %in% bin_names){
       message(paste("NOT FOUND:",bins_to_label[i],labels[i]))
@@ -188,7 +188,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
     
     ci = get_chrom_and_index(bins_to_label[i])
     
-    print(paste(bins_to_label[i],i,ci[[1]],ci[[2]],label))
+    #print(paste(bins_to_label[i],i,ci[[1]],ci[[2]],label))
     
     if(!is.null(ci[[2]])){
       x = c(x,ci[[2]])
@@ -201,9 +201,9 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
     }
     
   }
-  print(label_chrom)
-  print(label_start)
-  print(label_text)
+  #print(label_chrom)
+  #print(label_start)
+  #print(label_text)
   label_bed = data.frame(chr=label_chrom,
                          start=as.integer(label_start),
                          end=as.integer(label_end),
@@ -211,7 +211,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
   
   
   if(ideogram){
-    print(tail(label_bed))
+    #print(tail(label_bed))
     
   }else{
     circos.trackPlotRegion(chroms_u_nochr, ylim = c(0, max(pretty_CN_heatmap_output$cumulative_gain)), 
@@ -232,12 +232,12 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
   if(ideogram){
     these_gains = pretty_CN_heatmap_output$cumulative_gain
     gain_df = data.frame(region=names(these_gains),value1=unname(these_gains))
-    print(head(gain_df))
+    #print(head(gain_df))
     gain_df = data.frame(region=names(these_gains),value1=unname(these_gains)) %>%
       separate(region,into=c("chr","coords"),sep=":") %>%
       separate(coords,into=c("start","end"),sep="-") %>% 
       mutate(start=as.integer(start),end=as.integer(end))
-    print(head(gain_df))
+    #print(head(gain_df))
     circos.genomicTrack(gain_df, panel.fun = function(region, value, ...) {
       circos.genomicLines(region, value, type = "l",area=T, col =gain_col,  ...)
     })
@@ -264,7 +264,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
       separate(region,into=c("chr","coords"),sep=":") %>%
       separate(coords,into=c("start","end"),sep="-") %>% 
       mutate(start=as.integer(start),end=as.integer(end))
-    print(head(loss_df))
+    #print(head(loss_df))
     circos.genomicTrack(loss_df, panel.fun = function(region, value, ...) {
       circos.genomicLines(region, value, type = "l",area=T, col = del_col,  ...)
     })
