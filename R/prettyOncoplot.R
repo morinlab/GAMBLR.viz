@@ -743,7 +743,7 @@ prettyOncoplot = function(maf_df,
   
   #print(range(metadata_df$NFKBIZ))
   #check for missing colours
-  print(paste("mapping:",paste(metadataColumns,collapse = ",")))
+  
   colours = map_metadata_to_colours(metadataColumns = metadataColumns, 
                                     these_samples_metadata = these_samples_metadata,
                                     annoAlpha = annoAlpha,
