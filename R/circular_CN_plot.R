@@ -3,9 +3,17 @@
 #'
 #' @param pretty_CN_heatmap_output 
 #' @param ideogram 
-#' @param labelTheseGenes 
+#' @param track_height Change this to increase/decrease the height of the tracks. (0.1)
+#' @param labelTheseGenes Specify a vector of gene names to label in the plot
+#' @param del_col Optionally specify a different colour to use for the CNV deletion track
+#' @param gain_col Optionally specify a different colour to use for the CNV gain track
+#' @param calculate_correlations Experimental! Calculate the correlation between CNVs between different chromosomes and link highly correlated regions
+#' @param min_correlation Minimum correlation to consider when plotting links
+#' @param max_neg_correlation Maximum negative value for correlations <1 to consider when plotting links
+#' @param link_transparency Specify a different alpha to increase or decrease the transparency of links
+#' 
 #'
-#' @return
+#' @return Nothing
 #' @export
 #'
 #' @examples
@@ -22,7 +30,6 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
                             del_col="#0000FF80",
                             gain_col="#FF000080",
                             calculate_correlations = FALSE,
-                            return_correlations = FALSE,
                             link_transparency=0.8,
                             labelTheseGenes = c("CD58","TLR2",
                                                 "MCL1","CDKN2A",
@@ -134,9 +141,6 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
   
 
   
-  #return(list(bed1,bed2,correlations))
-  #Heatmap(correlations,row_split=bin_chroms,
-  #        column_split = bin_chroms,cluster_rows=F,cluster_columns=F,show_row_names = F,show_column_names = F)
   chroms_u = unique(bin_chroms)
   xlims = matrix(ncol=2,nrow=length(chroms_u))
   rownames(xlims)=chroms_u
@@ -294,12 +298,23 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 
 #' Categorize arm-level and chromosomal CNV events
 #'
-#' @param pretty_CN_heatmap_output 
+#' @param pretty_CN_heatmap_output The output from running the pretty_CN_heatmap function
 #'
-#' @return
+#' @return List of data frames
 #' @export
 #'
 #' @examples
+#' 
+#' cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+#'     scale_by_sample = T,
+#'     these_samples_metadata = all_genome_meta,
+#'     metadataColumns = c("pathology","seq_type"),
+#'     return_data = T)
+#'     
+#' aneuploidies = categorize_CN_events(cn_out)
+#' 
+#' 
+#' 
 categorize_CN_events = function(pretty_CN_heatmap_output){
   CN_mat = pretty_CN_heatmap_output$data
   labels = pretty_CN_heatmap_output$labels

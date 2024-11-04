@@ -17,7 +17,7 @@
 #' @param cluster_columns Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
-#' @param sortByPGA
+#' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
 #' @param sortByMetadataColumns A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap

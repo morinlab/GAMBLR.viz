@@ -32,29 +32,36 @@ pretty_circular_mutation_frequency_heatmap(
 )
 }
 \arguments{
-\item{prettyOncoplot_output}{}
+\item{prettyOncoplot_output}{The output of the prettyOncoplot function}
 
-\item{genes}{}
+\item{cn_status_matrix}{The output of get_cn_states}
 
-\item{keep_these_pathologies}{}
+\item{collated_results}{A list of data frames with sample_id as rownames and features as column names}
 
-\item{min_sample_num}{}
+\item{genes}{A vector of genes to label}
+
+\item{keep_these_pathologies}{A vector of pathology values to show in the plot. All the remaining rows will be ignored.}
+
+\item{min_sample_num}{Minimum number of samples in a pathology to be considered for the plot. Pathologies with less than this number will be excluded. (20)}
+}
+\value{
+Nothing or a list of data frames (when return_data = TRUE)
 }
 \description{
 pretty_circular_mutation_frequency_heatmap
 }
 \examples{
 
-all_gambl_meta = get_gambl_metadata() \%>\% 
+all_gambl_meta = get_gambl_metadata() \%>\%
     filter(!seq_type == "mrna") \%>\%
     filter(pathology \%in\% names(get_gambl_colours("pathology")))
-    
+
 all_coding = get_all_coding_ssm(these_samples_metadata = all_gambl_meta)
 
-genes = filter(GAMBLR.data::lymphoma_genes_dlbcl_v_latest,curated==TRUE) \%>\% 
+genes = filter(GAMBLR.data::lymphoma_genes_dlbcl_v_latest,curated==TRUE) \%>\%
     pull(Gene)
 genes = unique(c(genes,filter(GAMBLR.data::lymphoma_genes_mcl_v_latest,,curated==TRUE) \%>\% pull(Gene)))
-genes = unique(c(genes,filter(GAMBLR.data::lymphoma_genes_bl_v_latest,,curated==TRUE) \%>\% pull(Gene)))  
+genes = unique(c(genes,filter(GAMBLR.data::lymphoma_genes_bl_v_latest,,curated==TRUE) \%>\% pull(Gene)))
 oncoplot_output = prettyOncoplot(all_coding,
                                 genes=genes,
                                 minMutationPercent = 2,
@@ -68,7 +75,7 @@ pretty_circular_mutation_frequency_heatmap(prettyOncoplot_output = oncoplot_outp
                                                "BL",
                                                "HGBL"))
 
-genes_and_cn_threshs = 
+genes_and_cn_threshs =
     data.frame(gene_id=c("MYC",
     "MIR17HG", "TNFAIP3","TCF4",
     "TNFRSF14","REL","CD274",
@@ -85,22 +92,22 @@ cn_status = get_cnv_and_ssm_status(only_cnv="all",
                         these_samples_metadata = all_gambl_meta,
                         genes_and_cn_threshs = genes_and_cn_threshs,
                         adjust_for_ploidy=T)
-                        
-                        
+
+
 pretty_circular_mutation_frequency_heatmap(cn_status_matrix = cn_status,
                                            prettyOncoplot_output = oncoplot_output)
 
-sv_collated = GAMBLR.results:::collate_sv_results() \%>\% 
+sv_collated = GAMBLR.results:::collate_sv_results() \%>\%
     select(sample_id,ends_with("sv"))
 
-NFKBIZ_genome = GAMBLR.results:::collate_nfkbiz_results() \%>\% 
+NFKBIZ_genome = GAMBLR.results:::collate_nfkbiz_results() \%>\%
     select(sample_id,NFKBIZ_UTR)
-NFKBIZ_capture = GAMBLR.results:::collate_nfkbiz_results(seq_type_filter="capture") \%>\% 
+NFKBIZ_capture = GAMBLR.results:::collate_nfkbiz_results(seq_type_filter="capture") \%>\%
     select(sample_id,NFKBIZ_UTR)
 
-HNRNPH1_genome = GAMBLR.results:::collate_hnrnph1_mutations() \%>\% 
+HNRNPH1_genome = GAMBLR.results:::collate_hnrnph1_mutations() \%>\%
     select(sample_id,HNRNPH1_splice)
-HNRNPH1_capture = GAMBLR.results:::collate_hnrnph1_mutations(seq_type_filter="capture") \%>\% 
+HNRNPH1_capture = GAMBLR.results:::collate_hnrnph1_mutations(seq_type_filter="capture") \%>\%
     select(sample_id,HNRNPH1_splice)
 
 NFKBIZ = bind_rows(NFKBIZ_genome,NFKBIZ_capture)
@@ -112,17 +119,17 @@ pretty_circular_mutation_frequency_heatmap(cn_status_matrix = cn_status,
                                                HNRNPH1),
                                            prettyOncoplot_output = oncoplot_output,
                                            these_samples_metadata = all_gambl_meta)
-                                           
-                                           
+
+
 all_states_binned = get_cn_states(n_bins_split=2500,
     missing_data_as_diploid = T,
-    seg_data = seg_data)    
-    
+    seg_data = seg_data)
+
 CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
     these_samples_metadata = all_gambl_meta,
     hide_annotations = "chromosome",
     scale_by_sample=T,
-    return_data = T)   
+    return_data = T)
 
 arm_level_events = categorize_CN_events(CN_out)
 
@@ -136,15 +143,15 @@ pretty_circular_mutation_frequency_heatmap(cn_status_matrix = cn_status,
                                                arm_level_annotated),
                                            prettyOncoplot_output = oncoplot_output,
                                            these_samples_metadata = all_gambl_meta)
-                                           
-                              
+
+
 ashm_freq = get_ashm_count_matrix(
                  regions_bed = dplyr::mutate(GAMBLR.data::grch37_ashm_regions,
                                name = paste(gene, region, sep = "_")),
                  this_seq_type = "genome"
                  )
-ashm_freq_collated = mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))  
- 
+ashm_freq_collated = mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))
+
  ashm_freq_collated = ashm_freq_collated[,colSums(ashm_freq_collated) >130]
  ashm_freq_collated = rownames_to_column(ashm_freq_collated,"sample_id")
 

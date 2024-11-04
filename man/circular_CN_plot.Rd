@@ -13,7 +13,6 @@ circular_CN_plot(
   del_col = "#0000FF80",
   gain_col = "#FF000080",
   calculate_correlations = FALSE,
-  return_correlations = FALSE,
   link_transparency = 0.8,
   labelTheseGenes = c("CD58", "TLR2", "MCL1", "CDKN2A", "TMEM30A", "RHOA", "B2M", "PTEN",
     "FAS", "ETV6", "GRB2", "FCGR2B", "CCND3", "CUX1", "MIR17HG", "TFPT", "CD274", "JAK2",
@@ -26,7 +25,24 @@ circular_CN_plot(
 
 \item{ideogram}{}
 
-\item{labelTheseGenes}{}
+\item{track_height}{Change this to increase/decrease the height of the tracks. (0.1)}
+
+\item{min_correlation}{Minimum correlation to consider when plotting links}
+
+\item{max_neg_correlation}{Maximum negative value for correlations <1 to consider when plotting links}
+
+\item{del_col}{Optionally specify a different colour to use for the CNV deletion track}
+
+\item{gain_col}{Optionally specify a different colour to use for the CNV gain track}
+
+\item{calculate_correlations}{Experimental! Calculate the correlation between CNVs between different chromosomes and link highly correlated regions}
+
+\item{link_transparency}{Specify a different alpha to increase or decrease the transparency of links}
+
+\item{labelTheseGenes}{Specify a vector of gene names to label in the plot}
+}
+\value{
+Nothing
 }
 \description{
 Circular overview of copy number data across a cohort

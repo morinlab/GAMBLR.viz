@@ -74,6 +74,8 @@ pretty_CN_heatmap(
 
 \item{splitByBinState}{Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin}
 
+\item{sortByPGA}{Optional: Sort the rows based on percent genome altered (PGA) instead of the other options}
+
 \item{sortByMetadataColumns}{A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)}
 
 \item{labelTheseGenes}{A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap}
@@ -120,10 +122,10 @@ Pretty Copy Number Heatmap
 
 
 #get some metadata for subsetting the data to just one pathology (DLBCL)
-dlbcl_genome_meta = get_gambl_metadata() \%>\% 
+dlbcl_genome_meta = get_gambl_metadata() \%>\%
                     filter(pathology=="DLBCL",
                     seq_type=="genome")
-                    
+
 # Create the copy number matrix using the helper functions
 all_segments = get_cn_segments()
 all_states_binned = get_cn_states(n_bins_split=2500,
@@ -137,7 +139,7 @@ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
                   these_samples_metadata = dlbcl_genome_meta,
                   hide_annotations = "chromosome")
 
-# Disable row (sample) clustering and restrict to a few chromosomes 
+# Disable row (sample) clustering and restrict to a few chromosomes
 # and highlight some genes of interest
 pretty_CN_heatmap(cn_state_matrix=all_states_binned,
   these_samples_metadata = dlbcl_genome_meta,
@@ -150,11 +152,11 @@ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
 # get gene expression data
 gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
 
-genome_meta_exp = left_join(get_gambl_metadata() \%>\% 
-    filter(seq_type=="genome") \%>\% 
+genome_meta_exp = left_join(get_gambl_metadata() \%>\%
+    filter(seq_type=="genome") \%>\%
     select(sample_id,pathology,lymphgen),
     select(gene_exp_all,-sample_id),
-    by=c("sample_id"="genome_sample_id")) \%>\% 
+    by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
 
 # Include gene expression data and embed a box plot showing the expression of one gene across different CN states

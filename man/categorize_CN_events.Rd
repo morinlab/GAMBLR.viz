@@ -7,8 +7,24 @@
 categorize_CN_events(pretty_CN_heatmap_output)
 }
 \arguments{
-\item{pretty_CN_heatmap_output}{}
+\item{pretty_CN_heatmap_output}{The output from running the pretty_CN_heatmap function}
+}
+\value{
+List of data frames
 }
 \description{
 Categorize arm-level and chromosomal CNV events
+}
+\examples{
+
+cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+    scale_by_sample = T,
+    these_samples_metadata = all_genome_meta,
+    metadataColumns = c("pathology","seq_type"),
+    return_data = T)
+    
+aneuploidies = categorize_CN_events(cn_out)
+
+
+
 }

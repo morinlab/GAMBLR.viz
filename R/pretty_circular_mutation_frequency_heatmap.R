@@ -1,11 +1,13 @@
 #' pretty_circular_mutation_frequency_heatmap
 #'
-#' @param prettyOncoplot_output
-#' @param genes
-#' @param keep_these_pathologies
-#' @param min_sample_num
+#' @param prettyOncoplot_output The output of the prettyOncoplot function
+#' @param cn_status_matrix The output of get_cn_states
+#' @param collated_results A list of data frames with sample_id as rownames and features as column names
+#' @param genes A vector of genes to label
+#' @param keep_these_pathologies A vector of pathology values to show in the plot. All the remaining rows will be ignored.
+#' @param min_sample_num Minimum number of samples in a pathology to be considered for the plot. Pathologies with less than this number will be excluded. (20)
 #'
-#' @return
+#' @return Nothing or a list of data frames (when return_data = TRUE)
 #' @export
 #'
 #' @examples
