@@ -38,11 +38,47 @@ pretty_circular_mutation_frequency_heatmap(
 
 \item{collated_results}{A list of data frames with sample_id as rownames and features as column names}
 
+\item{these_samples_metadata}{A data frame with metadata. Usually the output of [GAMBLR.results::get_gambl_metadata].}
+
 \item{genes}{A vector of genes to label}
+
+\item{cluster}{Whether to perform clustering. Default is TRUE (clustering is performed).}
 
 \item{keep_these_pathologies}{A vector of pathology values to show in the plot. All the remaining rows will be ignored.}
 
 \item{min_sample_num}{Minimum number of samples in a pathology to be considered for the plot. Pathologies with less than this number will be excluded. (20)}
+
+\item{col_fun}{Color function to modify the default color pallette of the heatmap.}
+
+\item{col_theme}{Alternatively, provide the color theme instead of  `col_fun` to change the default colors of the heatmap.}
+
+\item{return_data}{Conditionally return the formatted data used for the plotting. Default is FALSE (only image is plotted and no data is returned).}
+
+\item{dend_location}{Location of the dendrogram. Default is "inside".}
+
+\item{clustering_distance_method}{Clustering method. Default is "euclidean".}
+
+\item{border}{Whether to draw border around heatmap. Default is TRUE (with border).}
+
+\item{split_by_type}{Whether to split the mutations by type. Default is FALSE (no splitting).}
+
+\item{rotate_degrees}{Rotate labels. Default is 0 (no rotation).}
+
+\item{gap.degree}{Gap degree. Default is 15.}
+
+\item{show.sector.labels}{Show labels for each sector of the heatmap. Default is FALSE (no labels).}
+
+\item{label_cex}{Number indicating the amount by which plotting text and symbols should be scaled relative to the default when displaying the labels. Default is 0.5.}
+
+\item{rownames_cex}{Number indicating the amount by which plotting text and symbols should be scaled relative to the default when displaying the rownames. Default is 0.5.}
+
+\item{include_legend}{Whether to include the legend. Default is FALSE (no legend).}
+
+\item{colour_labels}{Optionally color labels. Default is FALSE (no coloring).}
+
+\item{label_group}{How to group the labels. Default is "text".}
+
+\item{label_alpha}{Value from 0 to 1 to control alpha of the label.}
 }
 \value{
 Nothing or a list of data frames (when return_data = TRUE)

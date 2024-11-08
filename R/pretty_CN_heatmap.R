@@ -36,6 +36,8 @@
 #' @param left_annotation_name_side Which side to put the name of the metadata annotations (top or bottom)
 #' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded
 #' @param return_data Specify TRUE to get some of the internal data back including the heatmap object
+#' @param flip Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.
+#' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
 #' @return list (when return_data = TRUE)
 #' @export

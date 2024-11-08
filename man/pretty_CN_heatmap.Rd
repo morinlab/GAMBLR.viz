@@ -111,6 +111,10 @@ pretty_CN_heatmap(
 \item{return_data}{Specify TRUE to get some of the internal data back including the heatmap object}
 
 \item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
+
+\item{flip}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
+
+\item{verbose}{Control verbosity of the console output. Default is FALSE.}
 }
 \value{
 list (when return_data = TRUE)

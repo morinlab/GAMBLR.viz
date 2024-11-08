@@ -3,9 +3,27 @@
 #' @param prettyOncoplot_output The output of the prettyOncoplot function
 #' @param cn_status_matrix The output of get_cn_states
 #' @param collated_results A list of data frames with sample_id as rownames and features as column names
+#' @param these_samples_metadata A data frame with metadata. Usually the output of [GAMBLR.results::get_gambl_metadata].
 #' @param genes A vector of genes to label
+#' @param cluster Whether to perform clustering. Default is TRUE (clustering is performed).
 #' @param keep_these_pathologies A vector of pathology values to show in the plot. All the remaining rows will be ignored.
 #' @param min_sample_num Minimum number of samples in a pathology to be considered for the plot. Pathologies with less than this number will be excluded. (20)
+#' @param col_fun Color function to modify the default color pallette of the heatmap.
+#' @param col_theme Alternatively, provide the color theme instead of  `col_fun` to change the default colors of the heatmap.
+#' @param return_data Conditionally return the formatted data used for the plotting. Default is FALSE (only image is plotted and no data is returned).
+#' @param dend_location Location of the dendrogram. Default is "inside".
+#' @param clustering_distance_method Clustering method. Default is "euclidean".
+#' @param border Whether to draw border around heatmap. Default is TRUE (with border).
+#' @param split_by_type Whether to split the mutations by type. Default is FALSE (no splitting).
+#' @param rotate_degrees Rotate labels. Default is 0 (no rotation).
+#' @param gap.degree Gap degree. Default is 15.
+#' @param show.sector.labels Show labels for each sector of the heatmap. Default is FALSE (no labels).
+#' @param label_cex Number indicating the amount by which plotting text and symbols should be scaled relative to the default when displaying the labels. Default is 0.5.
+#' @param rownames_cex Number indicating the amount by which plotting text and symbols should be scaled relative to the default when displaying the rownames. Default is 0.5.
+#' @param include_legend Whether to include the legend. Default is FALSE (no legend).
+#' @param colour_labels Optionally color labels. Default is FALSE (no coloring).
+#' @param label_group How to group the labels. Default is "text".
+#' @param label_alpha Value from 0 to 1 to control alpha of the label.
 #'
 #' @return Nothing or a list of data frames (when return_data = TRUE)
 #' @export
