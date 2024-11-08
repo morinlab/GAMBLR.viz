@@ -14,16 +14,16 @@ circular_CN_plot(
   gain_col = "#FF000080",
   calculate_correlations = FALSE,
   link_transparency = 0.8,
-  labelTheseGenes = c("CD58", "TLR2", "MCL1", "CDKN2A", "TMEM30A", "RHOA", "B2M", "PTEN",
-    "FAS", "ETV6", "GRB2", "FCGR2B", "CCND3", "CUX1", "MIR17HG", "TFPT", "CD274", "JAK2",
-    "CDK14", "BCL6", "EZH2", "HIST1H1E", "REL", "NOL9", "TNFRSF14", "TOX", "TP53", "RB1",
-    "TCF4", "HNRNPD", "BCL2", "NFKBIZ", "TNFAIP3", "PRDM1", "CD70", "MYC")
+  labelTheseGenes = c("CD58", "TLR2", "MCL1", "CDKN2A", "TMEM30A", "RHOA", "B2M",
+    "PTEN", "FAS", "ETV6", "GRB2", "FCGR2B", "CCND3", "CUX1", "MIR17HG", "TFPT", "CD274",
+    "JAK2", "CDK14", "BCL6", "EZH2", "HIST1H1E", "REL", "NOL9", "TNFRSF14", "TOX",
+    "TP53", "RB1", "TCF4", "HNRNPD", "BCL2", "NFKBIZ", "TNFAIP3", "PRDM1", "CD70", "MYC")
 )
 }
 \arguments{
-\item{pretty_CN_heatmap_output}{}
+\item{pretty_CN_heatmap_output}{Output from the [GAMBLR.results::pretty_CN_heatmap] call.}
 
-\item{ideogram}{}
+\item{ideogram}{Logical value indicating whether to plot ideogram. Default is TRUE.}
 
 \item{track_height}{Change this to increase/decrease the height of the tracks. (0.1)}
 

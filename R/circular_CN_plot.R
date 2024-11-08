@@ -1,8 +1,8 @@
 
 #' Circular overview of copy number data across a cohort
 #'
-#' @param pretty_CN_heatmap_output 
-#' @param ideogram 
+#' @param pretty_CN_heatmap_output Output from the [GAMBLR.results::pretty_CN_heatmap] call.
+#' @param ideogram Logical value indicating whether to plot ideogram. Default is TRUE.
 #' @param track_height Change this to increase/decrease the height of the tracks. (0.1)
 #' @param labelTheseGenes Specify a vector of gene names to label in the plot
 #' @param del_col Optionally specify a different colour to use for the CNV deletion track
