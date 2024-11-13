@@ -90,13 +90,16 @@ plot_sample_circos = function(this_sample_id,
       dplyr::select(chromosome, start, end, gene_name) %>%
       dplyr::mutate(chromosome = paste0("chr", chromosome))
   }
-  if(missing(sv_df)){
-    sv_df = get_manta_sv(verbose = FALSE) %>%
-      dplyr::filter(tumour_sample_id == this_sample_id)
-  }else{
-    sv_df = sv_df %>%
-      dplyr::filter(tumour_sample_id == this_sample_id)
+  if(include_sv){
+    if(missing(sv_df)){
+      sv_df = get_manta_sv(verbose = FALSE) %>%
+        dplyr::filter(tumour_sample_id == this_sample_id)
+    }else{
+      sv_df = sv_df %>%
+        dplyr::filter(tumour_sample_id == this_sample_id)
+    }
   }
+  
 
   #add chr prefixes if grch37 is selcted (expected by circlize)
   if(this_projection == "grch37"){

@@ -62,7 +62,7 @@
 #' @param split_rows_kmeans K value for k-means clustering on rows
 #' @param split_columns_kmeans K value for k-means clustering on columns
 #' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
-#' @param simplify Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
+#' @param simplify_annotation Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
 #' @param stacked Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)
 #' @param numeric_heatmap_type Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".
 #' @param numeric_heatmap_location Where to draw the numeric heatmap. Can be "top" (default) or "bottom".
@@ -116,7 +116,7 @@
 #'      cluster_rows = T,
 #'      metadataColumns = c("pathology","genetic_subgroup","seq_type","ffpe_or_frozen"),
 #'      cluster_cols = F,
-#'      simplify=T,
+#'      simplify_annotation=T,
 #'      cnv_df=gene_cnv,sortByColumns = c("pathology","genetic_subgroup"))
 #'
 # define gene groups
@@ -194,16 +194,16 @@ prettyOncoplot = function(maf_df,
                           split_rows_kmeans,
                           split_columns_kmeans,
                           dry_run = FALSE,
-                          simplify= FALSE,
+                          simplify_annotation= FALSE,
                           stacked = FALSE,
                           numeric_heatmap_type = "aSHM",
                           numeric_heatmap_location = "top",
                           return_inputs = FALSE){
   
   if(stacked){
-    if(!simplify){
+    if(!simplify_annotation){
       message("stacked mode is only compatible in combination with simplify = TRUE. Setting this for you.")
-      simplify = TRUE
+      simplify_annotation = TRUE
     }
     if(numeric_heatmap_location == "bottom"){
       message("Numeric heatmap will be on the bottom. Some features will not be available.")
@@ -472,7 +472,7 @@ prettyOncoplot = function(maf_df,
   }
   spacing = 0
   height_scaling = 1
-  if(simplify){
+  if(simplify_annotation){
     #make oncomatrix individually from the MAF
     
     summarize_mutation_by_class = function(mutation_set){
@@ -713,6 +713,14 @@ prettyOncoplot = function(maf_df,
     print(length(patients_kept))
     
   }
+  if(length(expressionColumns)){
+    if(missing(numericMetadataColumns)){
+      numericMetadataColumns = expressionColumns
+    }else{
+      numericMetadataColumns = c(numericMetadataColumns,expressionColumns)
+    }
+    
+  }
   if(!missing(numericMetadataColumns)){
     
     metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
@@ -732,6 +740,8 @@ prettyOncoplot = function(maf_df,
   }
   metadata_df = metadata_df %>%
     mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
+  
+  #print(range(metadata_df$NFKBIZ))
   #check for missing colours
   
   colours = map_metadata_to_colours(metadataColumns = metadataColumns, 
@@ -745,12 +755,34 @@ prettyOncoplot = function(maf_df,
     colours[["HotSpot"]] = "magenta"
   }
   if (! is.null(custom_colours)){
-    colours = custom_colours
+    for(colname in names(custom_colours)){
+      colours[[colname]] = custom_colours[[colname]]
+      print("adding:")
+      print(colname)
+      print(colours[[colname]])
+    }
+    print(names(colours))
+    
+  }
+  
+  col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
+  if(numeric_heatmap_type=="CNV"){
+    col_fun = circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red"))
+  }
+  
+  for(exp in expressionColumns){
+    colours[[exp]] = col_fun
+   
   }
   
   for(annotation in names(colours)){
     if(annotation %in% c("HotSpot","hot_spot")){
       next;
+    }
+    if(!missing(expressionColumns)){
+      if(annotation %in% expressionColumns){
+        next;
+      }
     }
     all_names = filter(metadata_df,!is.na(annotation)) %>% pull(annotation) %>% 
       unique() %>% as.character()
@@ -759,10 +791,18 @@ prettyOncoplot = function(maf_df,
       print("-=-=-=")
       print(all_names[!all_names %in% names(colours[[annotation]])])
       print("-=-=-=")
-      stop(paste("No colour assigned for one or more values in annotation:\n Remove the offending rows or provide custom colours",annotation))
+      print(unique(all_names))
+      print("-=-=-=")
+      print(names(colours[[annotation]]))
+      print("-=-=-=")
+      stop(paste("No colour assigned for one or more values in annotation:", annotation ,"\n Remove the offending rows or provide custom colours",annotation))
     }
   }
-  
+  if(verbose){
+    print("COLOURS:")
+    print(colours)
+  }
+
   if(!missing(sortByColumns)){
     if (arrange_descending) {
       metadata_df = arrange(metadata_df, across(sortByColumns, desc))
@@ -774,15 +814,8 @@ prettyOncoplot = function(maf_df,
   if(verbose){
     print(genes_kept)
   }
-  col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
-  if(numeric_heatmap_type=="CNV"){
-    col_fun = circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red"))
-  }
-  
-  for(exp in expressionColumns){
-    colours[[exp]] = col_fun
-  }
 
+  
   if(missing(splitGeneGroups)){
     row_split = rep("", length(genes))
   }else{
@@ -903,7 +936,7 @@ prettyOncoplot = function(maf_df,
   
   
 
-  if(simplify){
+  if(simplify_annotation){
     if(!missing(cnv_df)){
       cn_df = cn_df[genes_kept,patients_kept]
     }
@@ -1074,7 +1107,7 @@ prettyOncoplot = function(maf_df,
     
 
   
-  if(simplify){
+  if(simplify_annotation){
     plot_type = "simplify"
   }else{
     plot_type = "original"
@@ -1121,7 +1154,8 @@ prettyOncoplot = function(maf_df,
                       return_inputs=return_inputs,
                       numeric_heatmap_location=numeric_heatmap_location,
                       split_rows_kmeans=split_rows_kmeans,
-                      split_columns_kmeans=split_columns_kmeans)
+                      split_columns_kmeans=split_columns_kmeans,
+                      verbose=verbose)
   if(return_inputs){
     return(returned)
   }
@@ -1168,7 +1202,8 @@ make_prettyoncoplot = function(mat_input,
                                return_inputs,
                                numeric_heatmap_location,
                                split_rows_kmeans,
-                               split_columns_kmeans){
+                               split_columns_kmeans,
+                               verbose){
   
 
   if(plot_type == "simplify"){
@@ -1337,11 +1372,11 @@ make_prettyoncoplot = function(mat_input,
         }
         return()
       }
-      
+      #if(return_inputs){
+      #  return(list(Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
+      #}
     } #end of stacked
-    if(return_inputs){
-      return(list(Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
-    }
+    
   }else{ #basic plot type
     heatmap_legend_param = list(title = "Alterations",
                                 at = c("RNA", "3'UTR" , "Nonsense_Mutation", "Splice_Site","Splice_Region", "Nonstop_Mutation", "Translation_Start_Site",
@@ -1397,7 +1432,21 @@ make_prettyoncoplot = function(mat_input,
   draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
   
   if(return_inputs){
-    return(list(Heatmap=ch,heat_mat=heat_mat,mut_mat=mat_input))
+    
+    if(plot_type == "simplify"){
+      any_mut = mat_input$Missense
+      any_mut[] = 0
+      any_mut[mat_input$Missense] = 1
+      any_mut[mat_input$Truncating] = 1
+      any_mut[mat_input$Splice_Site] = 1
+      
+      mut_status = as.data.frame(t(any_mut))
+      metadata_df = bind_cols(metadata_df,mut_status)
+      return(list(Heatmap=ch,mut_mat=mat_input,mut_status=mut_status,metadata=metadata_df))
+    }
+    return(list(Heatmap=ch,mut_mat=mat_input,metadata=metadata_df))
+    
+    
   }
   
 }
