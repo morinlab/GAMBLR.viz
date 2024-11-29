@@ -10,7 +10,6 @@ License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Imports:
-    broom,
     circlize,
     ComplexHeatmap,
     data.table,
