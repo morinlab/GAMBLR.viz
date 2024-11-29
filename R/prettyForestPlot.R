@@ -27,7 +27,7 @@
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import dplyr ggpubr forcats ggplot2 purrr tidyr broom GAMBLR.helpers
+#' @import dplyr ggpubr ggplot2 purrr tidyr broom GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -148,8 +148,7 @@ prettyForestPlot = function(maf,
     unnest(tidy) %>%
     dplyr::mutate(q.value = p.adjust(p.value, "BH")) %>%
     dplyr::select(-c(test, method, alternative)) %>%
-    dplyr::filter(q.value <= max_q) %>%
-    dplyr::mutate(gene = fct_reorder(gene, estimate))
+    dplyr::filter(q.value <= max_q)
 
   flatten_table <- function(Row){
 

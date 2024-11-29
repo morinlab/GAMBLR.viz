@@ -15,7 +15,6 @@ Imports:
     ComplexHeatmap,
     data.table,
     dplyr,
-    forcats,
     GAMBLR.data,
     GAMBLR.helpers,
     GAMBLR.utils,
