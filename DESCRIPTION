@@ -12,7 +12,6 @@ Depends:
 Imports:
     circlize,
     ComplexHeatmap,
-    data.table,
     dplyr,
     GAMBLR.data,
     GAMBLR.helpers,

@@ -23,8 +23,7 @@
 #' @param plot_sub Optional parameter, add a subtitle to the alignment metric plot.
 #'
 #' @return A plot as a ggplot object (grob).
-#'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
+#' 
 #' @import ggplot2 GAMBLR.helpers dplyr tidyr
 #' @export
 #'

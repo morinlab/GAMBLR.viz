@@ -47,7 +47,6 @@
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import dplyr tidyr tibble ComplexHeatmap circlize grid
 #' @export
 #'
@@ -283,13 +282,16 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
       mutate(
         start = start - window_size,
         end = end + window_size
-      ) %>%
-      as.data.table()
-    setkey(regions.dt, chrom, start, end)
+      )
 
-    bin.dt <- as.data.table(bin_df)
-    setkey(bin.dt, chrom, start, end)
-    bin_overlapped <- foverlaps(bin.dt, regions.dt) %>%
+    bin.dt <- as.data.frame(bin_df)
+    bin_overlapped <- cool_overlaps(
+        bin.dt,
+        regions.dt,
+        columns1 = c("chrom", "start", "end"),
+        columns2 = c("chrom", "start", "end"),
+        nomatch = TRUE
+      ) %>%
       as.data.frame() %>%
       rename(label = !!sym(label_by)) %>%
       arrange(label, start) %>%
