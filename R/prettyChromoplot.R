@@ -7,7 +7,8 @@
 #' Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 #'
 #' @param scores Output file scores.gistic from the run of GISTIC2.0
-#' @param genes_to_label Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.
+#' @param genes_to_label Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.
+#' @param projection Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.
 #' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
 #' @param adjust_amps Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.
 #' @param adjust_dels Optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.
@@ -19,8 +20,7 @@
 #'
 #' @return plot
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import dplyr ggplot2 ggrepel
+#' @import dplyr ggplot2 ggrepel readr
 #' @export
 #'
 #' @examples
@@ -37,6 +37,7 @@
 #'
 prettyChromoplot = function(scores,
                             genes_to_label,
+                            projection = "grch37",
                             cutoff = 0.5,
                             adjust_amps = 0.5,
                             adjust_dels = 2.75,
@@ -47,7 +48,7 @@ prettyChromoplot = function(scores,
                             segment.angle = 25){
 
   #read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
-  scores = data.table::fread(scores) %>%
+  scores = read_tsv(scores) %>%
     dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, - 1 * `G-score`)) %>%
     dplyr::relocate(Type, .after = frequency)
 
@@ -59,25 +60,31 @@ prettyChromoplot = function(scores,
   cnv_palette = c("up" = "#bd0000", "down" = "#2e5096", "neutral" = "#D2D2D3")
 
   #if no file is provided, annotate with oncogenes in GAMBLR package
+  if(projection == "grch37"){
+    default_genes <- GAMBLR.data::grch37_oncogene
+  } else {
+    default_genes <- GAMBLR.data::hg38_oncogene
+  }
   if(missing(genes_to_label)){
-    genes_to_label = GAMBLR.data::grch37_oncogene %>%
-      dplyr::mutate(across(c(chrom, start, end), as.integer)) %>%
-      data.table::as.data.table()
+    genes_to_label = default_genes %>%
+      dplyr::mutate(across(c(chrom, start, end), as.integer))
   }else{
-    genes_to_label = data.table::fread(genes_to_label)
+    genes_to_label = read_tsv(genes_to_label)
     colnames(genes_to_label)[1:3] = c("chrom", "start", "end")
     genes_to_label = genes_to_label %>%
-
-      #for now, drop the X chromosome since GISTIC runs without sex chromosmes
-      dplyr::filter(!grepl("X", chrom)) %>%
-      dplyr::mutate(across(c(chrom, start, end), as.integer)) %>%
-      data.table::as.data.table()
+    # drop the X chromosome since GISTIC runs without sex chromosmes
+    dplyr::filter(!grepl("X", chrom)) %>%
+    dplyr::mutate(across(c(start, end), as.integer))
   }
   #overlap scores with genes to annotate
-  scores = data.table::foverlaps(scores %>%
-    data.table::setkey(., Chromosome, Start, End), genes_to_label %>%
-    data.table::setkey(., chrom, start, end), by.x = c("Chromosome", "Start", "End"), by.y = c("chrom", "start", "end"), type = "within") %>%
-
+  scores = cool_overlaps(
+        scores,
+        genes_to_label,
+        columns1 = c("Chromosome", "Start", "End"),
+        columns2 = c("chrom", "start", "end"),
+        type = "within",
+        nomatch = TRUE
+    ) %>%
     #if gene to annotate is provided, but it is in region with no CNV, do not label it
     dplyr::mutate(gene=ifelse(!is.na(gene) & fill=="neutral", NA, gene)) %>%
     #if gene is covering multiple adjacent regions, label only once

@@ -34,7 +34,6 @@
 #'
 #' @return a ggplot2 object
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import ggplot2 dplyr readr tidyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'

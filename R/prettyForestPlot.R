@@ -26,7 +26,6 @@
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
 #' @import dplyr ggpubr ggplot2 purrr tidyr GAMBLR.helpers
 #' @export
 #'
