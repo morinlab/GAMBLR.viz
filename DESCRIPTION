@@ -27,7 +27,6 @@ Imports:
     purrr,
     RColorBrewer,
     readr,
-    stringr,
     tibble,
     tidyr,
     wordcloud

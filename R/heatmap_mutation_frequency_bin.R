@@ -62,7 +62,7 @@
 #' # get ashm regions of a set of genes.
 #' my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
 #'   rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") %>%
-#'   mutate(chrom = stringr::str_remove(chrom, "chr"))
+#'   mutate(chrom = gsub("chr", "", chrom))
 #'
 #' # create heatmap of mutation counts for the specified regions
 #' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
