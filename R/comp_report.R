@@ -21,7 +21,8 @@
 #'
 #' @return Nothing.
 #'
-#' @import ggplot2 ggpubr dplyr GAMBLR.utils
+#' @rawNamespace import(ggpubr, except = "get_legend")
+#' @import ggplot2 dplyr GAMBLR.utils
 #' @export
 #'
 #' @examples
