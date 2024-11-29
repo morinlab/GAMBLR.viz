@@ -25,7 +25,6 @@ Imports:
     ggrepel,
     gridExtra,
     purrr,
-    RCircos,
     RColorBrewer,
     readr,
     stringr,
