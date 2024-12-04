@@ -227,15 +227,31 @@ prettyOncoplot = function(maf_df,
   onco_matrix_coding <- GAMBLR.helpers::coding_class[
     !GAMBLR.helpers::coding_class %in% c("Silent", "Splice_Region", "Targeted_Region")
   ]
-  #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
-  if(missing(onco_matrix_path)){
-    onco_matrix_path = "onco_matrix.txt"
-    #order the data frame the way you want the patients shown
-    maf_patients = unique(as.character(maf_df$Tumor_Sample_Barcode))
-    if(any(!maf_patients %in% patients)){
-      extra = maf_patients[which(!maf_patients %in% patients)]
-      patients = maf_patients[which(maf_patients %in% patients)]
-      n_drop = length(extra)
+  # Obtain requested non-coding variants
+  if (length(include_noncoding) > 0) {
+    print("Generating maf_df_noncoding")
+    nc <- data.frame(t(data.frame(include_noncoding))) %>%
+      rownames_to_column("Hugo_Symbol") %>%
+      pivot_longer(-Hugo_Symbol) %>%
+      select(
+        Hugo_Symbol,
+        Variant_Classification = value
+      )
+    maf_df_noncoding <- inner_join(maf_df, nc)
+  } else {
+    # Make empty maf_df
+    maf_df_noncoding <- maf_df %>%
+      filter(!Tumor_Sample_Barcode %in% maf_df$Tumor_Sample_Barcode)
+  }
+  
+# Modify maf_df to include only coding mutations then add specified non-coding mutations
+maf_df <- maf_df %>%
+  filter(
+    Tumor_Sample_Barcode %in% patients,
+    Variant_Classification %in% onco_matrix_coding
+  ) %>%
+  bind_rows(maf_df_noncoding)
+
       message(paste(n_drop, "patients are not in your metadata, will drop them from the data before displaying"))
       maf_df = filter(maf_df, Tumor_Sample_Barcode %in% patients)
     }
@@ -364,39 +380,10 @@ prettyOncoplot = function(maf_df,
     print("AFTER")
     print(dim(cnv_df))
   }
-  #because the way MAFtools writes this file out is the absolute worst for compatability
-  old_style_mat = read.table(onco_matrix_path, sep = "\t", stringsAsFactors = FALSE)
-  mat = read.table(onco_matrix_path, sep = "\t", header = TRUE, check.names = FALSE, row.names = 1, fill = TRUE, stringsAsFactors = F, na.strings = c("NA", ""))
-  colnames(old_style_mat) = colnames(mat)
-  mat = old_style_mat
-  mat[mat==0]=""
-  #add the noncoding mutations to this if requested (only for genes and types specified)
-  if(length(include_noncoding) > 0){
-    all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
-    all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
-    for(gene in names(include_noncoding)){
-      for(this_vc in unname(include_noncoding[[gene]])){
-        message(paste(gene, "and", this_vc))
-        these_samples = dplyr::filter(
-          maf_df,
-          Hugo_Symbol == gene & Variant_Classification == this_vc
-        ) %>%
-          dplyr::select(Tumor_Sample_Barcode, Variant_Classification) %>%
-          unique() %>%
-          pull(Tumor_Sample_Barcode)
-        for(samp in these_samples){
-          if(samp %in% colnames(mat)){
-            if(mat[gene, samp] == ""){
-              mat[gene, samp] = this_vc
-            }else{
-              mat[gene, samp] = paste0(this_vc, ";", mat[gene, samp])
-            }
-          }
-        }
-      }
-    }
-  }
-  #annotate hot spots if necessary
+  mat <- mat_origin
+  mat[mat == 0] <- ""
+  
+  # annotate hot spots if necessary
   if(missing(metadataColumns)){
     message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
     metadataColumns = c("pathology")
