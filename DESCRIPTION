@@ -10,12 +10,9 @@ License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Imports:
-    broom,
     circlize,
     ComplexHeatmap,
-    data.table,
     dplyr,
-    forcats,
     GAMBLR.data,
     GAMBLR.helpers,
     GAMBLR.utils,
@@ -23,12 +20,9 @@ Imports:
     ggplot2,
     ggpubr,
     ggrepel,
-    gridExtra,
     purrr,
-    RCircos,
     RColorBrewer,
     readr,
-    stringr,
     tibble,
     tidyr,
     wordcloud

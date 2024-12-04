@@ -34,8 +34,7 @@
 #'
 #' @return a ggplot2 object
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import ggplot2 dplyr readr stringr tidyr GAMBLR.helpers GAMBLR.utils
+#' @import ggplot2 dplyr readr tidyr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -128,9 +127,10 @@ prettyRainfallPlot = function(
                 "Chromosome" = "chr_name"
             ) %>%
             dplyr::mutate(
-                Chromosome = str_remove(
-                    Chromosome,
-                    pattern = "chr"
+                Chromosome = gsub(
+                    "chr",
+                    "",
+                    Chromosome
                 )
             )
         } else if (projection == "hg38") {
@@ -169,14 +169,20 @@ prettyRainfallPlot = function(
             ungroup()
 
         # this will be needed for consistent labeling with rainfall plots
+        sorted_chromosomes <- sort(
+            ashm_regions$Chromosome,
+            method = "radix",
+            decreasing = FALSE,
+            na.last = TRUE
+        )
+        sorted_chromosomes <- sorted_chromosomes[
+            order(as.numeric(sorted_chromosomes))
+        ]
         ashm_regions = ashm_regions %>%
             dplyr::arrange(
                 match(
                     Chromosome,
-                    str_sort(
-                        ashm_regions$Chromosome,
-                        numeric = TRUE
-                    )
+                    sorted_chromosomes
                 )
             )
         ashm_regions <- ashm_regions %>%
@@ -300,7 +306,7 @@ prettyRainfallPlot = function(
         dplyr::arrange(
             match(
                 Chromosome,
-                str_sort(rainfall_points$Chromosome, numeric = TRUE)
+                sorted_chromosomes
             )
         )
     rainfall_points <- rainfall_points %>%

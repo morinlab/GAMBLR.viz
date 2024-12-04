@@ -21,7 +21,7 @@
 #'
 #' @return Nothing.
 #'
-#' @rawNamespace import(gridExtra, except = "combine")
+#' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import ggplot2 dplyr GAMBLR.utils
 #' @export
 #'
@@ -120,9 +120,29 @@ comp_report = function(this_sample_id,
   cnv_ideogram = fancy_ideogram(this_sample_id = this_sample_id, seg_data = seg, maf_data = maf, plot_title = "", plot_subtitle = "F. Ideogram.")
 
   #build pdf report
-  pdf(paste0(out, this_sample_id, "_report.pdf"), width = 17, height = 12)
-  page1 = grid.arrange(ssm_chr, sv_chr, ssm_count, violine_plot, sv_count, sv_size, snv_plot, cns, nrow = 3, ncol = 6, name = "Report", top = textGrob(paste0(this_sample_id, " - Report"), gp = gpar(fontsize = 15, fontface = "bold")), bottom = "Page 1", layout_matrix = rbind(c(1,1,1,2,2,2), c(3,3,4,4,5,5), c(6,6,7,7,8,8)))
-  page2 = grid.arrange(cnv_ideogram,  nrow = 4, ncol = 4, name = "Report", bottom = "Page 2", layout_matrix = rbind(c(1,1,1,1), c(1,1,1,1), c(1,1,1,1), c(1,1,1,1)))
+  pdf(
+    paste0(out, this_sample_id, "_report.pdf"),
+    width = 17,
+    height = 12,
+    onefile = TRUE
+)
+  # Create a layour for 8 plots where the top row is 2 plots and the rest are
+  # in 3-column setup
+  ggarrange(
+    ggarrange(
+        ssm_chr, sv_chr,
+        nrow = 1,
+        ncol = 2
+    ),
+    ggarrange(
+        ssm_count, violine_plot, sv_count,
+        sv_size, snv_plot, cns,
+        nrow = 2,
+        ncol = 3
+    ),
+    heights = c(1, 2)
+  )
+  cnv_ideogram
   dev.off()
 
   #export individual plots
