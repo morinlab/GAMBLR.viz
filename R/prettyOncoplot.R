@@ -9,7 +9,6 @@
 #'
 #' @param maf_df A maf as data frame containing the mutations you want to plot.
 #' @param cnv_df An optional data frame of CN status for genes you want included (rows = sample_id, columns = Hugo_Symbol)
-#' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
 #' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
@@ -142,7 +141,6 @@
 prettyOncoplot = function(
     maf_df,
     cnv_df,
-    onco_matrix_path,
     genes,
     include_noncoding = NULL,
     keepGeneOrder = FALSE,
