@@ -287,7 +287,7 @@ prettyOncoplot = function(
             Variant_Classification %in% onco_matrix_coding
         ) %>%
         bind_rows(maf_df_noncoding)
-    
+
     # Make sure that the N of patients matches between metadata and maf
     # so the displayed %ages and counts are correct
     # This will account for cases where the sample is in metadata but has 0
@@ -314,6 +314,14 @@ prettyOncoplot = function(
             incoming_maf = maf_df,
             these_samples_metadata = these_samples_metadata
         )
+        maf_df <- maf_df %>%
+            mutate(
+                Hugo_Symbol = ifelse(
+                    Hugo_Symbol == "GARBAGE",
+                    paste0(Hugo_Symbol, row_number()),
+                    Hugo_Symbol
+                )
+            )
     }
 
     ##### Handling of genes to be displayed
@@ -336,7 +344,7 @@ prettyOncoplot = function(
             arrange(desc(MutatedSamples))
         genes <- gene_summary ### HERE
         colnames(genes)[2] = "mutload"
-        genes$fractMutated <- genes$mutload / maf_patients
+        genes$fractMutated <- genes$mutload / length(maf_patients)
         genes <- genes %>%
             filter(fractMutated * 100 >= minMutationPercent) %>%
             pull(Hugo_Symbol)
