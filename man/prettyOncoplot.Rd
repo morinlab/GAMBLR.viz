@@ -7,7 +7,6 @@
 prettyOncoplot(
   maf_df,
   cnv_df,
-  onco_matrix_path,
   genes,
   include_noncoding = NULL,
   keepGeneOrder = FALSE,
@@ -71,8 +70,6 @@ prettyOncoplot(
 \item{maf_df}{A maf as data frame containing the mutations you want to plot.}
 
 \item{cnv_df}{An optional data frame of CN status for genes you want included (rows = sample_id, columns = Hugo_Symbol)}
-
-\item{onco_matrix_path}{Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).}
 
 \item{genes}{An optional vector of genes to restrict your plot to.}
 

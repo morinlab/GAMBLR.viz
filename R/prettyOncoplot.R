@@ -9,7 +9,6 @@
 #'
 #' @param maf_df A maf as data frame containing the mutations you want to plot.
 #' @param cnv_df An optional data frame of CN status for genes you want included (rows = sample_id, columns = Hugo_Symbol)
-#' @param onco_matrix_path Provide a path to an onco_matrix file instead of a MAF object if the former is unavailable (this limits functionality a bit).
 #' @param genes An optional vector of genes to restrict your plot to.
 #' @param include_noncoding List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")
 #' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
@@ -139,1027 +138,1116 @@
 #'     sortByColumns = c("pathology", "lymphgen", "sex")
 #' )
 #'
-prettyOncoplot = function(maf_df,
-                          cnv_df,
-                          onco_matrix_path,
-                          genes,
-                          include_noncoding = NULL,
-                          keepGeneOrder = FALSE,
-                          keepSampleOrder = FALSE,
-                          highlightHotspots = FALSE,
-                          these_samples_metadata,
-                          metadataColumns,
-                          numericMetadataColumns,
-                          expressionColumns = c(),
-                          numericMetadataMax,
-                          sortByColumns,
-                          arrange_descending = FALSE,
-                          removeNonMutated = FALSE,
-                          minMutationPercent,
-                          mutAlpha = 1,
-                          recycleOncomatrix = FALSE,
-                          splitColumnName,
-                          splitGeneGroups,
-                          showTumorSampleBarcode = FALSE,
-                          groupNames,
-                          hide_annotations,
-                          hide_annotations_tracks = FALSE,
-                          annotate_specific_genes = FALSE,
-                          this_forest_object = NULL,
-                          custom_colours = NULL,
-                          hideTopBarplot = TRUE,
-                          tally_all_mutations = FALSE,
-                          tally_all_mutations_max = 1000,
-                          hideSideBarplot = FALSE,
-                          box_col = NA,
-                          annoAlpha = 1,
-                          legend_direction = "horizontal",
-                          ylim = NULL,
-                          legend_position = "bottom",
-                          legend_row = 3,
-                          legend_col = 3,
-                          metadataBarHeight = 1.5,
-                          metadataBarFontsize = 5,
-                          legendFontSize = 10,
-                          fontSizeGene = 6,
-                          annotation_row = 2,
-                          annotation_col = 1,
-                          verbose = FALSE,
-                          cluster_rows = FALSE,
-                          cluster_cols = FALSE,
-                          cluster_numeric_rows = TRUE,
-                          cluster_numeric_cols = FALSE,
-                          clustering_distance_rows = "binary",
-                          clustering_distance_cols = "binary",
-                          split_rows_kmeans,
-                          split_columns_kmeans,
-                          dry_run = FALSE,
-                          simplify_annotation= FALSE,
-                          stacked = FALSE,
-                          numeric_heatmap_type = "aSHM",
-                          numeric_heatmap_location = "top",
-                          return_inputs = FALSE){
-  
-  if(stacked){
-    if(!simplify_annotation){
-      message("stacked mode is only compatible in combination with simplify = TRUE. Setting this for you.")
-      simplify_annotation = TRUE
-    }
-    if(numeric_heatmap_location == "bottom"){
-      message("Numeric heatmap will be on the bottom. Some features will not be available.")
-      if(!missing(split_columns_kmeans) | !missing(split_rows_kmeans)){
-        message("split_columns_kmeans and split_rows_kmeans only works when numeric_heatmap_location is set to 'top'")
-      }
-    }
-  }
+prettyOncoplot = function(
+    maf_df,
+    cnv_df,
+    genes,
+    include_noncoding = NULL,
+    keepGeneOrder = FALSE,
+    keepSampleOrder = FALSE,
+    highlightHotspots = FALSE,
+    these_samples_metadata,
+    metadataColumns,
+    numericMetadataColumns,
+    expressionColumns = c(),
+    numericMetadataMax,
+    sortByColumns,
+    arrange_descending = FALSE,
+    removeNonMutated = FALSE,
+    minMutationPercent,
+    mutAlpha = 1,
+    recycleOncomatrix = FALSE,
+    splitColumnName,
+    splitGeneGroups,
+    showTumorSampleBarcode = FALSE,
+    groupNames,
+    hide_annotations,
+    hide_annotations_tracks = FALSE,
+    annotate_specific_genes = FALSE,
+    this_forest_object = NULL,
+    custom_colours = NULL,
+    hideTopBarplot = TRUE,
+    tally_all_mutations = FALSE,
+    tally_all_mutations_max = 1000,
+    hideSideBarplot = FALSE,
+    box_col = NA,
+    annoAlpha = 1,
+    legend_direction = "horizontal",
+    ylim = NULL,
+    legend_position = "bottom",
+    legend_row = 3,
+    legend_col = 3,
+    metadataBarHeight = 1.5,
+    metadataBarFontsize = 5,
+    legendFontSize = 10,
+    fontSizeGene = 6,
+    annotation_row = 2,
+    annotation_col = 1,
+    verbose = FALSE,
+    cluster_rows = FALSE,
+    cluster_cols = FALSE,
+    cluster_numeric_rows = TRUE,
+    cluster_numeric_cols = FALSE,
+    clustering_distance_rows = "binary",
+    clustering_distance_cols = "binary",
+    split_rows_kmeans,
+    split_columns_kmeans,
+    dry_run = FALSE,
+    simplify_annotation= FALSE,
+    stacked = FALSE,
+    numeric_heatmap_type = "aSHM",
+    numeric_heatmap_location = "top",
+    return_inputs = FALSE
+){
 
-  if(!missing(split_columns_kmeans) & !missing(splitColumnName)){
-    stop("split_columns_kmeans and splitColumnName are incompatible. Use one or the other")
-  }
-  
-  patients = pull(these_samples_metadata, sample_id)
-  if(missing(maf_df)){
-    stop(
-      "You must provide maf data frame."
-    )
-  }
-
-  onco_matrix_coding <- GAMBLR.helpers::coding_class[
-    !GAMBLR.helpers::coding_class %in% c("Silent", "Splice_Region", "Targeted_Region")
-  ]
-  #ensure patients not in metadata get dropped up-front to ensure mutation frequencies are accurate
-  if(missing(onco_matrix_path)){
-    onco_matrix_path = "onco_matrix.txt"
-    #order the data frame the way you want the patients shown
-    maf_patients = unique(as.character(maf_df$Tumor_Sample_Barcode))
-    if(any(!maf_patients %in% patients)){
-      extra = maf_patients[which(!maf_patients %in% patients)]
-      patients = maf_patients[which(maf_patients %in% patients)]
-      n_drop = length(extra)
-      message(paste(n_drop, "patients are not in your metadata, will drop them from the data before displaying"))
-      maf_df = filter(maf_df, Tumor_Sample_Barcode %in% patients)
+    ##### Input checks
+    if(stacked){
+        if(!simplify_annotation){
+            message(
+                "stacked mode is only compatible in combination with simplify = TRUE. Setting this for you."
+            )
+            simplify_annotation = TRUE
+        }
+        if(numeric_heatmap_location == "bottom"){
+            message(
+                "Numeric heatmap will be on the bottom. Some features will not be available."
+            )
+            if(!missing(split_columns_kmeans) | !missing(split_rows_kmeans)){
+                message(
+                    "split_columns_kmeans and split_rows_kmeans only works when numeric_heatmap_location is set to 'top'"
+                )
+            }
+        }
     }
-    if(missing(genes)){
-      #check that our MAFtools object only contains samples in the supplied metadata
-      gene_summary = maf_df %>%
-        distinct(
-          Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
-          Start_Position, End_Position
-        ) %>%
-        filter(
-          Tumor_Sample_Barcode %in% patients,
-          Variant_Classification %in% onco_matrix_coding
-        ) %>%
-        distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
-        group_by(Hugo_Symbol) %>%
-        summarize(MutatedSamples = n(), .groups = "drop") %>%
-        arrange(desc(MutatedSamples))
-      genes = gene_summary ### HERE
-      colnames(genes)[2] = "mutload"
-      totSamps = as.numeric(length(unique(maf_df$Tumor_Sample_Barcode)))
-      genes$fractMutated = genes$mutload / totSamps
-      genes = genes %>% filter(fractMutated * 100 >= minMutationPercent) %>% pull(Hugo_Symbol)
-      
-      lg = length(genes)
-      if(!recycleOncomatrix){
-        message(paste("creating oncomatrix with", lg, "genes"))
-        mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-        mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
-        tsbs = maf_df %>%
-          distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
-          filter(
-            Tumor_Sample_Barcode %in% patients,
-            Variant_Classification %in% onco_matrix_coding
-          ) %>%
-          group_by(Tumor_Sample_Barcode) %>%
-          summarize(total = n(), .groups = "drop") %>%
-          arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-        if(!removeNonMutated){
-          tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
-          colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
-          rownames(tsb.include) = rownames(mat_origin)
-          mat_origin = cbind(mat_origin, tsb.include)
-        }
-        write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
-        if(verbose){
-          print(paste("numcases:", length(tsbs)))
-        }
-      }
-      
-    }else{
-      if(any(duplicated(genes))){
-        stop("There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list.")
-      }
-      gene_summary = maf_df %>%
-        distinct(
-          Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
-          Start_Position, End_Position
-        ) %>%
-        filter(
-          Hugo_Symbol %in% genes,
-          Tumor_Sample_Barcode %in% patients,
-          Variant_Classification %in% onco_matrix_coding
-        ) %>%
-        distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
-        group_by(Hugo_Symbol) %>%
-        summarize(MutatedSamples = n(), .groups = "drop") %>%
-        arrange(desc(MutatedSamples))
-      if(!recycleOncomatrix){
-        mat_origin = GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-        mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
-        tsbs = maf_df %>%
-          distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
-          filter(
-            Tumor_Sample_Barcode %in% patients,
-            Variant_Classification %in% onco_matrix_coding
-          ) %>%
-          group_by(Tumor_Sample_Barcode) %>%
-          summarize(total = n(), .groups = "drop") %>%
-          arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
-        if(verbose){
-          print(paste("numcases:",length(tsbs)))
-          print(paste("numgenes:",length(mat_origin[,1])))
-        }
-      }
-      
-      if(!removeNonMutated & !recycleOncomatrix){
-        tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
-        colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
-        rownames(tsb.include) = rownames(mat_origin)
-        mat_origin = cbind(mat_origin, tsb.include)
-      }else if(length(include_noncoding) > 0){
-        print(
-            "You requested to include noncoding mutations and remove non-mutated patients ..."
+
+    if(!missing(split_columns_kmeans) & !missing(splitColumnName)){
+        stop(
+            "split_columns_kmeans and splitColumnName are incompatible. Use one or the other"
         )
-        these_have_noncoding <- maf_df %>%
+    }
+
+    if(missing(maf_df)){
+        stop(
+        "You must provide maf data frame."
+        )
+    }
+
+    ##### Main function
+    # First, handle non-coding variants when requested and match patients
+    # between metadata and maf
+
+    # Handle the non-coding variants when they are requested to be plotted
+    onco_matrix_coding <- GAMBLR.helpers::coding_class[
+        !GAMBLR.helpers::coding_class %in% c("Silent", "Splice_Region", "Targeted_Region")
+    ]
+    # Obtain requested non-coding variants
+    if (length(include_noncoding) > 0) {
+        print("Generating maf_df_noncoding")
+        nc <- data.frame(t(data.frame(include_noncoding))) %>%
+            rownames_to_column("Hugo_Symbol") %>%
+            pivot_longer(-Hugo_Symbol) %>%
+            dplyr::select(
+                Hugo_Symbol,
+                Variant_Classification = value
+            )
+        maf_df_noncoding <- inner_join(maf_df, nc)
+    } else {
+        # Make empty maf_df
+        maf_df_noncoding <- maf_df %>%
+            dplyr::filter(
+                !Tumor_Sample_Barcode %in% maf_df$Tumor_Sample_Barcode
+            )
+    }
+
+    # Ensure Tumor_Sample_Barcode is always present because different
+    # versions of metadata may generate different output with inconsistent
+    # columns present in the resulting metadata
+    if(!'Tumor_Sample_Barcode' %in% colnames(these_samples_metadata)){
+        these_samples_metadata <- these_samples_metadata %>%
+            dplyr::mutate(Tumor_Sample_Barcode = sample_id)
+    }
+    patients <- pull(these_samples_metadata, sample_id) %>% unique
+    if(verbose){
+        print(
+            paste(
+                "There are",
+                length(patients),
+                "unique patients in the provided metadata."
+            )
+        )
+    }
+
+    # Modify maf_df to include only coding mutations then
+    # add specified non-coding mutations
+    maf_df <- maf_df %>%
+        dplyr::filter(
+            Tumor_Sample_Barcode %in% patients,
+            Variant_Classification %in% onco_matrix_coding
+        ) %>%
+        bind_rows(maf_df_noncoding)
+
+    # Make sure that the N of patients matches between metadata and maf
+    # so the displayed %ages and counts are correct
+    # This will account for cases where the sample is in metadata but has 0
+    # mutations in maf
+    maf_patients <- unique(as.character(maf_df$Tumor_Sample_Barcode))
+    if(any(!maf_patients %in% patients)){
+        extra <- maf_patients[which(!maf_patients %in% patients)]
+        patients <- maf_patients[which(maf_patients %in% patients)]
+        n_drop <- length(extra)
+        message(
+            paste(
+                n_drop,
+                "patients are not in your metadata, will drop them from the data before displaying"
+            )
+        )
+        maf_df = filter(maf_df, Tumor_Sample_Barcode %in% patients)
+        # Reset this variable to now represent only patients present in metadata
+        maf_patients <- unique(as.character(maf_df$Tumor_Sample_Barcode))
+    }
+    # Now do opposite check and make sure that all patients from metadata are
+    # also present in maf
+    if(any(!patients %in% maf_patients)){
+        maf_df <- supplement_maf(
+            incoming_maf = maf_df,
+            these_samples_metadata = these_samples_metadata
+        )
+        maf_df <- maf_df %>%
+            mutate(
+                Hugo_Symbol = ifelse(
+                    Hugo_Symbol == "GARBAGE",
+                    paste0(Hugo_Symbol, row_number()),
+                    Hugo_Symbol
+                )
+            )
+    }
+
+    ##### Handling of genes to be displayed
+
+    # When no genes provided, display only genes above the specified min
+    # mutation frequency threshold. Here we will define those genes
+    if(missing(genes)){
+        gene_summary <- maf_df %>%
+            distinct(
+                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+                Start_Position, End_Position
+            ) %>%
             filter(
                 Tumor_Sample_Barcode %in% patients,
-                Hugo_Symbol %in% names(include_noncoding),
-                Variant_Classification %in% unlist(unname(include_noncoding))
+                Variant_Classification %in% onco_matrix_coding
             ) %>%
-            distinct(
-                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position
-            ) %>%
-            pull(Tumor_Sample_Barcode)
-        tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]))
-        colnames(tsb.include) = these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]
-        rownames(tsb.include) = rownames(mat_origin)
-        mat_origin = cbind(mat_origin, tsb.include)
-      }
-      write.table(mat_origin, file = onco_matrix_path, quote = F, sep = "\t")
-    }
-  }
-  if(missing(onco_matrix_path)){
-    onco_matrix_path = "onco_matrix.txt"
-  }
-  if(!missing(numericMetadataColumns)){
-    message(paste0("The column(s) specified both in metadata and numeric metadata will be plotted as numeric values..."))
-    metadataColumns = metadataColumns[!metadataColumns %in% numericMetadataColumns]
-  }
-  patients = pull(these_samples_metadata, sample_id)
-  if(!missing(cnv_df)){
-    print("BEFORE:")
-    print(dim(cnv_df))
-    cnv_df = cnv_df[rownames(cnv_df) %in% patients,]
-    print("AFTER")
-    print(dim(cnv_df))
-  }
-  #because the way MAFtools writes this file out is the absolute worst for compatability
-  old_style_mat = read.table(onco_matrix_path, sep = "\t", stringsAsFactors = FALSE)
-  mat = read.table(onco_matrix_path, sep = "\t", header = TRUE, check.names = FALSE, row.names = 1, fill = TRUE, stringsAsFactors = F, na.strings = c("NA", ""))
-  colnames(old_style_mat) = colnames(mat)
-  mat = old_style_mat
-  mat[mat==0]=""
-  #add the noncoding mutations to this if requested (only for genes and types specified)
-  if(length(include_noncoding) > 0){
-    all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
-    all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
-    for(gene in names(include_noncoding)){
-      for(this_vc in unname(include_noncoding[[gene]])){
-        message(paste(gene, "and", this_vc))
-        these_samples = dplyr::filter(
-          maf_df,
-          Hugo_Symbol == gene & Variant_Classification == this_vc
-        ) %>%
-          dplyr::select(Tumor_Sample_Barcode, Variant_Classification) %>%
-          unique() %>%
-          pull(Tumor_Sample_Barcode)
-        for(samp in these_samples){
-          if(samp %in% colnames(mat)){
-            if(mat[gene, samp] == ""){
-              mat[gene, samp] = this_vc
-            }else{
-              mat[gene, samp] = paste0(this_vc, ";", mat[gene, samp])
+            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+            group_by(Hugo_Symbol) %>%
+            summarize(MutatedSamples = n(), .groups = "drop") %>%
+            arrange(desc(MutatedSamples))
+        genes <- gene_summary ### HERE
+        colnames(genes)[2] = "mutload"
+        genes$fractMutated <- genes$mutload / length(maf_patients)
+        genes <- genes %>%
+            filter(fractMutated * 100 >= minMutationPercent) %>%
+            pull(Hugo_Symbol)
+        
+        lg <- length(genes)
+        if(!recycleOncomatrix){
+            message(paste("creating oncomatrix with", lg, "genes"))
+            mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+            mat_origin <- mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+            tsbs <- maf_df %>%
+                distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
+                filter(
+                    Tumor_Sample_Barcode %in% patients,
+                    Variant_Classification %in% onco_matrix_coding
+                ) %>%
+                group_by(Tumor_Sample_Barcode) %>%
+                summarize(total = n(), .groups = "drop") %>%
+                arrange(desc(total)) %>%
+                pull(Tumor_Sample_Barcode)
+            if(!removeNonMutated){
+                tsb.include = matrix(
+                    data = 0,
+                    nrow = nrow(mat_origin),
+                    ncol = length(tsbs[!tsbs %in% colnames(mat_origin)])
+                )
+                colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
+                rownames(tsb.include) = rownames(mat_origin)
+                mat_origin = cbind(mat_origin, tsb.include)
             }
-          }
+            if(verbose){
+                print(paste("numcases:", length(tsbs)))
+            }
         }
-      }
+      
+    }else{
+        # This will handle the case when user did provide the gene list
+        if(any(duplicated(genes))){
+            stop(
+                "There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list."
+            )
+        }
+        gene_summary = maf_df %>%
+            distinct(
+                Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+                Start_Position, End_Position
+            ) %>%
+            filter(
+                Hugo_Symbol %in% genes,
+                Tumor_Sample_Barcode %in% patients,
+                Variant_Classification %in% onco_matrix_coding
+            ) %>%
+            distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
+            group_by(Hugo_Symbol) %>%
+            summarize(MutatedSamples = n(), .groups = "drop") %>%
+            arrange(desc(MutatedSamples))
+        if(!recycleOncomatrix){
+            mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
+            mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+            tsbs = maf_df %>%
+                distinct(
+                    Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
+                    Start_Position, End_Position
+                ) %>%
+                filter(
+                    Tumor_Sample_Barcode %in% patients,
+                    Variant_Classification %in% onco_matrix_coding
+                ) %>%
+                group_by(Tumor_Sample_Barcode) %>%
+                summarize(total = n(), .groups = "drop") %>%
+                arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
+            if(verbose){
+                print(paste("numcases:",length(tsbs)))
+                print(paste("numgenes:",length(mat_origin[,1])))
+            }
+        }
+      
+        if(!removeNonMutated & !recycleOncomatrix){
+            tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(tsbs[!tsbs %in% colnames(mat_origin)]))
+            colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
+            rownames(tsb.include) = rownames(mat_origin)
+            mat_origin = cbind(mat_origin, tsb.include)
+        }else if(length(include_noncoding) > 0){
+            print(
+                "You requested to include noncoding mutations and remove non-mutated patients ..."
+            )
+            these_have_noncoding <- maf_df %>%
+                filter(
+                    Tumor_Sample_Barcode %in% patients,
+                    Hugo_Symbol %in% names(include_noncoding),
+                    Variant_Classification %in% unlist(unname(include_noncoding))
+                ) %>%
+                distinct(
+                    Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position
+                ) %>%
+                pull(Tumor_Sample_Barcode)
+            tsb.include = matrix(data = 0, nrow = nrow(mat_origin), ncol = length(these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]))
+            colnames(tsb.include) = these_have_noncoding[!these_have_noncoding %in% colnames(mat_origin)]
+            rownames(tsb.include) = rownames(mat_origin)
+            mat_origin = cbind(mat_origin, tsb.include)
+        }
     }
-  }
-  #annotate hot spots if necessary
-  if(missing(metadataColumns)){
-    message("you should name at least one metadata column to show as an annotation. Defaulting to pathology")
-    metadataColumns = c("pathology")
-  }
-  if(missing(genes)){
-    genes = rownames(mat)
-  }
-  col = GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
-  mat[mat == 0]=""
-  patients_dropped = patients[which(!patients %in% colnames(mat))]
-  if(verbose){
-    message("====DROPPED=====")
-    message(patients_dropped)
-  }
-  patients_kept = patients[which(patients %in% colnames(mat))]
-  genes_kept = genes[which(genes %in% rownames(mat))]
-  if(!missing(cnv_df)){
-    #ensure any genes in this input are added to genes_kept
-    cnv_genes = colnames(cnv_df)
-    cnv_patients = rownames(cnv_df)[which(rownames(cnv_df) %in% these_samples_metadata$sample_id)]
-    cnv_df = cnv_df[cnv_patients,]
-    extra_cnv_genes = cnv_genes[!cnv_genes %in% genes_kept]
-    
-    extra_cnv_patients = cnv_patients[!cnv_patients %in% patients_kept]
-    
-  }
-  if(recycleOncomatrix){
-    gene_summary_list = apply(mat,1,function(x){sum(!is.na(x))})
-    gene_summary = data.frame(Hugo_Symbol = names(gene_summary_list),MutatedSamples=as.numeric(unname(gene_summary_list)))
-    gene_summary = arrange(gene_summary,desc(MutatedSamples))
-  }else{
-    genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
-    for (g in genes_dropped) {
-      gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+
+    mat <- mat_origin
+    mat[mat == 0] <- ""
+
+    if(!missing(cnv_df)){
+        print("BEFORE:")
+        print(dim(cnv_df))
+        cnv_df = cnv_df[rownames(cnv_df) %in% patients,]
+        print("AFTER")
+        print(dim(cnv_df))
     }
-    gene_summary <- gene_summary %>% replace(is.na(.), 0)
-  }
-  if(!missing(minMutationPercent)){
+    
+    ##### The part below will be handling the metadata and colors
+    if(missing(metadataColumns)){
+        message(
+            "You should name at least one metadata column to show as an annotation. Defaulting to pathology"
+        )
+        metadataColumns = c("pathology")
+    }
+    if(!missing(numericMetadataColumns)){
+        message(
+            "The column(s) specified both in metadata and numeric metadata will be plotted as numeric values..."
+        )
+        metadataColumns = metadataColumns[!metadataColumns %in% numericMetadataColumns]
+    }
+
+    if(missing(genes)){
+        genes = rownames(mat)
+    }
+    
+    col = GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
+
+    patients_dropped = patients[which(!patients %in% colnames(mat))]
+    if(verbose){
+        message("====DROPPED=====")
+        message(patients_dropped)
+    }
+    patients_kept = patients[which(patients %in% colnames(mat))]
+    genes_kept = genes[which(genes %in% rownames(mat))]
+    
+    if(!missing(cnv_df)){
+        #ensure any genes in this input are added to genes_kept
+        cnv_genes = colnames(cnv_df)
+        cnv_patients = rownames(cnv_df)[which(rownames(cnv_df) %in% these_samples_metadata$sample_id)]
+        cnv_df = cnv_df[cnv_patients,]
+        extra_cnv_genes = cnv_genes[!cnv_genes %in% genes_kept]
+        extra_cnv_patients = cnv_patients[!cnv_patients %in% patients_kept]
+    }
     if(recycleOncomatrix){
-      
-      warning("mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it")
-      return()
+        gene_summary_list = apply(mat,1,function(x){sum(!is.na(x))})
+        gene_summary = data.frame(
+            Hugo_Symbol = names(gene_summary_list),
+            MutatedSamples=as.numeric(unname(gene_summary_list))
+        )
+        gene_summary = arrange(gene_summary,desc(MutatedSamples))
+    }else{
+        genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
+        for (g in genes_dropped) {
+            gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+        }
+        gene_summary <- gene_summary %>% replace(is.na(.), 0)
     }
-    mutation_counts <- gene_summary %>%
-      select(Hugo_Symbol, MutatedSamples)
-    numpat = length(patients_kept)
-    mutation_counts = mutate(mutation_counts, percent_mutated = 100 * MutatedSamples / numpat)
-    genes_keep = mutation_counts %>%
-      dplyr::filter(percent_mutated >= minMutationPercent) %>%
-      pull(Hugo_Symbol)
-    
-    genes_kept = genes[genes %in% genes_keep]
-  }
-
-  mat = mat[,patients_kept]
-  mat = mat[which(rownames(mat) %in% genes_kept),]
-  if(!missing(cnv_df)){
-    genes_kept = c(extra_cnv_genes,genes_kept)
-    patients_kept = c(patients_kept,extra_cnv_patients)
-    #add missing genes from CNV data
-    print(dim(mat))
-    mat1 = matrix(nrow=length(extra_cnv_genes),ncol=ncol(mat))
-    colnames(mat1) = colnames(mat)
-    rownames(mat1) = extra_cnv_genes
-    mat1[] = 0
-    mat = rbind(mat1,mat)
-    #add placeholder columns
-    for(pat in extra_cnv_patients){
-      mat[,pat] = 0
+    if(!missing(minMutationPercent)){
+        if(recycleOncomatrix){
+            stop(
+                "mintMutationPercent option is not available when you provide your own oncomatrix. Feel free to implement this if you need it"
+            )
+        }
+        mutation_counts <- gene_summary %>%
+            select(Hugo_Symbol, MutatedSamples)
+        numpat = length(patients_kept)
+        mutation_counts = mutate(mutation_counts, percent_mutated = 100 * MutatedSamples / numpat)
+        genes_keep = mutation_counts %>%
+            dplyr::filter(percent_mutated >= minMutationPercent) %>%
+            pull(Hugo_Symbol)
+        
+        genes_kept = genes[genes %in% genes_keep]
     }
-    print("MAT:")
-    print(dim(mat))
-  }
-  spacing = 0
-  height_scaling = 1
-  if(simplify_annotation){
-    #make oncomatrix individually from the MAF
-    
-    summarize_mutation_by_class = function(mutation_set){
-      if("hot_spot" %in% mutation_set){
-        snv_maf = filter(maf_df,hot_spot==TRUE) %>%
-          filter(Hugo_Symbol %in% rownames(mat)) %>%
-          select(Hugo_Symbol,Tumor_Sample_Barcode) %>% unique()  %>% #keep at most one per group/gene combo
-          mutate(Mutated = TRUE)
-      }else{
-        snv_maf = filter(maf_df,Variant_Classification %in% mutation_set) %>%
-          filter(Hugo_Symbol %in% rownames(mat)) %>%
-          select(Hugo_Symbol,Tumor_Sample_Barcode) %>% unique()  %>% #keep at most one per group/gene combo
-          mutate(Mutated = TRUE)
-      }
 
-      
-      snv_wide = pivot_wider(snv_maf,names_from = "Tumor_Sample_Barcode",values_from = "Mutated",values_fill = FALSE) %>%
-        column_to_rownames("Hugo_Symbol")
-      missing_g = rownames(mat)[which(!rownames(mat) %in% rownames(snv_wide))]
-      missing_s = colnames(mat)[which(!colnames(mat) %in% colnames(snv_wide))]
-      #add missing rows
-      for(g in missing_g){
-        snv_wide[g,] = FALSE
-      }
-      #add missing cols
-      for(s in missing_s){
-        snv_wide[,s] = FALSE
-      }
-      return(snv_wide[rownames(mat),colnames(mat)])
+    mat = mat[,patients_kept]
+    mat = mat[which(rownames(mat) %in% genes_kept),]
+
+    if(!missing(cnv_df)){
+        genes_kept = c(extra_cnv_genes,genes_kept)
+        patients_kept = c(patients_kept,extra_cnv_patients)
+        #add missing genes from CNV data
+        print(dim(mat))
+        mat1 = matrix(nrow=length(extra_cnv_genes),ncol=ncol(mat))
+        colnames(mat1) = colnames(mat)
+        rownames(mat1) = extra_cnv_genes
+        mat1[] = 0
+        mat = rbind(mat1,mat)
+        #add placeholder columns
+        for(pat in extra_cnv_patients){
+        mat[,pat] = 0
+        }
+        print("MAT:")
+        print(dim(mat))
     }
-    
-    col["Missense"] = col["Missense_Mutation"]
-    col["Truncating"] = col["Nonsense_Mutation"]
-    col["CNV"] = "purple"
-    col["HotSpot"] = "magenta"
-    heights = c("Missense","Truncating","Splice_Site","HotSpot","CNV")
-    
-    alter_fun = list(
-      background = function(x, y, w, h) grid.rect(x, y, w, h, 
-                                                  gp = gpar(fill = NA,col=NA)),
-     
-      Missense = function(x, y, w, h){ grid.rect(x, y, w*0.9, h*0.9, 
-                                             gp = gpar(fill = col["Missense"], col = NA))},
-      Truncating = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
-                                                gp = gpar(fill = col["Truncating"], col = NA))},
-      Splice_Site = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
-                                                   gp = gpar(fill = col["Splice_Site"], col = NA))},
-      
-      CNV = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.5, 
-                                            gp = gpar(fill = col["CNV"], col = NA))},
-      HotSpot = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
-                                                gp = gpar(fill = col["Missense"], col = NA));
-                                      grid.rect(x, y, w*0.9, h*0.3, 
-                                                gp = gpar(fill = col["HotSpot"], col = NA));}
-      #HotSpot = function(x,y,w,h){grid.circle(x,y,w*0.9,
-      #                                        gp = gpar(fill = col["HotSpot"], col = NA))}
-      
-    , col = col)
+    spacing = 0
+    height_scaling = 1
+    if(simplify_annotation){
+        #make oncomatrix individually from the MAF
+        
+        summarize_mutation_by_class = function(mutation_set){
+        if("hot_spot" %in% mutation_set){
+            snv_maf = filter(maf_df,hot_spot==TRUE) %>%
+            filter(Hugo_Symbol %in% rownames(mat)) %>%
+            select(Hugo_Symbol,Tumor_Sample_Barcode) %>% unique()  %>% #keep at most one per group/gene combo
+            mutate(Mutated = TRUE)
+        }else{
+            snv_maf = filter(maf_df,Variant_Classification %in% mutation_set) %>%
+            filter(Hugo_Symbol %in% rownames(mat)) %>%
+            select(Hugo_Symbol,Tumor_Sample_Barcode) %>% unique()  %>% #keep at most one per group/gene combo
+            mutate(Mutated = TRUE)
+        }
 
-    snv_df = summarize_mutation_by_class(mutation_set=c("Missense_Mutation","In_Frame_Del", "In_Frame_Ins","Translation_Start_Site"))
-    if(verbose){
-      print("SNV")
-      print(dim(snv_df))
+        
+        snv_wide = pivot_wider(snv_maf,names_from = "Tumor_Sample_Barcode",values_from = "Mutated",values_fill = FALSE) %>%
+            column_to_rownames("Hugo_Symbol")
+        missing_g = rownames(mat)[which(!rownames(mat) %in% rownames(snv_wide))]
+        missing_s = colnames(mat)[which(!colnames(mat) %in% colnames(snv_wide))]
+        #add missing rows
+        for(g in missing_g){
+            snv_wide[g,] = FALSE
+        }
+        #add missing cols
+        for(s in missing_s){
+            snv_wide[,s] = FALSE
+        }
+        return(snv_wide[rownames(mat),colnames(mat)])
+        }
+        
+        col["Missense"] = col["Missense_Mutation"]
+        col["Truncating"] = col["Nonsense_Mutation"]
+        col["CNV"] = "purple"
+        col["HotSpot"] = "magenta"
+        heights = c("Missense","Truncating","Splice_Site","HotSpot","CNV")
+        
+        alter_fun = list(
+        background = function(x, y, w, h) grid.rect(x, y, w, h, 
+                                                    gp = gpar(fill = NA,col=NA)),
+        
+        Missense = function(x, y, w, h){ grid.rect(x, y, w*0.9, h*0.9, 
+                                                gp = gpar(fill = col["Missense"], col = NA))},
+        Truncating = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
+                                                    gp = gpar(fill = col["Truncating"], col = NA))},
+        Splice_Site = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
+                                                    gp = gpar(fill = col["Splice_Site"], col = NA))},
+        
+        CNV = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.5, 
+                                                gp = gpar(fill = col["CNV"], col = NA))},
+        HotSpot = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9, 
+                                                    gp = gpar(fill = col["Missense"], col = NA));
+                                        grid.rect(x, y, w*0.9, h*0.3, 
+                                                    gp = gpar(fill = col["HotSpot"], col = NA));}
+        #HotSpot = function(x,y,w,h){grid.circle(x,y,w*0.9,
+        #                                        gp = gpar(fill = col["HotSpot"], col = NA))}
+        
+        , col = col)
+
+        snv_df = summarize_mutation_by_class(mutation_set=c("Missense_Mutation","In_Frame_Del", "In_Frame_Ins","Translation_Start_Site"))
+        if(verbose){
+        print("SNV")
+        print(dim(snv_df))
+        }
+        trunc_df = summarize_mutation_by_class(mutation_set=c("Nonsense_Mutation","Frame_Shift_Del","Frame_Shift_Ins","Nonstop_Mutation"))
+        splice_df = summarize_mutation_by_class(mutation_set = "Splice_Site")
+
+        if(highlightHotspots){
+        hotspot_df = summarize_mutation_by_class(mutation_set = "hot_spot")
+        snv_df[trunc_df==TRUE | splice_df==TRUE ] = FALSE
+        snv_df[ hotspot_df==TRUE] = FALSE
+        trunc_df[ hotspot_df==TRUE] = FALSE
+        splice_df[ hotspot_df==TRUE] = FALSE
+        }
+        
+        
+        snv_df[trunc_df==TRUE | splice_df==TRUE] = FALSE
+        splice_df[trunc_df==TRUE] = FALSE
+        
+        snv_df[trunc_df==TRUE | splice_df==TRUE] = FALSE
+        splice_df[trunc_df==TRUE] = FALSE
+        
+        if(!missing(cnv_df)){
+        transposed_cnv_df = t(cnv_df)
+        
+        #cnv_df = matrix(nrow = nrow(mat),ncol=ncol(mat),dimnames = list(rownames(mat), colnames(mat)) )
+        cn_df = matrix(nrow = nrow(transposed_cnv_df),
+                        ncol=ncol(transposed_cnv_df),
+                        dimnames = list(rownames(transposed_cnv_df), 
+                                        colnames(transposed_cnv_df)) )
+        
+        cn_df[]=FALSE
+        cn_df[transposed_cnv_df==1] = TRUE
+        missing_snv_genes = rownames(mat)[which(!rownames(mat) %in% rownames(cn_df))]
+        print("MISSING CNVs:")
+        print(missing_snv_genes)
+        mat1 = matrix(nrow=length(missing_snv_genes),ncol=ncol(cn_df))
+        
+        colnames(mat1) = colnames(cn_df)
+        rownames(mat1) = missing_snv_genes
+        mat1[] = FALSE
+        cn_df = rbind(cn_df,mat1)
+        cn_df = as.data.frame(cn_df)
+        #cn_df = cn_df[,patients_kept]
+        #add placeholder columns
+        missing_snv_patients = colnames(mat)[which(!colnames(mat) %in% colnames(cn_df))]
+        for(pat in missing_snv_patients){
+            cn_df[,pat] = 0
+        }
+        cn_df = cn_df[rownames(mat),patients_kept]
+        
+        }
+        
+        
+        if(!missing(cnv_df)){
+
+        cn_df[splice_df == TRUE] = FALSE
+        cn_df[trunc_df == TRUE] = FALSE
+        cn_df[hotspot_df == TRUE] = FALSE
+        cn_df[snv_df==TRUE] = FALSE
+        print(rownames(cn_df))
+        print(rownames(hotspot_df))
+
+        }
+        
+    }else{
+        alter_fun = list(
+        background = function(x, y, w, h) {
+            grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+                    gp = gpar(fill = "#e6e6e6", col = box_col))
+        },
+        RNA = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = "#F2ED36", col = box_col))
+        },
+        `3'UTR` = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = "#F2ED36", col = box_col))
+        },
+        `5'UTR` = function(x, y, w, h) {
+            grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+                gp = gpar(fill = col["5'UTR"], col = box_col)
+            )
+        },
+        Intron = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
+                    gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
+        },
+        Nonsense_Mutation = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = "#D8A7CA", col = box_col))
+        },
+        Splice_Site = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Splice_Site"], col = box_col))
+        },
+        Splice_Region = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Splice_Region"], col = box_col))
+        },
+        Nonstop_Mutation = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Nonstop_Mutation"], col = box_col))
+        },
+        Translation_Start_Site = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Translation_Start_Site"], col = box_col))
+        },
+        In_Frame_Ins = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["In_Frame_Ins"], col = box_col))
+        },
+        In_Frame_Del = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["In_Frame_Del"], col = box_col))
+        },
+        #all frame shifts will be the same colour, magenta
+        Frame_Shift_Del = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Frame_Shift_Del"], col = box_col))
+        },
+        Frame_Shift_Ins = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Frame_Shift_Ins"], col = box_col))
+        },
+        #big red
+        Multi_Hit = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Multi_Hit"], col = box_col))
+        },
+        #small green
+        Missense_Mutation = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
+                    gp = gpar(fill = col["Missense_Mutation"], col = box_col))
+        }
+        ,
+        hot_spot = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+                    gp = gpar(fill = "magenta", col = box_col))
+        },
+        Silent = function(x, y, w, h) {
+            grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+                    gp = gpar(fill = col["Silent"], col = box_col))
+        }
+        )
     }
-    trunc_df = summarize_mutation_by_class(mutation_set=c("Nonsense_Mutation","Frame_Shift_Del","Frame_Shift_Ins","Nonstop_Mutation"))
-    splice_df = summarize_mutation_by_class(mutation_set = "Splice_Site")
 
+    # Annotate hotspots if necessary
     if(highlightHotspots){
-      hotspot_df = summarize_mutation_by_class(mutation_set = "hot_spot")
-      snv_df[trunc_df==TRUE | splice_df==TRUE ] = FALSE
-      snv_df[ hotspot_df==TRUE] = FALSE
-      trunc_df[ hotspot_df==TRUE] = FALSE
-      splice_df[ hotspot_df==TRUE] = FALSE
+        if(! "hot_spot" %in% colnames(maf_df)){
+            stop(
+                "maf_df requires a hot_spot column. Did you forget to run annotate_hotspots?"
+            )
+        }
+        hot_samples = dplyr::filter(maf_df, hot_spot == TRUE & Hugo_Symbol %in% genes_kept) %>%
+            dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+            mutate(mutated = "hot_spot") %>%
+            unique()
+        
+        all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
+        all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
+        hs = left_join(all_samples_df, hot_samples)
+            hot_mat = hs %>%
+            pivot_wider(names_from = "Tumor_Sample_Barcode", values_from = "mutated") %>%
+            left_join(all_genes_df,.) %>%
+            column_to_rownames("Hugo_Symbol") %>%
+            as.matrix()
+        
+        #annotate hotspots in matrix
+        for (i in colnames(mat)){
+            mat[genes, i][!is.na(hot_mat[genes_kept, i])] = paste0(mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])], ";", hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])])
+        }
     }
-    
-    
-    snv_df[trunc_df==TRUE | splice_df==TRUE] = FALSE
-    splice_df[trunc_df==TRUE] = FALSE
-    
-    snv_df[trunc_df==TRUE | splice_df==TRUE] = FALSE
-    splice_df[trunc_df==TRUE] = FALSE
-    
-    if(!missing(cnv_df)){
-      transposed_cnv_df = t(cnv_df)
-      
-      #cnv_df = matrix(nrow = nrow(mat),ncol=ncol(mat),dimnames = list(rownames(mat), colnames(mat)) )
-      cn_df = matrix(nrow = nrow(transposed_cnv_df),
-                     ncol=ncol(transposed_cnv_df),
-                     dimnames = list(rownames(transposed_cnv_df), 
-                                     colnames(transposed_cnv_df)) )
-      
-      cn_df[]=FALSE
-      cn_df[transposed_cnv_df==1] = TRUE
-      missing_snv_genes = rownames(mat)[which(!rownames(mat) %in% rownames(cn_df))]
-      print("MISSING CNVs:")
-      print(missing_snv_genes)
-      mat1 = matrix(nrow=length(missing_snv_genes),ncol=ncol(cn_df))
-      
-      colnames(mat1) = colnames(cn_df)
-      rownames(mat1) = missing_snv_genes
-      mat1[] = FALSE
-      cn_df = rbind(cn_df,mat1)
-      cn_df = as.data.frame(cn_df)
-      #cn_df = cn_df[,patients_kept]
-      #add placeholder columns
-      missing_snv_patients = colnames(mat)[which(!colnames(mat) %in% colnames(cn_df))]
-      for(pat in missing_snv_patients){
-        cn_df[,pat] = 0
-      }
-      cn_df = cn_df[rownames(mat),patients_kept]
-      
+
+    if(verbose){
+        print(colours) #eventually get rid of this once the bugs are gone
+        print("KEPT:")
+        print(length(patients_kept))
     }
-    
-    
-    if(!missing(cnv_df)){
-
-      cn_df[splice_df == TRUE] = FALSE
-      cn_df[trunc_df == TRUE] = FALSE
-      cn_df[hotspot_df == TRUE] = FALSE
-      cn_df[snv_df==TRUE] = FALSE
-      print(rownames(cn_df))
-      print(rownames(hotspot_df))
-
+    if(length(expressionColumns)){
+        if(missing(numericMetadataColumns)){
+            numericMetadataColumns = expressionColumns
+        }else{
+            numericMetadataColumns = c(numericMetadataColumns, expressionColumns)
+        }
+        
     }
-    
-    
-    
-   
-  }else{
-    alter_fun = list(
-      background = function(x, y, w, h) {
-        grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
-                  gp = gpar(fill = "#e6e6e6", col = box_col))
-      },
-      RNA = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = "#F2ED36", col = box_col))
-      },
-      `3'UTR` = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = "#F2ED36", col = box_col))
-      },
-      Intron = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
-                  gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
-      },
-      Nonsense_Mutation = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = "#D8A7CA", col = box_col))
-      },
-      Splice_Site = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Splice_Site"], col = box_col))
-      },
-      Splice_Region = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Splice_Region"], col = box_col))
-      },
-      Nonstop_Mutation = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Nonstop_Mutation"], col = box_col))
-      },
-      Translation_Start_Site = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Translation_Start_Site"], col = box_col))
-      },
-      In_Frame_Ins = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["In_Frame_Ins"], col = box_col))
-      },
-      In_Frame_Del = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["In_Frame_Del"], col = box_col))
-      },
-      #all frame shifts will be the same colour, magenta
-      Frame_Shift_Del = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Frame_Shift_Del"], col = box_col))
-      },
-      Frame_Shift_Ins = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Frame_Shift_Ins"], col = box_col))
-      },
-      #big red
-      Multi_Hit = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Multi_Hit"], col = box_col))
-      },
-      #small green
-      Missense_Mutation = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                  gp = gpar(fill = col["Missense_Mutation"], col = box_col))
-      }
-      ,
-      hot_spot = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
-                  gp = gpar(fill = "magenta", col = box_col))
-      },
-      Silent = function(x, y, w, h) {
-        grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
-                  gp = gpar(fill = col["Silent"], col = box_col))
-      }
-    )
-  }
-
-  
-  if(highlightHotspots){
-    if(! "hot_spot" %in% colnames(maf_df)){
-      stop("maf_df requires a hot_spot column. Did you forget to run annotate_hotspots?")
-    }
-    hot_samples = dplyr::filter(maf_df, hot_spot == TRUE & Hugo_Symbol %in% genes_kept) %>%
-      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      mutate(mutated = "hot_spot") %>%
-      unique()
-    
-    all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
-    all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
-    hs = left_join(all_samples_df, hot_samples)
-    hot_mat = hs %>%
-      pivot_wider(names_from = "Tumor_Sample_Barcode", values_from = "mutated") %>%
-      left_join(all_genes_df,.) %>%
-      column_to_rownames("Hugo_Symbol") %>%
-      as.matrix()
-    
-    
-    
-   #annotate hotspots in matrix
-   for (i in colnames(mat)){
-        mat[genes, i][!is.na(hot_mat[genes_kept, i])] = paste0(mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])], ";", hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])])
-   }
-    
-    
-
-  }
-  if(verbose){
-    print(colours) #eventually get rid of this once the bugs are gone
-    print("KEPT:")
-    print(length(patients_kept))
-    
-  }
-  if(length(expressionColumns)){
-    if(missing(numericMetadataColumns)){
-      numericMetadataColumns = expressionColumns
+    if(!missing(numericMetadataColumns)){
+        metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+            column_to_rownames("sample_id") %>%
+            dplyr::select(all_of(c(metadataColumns, numericMetadataColumns, expressionColumns)))
+        
+        if(!missing(numericMetadataMax)){
+            max_list = setNames(numericMetadataMax, numericMetadataColumns)
+            metadata_df = metadata_df %>%
+                mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
+        }
     }else{
-      numericMetadataColumns = c(numericMetadataColumns,expressionColumns)
+        metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
+            column_to_rownames("sample_id") %>%
+            dplyr::select(all_of(c(metadataColumns, expressionColumns)))
     }
-    
-  }
-  if(!missing(numericMetadataColumns)){
-    
-    metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
-      column_to_rownames("sample_id") %>%
-      dplyr::select(all_of(c(metadataColumns, numericMetadataColumns, expressionColumns)))
-    
-    if(!missing(numericMetadataMax)){
-      max_list = setNames(numericMetadataMax, numericMetadataColumns)
-      
-      metadata_df = metadata_df %>%
-        mutate(across(names(max_list), ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]], .x)))
-    }
-  }else{
-    metadata_df = dplyr::filter(these_samples_metadata, sample_id %in% patients_kept) %>%
-      column_to_rownames("sample_id") %>%
-      dplyr::select(all_of(c(metadataColumns, expressionColumns)))
-  }
-  metadata_df = metadata_df %>%
-    mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
-  
-  #print(range(metadata_df$NFKBIZ))
-  #check for missing colours
-  
-  colours = map_metadata_to_colours(metadataColumns = metadataColumns, 
-                                    these_samples_metadata = these_samples_metadata,
-                                    annoAlpha = annoAlpha,
-                                    verbose=verbose)
-
-  #colours = assign_colours(metadataColumns,these_samples_metadata,annoAlpha,verbose)
-  if(highlightHotspots){
-    colours[["hot_spot"]] = c("hot_spot" = "magenta")
-    colours[["HotSpot"]] = "magenta"
-  }
-  if (! is.null(custom_colours)){
-    for(colname in names(custom_colours)){
-      colours[[colname]] = custom_colours[[colname]]
-      print("adding:")
-      print(colname)
-      print(colours[[colname]])
-    }
-    print(names(colours))
-    
-  }
-  
-  col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
-  if(numeric_heatmap_type=="CNV"){
-    col_fun = circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red"))
-  }
-  
-  for(exp in expressionColumns){
-    colours[[exp]] = col_fun
-   
-  }
-  
-  for(annotation in names(colours)){
-    if(annotation %in% c("HotSpot","hot_spot")){
-      next;
-    }
-    if(!missing(expressionColumns)){
-      if(annotation %in% expressionColumns){
-        next;
-      }
-    }
-    all_names = filter(metadata_df,!is.na(annotation)) %>% pull(annotation) %>% 
-      unique() %>% as.character()
-    all_names = all_names[!is.na(all_names)]
-    if(any(!all_names %in% names(colours[[annotation]]))){
-      print("-=-=-=")
-      print(all_names[!all_names %in% names(colours[[annotation]])])
-      print("-=-=-=")
-      print(unique(all_names))
-      print("-=-=-=")
-      print(names(colours[[annotation]]))
-      print("-=-=-=")
-      stop(paste("No colour assigned for one or more values in annotation:", annotation ,"\n Remove the offending rows or provide custom colours",annotation))
-    }
-  }
-  if(verbose){
-    print("COLOURS:")
-    print(colours)
-  }
-
-  if(!missing(sortByColumns)){
-    if (arrange_descending) {
-      metadata_df = arrange(metadata_df, across(sortByColumns, desc))
-    } else {
-      metadata_df = arrange(metadata_df, across(sortByColumns))
-    }
-    patients_kept = rownames(metadata_df)
-  }
-  if(verbose){
-    print(genes_kept)
-  }
-
-  
-  if(missing(splitGeneGroups)){
-    row_split = rep("", length(genes))
-  }else{
-    row_split = factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
-  }
-  if(!missing(groupNames)){
-    column_title = groupNames
-  }else{
-    column_title = NULL
-  }
-  if(keepGeneOrder){
-    gene_order = intersect(genes,genes_kept)
-    print(gene_order)
-  }else{
-    gene_order = NULL
-  }
-  if(missing(hide_annotations)){
-    show_legend = rep(TRUE, length(colnames(metadata_df)))
-  }else{
-    show_legend = rep(TRUE, length(colnames(metadata_df)))
-    names(show_legend) = colnames(metadata_df)
-    show_legend[hide_annotations] = FALSE
-  }
-  
-  
-  
-  if(hideTopBarplot){
-    top_annotation = NULL
-  }else{
-    tally_mutations = maf_df %>%
-      dplyr::filter(Tumor_Sample_Barcode %in% patients_kept) %>%
-      group_by(Tumor_Sample_Barcode) %>%
-      summarize(n_mutations = n()) %>%
-      ungroup %>%
-      arrange(match(Tumor_Sample_Barcode, patients_kept)) %>%
-      select(n_mutations) %>%
-      mutate(n_mutations = ifelse(n_mutations > tally_all_mutations_max,
-                                  tally_all_mutations_max,
-                                  n_mutations))
-    
-    if(is.null(ylim) & ! tally_all_mutations){
-      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
-      
-    }else if (!is.null(ylim) & ! tally_all_mutations){
-      top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
-      
-    } else if (is.null(ylim) & tally_all_mutations) {
-      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations))
-    } else if (! is.null(ylim) & tally_all_mutations) {
-      top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations, ylim=ylim))
-    }
-  }
-  
-  # Handle right annotation for specific genes
-  if (annotate_specific_genes & is.null(this_forest_object)) {
-    message("WARNING: You requested right annotation, but forgot to provide output of GAMBLR::prettyForestPlot")
-    message("No right annotation will be drawn.")
-    right_annotation = NULL
-  } else if (annotate_specific_genes) {
-    
-    these_comparisons = this_forest_object$mutmat$comparison %>% levels
-    
-    enrichment_label =
-      mat[intersect(genes, genes_kept),patients_kept] %>%
-      rownames_to_column("gene") %>%
-      select(gene) %>%
-      left_join(this_forest_object$fisher %>% select(gene, estimate, q.value)) %>%
-      mutate("Enriched in" = case_when(
-        estimate == "Inf" & q.value <= 0.1 ~ these_comparisons[1],
-        estimate == "-Inf" & q.value <= 0.1 ~ these_comparisons[2],
-        is.na(estimate) ~ "NA",
-        estimate<=1 & q.value <= 0.1 ~ these_comparisons[2],
-        estimate > 1 & q.value <= 0.1 ~ these_comparisons[1],
-        TRUE ~ "Neither"
-      )) %>%
-      pull("Enriched in")
-    
-    right_annotation = rowAnnotation(" " = enrichment_label,
-                                     col = list(" " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], 
-                                                        Neither = "#ACADAF", "NA" = "#000000")),
-                                     simple_anno_size = unit(metadataBarHeight, "mm"),
-                                     annotation_legend_param =
-                                       list(title = "Enriched in",
-                                            nrow=legend_row,
-                                            ncol = legend_col,
-                                            direction=legend_direction,
-                                            labels_gp = gpar(fontsize = legendFontSize)))
-  } else {
-    if(hideSideBarplot){
-      right_annotation = NULL
-    }else{
-      right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
-    }
-  }
-  
-  if(missing(hide_annotations)){
-    metadata_df = metadata_df
-  }else if (hide_annotations_tracks){
     metadata_df = metadata_df %>%
-      dplyr:: select(-all_of(hide_annotations))
-  }
-  
-  if(keepSampleOrder){
-    patients_kept <- patients_kept[order(
-      match(
-        patients_kept,
-        these_samples_metadata %>%
-          filter(sample_id %in% patients_kept) %>%
-          pull(sample_id)
-      )
-    )]
-    metadata_df <- metadata_df[
-      order(match(rownames(metadata_df), patients_kept)),
-      ,
-      drop = FALSE
-    ]
-  }
-  
-  
+        mutate(across(all_of(expressionColumns), ~ trim_scale_expression(.x)))
 
-  if(simplify_annotation){
-    if(!missing(cnv_df)){
-      cn_df = cn_df[genes_kept,patients_kept]
-    }
-    
-    trunc_df = trunc_df[genes_kept,patients_kept]
-    snv_df = snv_df[genes_kept,patients_kept]
-    splice_df = splice_df[genes_kept,patients_kept]
-    any_hit = trunc_df
-    any_hit[snv_df == TRUE] = TRUE
-    any_hit[splice_df == TRUE] = TRUE
-    if(!missing(cnv_df)){
-      any_hit[cn_df==TRUE] = TRUE
-    }
+    #check for missing colours
+    colours = map_metadata_to_colours(
+        metadataColumns = metadataColumns, 
+        these_samples_metadata = these_samples_metadata,
+        annoAlpha = annoAlpha,
+        verbose=verbose
+    )
+
     if(highlightHotspots){
-      any_hit[hotspot_df == TRUE] = TRUE
+        colours[["hot_spot"]] = c("hot_spot" = "magenta")
+        colours[["HotSpot"]] = "magenta"
     }
-    if(removeNonMutated){
-      patients_kept = names(which(colSums(any_hit)>0))
-      if(!missing(cnv_df)){
-        cn_df = cn_df[genes_kept,patients_kept]
-      }
-      print("KEPT:")
-      print(length(patients_kept))
-      
-      trunc_df = trunc_df[genes_kept,patients_kept]
-      snv_df = snv_df[genes_kept,patients_kept]
-      splice_df = splice_df[genes_kept,patients_kept]
-      metadata_df = metadata_df[patients_kept,]
-      if(highlightHotspots){
-        hotspot_df = hotspot_df[genes_kept,patients_kept]
-      }
+    if (! is.null(custom_colours)){
+        for(colname in names(custom_colours)){
+            colours[[colname]] = custom_colours[[colname]]
+            print("adding:")
+            print(colname)
+            print(colours[[colname]])
+        }
+        print(names(colours))
     }
-    if(missing(sortByColumns)){
-      col_order = NULL
-    }else{
-      col_order = patients_kept
-      
+  
+    col_fun = circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
+    if(numeric_heatmap_type=="CNV"){
+        col_fun = circlize::colorRamp2(c(1, 2, 5), c("blue","white", "red"))
     }
-    
-    
-    mat_list = list(
-                    Missense=as.matrix(snv_df[genes_kept,patients_kept]),
-                    Truncating=as.matrix(trunc_df[genes_kept,patients_kept]),
-                    Splice_Site = as.matrix(splice_df[genes_kept,patients_kept]))
-    
-    if(!missing(cnv_df)){
-      mat_list[["CNV"]] = as.matrix(cn_df[genes_kept,patients_kept])
+  
+    for(exp in expressionColumns){
+        colours[[exp]] = col_fun
     }
-    if(highlightHotspots){
-      mat_list[["HotSpot"]] = as.matrix(hotspot_df[genes_kept,patients_kept])
+  
+    for(annotation in names(colours)){
+        if(annotation %in% c("HotSpot","hot_spot")){
+        next;
+        }
+        if(!missing(expressionColumns)){
+        if(annotation %in% expressionColumns){
+            next;
+        }
+        }
+        all_names = filter(metadata_df,!is.na(annotation)) %>% pull(annotation) %>% 
+        unique() %>% as.character()
+        all_names = all_names[!is.na(all_names)]
+        if(any(!all_names %in% names(colours[[annotation]]))){
+        print("-=-=-=")
+        print(all_names[!all_names %in% names(colours[[annotation]])])
+        print("-=-=-=")
+        print(unique(all_names))
+        print("-=-=-=")
+        print(names(colours[[annotation]]))
+        print("-=-=-=")
+        stop(paste("No colour assigned for one or more values in annotation:", annotation ,"\n Remove the offending rows or provide custom colours",annotation))
+        }
     }
     if(verbose){
-        message("done")
+        print("COLOURS:")
+        print(colours)
     }
-    mat_input = mat_list
-  }else{ #end simplify
-    if(missing(sortByColumns)){
-      col_order = NULL
-    }else{
-      col_order = patients_kept
-      
-    }
-    mat_input = mat[intersect(genes, genes_kept),patients_kept]
-    #print(mat_input)
-    any_hit = mat_input
-    any_hit[] = FALSE
-    any_hit[mat_input != ""] = TRUE
-  }
-  
-  if(cluster_rows | cluster_cols){
-    if(!cluster_cols){
-      message("clustering mutation rows but not columns")
-      h_obj = pheatmap(any_hit,
-                       clustering_distance_rows = clustering_distance_rows,
-                       cluster_rows=T,cluster_cols=F,
-                       fontsize_row = 6,show_colnames = F)
-    }else if(!cluster_rows){
-      message("clustering mutation columns but not rows")
-      h_obj = pheatmap(any_hit,
-                       clustering_distance_cols= clustering_distance_cols,
-                       cluster_cols=T,cluster_rows=F,
-                       fontsize_row = 6,show_colnames = F)
-    }else{
-      message("clustering mutation rows and columns")
-      h_obj = pheatmap(any_hit,
-                       clustering_distance_rows = clustering_distance_rows,
-                       clustering_distance_cols= clustering_distance_cols,
-                       fontsize_row = 6,show_colnames = F)
-    }
-    if(dry_run){
-      print(h_obj)
-      return(h_obj)
-    }
-    row_dend = row_dend(h_obj)
-    col_dend = column_dend(h_obj)
-  }else{
-    row_dend = NULL
-    col_dend = NULL
-  }
-  
-  if(missing(splitColumnName)){
-    column_split = rep("", length(patients_kept))
-  }else{
-    if(is.factor(metadata_df[,splitColumnName])){
-      print("FACTOR!")
-      metadata_df = arrange(metadata_df,splitColumnName) 
-      column_split = pull(metadata_df,splitColumnName)
-      patients_kept = rownames(metadata_df)
-      
-    }else{
-      if(verbose){
-        print("NOT FACTOR")
-      }
-      #replace any NA values with "NA"
-      metadata_df[is.na(metadata_df[,splitColumnName]),splitColumnName]="NA"
-      column_split = factor(metadata_df[patients_kept, splitColumnName])
+
+    if(!missing(sortByColumns)){
+        if (arrange_descending) {
+            metadata_df = arrange(metadata_df, across(sortByColumns, desc))
+        } else {
+            metadata_df = arrange(metadata_df, across(sortByColumns))
+        }
+        patients_kept = rownames(metadata_df)
     }
     
-  }
-  metadata_df <- metadata_df %>%
-    mutate_if(is.factor, as.character) %>%
-    replace(is.na(.), "NA")
-  # Only keep the annotation colors for the remaining patients
-  for(column in colnames(metadata_df)){
-    if(missing(numericMetadataColumns)){
-      remaining <- unique(metadata_df[column]) %>% pull()
-      colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
-    }else if(!column %in% numericMetadataColumns){
-      remaining <- unique(metadata_df[column]) %>% pull()
-      colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+    if(verbose){
+        print(genes_kept)
     }
-  }
-  if(verbose){
-    print("Rows of metadata:")
-    print(nrow(metadata_df))
-    print(dim(mat))
-    
-  }
-  if(stacked){
-    #need to prepare the second heatmap from the numericmetadata (e.g. aSHM)
-    if(numeric_heatmap_type=="CNV"){
-      trim_cn = function(x){
-        x = ifelse(x >5,5,x)
-        return(x)
-      }
-      
-      metadata_df = metadata_df %>%
-        mutate(across(all_of(numericMetadataColumns), ~ trim_cn(.x)))
-    }else{
-      metadata_df = metadata_df %>%
-        mutate(across(all_of(numericMetadataColumns), ~ trim_scale_expression(.x)))
-    }
-    
-    
-    #drop any columns that result in NaN after scaling
-    cm = colMeans(metadata_df[,numericMetadataColumns])
-    not_nan = names(which(!is.nan(cm)))
-    if(any(is.nan(cm))){
-      message(paste("dropping",sum(is.nan(cm)),"genes due to sparseness"))
-      message(paste(names(which(is.nan(cm))),collapse = ","))
-    }
-    heat_mat = t(metadata_df[patients_kept,not_nan])
-    keepcol = colnames(metadata_df)[!colnames(metadata_df)%in%numericMetadataColumns]
-    
-    metadata_df_numeric = metadata_df[,keepcol]
-    
-  }
-    
 
   
-  if(simplify_annotation){
-    plot_type = "simplify"
-  }else{
-    plot_type = "original"
-  }
-  if(verbose){
-    message("calling make_prettyoncoplot()")
-  }
-  returned = make_prettyoncoplot(mat_input,metadata_df,metadata_df_numeric,
-                      cluster_oncoplot_rows = cluster_rows, 
-                      cluster_oncoplot_cols = cluster_cols,
-                      cluster_numeric_rows = cluster_numeric_rows,
-                      cluster_numeric_cols = cluster_numeric_cols,
-                      clustering_distance_cols = clustering_distance_cols,
-                      splitColumnName = splitColumnName,
-                      column_split=column_split,
-                      alter_fun=alter_fun,
-                      top_annotation = top_annotation,
-                      right_annotation = right_annotation,
-                      plot_type=plot_type,
-                      stacked=stacked,
-                      numeric_heatmap_type=numeric_heatmap_type,
-                      cnv_df=cnv_df,
-                      heat_mat=heat_mat,
-                      col=col,
-                      annotation_row=annotation_row,
-                      annotation_col=annotation_col,
-                      legend_direction=legend_direction,
-                      legendFontSize=legendFontSize,
-                      fontSizeGene=fontSizeGene,
-                      gene_order=gene_order,
-                      col_order=col_order,
-                      legend_row=legend_row,
-                      legend_col=legend_col,
-                      col_fun=col_fun,
-                      colours=colours,
-                      row_dend=row_dend,
-                      col_dend=col_dend,
-                      column_title=column_title,
-                      show_legend=show_legend,
-                      legend_position=legend_position,
-                      metadataBarHeight=metadataBarHeight,
-                      metadataBarFontsize=metadataBarFontsize,
-                      showTumorSampleBarcode=showTumorSampleBarcode,
-                      return_inputs=return_inputs,
-                      numeric_heatmap_location=numeric_heatmap_location,
-                      split_rows_kmeans=split_rows_kmeans,
-                      split_columns_kmeans=split_columns_kmeans,
-                      verbose=verbose)
-  if(return_inputs){
-    return(returned)
-  }
-}
+    if(missing(splitGeneGroups)){
+        row_split = rep("", length(genes))
+    }else{
+        row_split = factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
+    }
+
+    if(!missing(groupNames)){
+        column_title = groupNames
+    }else{
+        column_title = NULL
+    }
+
+    if(keepGeneOrder){
+        gene_order = intersect(genes,genes_kept)
+        print(gene_order)
+    }else{
+        gene_order = NULL
+    }
+
+    ##### Now handle the annotations around the oncoplot
+    if(missing(hide_annotations)){
+        show_legend = rep(TRUE, length(colnames(metadata_df)))
+    }else{
+        show_legend = rep(TRUE, length(colnames(metadata_df)))
+        names(show_legend) = colnames(metadata_df)
+        show_legend[hide_annotations] = FALSE
+    }
+
+    if(hideTopBarplot){
+        top_annotation = NULL
+    }else{
+        tally_mutations = maf_df %>%
+            dplyr::filter(Tumor_Sample_Barcode %in% patients_kept) %>%
+            group_by(Tumor_Sample_Barcode) %>%
+            summarize(n_mutations = n()) %>%
+            ungroup %>%
+            arrange(match(Tumor_Sample_Barcode, patients_kept)) %>%
+            select(n_mutations) %>%
+            mutate(n_mutations = ifelse(
+                n_mutations > tally_all_mutations_max,
+                tally_all_mutations_max,
+                n_mutations)
+            )
+        
+        if(is.null(ylim) & ! tally_all_mutations){
+            top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot())
+        }else if (!is.null(ylim) & ! tally_all_mutations){
+            top_annotation = HeatmapAnnotation(cbar = anno_oncoprint_barplot(ylim=ylim))
+        } else if (is.null(ylim) & tally_all_mutations) {
+            top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations))
+        } else if (! is.null(ylim) & tally_all_mutations) {
+            top_annotation = columnAnnotation(" " = anno_barplot(tally_mutations, ylim=ylim))
+        }
+    }
+  
+    # Handle right annotation for specific genes
+    if (annotate_specific_genes & is.null(this_forest_object)) {
+        message(
+            "WARNING: You requested right annotation, but forgot to provide output of GAMBLR::prettyForestPlot"
+        )
+        message(
+            "No right annotation will be drawn."
+        )
+        right_annotation = NULL
+    } else if (annotate_specific_genes) {
+        
+        these_comparisons = this_forest_object$mutmat$comparison %>% levels
+        
+        enrichment_label =
+            mat[intersect(genes, genes_kept),patients_kept] %>%
+            rownames_to_column("gene") %>%
+            select(gene) %>%
+            left_join(this_forest_object$fisher %>% select(gene, estimate, q.value)) %>%
+            mutate("Enriched in" = case_when(
+                estimate == "Inf" & q.value <= 0.1 ~ these_comparisons[1],
+                estimate == "-Inf" & q.value <= 0.1 ~ these_comparisons[2],
+                is.na(estimate) ~ "NA",
+                estimate<=1 & q.value <= 0.1 ~ these_comparisons[2],
+                estimate > 1 & q.value <= 0.1 ~ these_comparisons[1],
+                TRUE ~ "Neither"
+            )) %>%
+            pull("Enriched in")
+        
+        right_annotation = rowAnnotation(
+            " " = enrichment_label,
+            col = list(
+                " " = c(GAMBLR.helpers::get_gambl_colours()[these_comparisons], 
+                Neither = "#ACADAF", "NA" = "#000000")
+            ),
+            simple_anno_size = unit(metadataBarHeight, "mm"),
+            annotation_legend_param = list(
+                title = "Enriched in",
+                nrow=legend_row,
+                ncol = legend_col,
+                direction=legend_direction,
+                labels_gp = gpar(fontsize = legendFontSize)
+            )
+        )
+    } else {
+        if(hideSideBarplot){
+            right_annotation = NULL
+        }else{
+            right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
+        }
+    }
+  
+    if(missing(hide_annotations)){
+        metadata_df = metadata_df
+    }else if (hide_annotations_tracks){
+        metadata_df = metadata_df %>%
+        dplyr::select(-all_of(hide_annotations))
+    }
+
+    if(keepSampleOrder){
+        patients_kept <- patients_kept[order(
+        match(
+            patients_kept,
+            these_samples_metadata %>%
+            filter(sample_id %in% patients_kept) %>%
+            pull(sample_id)
+        )
+        )]
+        metadata_df <- metadata_df[
+        order(match(rownames(metadata_df), patients_kept)),
+        ,
+        drop = FALSE
+        ]
+    }
+
+    if(simplify_annotation){
+        if(!missing(cnv_df)){
+            cn_df = cn_df[genes_kept,patients_kept]
+        }
+
+        trunc_df = trunc_df[genes_kept,patients_kept]
+        snv_df = snv_df[genes_kept,patients_kept]
+        splice_df = splice_df[genes_kept,patients_kept]
+        any_hit = trunc_df
+        any_hit[snv_df == TRUE] = TRUE
+        any_hit[splice_df == TRUE] = TRUE
+
+        if(!missing(cnv_df)){
+            any_hit[cn_df==TRUE] = TRUE
+        }
+
+        if(highlightHotspots){
+            any_hit[hotspot_df == TRUE] = TRUE
+        }
+
+        if(removeNonMutated){
+            patients_kept = names(which(colSums(any_hit)>0))
+
+            if(!missing(cnv_df)){
+                cn_df = cn_df[genes_kept,patients_kept]
+            }
+            print("KEPT:")
+            print(length(patients_kept))
+            
+            trunc_df = trunc_df[genes_kept,patients_kept]
+            snv_df = snv_df[genes_kept,patients_kept]
+            splice_df = splice_df[genes_kept,patients_kept]
+            metadata_df = metadata_df[patients_kept,]
+
+            if(highlightHotspots){
+                hotspot_df = hotspot_df[genes_kept,patients_kept]
+            }
+        }
+
+        if(missing(sortByColumns)){
+            col_order = NULL
+        }else{
+            col_order = patients_kept
+        }
+        
+        
+        mat_list = list(
+            Missense=as.matrix(snv_df[genes_kept,patients_kept]),
+            Truncating=as.matrix(trunc_df[genes_kept,patients_kept]),
+            Splice_Site = as.matrix(splice_df[genes_kept,patients_kept])
+        )
+        
+        if(!missing(cnv_df)){
+            mat_list[["CNV"]] = as.matrix(cn_df[genes_kept,patients_kept])
+        }
+        if(highlightHotspots){
+            mat_list[["HotSpot"]] = as.matrix(hotspot_df[genes_kept,patients_kept])
+        }
+        if(verbose){
+            message("done")
+        }
+        mat_input = mat_list
+    }else{ #end simplify
+        if(missing(sortByColumns)){
+            col_order = NULL
+        }else{
+            col_order = patients_kept
+        }
+        mat_input = mat[intersect(genes, genes_kept),patients_kept]
+        any_hit = mat_input
+        any_hit[] = FALSE
+        any_hit[mat_input != ""] = TRUE
+    }
+  
+    if(cluster_rows | cluster_cols){
+        if(!cluster_cols){
+            message("clustering mutation rows but not columns")
+            h_obj = pheatmap(
+                any_hit,
+                clustering_distance_rows = clustering_distance_rows,
+                cluster_rows=T,
+                cluster_cols=F,
+                fontsize_row = 6,
+                show_colnames = F
+            )
+        }else if(!cluster_rows){
+            message("clustering mutation columns but not rows")
+            h_obj = pheatmap(
+                any_hit,
+                clustering_distance_cols= clustering_distance_cols,
+                cluster_cols=T,
+                cluster_rows=F,
+                fontsize_row = 6,
+                show_colnames = F
+            )
+        }else{
+        message("clustering mutation rows and columns")
+        h_obj = pheatmap(
+            any_hit,
+            clustering_distance_rows=clustering_distance_rows,
+            clustering_distance_cols=clustering_distance_cols,
+            fontsize_row = 6,
+            show_colnames = F)
+        }
+        if(dry_run){
+            print(h_obj)
+            return(h_obj)
+        }
+        row_dend = row_dend(h_obj)
+        col_dend = column_dend(h_obj)
+    }else{
+        row_dend = NULL
+        col_dend = NULL
+    }
+  
+    if(missing(splitColumnName)){
+        column_split = rep("", length(patients_kept))
+    }else{
+        if(is.factor(metadata_df[,splitColumnName])){
+            print("FACTOR!")
+            metadata_df = arrange(metadata_df,splitColumnName) 
+            column_split = pull(metadata_df,splitColumnName)
+            patients_kept = rownames(metadata_df)
+        }else{
+            if(verbose){
+                print("NOT FACTOR")
+            }
+            metadata_df[is.na(metadata_df[,splitColumnName]),splitColumnName]="NA"
+            column_split = factor(metadata_df[patients_kept, splitColumnName])
+        }
+        
+    }
+    metadata_df <- metadata_df %>%
+        mutate_if(is.factor, as.character) %>%
+        replace(is.na(.), "NA")
+    # Only keep the annotation colors for the remaining patients
+    for(column in colnames(metadata_df)){
+        if(missing(numericMetadataColumns)){
+            remaining <- unique(metadata_df[column]) %>% pull()
+            colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+        }else if(!column %in% numericMetadataColumns){
+            remaining <- unique(metadata_df[column]) %>% pull()
+            colours[[column]] <- (colours[column] %>% unname %>% unlist)[remaining]
+        }
+    }
+    if(verbose){
+        print("Rows of metadata:")
+        print(nrow(metadata_df))
+        print(dim(mat))
+    }
+    if(stacked){
+        #need to prepare the second heatmap from the numericmetadata (e.g. aSHM)
+        if(numeric_heatmap_type=="CNV"){
+            trim_cn = function(x){
+                x = ifelse(x >5,5,x)
+                return(x)
+            }
+            metadata_df = metadata_df %>%
+                mutate(across(all_of(numericMetadataColumns), ~ trim_cn(.x)))
+        }else{
+            metadata_df = metadata_df %>%
+                mutate(across(all_of(numericMetadataColumns), ~ trim_scale_expression(.x)))
+        }
+        
+        #drop any columns that result in NaN after scaling
+        cm = colMeans(metadata_df[,numericMetadataColumns])
+        not_nan = names(which(!is.nan(cm)))
+        if(any(is.nan(cm))){
+            message(paste("dropping",sum(is.nan(cm)),"genes due to sparseness"))
+            message(paste(names(which(is.nan(cm))),collapse = ","))
+        }
+        heat_mat = t(metadata_df[patients_kept,not_nan])
+        keepcol = colnames(metadata_df)[!colnames(metadata_df)%in%numericMetadataColumns]
+        
+        metadata_df_numeric = metadata_df[,keepcol]
+
+    }
+    
+    if(simplify_annotation){
+        plot_type = "simplify"
+    }else{
+        plot_type = "original"
+    }
+
+    if(verbose){
+        message("calling make_prettyoncoplot()")
+    }
+
+    returned = make_prettyoncoplot(
+            mat_input,metadata_df,metadata_df_numeric,
+            cluster_oncoplot_rows = cluster_rows, 
+            cluster_oncoplot_cols = cluster_cols,
+            cluster_numeric_rows = cluster_numeric_rows,
+            cluster_numeric_cols = cluster_numeric_cols,
+            clustering_distance_cols = clustering_distance_cols,
+            splitColumnName = splitColumnName,
+            column_split=column_split,
+            alter_fun=alter_fun,
+            top_annotation = top_annotation,
+            right_annotation = right_annotation,
+            plot_type=plot_type,
+            stacked=stacked,
+            numeric_heatmap_type=numeric_heatmap_type,
+            cnv_df=cnv_df,
+            heat_mat=heat_mat,
+            col=col,
+            annotation_row=annotation_row,
+            annotation_col=annotation_col,
+            legend_direction=legend_direction,
+            legendFontSize=legendFontSize,
+            fontSizeGene=fontSizeGene,
+            gene_order=gene_order,
+            col_order=col_order,
+            legend_row=legend_row,
+            legend_col=legend_col,
+            col_fun=col_fun,
+            colours=colours,
+            row_dend=row_dend,
+            col_dend=col_dend,
+            column_title=column_title,
+            show_legend=show_legend,
+            legend_position=legend_position,
+            metadataBarHeight=metadataBarHeight,
+            metadataBarFontsize=metadataBarFontsize,
+            showTumorSampleBarcode=showTumorSampleBarcode,
+            return_inputs=return_inputs,
+            numeric_heatmap_location=numeric_heatmap_location,
+            split_rows_kmeans=split_rows_kmeans,
+            split_columns_kmeans=split_columns_kmeans,
+            verbose=verbose
+        )
+        if(return_inputs){
+            return(returned)
+        }
+    }
 
 make_prettyoncoplot = function(mat_input,
                                metadata_df,
