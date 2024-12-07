@@ -18,8 +18,7 @@ prettyForestPlot(
   comparison_name = FALSE,
   custom_colours = FALSE,
   custom_labels = FALSE,
-  max_q = 1,
-  mirrorarg = FALSE
+  max_q = 1
 )
 }
 \arguments{
@@ -50,8 +49,6 @@ prettyForestPlot(
 \item{custom_labels}{Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.}
 
 \item{max_q}{cut off for q values to be filtered in fish test}
-
-\item{mirrorarg}{Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.}
 }
 \value{
 A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
