@@ -10,10 +10,15 @@
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.
+#' @param label_threshold The minimum number of mutations at a position to label the mutation. Default is 5.
+#' @param refseq Optional, the RefSeq ID of the gene. If not provided, the first RefSeq ID found in the protein domains table will be used.
+#' @param metadata Optional, a data frame containing metadata for the samples. If provided, the plot will be split by the values of split_by_column.
+#' @param split_by_column Optional, the column in metadata to split the plot by. Default is NULL.
+#' @param split_column_values Optional, the values of split_by_column to split the plot by. Default is NULL.
 #'
 #' @return A lollipop plot.
 #'
-#' @import dplyr ggplot2
+#' @import dplyr ggplot2 ggpubr
 #' @export
 #'
 #' @examples
@@ -66,8 +71,8 @@ pretty_lollipop_plot <- function(
         }
         metadata <- metadata[metadata[[split_by_column]] %in% split_column_values, ]
         maf_df <- maf_df %>%
-            filter(Tumor_Sample_Barcode %in% metadata$sample_id) %>%
-            left_join(select(metadata, Tumor_Sample_Barcode = sample_id, all_of(split_by_column)), by = "Tumor_Sample_Barcode")
+            dplyr::filter(Tumor_Sample_Barcode %in% metadata$sample_id) %>%
+            left_join(dplyr::select(metadata, Tumor_Sample_Barcode = sample_id, all_of(split_by_column)), by = "Tumor_Sample_Barcode")
     } else {
         # make a dummy grouping column
         split_by_column <- "dummy"
@@ -76,8 +81,8 @@ pretty_lollipop_plot <- function(
     }
     # Subset the maf to gene and variants of interest
     nc_maf_df <- maf_df %>%
-        filter(Hugo_Symbol == gene) %>%
-        filter(Variant_Classification %in% variants)
+        dplyr::filter(Hugo_Symbol == gene) %>%
+        dplyr::filter(Variant_Classification %in% variants)
     gene_df <- nc_maf_df %>%
         mutate(position = as.numeric(gsub(
             "[^0-9]+",
@@ -189,9 +194,9 @@ pretty_lollipop_plot <- function(
 
     if (length(split_column_values) == 2) {
         # Co-lollipop plot when split_by_column is provided
-        mutation_plot1 <- mutation_plot_fun(gene_counts %>% filter(!!sym(split_by_column) == split_column_values[1])) +
+        mutation_plot1 <- mutation_plot_fun(gene_counts %>% dplyr::filter(!!sym(split_by_column) == split_column_values[1])) +
             ylim(0, y_max)
-        mutation_plot2 <- mutation_plot_fun(gene_counts %>% filter(!!sym(split_by_column) == split_column_values[2])) +
+        mutation_plot2 <- mutation_plot_fun(gene_counts %>% dplyr::filter(!!sym(split_by_column) == split_column_values[2])) +
             scale_y_reverse(limits = c(ymax, 0))
         plot <- ggpubr::ggarrange(
             mutation_plot1, domain_plot, mutation_plot2,
