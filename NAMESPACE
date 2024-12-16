@@ -29,11 +29,8 @@ export(prettyGeneCloud)
 export(prettyOncoplot)
 export(prettyRainfallPlot)
 export(pretty_CN_heatmap)
-<<<<<<< HEAD
 export(pretty_colollipop_plot)
-=======
 export(pretty_circular_mutation_frequency_heatmap)
->>>>>>> master
 export(pretty_lollipop_plot)
 export(splendidHeatmap)
 import(ComplexHeatmap)
