@@ -7,6 +7,7 @@
 prettyChromoplot(
   scores,
   genes_to_label,
+  projection = "grch37",
   cutoff = 0.5,
   adjust_amps = 0.5,
   adjust_dels = 2.75,
@@ -20,7 +21,9 @@ prettyChromoplot(
 \arguments{
 \item{scores}{Output file scores.gistic from the run of GISTIC2.0}
 
-\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR packages are used by default to annotate on the plot.}
+\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.}
+
+\item{projection}{Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.}
 
 \item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 

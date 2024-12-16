@@ -23,7 +23,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr stringr GAMBLR.helpers
+#' @import ggplot2 dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -121,7 +121,7 @@ fancy_multisamp_ideogram = function(these_sample_ids,
   cn_states$ycoord = cn_states$chrom
 
   #paste chr in chromosome column, if not there
-  if(!str_detect(cn_states$chrom[1], "chr")){
+  if(!grepl("chr", cn_states$chrom[1])){
     cn_states = mutate(cn_states, chrom = paste0("chr", chrom))
     }
 

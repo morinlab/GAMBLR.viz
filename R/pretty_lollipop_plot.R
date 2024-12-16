@@ -9,6 +9,7 @@
 #' @param maf_df A data frame containing the mutation data.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
+#' @param refseq_id Insert a specific NM_xxx value of interest
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE. 
 #' @param plotarg Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.
 #' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
@@ -38,15 +39,16 @@
 #' lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
 #'
 pretty_lollipop_plot <- function(
-    maf_df = NULL, 
-    gene = NULL,
+    maf_df, 
+    gene,
     plot_title,
+    refseq_id,
     include_silent = FALSE,
     plotarg = TRUE,
     mirrorarg = FALSE,
-    combined_gene_counts = NULL,
-    meta1_counter = NULL,
-    meta2_counter = NULL,
+    combined_gene_counts,
+    meta1_counter,
+    meta2_counter,
     Sample1 = Sample1,
     Sample2 = Sample2
 ) {
@@ -119,6 +121,22 @@ pretty_lollipop_plot <- function(
         HGNC == gene
     )
    
+    if (missing(refseq_id)){
+        if (length(unique(protein_domain_subset$refseq.ID)) == 1){ # Gene only has 1 NM_XXX on protein_domains$refseq.ID
+            protein_domain_subset <- protein_domain_subset
+        } else if (length(unique(protein_domains$refseq.ID)) > 1){ # Gene has >1 NM_XXX on protein_domains$refseq.ID, the first one is selected
+            protein_domain_subset <- protein_domain_subset %>%
+                filter(refseq.ID == protein_domain_subset$refseq.ID[1])
+        }
+    } else if (refseq_id %in% protein_domain_subset$refseq.ID){ # refseq_id matches to an NM_XXX on protein_domains$refseq.ID
+        protein_domain_subset <- protein_domain_subset %>%
+            filter(refseq.ID == refseq_id)
+    } else { # refseq_id has no matches to protein_domains.Rd
+        stop(paste("Error: refseq_id", refseq_id, "is not found in protein_domains", 
+            "\nThe following refseq IDs are available in protein_domains.RD:",
+            paste(unique(protein_domain_subset$refseq.ID), collapse = ", ")))
+    }
+
     domain_data <- protein_domain_subset %>% 
         data.frame(
             start.points = protein_domain_subset$Start,

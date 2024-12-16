@@ -30,7 +30,7 @@
 #'
 #' @return Nothing
 #'
-#' @import dplyr circlize ComplexHeatmap ggplot2 stringr tibble
+#' @import dplyr circlize ComplexHeatmap ggplot2 tibble
 #' @export
 #'
 #' @examples
@@ -200,10 +200,19 @@ splendidHeatmap = function(this_matrix,
     dplyr::select(Tumor_Sample_Barcode, splitColumnName), by = "Tumor_Sample_Barcode")
 
   #specify where row breaks should be on heatmap
+  sorted_groups <- sort(
+    FEATURES$group,
+    method = "radix",
+    decreasing = FALSE,
+    na.last = TRUE
+  )
+  sorted_groups <- sorted_groups[
+    order(as.numeric(sorted_groups))
+  ]
   FEATURES = FEATURES %>%
     arrange(match(
       group,
-      str_sort(FEATURES$group, numeric = TRUE)
+      sorted_groups
     ))
   breaks = 0
   for (this_group in comparison_groups){

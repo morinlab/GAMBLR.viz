@@ -20,6 +20,7 @@ pretty_CN_heatmap(
   hide_annotations,
   sortByBins,
   splitByBinState,
+  sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
   bin_label_fontsize = 5,
@@ -37,7 +38,9 @@ pretty_CN_heatmap(
   legend_col = 3,
   boxplot_orientation = "vertical",
   return_data = FALSE,
-  drop_bin_if_sd_below = 0
+  drop_bin_if_sd_below = 0,
+  flip = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -70,6 +73,8 @@ pretty_CN_heatmap(
 \item{sortByBins}{Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.}
 
 \item{splitByBinState}{Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin}
+
+\item{sortByPGA}{Optional: Sort the rows based on percent genome altered (PGA) instead of the other options}
 
 \item{sortByMetadataColumns}{A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)}
 
@@ -106,6 +111,10 @@ pretty_CN_heatmap(
 \item{return_data}{Specify TRUE to get some of the internal data back including the heatmap object}
 
 \item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
+
+\item{flip}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
+
+\item{verbose}{Control verbosity of the console output. Default is FALSE.}
 }
 \value{
 list (when return_data = TRUE)
@@ -115,23 +124,26 @@ Pretty Copy Number Heatmap
 }
 \examples{
 
+
+#get some metadata for subsetting the data to just one pathology (DLBCL)
+dlbcl_genome_meta = get_gambl_metadata() \%>\%
+                    filter(pathology=="DLBCL",
+                    seq_type=="genome")
+
 # Create the copy number matrix using the helper functions
 all_segments = get_cn_segments()
 all_states_binned = get_cn_states(n_bins_split=2500,
                                  missing_data_as_diploid = T,
-                                 seg_data = all_segments)
+                                 seg_data = all_segments,
+                                 these_samples_metadata = dlbcl_genome_meta)
 
-#get some metadata for subsetting the data to just one pathology (DLBCL)
-dlbcl_genome_meta = get_gambl_metadata() \%>\% 
-                    filter(pathology=="DLBCL",
-                    seq_type=="genome")
 
 # Generate a basic genome-wide CN heatmap
 pretty_CN_heatmap(cn_state_matrix=all_states_binned,
                   these_samples_metadata = dlbcl_genome_meta,
                   hide_annotations = "chromosome")
 
-# Disable row (sample) clustering and restrict to a few chromosomes 
+# Disable row (sample) clustering and restrict to a few chromosomes
 # and highlight some genes of interest
 pretty_CN_heatmap(cn_state_matrix=all_states_binned,
   these_samples_metadata = dlbcl_genome_meta,
@@ -144,11 +156,11 @@ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
 # get gene expression data
 gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
 
-genome_meta_exp = left_join(get_gambl_metadata() \%>\% 
-    filter(seq_type=="genome") \%>\% 
+genome_meta_exp = left_join(get_gambl_metadata() \%>\%
+    filter(seq_type=="genome") \%>\%
     select(sample_id,pathology,lymphgen),
     select(gene_exp_all,-sample_id),
-    by=c("sample_id"="genome_sample_id")) \%>\% 
+    by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
 
 # Include gene expression data and embed a box plot showing the expression of one gene across different CN states

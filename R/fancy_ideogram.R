@@ -157,7 +157,6 @@ fancy_ideogram = function(this_sample_id,
       if(!str_detect(intersect_regions$chrom, "chr")){
         intersect_regions = mutate(intersect_regions, chrom = paste0("chr", chrom))
       }
-      intersect_regions = as.data.table(intersect_regions)
       intersect_regions$start = as.numeric(intersect_regions$start)
       intersect_regions$end = as.numeric(intersect_regions$end)
     }
@@ -183,15 +182,12 @@ fancy_ideogram = function(this_sample_id,
       }
     }
 
-    incoming_cn = as.data.table(cn_states)
-    regions_sub = as.data.table(intersect_regions)
-
-    #set keys
-    data.table::setkey(incoming_cn, chrom, start, end)
-    data.table::setkey(regions_sub, chrom, start, end)
-
     #intersect regions
-    intersect = data.table::foverlaps(regions_sub, incoming_cn, nomatch = 0)
+    intersect = cool_overlaps(
+        regions_sub, incoming_cn,
+        columns1 = c("chrom", "start", "end"),
+        columns2 = c("chrom", "start", "end")
+    )
 
     #transform object to data frame
     inter_df = as.data.frame(intersect)
@@ -267,11 +263,14 @@ fancy_ideogram = function(this_sample_id,
       colnames(maf_tmp)[2] = "start"
       colnames(maf_tmp)[3] = "end"
       maf_tmp = dplyr::select(maf_tmp, chrom, start, end)
-      maf.table = as.data.table(maf_tmp)
-      data.table::setkey(maf.table, chrom, start, end)
+      maf.table = as.data.frame(maf_tmp)
 
       #intersect regions
-      intersect_maf = data.table::foverlaps(regions_sub, maf.table, nomatch = 0)
+      intersect_maf = cool_overlaps(
+        regions_sub, maf.table,
+        columns1 = c("chrom", "start", "end"),
+        columns2 = c("chrom", "start", "end")
+        )
 
       #transform object to data frame
       inter_maf_df = as.data.frame(intersect_maf)
