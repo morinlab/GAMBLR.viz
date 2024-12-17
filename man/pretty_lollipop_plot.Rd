@@ -5,15 +5,16 @@
 \title{Pretty Lollipop Plot.}
 \usage{
 pretty_lollipop_plot(
-  maf_df = NULL,
-  gene = NULL,
+  maf_df,
+  gene,
   plot_title,
+  refseq_id,
   include_silent = FALSE,
   plotarg = TRUE,
   mirrorarg = FALSE,
-  combined_gene_counts = NULL,
-  meta1_counter = NULL,
-  meta2_counter = NULL,
+  combined_gene_counts,
+  meta1_counter,
+  meta2_counter,
   Sample1 = Sample1,
   Sample2 = Sample2
 )
@@ -24,6 +25,8 @@ pretty_lollipop_plot(
 \item{gene}{The gene symbol to plot.}
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
+
+\item{refseq_id}{Insert a specific NM_xxx value of interest}
 
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 
