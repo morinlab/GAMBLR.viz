@@ -4,7 +4,20 @@
 \alias{pretty_lollipop_plot}
 \title{Pretty Lollipop Plot.}
 \usage{
-pretty_lollipop_plot(maf_df, gene = NULL, plot_title, include_silent = FALSE)
+pretty_lollipop_plot(
+  maf_df,
+  gene,
+  plot_title,
+  refseq_id,
+  include_silent = FALSE,
+  plotarg = TRUE,
+  mirrorarg = FALSE,
+  combined_gene_counts,
+  meta1_counter,
+  meta2_counter,
+  Sample1 = Sample1,
+  Sample2 = Sample2
+)
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
@@ -13,7 +26,23 @@ pretty_lollipop_plot(maf_df, gene = NULL, plot_title, include_silent = FALSE)
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
 
+\item{refseq_id}{Insert a specific NM_xxx value of interest}
+
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
+
+\item{plotarg}{Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.}
+
+\item{mirrorarg}{Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.}
+
+\item{combined_gene_counts}{A dataframe containing data for a mirrored lollipop analysis.}
+
+\item{meta1_counter}{A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.}
+
+\item{meta2_counter}{A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.}
+
+\item{Sample1}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
+
+\item{Sample2}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
 }
 \value{
 A lollipop plot.
