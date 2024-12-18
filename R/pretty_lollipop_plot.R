@@ -51,7 +51,7 @@ pretty_lollipop_plot <- function(
     meta2_counter,
     Sample1 = Sample1,
     Sample2 = Sample2
-) {
+){
     if(missing(gene)){
         stop("Please provide a gene...")
     }
@@ -72,13 +72,42 @@ pretty_lollipop_plot <- function(
         )]
     }
 
+    max_splits <- maf_df %>%
+        pull(RefSeq) %>%
+        strsplit(",") %>%
+        sapply(length) %>%
+        max()
+
+    new_columns <- paste0("RefSeq_", seq_len(max_splits))
+
+    maf_df <- separate(
+        maf_df,
+        col = RefSeq,
+        into = new_columns,
+        sep = ",",
+        remove = TRUE,
+        convert = FALSE
+    )
+
+    maf_df <- maf_df %>%
+        pivot_longer(
+        cols = new_columns,       
+        names_to = "RefSeq_col",   # Name for the column containing old column names
+        values_to = "RefSeq",      # Name for the new single column with values
+        values_drop_na = TRUE      
+        ) %>%
+        select(-RefSeq_col)          # Remove the column names
+
+    maf_df <- maf_df %>% 
+        mutate(RefSeq = sub("\\.\\d+$", "", RefSeq)) # Remove decimal places to match with protein_domains
+
     nc_maf_df <- maf_df %>%
         filter(
             Hugo_Symbol == gene
         ) %>% 
         filter(
             Variant_Classification %in% variants 
-        ) 
+        )
 
     # Filter for the specific gene 
     gene_df <- nc_maf_df %>% 
@@ -120,20 +149,31 @@ pretty_lollipop_plot <- function(
         protein_domains, 
         HGNC == gene
     )
-   
+
+    # Initial check: Ensure NM_XXX in protein_domain_subset matches gene_df$RefSeq
+    matching_values <- protein_domain_subset$refseq.ID[protein_domain_subset$refseq.ID %in% unique(gene_df$RefSeq)]
+    # Trigger error only if there are no matches
+    if (length(matching_values) == 0) {
+        stop(paste(
+            "Error: None of the RefSeq IDs in gene_df match any refseq.ID in protein_domain_subset",
+            "\nThe following refseq IDs are available in protein_domain_subset:",
+            paste(unique(protein_domain_subset$refseq.ID), collapse = ", ")
+        ))
+    }
+
     if (missing(refseq_id)){
-        if (length(unique(protein_domain_subset$refseq.ID)) == 1){ # Gene only has 1 NM_XXX on protein_domains$refseq.ID
-            protein_domain_subset <- protein_domain_subset
-        } else if (length(unique(protein_domains$refseq.ID)) > 1){ # Gene has >1 NM_XXX on protein_domains$refseq.ID, the first one is selected
+        if (length(unique(protein_domain_subset$refseq.ID)) == 1){ # Case 1: No refseq_id provided. Gene has only one NM_XXX
+            protein_domain_subset <- protein_domain_subset 
+        } else if (length(unique(protein_domains$refseq.ID)) > 1){ # Case 2: No refseq_id provided. Gene has multiple NM_XXX; choose the first one
             protein_domain_subset <- protein_domain_subset %>%
-                filter(refseq.ID == protein_domain_subset$refseq.ID[1])
+                filter(refseq.ID == protein_domain_subset$refseq.ID[1])  
         }
-    } else if (refseq_id %in% protein_domain_subset$refseq.ID){ # refseq_id matches to an NM_XXX on protein_domains$refseq.ID
+    } else if (refseq_id %in% protein_domain_subset$refseq.ID){ # Case 3: User-provided refseq_id matches one in protein_domains
         protein_domain_subset <- protein_domain_subset %>%
             filter(refseq.ID == refseq_id)
-    } else { # refseq_id has no matches to protein_domains.Rd
-        stop(paste("Error: refseq_id", refseq_id, "is not found in protein_domains", 
-            "\nThe following refseq IDs are available in protein_domains.RD:",
+    } else { # Case 4: refseq_id not found in protein_domains
+        stop(paste("Error: refseq_id", refseq_id, "is not found in protein_domains.Rd", 
+            "\nThe following refseq IDs are available in protein_domains.Rd:",
             paste(unique(protein_domain_subset$refseq.ID), collapse = ", ")))
     }
 
@@ -445,7 +485,7 @@ pretty_lollipop_plot <- function(
                 hjust = 0.5
                 ),
             axis.text.x = element_text(
-              angle = 90, 
+              angle = 0, 
               hjust = 1
               )
         ) +
