@@ -907,10 +907,14 @@ prettyOncoplot = function(
     }
 
 
-    if(missing(splitGeneGroups)){
-        row_split = rep("", length(genes))
-    }else{
-        row_split = factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
+    if (missing(splitGeneGroups)) {
+        row_split <- rep("", length(genes))
+    } else {
+        if(is.factor(splitGeneGroups)){
+            row_split <- splitGeneGroups[genes]
+        } else(
+            row_split <- factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
+        )
     }
 
     if(!missing(groupNames)){
