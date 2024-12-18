@@ -715,11 +715,11 @@ prettyOncoplot = function(
         },
         Intron = function(x, y, w, h) {
             grid.rect(x, y, w-unit(spacing, "pt"), 0.75* h*height_scaling,
-                    gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
+                    gp = gpar(fill = col["Intron"], col = box_col))
         },
         Nonsense_Mutation = function(x, y, w, h) {
             grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
-                    gp = gpar(fill = "#D8A7CA", col = box_col))
+                    gp = gpar(fill = col["Nonsense_Mutation"], col = box_col))
         },
         Splice_Site = function(x, y, w, h) {
             grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
@@ -770,7 +770,7 @@ prettyOncoplot = function(
                     gp = gpar(fill = "magenta", col = box_col))
         },
         Silent = function(x, y, w, h) {
-            grid.rect(x, y, w-unit(spacing, "pt"), (height_scaling/5)*h,
+            grid.rect(x, y, w-unit(spacing, "pt"), h*height_scaling,
                     gp = gpar(fill = col["Silent"], col = box_col))
         }
         )
