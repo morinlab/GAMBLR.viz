@@ -1509,7 +1509,7 @@ make_prettyoncoplot = function(mat_input,
                                        "In_Frame_Ins", "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del", "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"),
                                 labels = c("RNA", "3'UTR", "Nonsense Mutation", "Splice Site","Splice Region", "Nonstop Mutation", "Translation Start Site",
                                            "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion", "Frame Shift Deletion",
-                                           "Multi Hit", "Missense Mutation", "Silent", "HotSpot"),
+                                           "Multi Hit", "Missense Mutation", "HotSpot", "Silent"),
                                 nrow = annotation_row, ncol = annotation_col,
                                 legend_direction = legend_direction,
                                 labels_gp = gpar(fontsize = legendFontSize))
