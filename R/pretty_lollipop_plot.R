@@ -9,7 +9,15 @@
 #' @param maf_df A data frame containing the mutation data.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
+#' @param refseq_id Insert a specific NM_xxx value of interest
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE. 
+#' @param plotarg Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.
+#' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
+#' @param combined_gene_counts A dataframe containing data for a mirrored lollipop analysis.
+#' @param meta1_counter A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param meta2_counter A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param Sample1 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param Sample2 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' 
 #' @return A lollipop plot.
 #'
@@ -32,16 +40,24 @@
 #'
 pretty_lollipop_plot <- function(
     maf_df, 
-    gene = NULL,
+    gene,
     plot_title,
-    include_silent = FALSE
-) {
+    refseq_id,
+    include_silent = FALSE,
+    plotarg = TRUE,
+    mirrorarg = FALSE,
+    combined_gene_counts,
+    meta1_counter,
+    meta2_counter,
+    Sample1 = Sample1,
+    Sample2 = Sample2
+){
     if(missing(gene)){
         stop("Please provide a gene...")
     }
   
     if(missing(plot_title)){
-        plot_title=gene
+        plot_title = gene
     }
 
     maf_df <- as.data.frame(maf_df)
@@ -56,13 +72,42 @@ pretty_lollipop_plot <- function(
         )]
     }
 
+    max_splits <- maf_df %>%
+        pull(RefSeq) %>%
+        strsplit(",") %>%
+        sapply(length) %>%
+        max()
+
+    new_columns <- paste0("RefSeq_", seq_len(max_splits))
+
+    maf_df <- separate(
+        maf_df,
+        col = RefSeq,
+        into = new_columns,
+        sep = ",",
+        remove = TRUE,
+        convert = FALSE
+    )
+
+    maf_df <- maf_df %>%
+        pivot_longer(
+        cols = new_columns,       
+        names_to = "RefSeq_col",   # Name for the column containing old column names
+        values_to = "RefSeq",      # Name for the new single column with values
+        values_drop_na = TRUE      
+        ) %>%
+        select(-RefSeq_col)          # Remove the column names
+
+    maf_df <- maf_df %>% 
+        mutate(RefSeq = sub("\\.\\d+$", "", RefSeq)) # Remove decimal places to match with protein_domains
+
     nc_maf_df <- maf_df %>%
         filter(
             Hugo_Symbol == gene
         ) %>% 
         filter(
             Variant_Classification %in% variants 
-        ) 
+        )
 
     # Filter for the specific gene 
     gene_df <- nc_maf_df %>% 
@@ -91,14 +136,47 @@ pretty_lollipop_plot <- function(
             Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
-        summarise(mutation_count = n()) 
+        mutate(mutation_count = n()) 
+
+    if (mirrorarg == TRUE){
+        gene_counts <- combined_gene_counts
+    } else {
+        gene_counts <- gene_counts
+    }
 
     # protein_domains a bundled object with GAMBLR.data
     protein_domain_subset <- subset(
         protein_domains, 
         HGNC == gene
     )
-   
+
+    # Initial check: Ensure NM_XXX in protein_domain_subset matches gene_df$RefSeq
+    matching_values <- protein_domain_subset$refseq.ID[protein_domain_subset$refseq.ID %in% unique(gene_df$RefSeq)]
+    # Trigger error only if there are no matches
+    if (length(matching_values) == 0) {
+        stop(paste(
+            "Error: None of the RefSeq IDs in gene_df match any refseq.ID in protein_domain_subset",
+            "\nThe following refseq IDs are available in protein_domain_subset:",
+            paste(unique(protein_domain_subset$refseq.ID), collapse = ", ")
+        ))
+    }
+
+    if (missing(refseq_id)){
+        if (length(unique(protein_domain_subset$refseq.ID)) == 1){ # Case 1: No refseq_id provided. Gene has only one NM_XXX
+            protein_domain_subset <- protein_domain_subset 
+        } else if (length(unique(protein_domains$refseq.ID)) > 1){ # Case 2: No refseq_id provided. Gene has multiple NM_XXX; choose the first one
+            protein_domain_subset <- protein_domain_subset %>%
+                filter(refseq.ID == protein_domain_subset$refseq.ID[1])  
+        }
+    } else if (refseq_id %in% protein_domain_subset$refseq.ID){ # Case 3: User-provided refseq_id matches one in protein_domains
+        protein_domain_subset <- protein_domain_subset %>%
+            filter(refseq.ID == refseq_id)
+    } else { # Case 4: refseq_id not found in protein_domains
+        stop(paste("Error: refseq_id", refseq_id, "is not found in protein_domains.Rd", 
+            "\nThe following refseq IDs are available in protein_domains.Rd:",
+            paste(unique(protein_domain_subset$refseq.ID), collapse = ", ")))
+    }
+
     domain_data <- protein_domain_subset %>% 
         data.frame(
             start.points = protein_domain_subset$Start,
@@ -120,22 +198,150 @@ pretty_lollipop_plot <- function(
 
     # get_gambl_colours() from GAMBLR.helpers
     colours_manual <- get_gambl_colours("mutation")
- 
+
     # Somatic mutation statistic
-    Somatic_Mutation_Numerator <- maf_df %>%
-        filter(
-            Hugo_Symbol == gene
-        ) %>% 
-        filter(
-            Variant_Classification %in% variants 
-        ) %>% 
-        distinct(Tumor_Sample_Barcode) %>% 
-        nrow()
+    if (mirrorarg == TRUE){
+        
+        # Initialize vectors
+        Somatic_Mutation_Numerator <- numeric(2)
+        Somatic_Mutation_Denominator <- numeric(2)
+        Somatic_Mutation_Rate <- numeric(2)
 
-    Somatic_Mutation_Denominator <- length(unique(maf_df$Tumor_Sample_Barcode))
+        # Somatic Mutation rate for lp1
+        Somatic_Mutation_Numerator[1] <- combined_gene_counts %>%
+            filter(
+                Hugo_Symbol == gene,
+                source == "Sample 1"
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
 
-    Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
-    Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
+        Somatic_Mutation_Denominator[1] <- meta1_counter
+
+        Somatic_Mutation_Rate[1] <- Somatic_Mutation_Numerator[1]/Somatic_Mutation_Denominator[1] *100
+        Somatic_Mutation_Rate[1] <- round(Somatic_Mutation_Rate[1], 2)
+
+        # Somatic Mutation rate for lp2
+        Somatic_Mutation_Numerator[2] <- combined_gene_counts %>%
+            filter(
+                Hugo_Symbol == gene,
+                source == "Sample 2"
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
+
+        Somatic_Mutation_Denominator[2] <- meta2_counter
+
+        Somatic_Mutation_Rate[2] <- Somatic_Mutation_Numerator[2]/Somatic_Mutation_Denominator[2] *100
+        Somatic_Mutation_Rate[2] <- round(Somatic_Mutation_Rate[2], 2)
+    } else {
+        Somatic_Mutation_Numerator <- maf_df %>%
+            filter(
+                Hugo_Symbol == gene
+            ) %>% 
+            filter(
+                Variant_Classification %in% variants 
+            ) %>% 
+            distinct(Tumor_Sample_Barcode) %>% 
+            nrow()
+
+        Somatic_Mutation_Denominator <- length(unique(maf_df$Tumor_Sample_Barcode))
+
+        Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
+        Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
+    }
+
+    # KS-Test 
+    if(mirrorarg == TRUE){
+        # Gene KS-Test
+        aa_frequency_data <- combined_gene_counts %>%
+            group_by(AA, source) %>%
+            summarise(freq = n())
+
+        ks_test_result <- ks.test(
+            aa_frequency_data$freq[aa_frequency_data$source == "Sample 1"], 
+            aa_frequency_data$freq[aa_frequency_data$source == "Sample 2"]
+        )
+
+        gene_p_value <- ks_test_result$p.value
+
+        # Domain(s) KS-Test
+        domain_names <- c()
+        domain_list <- list()
+        domain_data$p_value <- NA
+    
+        for (i in 1:nrow(domain_data)) {
+            domain_name <- domain_data$text.label[i]
+            min_val <- domain_data$start.points[i]
+            max_val <- domain_data$end.points[i]
+
+            # Subset data for the current domain
+            domain_subset <- combined_gene_counts %>%
+                filter(AA >= min_val & AA <= max_val)
+
+            if (nrow(domain_subset) > 0) {
+
+                # Mutation counts for Sample 1 and Sample 2
+                domain_mutation1 <- domain_subset %>%
+                    filter(
+                        Variant_Classification %in% variants, 
+                        source == "Sample 1"
+                    ) %>%
+                    nrow()
+
+                domain_mutation2 <- domain_subset %>%
+                    filter(
+                        Variant_Classification %in% variants, 
+                        source == "Sample 2"
+                    ) %>%
+                    nrow()
+
+                domain_frequency_data <- domain_subset %>%
+                    group_by(
+                        AA, 
+                        source
+                    ) %>%
+                    summarise(freq = n())
+
+                domain_ks_test <- tryCatch({
+                    ks.test(
+                        domain_frequency_data$freq[domain_frequency_data$source == "Sample 1"],
+                        domain_frequency_data$freq[domain_frequency_data$source == "Sample 2"]
+                    )
+                }, error = function(e) {
+                    list(p.value = NA)
+                })
+
+                # Save domain-specific results in a list
+                unique_domain_name <- paste0(
+                    "Domain_", 
+                    domain_name
+                )
+                domain_list[[unique_domain_name]] <- list(
+                    mutation_count_sample1 = domain_mutation1,
+                    mutation_count_sample2 = domain_mutation2,
+                    ks_p_value = domain_ks_test$p.value
+                )
+
+                # Store the p-value in domain_data
+                domain_data$p_value[i] <- domain_ks_test$p.value
+
+                # Store the unique domain name
+                domain_names <- c(domain_names, unique_domain_name)
+            } else {
+                print(paste(
+                    "No mutation data for domain", 
+                    domain_name
+                ))
+            }
+        }
+    }
 
     plot <- ggplot() +
         geom_segment(
@@ -153,7 +359,7 @@ pretty_lollipop_plot <- function(
                 x = AA, 
                 y = mutation_count, 
                 color = Variant_Classification, 
-                size = mutation_count
+                size = abs(mutation_count)
                 )
         ) +
         # Background rectangle for regions without domain data
@@ -184,34 +390,114 @@ pretty_lollipop_plot <- function(
             data = domain_data, 
             aes(
                 x = text.position, 
-                y = 0, 
+                y = 0.1, 
                 label = text.label
                 )
-        ) +
-        labs(
-            x = "AA Position", 
-            y = "Mutation Count", 
-            title = paste0(
-                plot_title, 
-                "\n[Somatic Mutation Rate: ", 
-                Somatic_Mutation_Rate, 
-                "%]"
+        ) 
+
+        if (mirrorarg == TRUE) {
+            plot <- plot +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = max(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate[1], 
+                        "% N = ", 
+                        Somatic_Mutation_Denominator[1],
+                        "\n",
+                        "Comparison Value ", 
+                        '"', 
+                        Sample1, 
+                        '"'
+                    ),
+                    hjust = 0
+                ) +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = min(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate[2], 
+                        "% N = ",
+                        Somatic_Mutation_Denominator[2], 
+                        "\n", 
+                        "Comparison Value ",
+                        '"', 
+                        Sample2, 
+                        '"'
+                    ),
+                    hjust = 0
+                ) +
+                geom_text(
+                    data = domain_data, 
+                    aes(
+                        x = text.position, 
+                        y = -0.2, 
+                        label = paste0(
+                            "p = ", 
+                            round(p_value, 3)
+                        )  # Display domain-specific p-value
+                    )
+                ) +
+                labs(
+                    x = "AA Position", 
+                    y = "Mutation Count", 
+                    title = paste0(
+                        plot_title,
+                        "\n",
+                        "p = ",
+                        round(gene_p_value, 3)
+                    )
                 )
-        ) +
+        } else {
+            plot <- plot +
+                annotate(
+                    "text",
+                    x = 0,
+                    y = max(gene_counts$mutation_count) * 1.1,
+                    label = paste0(
+                        "Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate, 
+                        "%"
+                    ),
+                    hjust = 0
+                ) +
+                labs(
+                    x = "AA Position", 
+                    y = "Mutation Count", 
+                    title = paste0(
+                        plot_title
+                    )
+                )
+        }
+
+        plot <- plot +
+        scale_size_continuous(
+            name = "Mutation Count", 
+            labels = function(x) abs(x)  
+        ) + 
         theme_bw() +
         theme(
             plot.title = element_text(
                 hjust = 0.5
                 ),
             axis.text.x = element_text(
-              angle = 45, 
+              angle = 0, 
               hjust = 1
               )
         ) +
         scale_color_manual(
           name = "Legend", 
           values = colours_manual
-        )
+        ) 
 
-  return(plot)
+    if (plotarg == TRUE) {
+        return(plot)
+    } else {
+        return(gene_counts)
+    }
+
 }
