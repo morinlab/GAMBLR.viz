@@ -10,6 +10,7 @@ pretty_lollipop_plot(
   plot_title,
   refseq_id,
   include_silent = FALSE,
+  label_threshold = 5,
   plotarg = TRUE,
   mirrorarg = FALSE,
   combined_gene_counts,
@@ -29,6 +30,8 @@ pretty_lollipop_plot(
 \item{refseq_id}{Insert a specific NM_xxx value of interest}
 
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
+
+\item{label_threshold}{Threshold for labels to appear on plot. Default set to 5.}
 
 \item{plotarg}{Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.}
 
@@ -62,8 +65,8 @@ library(GAMBLR.data)
 metadata <- get_gambl_metadata() \%>\%
     filter(cohort == "BL_Thomas")
 
-maf_df <- get_ssm_by_samples(
-    these_samples_metadata = metadata
+maf_df <- get_coding_ssm(
+     these_samples_metadata = metadata
 )
 
 #construct pretty_lollipop_plot.

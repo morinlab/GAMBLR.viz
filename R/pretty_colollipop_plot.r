@@ -1,7 +1,6 @@
 #' @title Pretty CoLollipop Plot.
 #'
-#' @description Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored, and a 
-#' [GAMBLR.viz::prettyForestPlot] displayed below.
+#' @description Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored.
 #'
 #' @details Retrieve maf data of a specific sample or a set of samples for comparison. A gene of interest 
 #' can then be visualized with the given maf data files, and comparison commands. Silent mutations can be 
@@ -34,12 +33,13 @@
 #'                                                         comparison_column = "sex",
 #'                                                         comparison_values = c("M", "F"),
 #'                                                         gene = "IGLL5")
+#' 
 pretty_colollipop_plot <- function(
     maf_df,
     metadata,
     comparison_column,
     comparison_values,
-    gene = NULL,
+    gene,
     plot_title,
     ...
 ) {
@@ -119,8 +119,6 @@ pretty_colollipop_plot <- function(
         lollipopplot_args
     ))
     lp2_gene_counts_data <- as.data.frame(lp2_gene_counts)
-    lp2_gene_counts_data <- lp2_gene_counts_data %>%
-        mutate(mutation_count = mutation_count * -1)
 
     # Combine data for both plots
     lp1_gene_counts_data <- lp1_gene_counts_data %>% 
@@ -177,7 +175,7 @@ pretty_colollipop_plot <- function(
             align = "h"),          
         ncol = 1, 
         nrow = 2,
-        heights = c(2, 1)            
+        heights = c(3, 1)            
     )
     return(plot)
 }

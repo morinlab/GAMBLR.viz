@@ -9,7 +9,7 @@ pretty_colollipop_plot(
   metadata,
   comparison_column,
   comparison_values,
-  gene = NULL,
+  gene,
   plot_title,
   ...
 )
@@ -33,8 +33,7 @@ pretty_colollipop_plot(
 A mirrored lollipop plot.
 }
 \description{
-Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored, and a 
-[GAMBLR.viz::prettyForestPlot] displayed below.
+Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored.
 }
 \details{
 Retrieve maf data of a specific sample or a set of samples for comparison. A gene of interest 
@@ -55,4 +54,5 @@ pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
                                                         comparison_column = "sex",
                                                         comparison_values = c("M", "F"),
                                                         gene = "IGLL5")
+
 }

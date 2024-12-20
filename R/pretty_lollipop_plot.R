@@ -11,6 +11,7 @@
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest
 #' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE. 
+#' @param label_threshold Threshold for labels to appear on plot. Default set to 5.
 #' @param plotarg Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.
 #' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
 #' @param combined_gene_counts A dataframe containing data for a mirrored lollipop analysis.
@@ -31,8 +32,8 @@
 #' metadata <- get_gambl_metadata() %>%
 #'     filter(cohort == "BL_Thomas")
 #' 
-#' maf_df <- get_ssm_by_samples(
-#'     these_samples_metadata = metadata
+#' maf_df <- get_coding_ssm(
+#'      these_samples_metadata = metadata
 #' )
 #'
 #' #construct pretty_lollipop_plot.
@@ -44,6 +45,7 @@ pretty_lollipop_plot <- function(
     plot_title,
     refseq_id,
     include_silent = FALSE,
+    label_threshold = 5,
     plotarg = TRUE,
     mirrorarg = FALSE,
     combined_gene_counts,
@@ -92,15 +94,16 @@ pretty_lollipop_plot <- function(
     maf_df <- maf_df %>%
         pivot_longer(
         cols = new_columns,       
-        names_to = "RefSeq_col",   # Name for the column containing old column names
-        values_to = "RefSeq",      # Name for the new single column with values
+        names_to = "RefSeq_col", # Name for the column containing old column names
+        values_to = "RefSeq", # Name for the new single column with values
         values_drop_na = TRUE      
         ) %>%
-        select(-RefSeq_col)          # Remove the column names
+        select(-RefSeq_col) # Remove the column names   
 
     maf_df <- maf_df %>% 
         mutate(RefSeq = sub("\\.\\d+$", "", RefSeq)) # Remove decimal places to match with protein_domains
 
+    # Subset the maf to gene and variants of interest
     nc_maf_df <- maf_df %>%
         filter(
             Hugo_Symbol == gene
@@ -124,8 +127,12 @@ pretty_lollipop_plot <- function(
                 )
             )
         ) %>%
+        mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
         arrange(AA)
 
+    repetition_factor <- length(unique(gene_df$RefSeq)) 
+
+    # Count mutations at each position
     gene_counts <- gene_df %>% 
         group_by(
             AA, 
@@ -136,7 +143,13 @@ pretty_lollipop_plot <- function(
             Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
-        mutate(mutation_count = n()) 
+        mutate(mutation_count = n()/repetition_factor) %>%
+        # Specify the amino acid change as a label based on the label_threshold value
+        mutate(label = as.character(ifelse(
+            mutation_count >= label_threshold, 
+            AA_position, 
+            ""
+        )))
 
     if (mirrorarg == TRUE){
         gene_counts <- combined_gene_counts
@@ -195,6 +208,8 @@ pretty_lollipop_plot <- function(
         )
     )
     x_min <- 0
+    # Set y_max to the nearest multiple of 5 above the maximum mutation count
+    y_max <- ceiling(max(gene_counts$mutation_count) / 5) * 5
 
     # get_gambl_colours() from GAMBLR.helpers
     colours_manual <- get_gambl_colours("mutation")
@@ -270,6 +285,12 @@ pretty_lollipop_plot <- function(
         )
 
         gene_p_value <- ks_test_result$p.value
+        
+        if(gene_p_value <= 0.05){
+            gene_p_value <- gene_p_value
+        } else {
+            gene_p_value <- NULL
+        }
 
         # Domain(s) KS-Test
         domain_names <- c()
@@ -334,6 +355,26 @@ pretty_lollipop_plot <- function(
 
                 # Store the unique domain name
                 domain_names <- c(domain_names, unique_domain_name)
+
+                for (i in 1:nrow(domain_data)) {
+                    if (is.na(domain_data$p_value[i])) {
+                        domain_data$p_value[i] <- 1
+                    } else {
+                        domain_data$p_value[i] <- domain_data$p_value[i]
+                    }
+                }
+                
+                for (i in 1:nrow(domain_data)) {
+                    if (domain_data$p_value[i] <= 0.001) {
+                        domain_data$p_value[i] <- "***"
+                    } else if (domain_data$p_value[i] <= 0.01) {
+                        domain_data$p_value[i] <- "**"
+                    } else if (domain_data$p_value[i] <= 0.05) {
+                        domain_data$p_value[i] <- "*"
+                    } else {
+                        domain_data$p_value[i] <- NA
+                    }
+                }
             } else {
                 print(paste(
                     "No mutation data for domain", 
@@ -343,26 +384,8 @@ pretty_lollipop_plot <- function(
         }
     }
 
-    plot <- ggplot() +
-        geom_segment(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                xend = AA, 
-                y = 0, 
-                yend = mutation_count
-                )
-        ) +
-        geom_point(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                y = mutation_count, 
-                color = Variant_Classification, 
-                size = abs(mutation_count)
-                )
-        ) +
-        # Background rectangle for regions without domain data
+    # Create the domain plot
+    domain_plot <- ggplot() + 
         geom_rect(
             aes(
                 xmin = x_min, 
@@ -370,10 +393,9 @@ pretty_lollipop_plot <- function(
                 ymin = -0.2, 
                 ymax = 0.2
                 ), 
-            fill = "black", 
-            color = "black"
+            fill = "lightgrey", 
+            color = "lightgrey"
         ) + 
-        # Domain rectangles
         geom_rect(
             data = domain_data, 
             aes(
@@ -393,106 +415,244 @@ pretty_lollipop_plot <- function(
                 y = 0.1, 
                 label = text.label
                 )
-        ) 
+        ) +
+        theme_void() +
+        theme(
+            axis.text.x = element_text(vjust = rel(0.5))
+        )
 
-        if (mirrorarg == TRUE) {
-            plot <- plot +
-                annotate(
-                    "text",
-                    x = 0,
-                    y = max(gene_counts$mutation_count) * 1.1,
-                    label = paste0(
-                        "Somatic Mutation Rate ", 
+    # Function for mutation lollipop plot
+    mutation_plot <- function(gene_counts){
+        ggplot() + 
+        geom_segment(
+            data = gene_counts, 
+            aes(
+                x = AA, 
+                xend = AA, 
+                y = 0, 
+                yend = mutation_count
+                )
+        ) +
+        geom_point(
+            data = gene_counts, 
+            aes(
+                x = AA, 
+                y = mutation_count, 
+                color = Variant_Classification, 
+                size = abs(mutation_count)
+                )
+        ) + 
+        geom_text(data = gene_counts, aes(
+                x = AA, 
+                y = mutation_count, 
+                label = label, 
+                angle = 45, 
+                hjust = -0.25
+        )) +
+        ggpubr::theme_pubr() +
+        scale_color_manual(name = "Mutation Type", values = colours_manual) +
+        ylab("Mutation Count") +
+        xlab("") +
+        xlim(0, x_max) +
+        theme(
+            axis.line.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            legend.position = "right"
+        ) +
+        guides(size = "none")
+    }
+        
+    if (mirrorarg == TRUE) {
+        
+        mutation_plot1 <- mutation_plot(gene_counts %>% filter(source == "Sample 1")) +
+            scale_y_continuous(
+                breaks = scales::breaks_pretty(), 
+                labels = scales::number_format()
+            ) +
+            ylim(0, y_max)
+
+        mutation_plot2 <- mutation_plot(gene_counts %>% filter(source == "Sample 2")) +
+            scale_y_reverse(limits = c(y_max, 0))
+
+        domain_plot <- domain_plot +
+            geom_text(
+                    data = domain_data, 
+                        aes(
+                            x = text.position, 
+                            y = -0.2, 
+                            label = ifelse(
+                                !is.na(p_value), 
+                                paste0("p = ", p_value), 
+                                ""
+                            )
+                        )
+            ) 
+        
+        domain_plot <- domain_plot + 
+            theme(
+                axis.title.x = element_blank(),
+                axis.text.x = element_text(),
+                axis.ticks.x = element_line(color = "black"),
+                plot.margin = margin(t = -20) # Reduce space between plots
+            )
+
+        # Combine mutation plots and domain plot
+        plot <- ggpubr::ggarrange(
+            mutation_plot1, 
+            domain_plot, 
+            mutation_plot2,
+            ncol = 1, 
+            align = "hv",
+            heights = c(3, 1, 3),
+            labels = c(
+                paste0("Somatic Mutation Rate ", 
                         Somatic_Mutation_Rate[1], 
-                        "% N = ", 
+                        "%",
+                        "\n",
+                        "             N = ", 
                         Somatic_Mutation_Denominator[1],
                         "\n",
-                        "Comparison Value ", 
+                        "    Comparison Value ", 
                         '"', 
                         Sample1, 
-                        '"'
-                    ),
-                    hjust = 0
-                ) +
-                annotate(
-                    "text",
-                    x = 0,
-                    y = min(gene_counts$mutation_count) * 1.1,
-                    label = paste0(
-                        "Somatic Mutation Rate ", 
-                        Somatic_Mutation_Rate[2], 
-                        "% N = ",
+                        '"'), 
+                "", 
+                paste0("Somatic Mutation Rate ", 
+                        Somatic_Mutation_Rate[2],
+                        "%",
+                        "\n", 
+                        "             N = ",
                         Somatic_Mutation_Denominator[2], 
                         "\n", 
-                        "Comparison Value ",
+                        "    Comparison Value ",
                         '"', 
                         Sample2, 
-                        '"'
-                    ),
-                    hjust = 0
-                ) +
-                geom_text(
-                    data = domain_data, 
-                    aes(
-                        x = text.position, 
-                        y = -0.2, 
-                        label = paste0(
-                            "p = ", 
-                            round(p_value, 3)
-                        )  # Display domain-specific p-value
-                    )
-                ) +
-                labs(
-                    x = "AA Position", 
-                    y = "Mutation Count", 
-                    title = paste0(
-                        plot_title,
-                        "\n",
-                        "p = ",
-                        round(gene_p_value, 3)
-                    )
-                )
-        } else {
-            plot <- plot +
-                annotate(
-                    "text",
-                    x = 0,
-                    y = max(gene_counts$mutation_count) * 1.1,
-                    label = paste0(
-                        "Somatic Mutation Rate ", 
-                        Somatic_Mutation_Rate, 
-                        "%"
-                    ),
-                    hjust = 0
-                ) +
-                labs(
-                    x = "AA Position", 
-                    y = "Mutation Count", 
-                    title = paste0(
-                        plot_title
-                    )
-                )
-        }
-
-        plot <- plot +
-        scale_size_continuous(
-            name = "Mutation Count", 
-            labels = function(x) abs(x)  
-        ) + 
-        theme_bw() +
-        theme(
-            plot.title = element_text(
-                hjust = 0.5
+                        '"')
                 ),
-            axis.text.x = element_text(
-              angle = 0, 
-              hjust = 1
-              )
-        ) +
-        scale_color_manual(
-          name = "Legend", 
-          values = colours_manual
-        ) 
+            label.y = c(0.85, 0, 0.35),
+            label.x = c(0.7, 0, 0.7),
+            common.legend = TRUE,
+            legend = "right"
+        ) %>% 
+        ggpubr::annotate_figure(
+            plot,
+            top = text_grob(
+                paste0(
+                    plot_title,
+                    "\n",
+                    ifelse(
+                        !is.null(gene_p_value), 
+                        paste0("p = ", round(gene_p_value, 3)), 
+                        ""
+                    )
+                ),
+                color = "black", 
+                face = "bold", 
+                size = 14
+            ) 
+            
+        )
+    } else {
+        plot <- ggplot() +
+            geom_segment(
+                data = gene_counts, 
+                aes(
+                    x = AA, 
+                    xend = AA, 
+                    y = 0, 
+                    yend = mutation_count
+                    )
+            ) +
+            geom_point(
+                data = gene_counts, 
+                aes(
+                    x = AA, 
+                    y = mutation_count, 
+                    color = Variant_Classification, 
+                    size = abs(mutation_count)
+                    )
+            ) +
+            geom_text(data = gene_counts, aes(
+                x = AA, 
+                y = mutation_count, 
+                label = label, 
+                angle = 45, 
+                hjust = -0.25
+            )) +
+            # Background rectangle for regions without domain data
+            geom_rect(
+                aes(
+                    xmin = x_min, 
+                    xmax = x_max, 
+                    ymin = -0.2, 
+                    ymax = 0.2
+                    ), 
+                fill = "darkgrey", 
+                color = "darkgrey"
+            ) + 
+            # Domain rectangles
+            geom_rect(
+                data = domain_data, 
+                aes(
+                    xmin = start.points, 
+                    xmax = end.points, 
+                    ymin = -0.4, 
+                    ymax = 0.4, 
+                    fill = color
+                    ), 
+                color = "black", 
+                show.legend = FALSE
+            ) +
+            geom_text(
+                data = domain_data, 
+                aes(
+                    x = text.position, 
+                    y = 0.1, 
+                    label = text.label
+                    )
+            ) +
+            annotate(
+                "text",
+                x = 0,
+                y = max(gene_counts$mutation_count) * 1.1,
+                label = paste0(
+                    "Somatic Mutation Rate ", 
+                    Somatic_Mutation_Rate, 
+                    "%"
+                ),
+                hjust = 0
+            ) +
+            labs(
+                x = "AA Position", 
+                y = "Mutation Count", 
+                title = paste0(
+                    plot_title
+                )
+            ) +
+            scale_size_continuous(
+                name = "Mutation Count", 
+                labels = function(x) abs(x)  
+            ) + 
+            scale_y_continuous(
+            breaks = scales::breaks_pretty(), 
+            labels = scales::number_format()
+            ) +
+            theme_bw() +
+            theme(
+                plot.title = element_text(
+                    hjust = 0.5
+                    ),
+                axis.text.x = element_text(
+                  angle = 0, 
+                  hjust = 1
+                  )
+            ) +
+            scale_color_manual(
+              name = "Legend", 
+              values = colours_manual
+            )
+    }
 
     if (plotarg == TRUE) {
         return(plot)
