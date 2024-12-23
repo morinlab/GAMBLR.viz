@@ -11,6 +11,7 @@ pretty_colollipop_plot(
   comparison_values,
   gene,
   plot_title,
+  refseq_id,
   ...
 )
 }
@@ -26,6 +27,8 @@ pretty_colollipop_plot(
 \item{gene}{The gene symbol to plot.}
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
+
+\item{refseq_id}{Insert a specific NM_xxx value of interest}
 
 \item{...}{`pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.}
 }
@@ -53,6 +56,5 @@ pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
                                                         metadata = metadata,
                                                         comparison_column = "sex",
                                                         comparison_values = c("M", "F"),
-                                                        gene = "IGLL5")
 
 }

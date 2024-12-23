@@ -12,6 +12,7 @@
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
+#' @param refseq_id Insert a specific NM_xxx value of interest
 #' @param ... `pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.
 #' 
 #' @return A mirrored lollipop plot.
@@ -32,8 +33,7 @@
 #'                                                         metadata = metadata,
 #'                                                         comparison_column = "sex",
 #'                                                         comparison_values = c("M", "F"),
-#'                                                         gene = "IGLL5")
-#' 
+#'
 pretty_colollipop_plot <- function(
     maf_df,
     metadata,
@@ -41,6 +41,7 @@ pretty_colollipop_plot <- function(
     comparison_values,
     gene,
     plot_title,
+    refseq_id,
     ...
 ) {
 
@@ -139,6 +140,7 @@ pretty_colollipop_plot <- function(
     colollipop_plot <- pretty_lollipop_plot(
         maf_df = maf_df, 
         gene = gene, 
+        refseq_id,
         plot_title = plot_title,
         include_silent = FALSE,
         plotarg = TRUE,

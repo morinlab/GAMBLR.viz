@@ -38,7 +38,7 @@
 #'
 #' #construct pretty_lollipop_plot.
 #' lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
-#'
+#' 
 pretty_lollipop_plot <- function(
     maf_df, 
     gene,
@@ -412,7 +412,8 @@ pretty_lollipop_plot <- function(
             data = domain_data, 
             aes(
                 x = text.position, 
-                y = 0.1, 
+                y = 0,
+                angle = 90, 
                 label = text.label
                 )
         ) +
@@ -422,7 +423,7 @@ pretty_lollipop_plot <- function(
         )
 
     # Function for mutation lollipop plot
-    mutation_plot <- function(gene_counts){
+        mutation_plot <- function(gene_counts){
         ggplot() + 
         geom_segment(
             data = gene_counts, 
@@ -431,7 +432,7 @@ pretty_lollipop_plot <- function(
                 xend = AA, 
                 y = 0, 
                 yend = mutation_count
-                )
+            )
         ) +
         geom_point(
             data = gene_counts, 
@@ -439,55 +440,74 @@ pretty_lollipop_plot <- function(
                 x = AA, 
                 y = mutation_count, 
                 color = Variant_Classification, 
-                size = abs(mutation_count)
-                )
+                size = mutation_count
+            )
         ) + 
-        geom_text(data = gene_counts, aes(
+        geom_text(
+            data = gene_counts, 
+            aes(
                 x = AA, 
                 y = mutation_count, 
                 label = label, 
                 angle = 45, 
                 hjust = -0.25
-        )) +
-        ggpubr::theme_pubr() +
-        scale_color_manual(name = "Mutation Type", values = colours_manual) +
-        ylab("Mutation Count") +
-        xlab("") +
-        xlim(0, x_max) +
-        theme(
-            axis.line.x = element_blank(),
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            legend.position = "right"
+            )
         ) +
-        guides(size = "none")
+        ggpubr::theme_pubr() 
     }
+
         
     if (mirrorarg == TRUE) {
+        max_mutation_count <- max(gene_counts$mutation_count)
         
         mutation_plot1 <- mutation_plot(gene_counts %>% filter(source == "Sample 1")) +
             scale_y_continuous(
-                breaks = scales::breaks_pretty(), 
-                labels = scales::number_format()
+                breaks = seq(
+                    0,
+                    max(gene_counts$mutation_count),
+                    by = 1
+                )
             ) +
-            ylim(0, y_max)
+            ylim(0, y_max) +
+            scale_size_continuous(
+                breaks = seq(
+                    floor(min(gene_counts$mutation_count)), 
+                    ceiling(max(max_mutation_count)), 
+                    by = 1
+                ),
+                labels = function(x) format(x, scientific = FALSE)
+            ) +
+            scale_color_manual(name = "Mutation Type", values = colours_manual) +
+            ylab("Mutation Count") +
+            xlab("") +
+            xlim(0, x_max) +
+            theme(
+                axis.line.x = element_blank(),
+                axis.text.x = element_blank(),
+                axis.ticks.x = element_blank(),
+                legend.position = "right"
+            ) 
 
         mutation_plot2 <- mutation_plot(gene_counts %>% filter(source == "Sample 2")) +
-            scale_y_reverse(limits = c(y_max, 0))
-
-        domain_plot <- domain_plot +
-            geom_text(
-                    data = domain_data, 
-                        aes(
-                            x = text.position, 
-                            y = -0.2, 
-                            label = ifelse(
-                                !is.na(p_value), 
-                                paste0("p = ", p_value), 
-                                ""
-                            )
-                        )
-            ) 
+            scale_y_reverse(limits = c(y_max, 0)) +
+            scale_size_continuous(
+                breaks = seq(
+                    floor(min(gene_counts$mutation_count)), 
+                    ceiling(max(max_mutation_count)), 
+                    by = 1
+                ),
+                labels = function(x) format(x, scientific = FALSE)
+            ) +
+            scale_color_manual(name = "Mutation Type", values = colours_manual) +
+            ylab("Mutation Count") +
+            xlab("") +
+            xlim(0, x_max) +
+            theme(
+                axis.line.x = element_blank(),
+                axis.text.x = element_blank(),
+                axis.ticks.x = element_blank(),
+                legend.position = "right"
+            )
         
         domain_plot <- domain_plot + 
             theme(
@@ -503,7 +523,6 @@ pretty_lollipop_plot <- function(
             domain_plot, 
             mutation_plot2,
             ncol = 1, 
-            align = "hv",
             heights = c(3, 1, 3),
             labels = c(
                 paste0("Somatic Mutation Rate ", 
@@ -516,7 +535,8 @@ pretty_lollipop_plot <- function(
                         "    Comparison Value ", 
                         '"', 
                         Sample1, 
-                        '"'), 
+                        '"'
+                ), 
                 "", 
                 paste0("Somatic Mutation Rate ", 
                         Somatic_Mutation_Rate[2],
@@ -528,8 +548,9 @@ pretty_lollipop_plot <- function(
                         "    Comparison Value ",
                         '"', 
                         Sample2, 
-                        '"')
-                ),
+                        '"'
+                )
+            ),
             label.y = c(0.85, 0, 0.35),
             label.x = c(0.7, 0, 0.7),
             common.legend = TRUE,
@@ -570,7 +591,7 @@ pretty_lollipop_plot <- function(
                     x = AA, 
                     y = mutation_count, 
                     color = Variant_Classification, 
-                    size = abs(mutation_count)
+                    size = mutation_count
                     )
             ) +
             geom_text(data = gene_counts, aes(
@@ -608,7 +629,8 @@ pretty_lollipop_plot <- function(
                 data = domain_data, 
                 aes(
                     x = text.position, 
-                    y = 0.1, 
+                    y = 0, 
+                    angle = 90, 
                     label = text.label
                     )
             ) +
@@ -629,15 +651,22 @@ pretty_lollipop_plot <- function(
                 title = paste0(
                     plot_title
                 )
-            ) +
-            scale_size_continuous(
-                name = "Mutation Count", 
-                labels = function(x) abs(x)  
             ) + 
             scale_y_continuous(
-            breaks = scales::breaks_pretty(), 
-            labels = scales::number_format()
-            ) +
+                breaks = seq(
+                    0,
+                    max(gene_counts$mutation_count),
+                    by = 1
+                )
+            )  +
+            scale_size_continuous(
+                breaks = seq(
+                    floor(min(gene_counts$mutation_count)), 
+                    ceiling(max(gene_counts$mutation_count)), 
+                    by = 1
+                ),
+                labels = function(x) format(x, scientific = FALSE)  
+            )  +
             theme_bw() +
             theme(
                 plot.title = element_text(
