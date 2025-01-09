@@ -273,7 +273,12 @@ prettyOncoplot = function(
                 Hugo_Symbol,
                 Variant_Classification = value
             )
+
         maf_df_noncoding <- inner_join(maf_df, nc)
+        if(verbose){
+          print(nc)
+          print(maf_df_noncoding)
+        }
     } else {
         # Make empty maf_df
         maf_df_noncoding <- maf_df %>%
@@ -1122,7 +1127,7 @@ prettyOncoplot = function(
                 cluster_rows=T,
                 cluster_cols=F,
                 fontsize_row = 6,
-                show_colnames = F
+                show_colnames = showTumorSampleBarcode
             )
             if(verbose){
               print("Done!")
@@ -1135,7 +1140,7 @@ prettyOncoplot = function(
                 cluster_cols=T,
                 cluster_rows=F,
                 fontsize_row = 6,
-                show_colnames = F
+                show_colnames = showTumorSampleBarcode
             )
         }else{
         message("clustering mutation rows and columns")
@@ -1144,7 +1149,7 @@ prettyOncoplot = function(
             clustering_distance_rows=clustering_distance_rows,
             clustering_distance_cols=clustering_distance_cols,
             fontsize_row = 6,
-            show_colnames = F)
+            show_colnames = showTumorSampleBarcode)
         }
         if(dry_run){
             print(h_obj)
@@ -1419,7 +1424,7 @@ make_prettyoncoplot = function(mat_input,
         message("re-clustering columns based on numeric metadata")
 
         hh = Heatmap(heat_mat,cluster_columns=T,
-                     clustering_distance_columns = clustering_distance_cols)
+                     clustering_distance_columns = clustering_distance_cols,show_column_names = showTumorSampleBarcode)
         col_order = NULL
         col_dend = column_dend(hh)
 
@@ -1437,6 +1442,9 @@ make_prettyoncoplot = function(mat_input,
       if(verbose){
         print(oncoprint_args)
       }
+      if(showTumorSampleBarcode){
+        heatmap_args[['show_column_names']] = TRUE
+      }
       if(numeric_heatmap_location == "top"){
         if(!missing(splitColumnName)){
           heatmap_args[['column_split']] = column_split
@@ -1446,11 +1454,17 @@ make_prettyoncoplot = function(mat_input,
         }
         if(verbose){
             print(names(heatmap_args))
+
             print(names(oncoprint_args))
+            print(oncoprint_args)
+        }
+        if(return_inputs){
+          oncoprint_heatmap = do.call("oncoPrint",oncoprint_args)
+          numeric_heatmap = do.call("Heatmap",heatmap_args)
         }
         ht_list =
           do.call("Heatmap",heatmap_args) %v%
-          do.call("oncoPrint",oncoprint_args) %v%
+
           ComplexHeatmap::HeatmapAnnotation(df = metadata_df_numeric,
                                             show_legend = show_legend,
                                             col = colours,
@@ -1461,19 +1475,25 @@ make_prettyoncoplot = function(mat_input,
                                                                            col_fun = col_fun,
                                                                            ncol = 1,
                                                                            direction = legend_direction,
-                                                                           labels_gp = gpar(fontsize = legendFontSize)))
+                                                                           labels_gp = gpar(fontsize = legendFontSize))) %v%
+          do.call("oncoPrint",oncoprint_args)
 
 
 
         draw(ht_list)
         if(return_inputs){
-          return(list(Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
+          return(list(Oncoprint=oncoprint_heatmap,Numeric=numeric_heatmap,Full_Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
         }
         return()
       }else if(numeric_heatmap_location == "bottom"){
+        if(return_inputs){
+          oncoprint_heatmap = do.call("oncoPrint",oncoprint_args)
+          numeric_heatmap = do.call("Heatmap",heatmap_args)
+        }
+
         ht_list =
           do.call("oncoPrint",oncoprint_args) %v%
-          do.call("Heatmap",heatmap_args) %v%
+
           ComplexHeatmap::HeatmapAnnotation(df = metadata_df_numeric,
                                             show_legend = show_legend,
                                             col = colours,
@@ -1484,13 +1504,14 @@ make_prettyoncoplot = function(mat_input,
                                                                            col_fun = col_fun,
                                                                            ncol = 1,
                                                                            direction = legend_direction,
-                                                                           labels_gp = gpar(fontsize = legendFontSize)))
+                                                                           labels_gp = gpar(fontsize = legendFontSize))) %v%
+        do.call("Heatmap",heatmap_args)
 
 
 
         draw(ht_list)
         if(return_inputs){
-          return(list(Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
+          return(list(Oncoprint=oncoprint_heatmap,Numeric=numeric_heatmap,Full_Heatmap=ht_list,heat_mat=heat_mat,mut_mat=mat_input))
         }
         return()
       }
