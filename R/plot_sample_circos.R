@@ -20,6 +20,7 @@
 #' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will be used.
 #' @param label_genes Gene labels (df, list or what type?)
 #' @param auto_label_sv Default is FALSE
+#' @param hide_legend Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata
 #'
 #' @return Nothing
 #'
@@ -56,11 +57,11 @@ plot_sample_circos = function(this_sample_id,
                               this_seq_type = "genome",
                               chrom_list,
                               label_genes,
-                              auto_label_sv = FALSE){
+                              auto_label_sv = FALSE,
+                              auto_colour_links = FALSE,
+                              hide_legend = FALSE){
 
-  if(this_projection == "hg38"){
-    stop("Currently, only grch37 is supported...")
-  }
+
 
   add_cnv = function(cnv_df){
     bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
@@ -72,7 +73,7 @@ plot_sample_circos = function(this_sample_id,
       cell.xlim = get.cell.meta.data("cell.xlim")
     }, bg.border = NA)
   }
-  if(missing(cnv_df)){
+  if(include_cnv & missing(cnv_df)){
     cnv_df = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       with_chr_prefix = TRUE,
@@ -85,10 +86,17 @@ plot_sample_circos = function(this_sample_id,
    chrom_list = paste0("chr", c(1:22,"X"))
   }
   if(!missing(label_genes)){
-    gene_bed = GAMBLR.data::grch37_gene_coordinates %>%
-      dplyr::filter(gene_name %in% label_genes) %>%
-      dplyr::select(chromosome, start, end, gene_name) %>%
-      dplyr::mutate(chromosome = paste0("chr", chromosome))
+    if(this_projection=="grch37"){
+      gene_bed = GAMBLR.data::grch37_gene_coordinates %>%
+        dplyr::filter(gene_name %in% label_genes) %>%
+        dplyr::select(chromosome, start, end, gene_name) %>%
+        dplyr::mutate(chromosome = paste0("chr", chromosome))
+    }else if(this_projection=="hg38"){
+      gene_bed = GAMBLR.data::hg38_gene_coordinates %>%
+        dplyr::filter(gene_name %in% label_genes) %>%
+        dplyr::select(chromosome, start, end, gene_name)
+    }
+
   }
   if(include_sv){
     if(missing(sv_df)){
@@ -99,7 +107,7 @@ plot_sample_circos = function(this_sample_id,
         dplyr::filter(tumour_sample_id == this_sample_id)
     }
   }
-  
+
 
   #add chr prefixes if grch37 is selcted (expected by circlize)
   if(this_projection == "grch37"){
@@ -115,7 +123,7 @@ plot_sample_circos = function(this_sample_id,
   if(auto_label_sv){
 
     #annotate oncogene SVs and label them
-    annotated_sv  = annotate_sv(sv_df, with_chr_prefix = TRUE) %>%
+    annotated_sv  = annotate_sv(sv_df, with_chr_prefix = TRUE,genome_build = this_projection) %>%
       dplyr::filter(!is.na(partner)) %>%
       dplyr::filter(tumour_sample_id == this_sample_id)
 
@@ -133,13 +141,24 @@ plot_sample_circos = function(this_sample_id,
     colnames(anno_bed1) = c("chrom", "start", "end", "sample_id")
     colnames(anno_bed2) = c("chrom", "start", "end", "sample_id")
 
-    bed_mut_partner = GAMBLR.data::grch37_partners %>%
-      dplyr::filter(gene %in% these_partners) %>%
-      mutate(chrom = paste0("chr", chrom))
+    if(this_projection=="grch37"){
+      bed_mut_partner = GAMBLR.data::grch37_partners %>%
+        dplyr::filter(gene %in% these_partners) %>%
+        mutate(chrom = paste0("chr", chrom))
 
-    bed_mut_onco = GAMBLR.data::grch37_oncogene %>%
-      dplyr::filter(gene %in% these_oncogenes) %>%
-      mutate(chrom = paste0("chr", chrom))
+      bed_mut_onco = GAMBLR.data::grch37_oncogene %>%
+        dplyr::filter(gene %in% these_oncogenes) %>%
+        mutate(chrom = paste0("chr", chrom))
+    }else if(this_projection=="hg38"){
+      bed_mut_partner = GAMBLR.data::hg38_partners %>%
+        dplyr::filter(gene %in% these_partners) %>%
+        mutate(chrom = paste0("chr", chrom))
+
+      bed_mut_onco = GAMBLR.data::hg38_oncogene %>%
+        dplyr::filter(gene %in% these_oncogenes) %>%
+        mutate(chrom = paste0("chr", chrom))
+    }
+
 
     bed_mut = bind_rows(bed_mut_partner, bed_mut_onco)
     print(bed_mut)
@@ -154,8 +173,17 @@ plot_sample_circos = function(this_sample_id,
   colnames(bed2) = c("chrom", "start", "end", "sample_id")
   circos.clear()
   circos.initializeWithIdeogram(chromosome.index = chrom_list)
-  add_cnv(cnv_df)
-  circos.genomicLink(bed1, bed2, col = "#bdbdc1")
+  if(include_cnv){
+    add_cnv(cnv_df)
+  }
+
+  if(auto_colour_links){
+    bed2 = decorate_bed(bed2,colour_by="chrom",colour_mapping = get_gambl_colours("chromosome"))
+    circos.genomicLink(bed1, bed2, col = bed2$color)
+  }else{
+    circos.genomicLink(bed1, bed2, col = "#bdbdc1")
+  }
+
   if(!missing(label_genes)){
     circos.genomicLabels(gene_bed, labels.column = "gene_name")
   }
@@ -164,16 +192,19 @@ plot_sample_circos = function(this_sample_id,
     circos.genomicLabels(bed_mut, labels.column = "gene")
   }
   text(0.75, this_sample_id, cex = 0.8)
+  if(hide_legend){
+    return()
+  }
   if(!missing(legend_metadata_columns)){
     samp_meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>%
       dplyr::filter(sample_id == this_sample_id)
 
     these_meta = samp_meta[legend_metadata_columns]
     these_cols = GAMBLR.helpers::get_gambl_colours()
-    
+
     these_meta <- mutate_if(these_meta, is.factor, as.character)
     vals = as.character(these_meta)
-    
+
     all_cols = map_metadata_to_colours(legend_metadata_columns, these_meta, verbose = T)
 
     cols = all_cols[vals]
