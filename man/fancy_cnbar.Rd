@@ -13,8 +13,8 @@ fancy_cnbar(
   end_col = 4,
   cn_col = 7,
   plot_title = paste0(this_sample_id),
- 
-    plot_subtitle = "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
+  plot_subtitle =
+    "n CNV Segments (barplots, left y-axis), n Affected bases for each CN state",
   chr_select = paste0("chr", c(1:22)),
   cutoff = 15,
   include_cn2 = TRUE,
@@ -52,7 +52,7 @@ fancy_cnbar(
 A plot as a ggplot object (grob).
 }
 \description{
-Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
+Plot sample-specific CN states and affected bases for each segment
 }
 \details{
 `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
