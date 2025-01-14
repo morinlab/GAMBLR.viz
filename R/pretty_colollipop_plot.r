@@ -12,7 +12,8 @@
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
-#' @param refseq_id Insert a specific NM_xxx value of interest
+#' @param refseq_id Insert a specific NM_xxx value of interest.
+#' @param forestarg Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.
 #' @param ... `pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.
 #' 
 #' @return A mirrored lollipop plot.
@@ -33,7 +34,7 @@
 #'                                                         metadata = metadata,
 #'                                                         comparison_column = "sex",
 #'                                                         comparison_values = c("M", "F"),
-#'
+#'                                                         gene = "IGLL5")
 pretty_colollipop_plot <- function(
     maf_df,
     metadata,
@@ -42,6 +43,7 @@ pretty_colollipop_plot <- function(
     gene,
     plot_title,
     refseq_id,
+    forestarg = TRUE,
     ...
 ) {
 
@@ -167,7 +169,7 @@ pretty_colollipop_plot <- function(
     )
 
     # arrange colollipop plot and forest plot together one over the other
-    plot <- ggarrange(
+    forest_plot <- ggarrange(
         colollipop_plot,              
         ggarrange(
             forest_plot$forest,        
@@ -179,5 +181,10 @@ pretty_colollipop_plot <- function(
         nrow = 2,
         heights = c(3, 1)            
     )
-    return(plot)
+
+    if (forestarg == TRUE) {
+        return(forest_plot)
+    } else {
+        return(colollipop_plot)
+    }
 }
