@@ -143,18 +143,24 @@ pretty_lollipop_plot <- function(
             Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
-        mutate(mutation_count = n()/repetition_factor) %>%
+        mutate(mutation_count = n()/repetition_factor)
+
+    if (mirrorarg == TRUE){
+        gene_counts <- combined_gene_counts %>%
         # Specify the amino acid change as a label based on the label_threshold value
         mutate(label = as.character(ifelse(
             mutation_count >= label_threshold, 
             AA_position, 
             ""
         )))
-
-    if (mirrorarg == TRUE){
-        gene_counts <- combined_gene_counts
     } else {
-        gene_counts <- gene_counts
+        gene_counts <- gene_counts %>%
+        # Specify the amino acid change as a label based on the label_threshold value
+        mutate(label = as.character(ifelse(
+            mutation_count >= label_threshold, 
+            AA_position, 
+            ""
+        )))
     }
 
     # protein_domains a bundled object with GAMBLR.data

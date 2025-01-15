@@ -11,6 +11,7 @@
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param gene The gene symbol to plot.
+#' @param label_threshold Threshold for labels to appear on plot. 
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest.
 #' @param forestarg Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.
@@ -34,13 +35,16 @@
 #'                                                         metadata = metadata,
 #'                                                         comparison_column = "sex",
 #'                                                         comparison_values = c("M", "F"),
-#'                                                         gene = "IGLL5")
+#'                                                         gene = "IGLL5",
+#'                                                         label_threshold = 3)
+#' 
 pretty_colollipop_plot <- function(
     maf_df,
     metadata,
     comparison_column,
     comparison_values,
     gene,
+    label_threshold,
     plot_title,
     refseq_id,
     forestarg = TRUE,
@@ -145,6 +149,7 @@ pretty_colollipop_plot <- function(
         refseq_id,
         plot_title = plot_title,
         include_silent = FALSE,
+        label_threshold = label_threshold,
         plotarg = TRUE,
         mirrorarg = TRUE,
         combined_gene_counts = combined_gene_counts,

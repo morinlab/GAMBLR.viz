@@ -10,6 +10,7 @@ pretty_colollipop_plot(
   comparison_column,
   comparison_values,
   gene,
+  label_threshold,
   plot_title,
   refseq_id,
   forestarg = TRUE,
@@ -26,6 +27,8 @@ pretty_colollipop_plot(
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
 \item{gene}{The gene symbol to plot.}
+
+\item{label_threshold}{Threshold for labels to appear on plot.}
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
 
@@ -59,5 +62,7 @@ pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
                                                         metadata = metadata,
                                                         comparison_column = "sex",
                                                         comparison_values = c("M", "F"),
-                                                        gene = "IGLL5")
+                                                        gene = "IGLL5",
+                                                        label_threshold = 3)
+
 }
