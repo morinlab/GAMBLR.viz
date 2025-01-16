@@ -836,7 +836,7 @@ prettyOncoplot = function(
 
     #check for missing colours
     colours = map_metadata_to_colours(
-        metadataColumns = metadataColumns,
+        metadataColumns = c(metadataColumns, numericMetadataColumns),
         these_samples_metadata = these_samples_metadata,
         annoAlpha = annoAlpha,
         verbose=verbose
@@ -869,8 +869,8 @@ prettyOncoplot = function(
         if(annotation %in% c("HotSpot","hot_spot")){
         next;
         }
-        if(!missing(expressionColumns)){
-        if(annotation %in% expressionColumns){
+        if(!missing(numericMetadataColumns)){
+        if(annotation %in% numericMetadataColumns){
             next;
         }
         }
