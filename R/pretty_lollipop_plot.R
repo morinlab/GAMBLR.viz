@@ -449,23 +449,26 @@ pretty_lollipop_plot <- function(
                 size = mutation_count
             )
         ) + 
-        geom_text(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                y = mutation_count, 
-                label = label, 
-                angle = 45, 
-                hjust = -0.25
-            )
-        ) +
         ggpubr::theme_pubr() 
     }
 
         
     if (mirrorarg == TRUE) {
-        max_mutation_count <- max(gene_counts$mutation_count)
-        
+
+        # common legend
+        co_legend_data <- mutation_plot(gene_counts) +
+            scale_size_continuous(
+                breaks = seq(
+                    floor(min(gene_counts$mutation_count)), 
+                    ceiling(max(gene_counts$mutation_count)), 
+                    by = 1
+                ),
+                labels = function(x) format(x, scientific = FALSE)  
+            )  +
+            scale_color_manual(name = "Mutation Type", values = colours_manual) +
+            theme(legend.position = "right")
+        gg_co_legend <- as_ggplot(get_legend(co_legend_data))
+      
         mutation_plot1 <- mutation_plot(gene_counts %>% filter(source == "Sample 1")) +
             scale_y_continuous(
                 breaks = seq(
@@ -474,15 +477,6 @@ pretty_lollipop_plot <- function(
                     by = 1
                 )
             ) +
-            ylim(0, y_max) +
-            scale_size_continuous(
-                breaks = seq(
-                    floor(min(gene_counts$mutation_count)), 
-                    ceiling(max(max_mutation_count)), 
-                    by = 1
-                ),
-                labels = function(x) format(x, scientific = FALSE)
-            ) +
             scale_color_manual(name = "Mutation Type", values = colours_manual) +
             ylab("Mutation Count") +
             xlab("") +
@@ -490,19 +484,16 @@ pretty_lollipop_plot <- function(
             theme(
                 axis.line.x = element_blank(),
                 axis.text.x = element_blank(),
-                axis.ticks.x = element_blank(),
-                legend.position = "right"
+                axis.ticks.x = element_blank()
             ) 
 
         mutation_plot2 <- mutation_plot(gene_counts %>% filter(source == "Sample 2")) +
-            scale_y_reverse(limits = c(y_max, 0)) +
-            scale_size_continuous(
+            scale_y_reverse(
                 breaks = seq(
-                    floor(min(gene_counts$mutation_count)), 
-                    ceiling(max(max_mutation_count)), 
+                    0,
+                    max(gene_counts$mutation_count),
                     by = 1
-                ),
-                labels = function(x) format(x, scientific = FALSE)
+                )
             ) +
             scale_color_manual(name = "Mutation Type", values = colours_manual) +
             ylab("Mutation Count") +
@@ -511,8 +502,7 @@ pretty_lollipop_plot <- function(
             theme(
                 axis.line.x = element_blank(),
                 axis.text.x = element_blank(),
-                axis.ticks.x = element_blank(),
-                legend.position = "right"
+                axis.ticks.x = element_blank()
             )
         
         domain_plot <- domain_plot + 
@@ -524,43 +514,46 @@ pretty_lollipop_plot <- function(
             )
 
         # Combine mutation plots and domain plot
-        plot <- ggpubr::ggarrange(
-            mutation_plot1, 
-            domain_plot, 
-            mutation_plot2,
-            ncol = 1, 
-            heights = c(3, 1, 3),
-            labels = c(
-                paste0("Somatic Mutation Rate ", 
-                        Somatic_Mutation_Rate[1], 
-                        "%",
-                        "\n",
-                        "             N = ", 
-                        Somatic_Mutation_Denominator[1],
-                        "\n",
-                        "    Comparison Value ", 
-                        '"', 
-                        Sample1, 
-                        '"'
-                ), 
-                "", 
-                paste0("Somatic Mutation Rate ", 
-                        Somatic_Mutation_Rate[2],
-                        "%",
-                        "\n", 
-                        "             N = ",
-                        Somatic_Mutation_Denominator[2], 
-                        "\n", 
-                        "    Comparison Value ",
-                        '"', 
-                        Sample2, 
-                        '"'
-                )
+        plot <- ggpubr::ggarrange(ggpubr::ggarrange(
+                mutation_plot1, 
+                domain_plot, 
+                mutation_plot2,
+                ncol = 1, 
+                heights = c(3, 1, 3),
+                labels = c(
+                    paste0("Somatic Mutation Rate ", 
+                            Somatic_Mutation_Rate[1], 
+                            "%",
+                            "\n",
+                            "             N = ", 
+                            Somatic_Mutation_Denominator[1],
+                            "\n",
+                            "    Comparison Value ", 
+                            '"', 
+                            Sample1, 
+                            '"'
+                    ), 
+                    "", 
+                    paste0("Somatic Mutation Rate ", 
+                            Somatic_Mutation_Rate[2],
+                            "%",
+                            "\n", 
+                            "             N = ",
+                            Somatic_Mutation_Denominator[2], 
+                            "\n", 
+                            "    Comparison Value ",
+                            '"', 
+                            Sample2, 
+                            '"'
+                    )   
+                ),
+                label.y = c(0.85, 0, 0.35),
+                label.x = c(0.7, 0, 0.7),
+                legend = "none"
             ),
-            label.y = c(0.85, 0, 0.35),
-            label.x = c(0.7, 0, 0.7),
-            common.legend = TRUE,
-            legend = "right"
+        gg_co_legend, 
+        ncol = 2,
+        widths = c(5,1)
         ) %>% 
         ggpubr::annotate_figure(
             plot,
