@@ -836,7 +836,7 @@ prettyOncoplot = function(
 
     #check for missing colours
     colours = map_metadata_to_colours(
-        metadataColumns = c(metadataColumns, numericMetadataColumns),
+        metadataColumns = metadataColumns,
         these_samples_metadata = these_samples_metadata,
         annoAlpha = annoAlpha,
         verbose=verbose
@@ -1515,6 +1515,16 @@ make_prettyoncoplot = function(mat_input,
                                 labels_gp = gpar(fontsize = legendFontSize))
 
   }
+
+
+  modify_na_elements <- function(x) {
+    if(is.character(x)){
+        x[is.na(names(x))] <- "white"
+        names(x) <- ifelse(is.na(names(x)), "NA", names(x))
+    }
+    return(x)
+  }
+  colours <- lapply(colours, modify_na_elements)
 
   oncoprint_args = list(mat=mat_input,
                         alter_fun = alter_fun,
