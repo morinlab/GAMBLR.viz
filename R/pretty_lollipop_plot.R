@@ -22,7 +22,7 @@
 #' 
 #' @return A lollipop plot.
 #'
-#' @import dplyr ggplot2 scales 
+#' @import dplyr ggplot2  
 #' @export
 #'
 #' @examples
