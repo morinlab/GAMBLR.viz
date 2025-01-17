@@ -22,7 +22,7 @@
 #' 
 #' @return A lollipop plot.
 #'
-#' @import dplyr ggplot2
+#' @import dplyr ggplot2 scales 
 #' @export
 #'
 #' @examples
@@ -38,7 +38,7 @@
 #'
 #' #construct pretty_lollipop_plot.
 #' lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
-#' 
+
 pretty_lollipop_plot <- function(
     maf_df, 
     gene,
@@ -143,7 +143,7 @@ pretty_lollipop_plot <- function(
             Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
-        mutate(mutation_count = n()/repetition_factor)
+        mutate(mutation_count = n()/repetition_factor) 
 
     if (mirrorarg == TRUE){
         gene_counts <- combined_gene_counts %>%
@@ -214,8 +214,6 @@ pretty_lollipop_plot <- function(
         )
     )
     x_min <- 0
-    # Set y_max to the nearest multiple of 5 above the maximum mutation count
-    y_max <- ceiling(max(gene_counts$mutation_count) / 5) * 5
 
     # get_gambl_colours() from GAMBLR.helpers
     colours_manual <- get_gambl_colours("mutation")
@@ -283,7 +281,10 @@ pretty_lollipop_plot <- function(
         # Gene KS-Test
         aa_frequency_data <- combined_gene_counts %>%
             group_by(AA, source) %>%
-            summarise(freq = n())
+            summarise(
+                freq = n()/repetition_factor,
+                .groups = "drop"
+            )
 
         ks_test_result <- ks.test(
             aa_frequency_data$freq[aa_frequency_data$source == "Sample 1"], 
@@ -295,7 +296,7 @@ pretty_lollipop_plot <- function(
         if(gene_p_value <= 0.05){
             gene_p_value <- gene_p_value
         } else {
-            gene_p_value <- NULL
+            gene_p_value <- NA
         }
 
         # Domain(s) KS-Test
@@ -314,27 +315,15 @@ pretty_lollipop_plot <- function(
 
             if (nrow(domain_subset) > 0) {
 
-                # Mutation counts for Sample 1 and Sample 2
-                domain_mutation1 <- domain_subset %>%
-                    filter(
-                        Variant_Classification %in% variants, 
-                        source == "Sample 1"
-                    ) %>%
-                    nrow()
-
-                domain_mutation2 <- domain_subset %>%
-                    filter(
-                        Variant_Classification %in% variants, 
-                        source == "Sample 2"
-                    ) %>%
-                    nrow()
-
                 domain_frequency_data <- domain_subset %>%
                     group_by(
                         AA, 
                         source
                     ) %>%
-                    summarise(freq = n())
+                    summarise(
+                        freq = n()/repetition_factor,
+                        .groups = "drop"
+                    )
 
                 domain_ks_test <- tryCatch({
                     ks.test(
@@ -345,32 +334,10 @@ pretty_lollipop_plot <- function(
                     list(p.value = NA)
                 })
 
-                # Save domain-specific results in a list
-                unique_domain_name <- paste0(
-                    "Domain_", 
-                    domain_name
-                )
-                domain_list[[unique_domain_name]] <- list(
-                    mutation_count_sample1 = domain_mutation1,
-                    mutation_count_sample2 = domain_mutation2,
-                    ks_p_value = domain_ks_test$p.value
-                )
-
                 # Store the p-value in domain_data
                 domain_data$p_value[i] <- domain_ks_test$p.value
 
-                # Store the unique domain name
-                domain_names <- c(domain_names, unique_domain_name)
-
-                for (i in 1:nrow(domain_data)) {
-                    if (is.na(domain_data$p_value[i])) {
-                        domain_data$p_value[i] <- 1
-                    } else {
-                        domain_data$p_value[i] <- domain_data$p_value[i]
-                    }
-                }
-                
-                for (i in 1:nrow(domain_data)) {
+                if (!is.na(domain_data$p_value[i])) {
                     if (domain_data$p_value[i] <= 0.001) {
                         domain_data$p_value[i] <- "***"
                     } else if (domain_data$p_value[i] <= 0.01) {
@@ -380,7 +347,8 @@ pretty_lollipop_plot <- function(
                     } else {
                         domain_data$p_value[i] <- NA
                     }
-                }
+                }            
+
             } else {
                 print(paste(
                     "No mutation data for domain", 
@@ -390,70 +358,80 @@ pretty_lollipop_plot <- function(
         }
     }
 
-    # Create the domain plot
-    domain_plot <- ggplot() + 
-        geom_rect(
-            aes(
-                xmin = x_min, 
-                xmax = x_max, 
-                ymin = -0.2, 
-                ymax = 0.2
-                ), 
-            fill = "lightgrey", 
-            color = "lightgrey"
-        ) + 
-        geom_rect(
-            data = domain_data, 
-            aes(
-                xmin = start.points, 
-                xmax = end.points, 
-                ymin = -0.4, 
-                ymax = 0.4, 
-                fill = color
-                ), 
-            color = "black", 
-            show.legend = FALSE
-        ) +
-        geom_text(
-            data = domain_data, 
-            aes(
-                x = text.position, 
-                y = 0,
-                angle = 90, 
-                label = text.label
-                )
-        ) +
-        theme_void() +
-        theme(
-            axis.text.x = element_text(vjust = rel(0.5))
-        )
-
-    # Function for mutation lollipop plot
-        mutation_plot <- function(gene_counts){
-        ggplot() + 
-        geom_segment(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                xend = AA, 
-                y = 0, 
-                yend = mutation_count
-            )
-        ) +
-        geom_point(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                y = mutation_count, 
-                color = Variant_Classification, 
-                size = mutation_count
-            )
-        ) + 
-        ggpubr::theme_pubr() 
-    }
-
-        
     if (mirrorarg == TRUE) {
+
+        # Processing p-values for domain plot
+        for (i in 1:nrow(domain_data)) {
+            if (!is.na(domain_data$p_value[i])) {
+                domain_data$p_value[i] <- as.character(domain_data$p_value[i])
+            } else {
+                domain_data$p_value[i] <- " "
+            }
+        }
+
+        # Create the domain plot
+        domain_plot <- ggplot() + 
+            geom_rect(
+                aes(
+                    xmin = x_min, 
+                    xmax = x_max, 
+                    ymin = -0.2, 
+                    ymax = 0.2
+                    ), 
+                fill = "lightgrey", 
+                color = "lightgrey"
+            ) + 
+            geom_rect(
+                data = domain_data, 
+                aes(
+                    xmin = start.points, 
+                    xmax = end.points, 
+                    ymin = -0.4, 
+                    ymax = 0.4, 
+                    fill = color
+                    ), 
+                color = "black", 
+                show.legend = FALSE
+            ) +
+            geom_text(
+                data = domain_data, 
+                aes(
+                    x = text.position, 
+                    y = 0,
+                    angle = 90, 
+                    label = paste0(
+                        text.label,
+                        "\n",
+                        domain_data$p_value
+                        )
+                )
+            ) +
+            theme_void() +
+            theme(axis.text.x = element_text(vjust = rel(0.5)))
+
+        # Function for mutation lollipop plot
+        mutation_plot <- function(gene_counts){
+            ggplot() + 
+            geom_segment(
+                data = gene_counts, 
+                aes(
+                    x = AA, 
+                    xend = AA, 
+                    y = 0, 
+                    yend = mutation_count
+                )
+            ) +
+            geom_point(
+                data = gene_counts, 
+                aes(
+                    x = AA, 
+                    y = mutation_count, 
+                    color = Variant_Classification, 
+                    size = mutation_count
+                )
+            ) + 
+            ggpubr::theme_pubr() 
+        }
 
         # common legend
         co_legend_data <- mutation_plot(gene_counts) +
@@ -562,7 +540,7 @@ pretty_lollipop_plot <- function(
                     plot_title,
                     "\n",
                     ifelse(
-                        !is.null(gene_p_value), 
+                        !is.na(gene_p_value), 
                         paste0("p = ", round(gene_p_value, 3)), 
                         ""
                     )

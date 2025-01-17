@@ -71,5 +71,4 @@ maf_df <- get_coding_ssm(
 
 #construct pretty_lollipop_plot.
 lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
-
 }
