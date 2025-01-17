@@ -1157,8 +1157,6 @@ prettyOncoplot = function(
     if(missing(splitColumnName)){
         column_split = rep("", length(patients_kept))
     }else{
-        print("this is the spot")
-        print(colnames(metadata_df))
         if(is.factor(metadata_df[,splitColumnName])){
             print("FACTOR!")
             metadata_df = arrange(metadata_df,splitColumnName)
