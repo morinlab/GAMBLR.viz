@@ -865,7 +865,7 @@ prettyOncoplot = function(
         colours[[exp]] = col_fun
     }
 
-    for(annotation in names(colours)){
+    for(annotation in intersect(colnames(metadata_df), names(colours))){
         if(annotation %in% c("HotSpot","hot_spot")){
         next;
         }
