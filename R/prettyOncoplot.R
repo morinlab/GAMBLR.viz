@@ -1017,13 +1017,6 @@ prettyOncoplot = function(
         }
     }
 
-    if(missing(hide_annotations)){
-        metadata_df = metadata_df
-    }else if (hide_annotations_tracks){
-        metadata_df = metadata_df %>%
-        dplyr::select(-all_of(hide_annotations))
-    }
-
     if(keepSampleOrder){
         patients_kept <- patients_kept[order(
         match(
@@ -1164,6 +1157,8 @@ prettyOncoplot = function(
     if(missing(splitColumnName)){
         column_split = rep("", length(patients_kept))
     }else{
+        print("this is the spot")
+        print(colnames(metadata_df))
         if(is.factor(metadata_df[,splitColumnName])){
             print("FACTOR!")
             metadata_df = arrange(metadata_df,splitColumnName)
@@ -1178,6 +1173,14 @@ prettyOncoplot = function(
         }
 
     }
+
+    if(missing(hide_annotations)){
+        metadata_df = metadata_df
+    }else if (hide_annotations_tracks){
+        metadata_df = metadata_df %>%
+        dplyr::select(-all_of(hide_annotations))
+    }
+
     metadata_df <- metadata_df %>%
         mutate_if(is.factor, as.character) %>%
         replace(is.na(.), "NA")
