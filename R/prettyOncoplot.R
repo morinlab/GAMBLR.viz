@@ -174,7 +174,7 @@ prettyOncoplot = function(
     sortByColumns,
     arrange_descending = FALSE,
     removeNonMutated = FALSE,
-    minMutationPercent,
+    minMutationPercent = 0,
     mutAlpha = 1,
     recycleOncomatrix = FALSE,
     splitColumnName,
@@ -421,6 +421,9 @@ prettyOncoplot = function(
             group_by(Hugo_Symbol) %>%
             summarize(MutatedSamples = n(), .groups = "drop") %>%
             arrange(desc(MutatedSamples))
+        gene_summary$fractMutated <- gene_summary$MutatedSamples / length(maf_patients)
+        gene_summary <- gene_summary %>%
+            filter(fractMutated * 100 >= minMutationPercent)
         if(!recycleOncomatrix){
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
             mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
@@ -523,11 +526,11 @@ prettyOncoplot = function(
         )
         gene_summary = arrange(gene_summary,desc(MutatedSamples))
     }else{
-        genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
-        for (g in genes_dropped) {
-            gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
-        }
-        gene_summary <- gene_summary %>% replace(is.na(.), 0)
+        # genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
+        # for (g in genes_dropped) {
+        #     gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+        # }
+        # gene_summary <- gene_summary %>% replace(is.na(.), 0)
     }
     if(!missing(minMutationPercent)){
         if(recycleOncomatrix){
@@ -865,12 +868,12 @@ prettyOncoplot = function(
         colours[[exp]] = col_fun
     }
 
-    for(annotation in names(colours)){
+    for(annotation in intersect(colnames(metadata_df), names(colours))){
         if(annotation %in% c("HotSpot","hot_spot")){
         next;
         }
-        if(!missing(expressionColumns)){
-        if(annotation %in% expressionColumns){
+        if(!missing(numericMetadataColumns)){
+        if(annotation %in% numericMetadataColumns){
             next;
         }
         }
@@ -908,12 +911,12 @@ prettyOncoplot = function(
 
 
     if (missing(splitGeneGroups)) {
-        row_split <- rep("", length(genes))
+        row_split <- rep("", length(genes_kept))
     } else {
         if(is.factor(splitGeneGroups)){
-            row_split <- splitGeneGroups[genes]
+            row_split <- splitGeneGroups[genes_kept]
         } else(
-            row_split <- factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
+            row_split <- factor(splitGeneGroups[genes_kept], levels = unique(splitGeneGroups[genes_kept]))
         )
     }
 
@@ -1015,13 +1018,6 @@ prettyOncoplot = function(
         }else{
             right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
         }
-    }
-
-    if(missing(hide_annotations)){
-        metadata_df = metadata_df
-    }else if (hide_annotations_tracks){
-        metadata_df = metadata_df %>%
-        dplyr::select(-all_of(hide_annotations))
     }
 
     if(keepSampleOrder){
@@ -1178,6 +1174,14 @@ prettyOncoplot = function(
         }
 
     }
+
+    if(missing(hide_annotations)){
+        metadata_df = metadata_df
+    }else if (hide_annotations_tracks){
+        metadata_df = metadata_df %>%
+        dplyr::select(-all_of(hide_annotations))
+    }
+
     metadata_df <- metadata_df %>%
         mutate_if(is.factor, as.character) %>%
         replace(is.na(.), "NA")
@@ -1515,6 +1519,16 @@ make_prettyoncoplot = function(mat_input,
                                 labels_gp = gpar(fontsize = legendFontSize))
 
   }
+
+
+  modify_na_elements <- function(x) {
+    if(is.character(x)){
+        x[is.na(names(x))] <- "white"
+        names(x) <- ifelse(is.na(names(x)), "NA", names(x))
+    }
+    return(x)
+  }
+  colours <- lapply(colours, modify_na_elements)
 
   oncoprint_args = list(mat=mat_input,
                         alter_fun = alter_fun,

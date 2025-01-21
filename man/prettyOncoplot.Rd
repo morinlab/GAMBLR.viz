@@ -20,7 +20,7 @@ prettyOncoplot(
   sortByColumns,
   arrange_descending = FALSE,
   removeNonMutated = FALSE,
-  minMutationPercent,
+  minMutationPercent = 0,
   mutAlpha = 1,
   recycleOncomatrix = FALSE,
   splitColumnName,
