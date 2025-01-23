@@ -20,6 +20,7 @@
 #' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will be used.
 #' @param label_genes Gene labels (df, list or what type?)
 #' @param auto_label_sv Default is FALSE
+#' @param auto_colour_links Whether to apply authomatic coloring of the links. Default is FALSE.
 #' @param hide_legend Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata
 #'
 #' @return Nothing

@@ -14,10 +14,10 @@ circular_CN_plot(
   gain_col = "#FF000080",
   calculate_correlations = FALSE,
   link_transparency = 0.8,
-  labelTheseGenes = c("CD58", "TLR2", "MCL1", "CDKN2A", "TMEM30A", "RHOA", "B2M", "PTEN",
-    "FAS", "ETV6", "GRB2", "FCGR2B", "CCND3", "CUX1", "MIR17HG", "TFPT", "CD274", "JAK2",
-    "CDK14", "BCL6", "EZH2", "HIST1H1E", "REL", "NOL9", "TNFRSF14", "TOX", "TP53", "RB1",
-    "TCF4", "HNRNPD", "BCL2", "NFKBIZ", "TNFAIP3", "PRDM1", "CD70", "MYC")
+  labelTheseGenes = c("CD58", "TLR2", "MCL1", "CDKN2A", "TMEM30A", "RHOA", "B2M",
+    "PTEN", "FAS", "ETV6", "GRB2", "FCGR2B", "CCND3", "CUX1", "MIR17HG", "TFPT", "CD274",
+    "JAK2", "CDK14", "BCL6", "EZH2", "HIST1H1E", "REL", "NOL9", "TNFRSF14", "TOX",
+    "TP53", "RB1", "TCF4", "HNRNPD", "BCL2", "NFKBIZ", "TNFAIP3", "PRDM1", "CD70", "MYC")
 )
 }
 \arguments{

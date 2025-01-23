@@ -52,6 +52,8 @@ plot_sample_circos(
 
 \item{auto_label_sv}{Default is FALSE}
 
+\item{auto_colour_links}{Whether to apply authomatic coloring of the links. Default is FALSE.}
+
 \item{hide_legend}{Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata}
 }
 \value{
