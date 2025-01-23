@@ -1,6 +1,6 @@
 #' @title Copy Number states barplot
 #'
-#' @description Generate a bar plot visualizing sample-specific copy number states and affected bases for each CN segment.
+#' @description Plot sample-specific CN states and affected bases for each segment
 #'
 #' @details `fancy_cnbar` visualizes copy number (CN) states on sample-level. Similarly to other fancy_x_plots this function
 #' accepts either a sample ID, for which the function will get copy number states with [GAMBLR::get_sample_cn_segments]. The function
