@@ -60,6 +60,7 @@ prettyOncoplot(
   split_columns_kmeans,
   dry_run = FALSE,
   simplify_annotation = FALSE,
+  simlify_bg_colour = NA,
   stacked = FALSE,
   numeric_heatmap_type = "aSHM",
   numeric_heatmap_location = "top",
