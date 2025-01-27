@@ -62,6 +62,7 @@
 #' @param split_columns_kmeans K value for k-means clustering on columns
 #' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
 #' @param simplify_annotation Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
+#' @param simlify_bg_colour When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.
 #' @param stacked Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)
 #' @param numeric_heatmap_type Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".
 #' @param numeric_heatmap_location Where to draw the numeric heatmap. Can be "top" (default) or "bottom".

@@ -178,6 +178,8 @@ prettyOncoplot(
 
 \item{simplify_annotation}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
 
+\item{simlify_bg_colour}{When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.}
+
 \item{stacked}{Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)}
 
 \item{numeric_heatmap_type}{Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".}
