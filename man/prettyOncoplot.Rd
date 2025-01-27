@@ -60,6 +60,7 @@ prettyOncoplot(
   split_columns_kmeans,
   dry_run = FALSE,
   simplify_annotation = FALSE,
+  simplify_bg_colour = NA,
   stacked = FALSE,
   numeric_heatmap_type = "aSHM",
   numeric_heatmap_location = "top",
@@ -176,6 +177,8 @@ prettyOncoplot(
 \item{dry_run}{Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows}
 
 \item{simplify_annotation}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
+
+\item{simplify_bg_colour}{When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.}
 
 \item{stacked}{Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)}
 

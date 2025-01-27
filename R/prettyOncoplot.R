@@ -62,6 +62,7 @@
 #' @param split_columns_kmeans K value for k-means clustering on columns
 #' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
 #' @param simplify_annotation Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
+#' @param simplify_bg_colour When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.
 #' @param stacked Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)
 #' @param numeric_heatmap_type Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".
 #' @param numeric_heatmap_location Where to draw the numeric heatmap. Can be "top" (default) or "bottom".
@@ -214,6 +215,7 @@ prettyOncoplot = function(
     split_columns_kmeans,
     dry_run = FALSE,
     simplify_annotation= FALSE,
+    simplify_bg_colour = NA,
     stacked = FALSE,
     numeric_heatmap_type = "aSHM",
     numeric_heatmap_location = "top",
@@ -616,7 +618,7 @@ prettyOncoplot = function(
 
         alter_fun = list(
         background = function(x, y, w, h) grid.rect(x, y, w, h,
-                                                    gp = gpar(fill = NA,col=NA)),
+                                                    gp = gpar(fill = simplify_bg_colour,col=NA)),
 
         Missense = function(x, y, w, h){ grid.rect(x, y, w*0.9, h*0.9,
                                                 gp = gpar(fill = col["Missense"], col = NA))},
