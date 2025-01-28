@@ -62,6 +62,7 @@
 #' @param split_columns_kmeans K value for k-means clustering on columns
 #' @param dry_run Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows
 #' @param simplify_annotation Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.
+#' @param simplify_bg_colour When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.
 #' @param stacked Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)
 #' @param numeric_heatmap_type Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".
 #' @param numeric_heatmap_location Where to draw the numeric heatmap. Can be "top" (default) or "bottom".
@@ -174,7 +175,7 @@ prettyOncoplot = function(
     sortByColumns,
     arrange_descending = FALSE,
     removeNonMutated = FALSE,
-    minMutationPercent,
+    minMutationPercent = 0,
     mutAlpha = 1,
     recycleOncomatrix = FALSE,
     splitColumnName,
@@ -214,6 +215,7 @@ prettyOncoplot = function(
     split_columns_kmeans,
     dry_run = FALSE,
     simplify_annotation= FALSE,
+    simplify_bg_colour = NA,
     stacked = FALSE,
     numeric_heatmap_type = "aSHM",
     numeric_heatmap_location = "top",
@@ -426,6 +428,9 @@ prettyOncoplot = function(
             group_by(Hugo_Symbol) %>%
             summarize(MutatedSamples = n(), .groups = "drop") %>%
             arrange(desc(MutatedSamples))
+        gene_summary$fractMutated <- gene_summary$MutatedSamples / length(maf_patients)
+        gene_summary <- gene_summary %>%
+            filter(fractMutated * 100 >= minMutationPercent)
         if(!recycleOncomatrix){
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
             mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
@@ -528,11 +533,11 @@ prettyOncoplot = function(
         )
         gene_summary = arrange(gene_summary,desc(MutatedSamples))
     }else{
-        genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
-        for (g in genes_dropped) {
-            gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
-        }
-        gene_summary <- gene_summary %>% replace(is.na(.), 0)
+        # genes_dropped = genes[which(!genes %in% gene_summary$Hugo_Symbol)]
+        # for (g in genes_dropped) {
+        #     gene_summary = dplyr::add_row(gene_summary, Hugo_Symbol = g)
+        # }
+        # gene_summary <- gene_summary %>% replace(is.na(.), 0)
     }
     if(!missing(minMutationPercent)){
         if(recycleOncomatrix){
@@ -613,7 +618,7 @@ prettyOncoplot = function(
 
         alter_fun = list(
         background = function(x, y, w, h) grid.rect(x, y, w, h,
-                                                    gp = gpar(fill = NA,col=NA)),
+                                                    gp = gpar(fill = simplify_bg_colour,col=NA)),
 
         Missense = function(x, y, w, h){ grid.rect(x, y, w*0.9, h*0.9,
                                                 gp = gpar(fill = col["Missense"], col = NA))},
@@ -871,12 +876,12 @@ prettyOncoplot = function(
         colours[[exp]] = col_fun
     }
 
-    for(annotation in names(colours)){
+    for(annotation in intersect(colnames(metadata_df), names(colours))){
         if(annotation %in% c("HotSpot","hot_spot")){
         next;
         }
-        if(!missing(expressionColumns)){
-        if(annotation %in% expressionColumns){
+        if(!missing(numericMetadataColumns)){
+        if(annotation %in% numericMetadataColumns){
             next;
         }
         }
@@ -914,12 +919,12 @@ prettyOncoplot = function(
 
 
     if (missing(splitGeneGroups)) {
-        row_split <- rep("", length(genes))
+        row_split <- rep("", length(genes_kept))
     } else {
         if(is.factor(splitGeneGroups)){
-            row_split <- splitGeneGroups[genes]
+            row_split <- splitGeneGroups[genes_kept]
         } else(
-            row_split <- factor(splitGeneGroups[genes], levels = unique(splitGeneGroups[genes]))
+            row_split <- factor(splitGeneGroups[genes_kept], levels = unique(splitGeneGroups[genes_kept]))
         )
     }
 
@@ -1021,13 +1026,6 @@ prettyOncoplot = function(
         }else{
             right_annotation = rowAnnotation(rbar = anno_oncoprint_barplot())
         }
-    }
-
-    if(missing(hide_annotations)){
-        metadata_df = metadata_df
-    }else if (hide_annotations_tracks){
-        metadata_df = metadata_df %>%
-        dplyr::select(-all_of(hide_annotations))
     }
 
     if(keepSampleOrder){
@@ -1184,6 +1182,14 @@ prettyOncoplot = function(
         }
 
     }
+
+    if(missing(hide_annotations)){
+        metadata_df = metadata_df
+    }else if (hide_annotations_tracks){
+        metadata_df = metadata_df %>%
+        dplyr::select(-all_of(hide_annotations))
+    }
+
     metadata_df <- metadata_df %>%
         mutate_if(is.factor, as.character) %>%
         replace(is.na(.), "NA")
@@ -1537,6 +1543,16 @@ make_prettyoncoplot = function(mat_input,
                                 labels_gp = gpar(fontsize = legendFontSize))
 
   }
+
+
+  modify_na_elements <- function(x) {
+    if(is.character(x)){
+        x[is.na(names(x))] <- "white"
+        names(x) <- ifelse(is.na(names(x)), "NA", names(x))
+    }
+    return(x)
+  }
+  colours <- lapply(colours, modify_na_elements)
 
   oncoprint_args = list(mat=mat_input,
                         alter_fun = alter_fun,
