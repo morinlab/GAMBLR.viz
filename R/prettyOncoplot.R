@@ -628,25 +628,23 @@ prettyOncoplot = function(
                                                     gp = gpar(fill = col["Missense"], col = NA));
                                         grid.rect(x, y, w*0.9, h*0.3,
                                                     gp = gpar(fill = col["HotSpot"], col = NA));}
-        #HotSpot = function(x,y,w,h){grid.circle(x,y,w*0.9,
-        #                                        gp = gpar(fill = col["HotSpot"], col = NA))}
 
         , col = col)
 
         snv_df = summarize_mutation_by_class(mutation_set=c("Missense_Mutation","In_Frame_Del", "In_Frame_Ins","Translation_Start_Site"))
         if(verbose){
-        print("SNV")
-        print(dim(snv_df))
+          print("SNV")
+          print(dim(snv_df))
         }
         trunc_df = summarize_mutation_by_class(mutation_set=c("Nonsense_Mutation","Frame_Shift_Del","Frame_Shift_Ins","Nonstop_Mutation"))
         splice_df = summarize_mutation_by_class(mutation_set = "Splice_Site")
 
         if(highlightHotspots){
-        hotspot_df = summarize_mutation_by_class(mutation_set = "hot_spot")
-        snv_df[trunc_df==TRUE | splice_df==TRUE ] = FALSE
-        snv_df[ hotspot_df==TRUE] = FALSE
-        trunc_df[ hotspot_df==TRUE] = FALSE
-        splice_df[ hotspot_df==TRUE] = FALSE
+          hotspot_df = summarize_mutation_by_class(mutation_set = "hot_spot")
+          snv_df[trunc_df==TRUE | splice_df==TRUE ] = FALSE
+          snv_df[ hotspot_df==TRUE] = FALSE
+          trunc_df[ hotspot_df==TRUE] = FALSE
+          splice_df[ hotspot_df==TRUE] = FALSE
         }
 
 
@@ -690,12 +688,15 @@ prettyOncoplot = function(
 
         if(!missing(cnv_df)){
 
-        cn_df[splice_df == TRUE] = FALSE
-        cn_df[trunc_df == TRUE] = FALSE
-        cn_df[hotspot_df == TRUE] = FALSE
-        cn_df[snv_df==TRUE] = FALSE
-        print(rownames(cn_df))
-        print(rownames(hotspot_df))
+          cn_df[splice_df == TRUE] = FALSE
+          cn_df[trunc_df == TRUE] = FALSE
+          if(highlightHotspots){
+            cn_df[hotspot_df == TRUE] = FALSE
+          }
+        
+          cn_df[snv_df==TRUE] = FALSE
+          print(rownames(cn_df))
+          
 
         }
 
