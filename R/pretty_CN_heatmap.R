@@ -302,7 +302,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     #remove chr prefix from colours
     names(chrom_col) = str_remove(names(chrom_col),"chr")
   }
-  print(chrom_col)
+
   splits = NULL
   if(!missing(sortByBins)){
     cluster_rows = FALSE
