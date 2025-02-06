@@ -54,6 +54,10 @@ ashm_multi_rainbow_plot = function(regions_bed,
   
   #get the mutations for each region and combine
   #regions_bed should contain chr, start, end, name (with these exact names)
+  if("maf_data" %in% class(maf_df)){
+        #drop our S3 classes because these additional attributes seem to cause some problems when the data is subsequently munged.
+        maf_df = strip_genomic_classes(maf_df)
+  }
   if(missing(metadata)){
     metadata = get_gambl_metadata(seq_type_filter = this_seq_type)
     meta_arranged = arrange(metadata, pathology_rank, lymphgen)
