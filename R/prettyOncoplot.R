@@ -221,6 +221,10 @@ prettyOncoplot = function(
     numeric_heatmap_location = "top",
     return_inputs = FALSE
 ){
+    if("maf_data" %in% class(maf_df)){
+        #drop our S3 classes because these additional attributes seem to cause some problems when the data is subsequently munged.
+        maf_df = strip_genomic_classes(maf_df)
+    }
     if(any(these_samples_metadata$seq_type == "mrna")){
       message("metadata contains rows with mrna seq_type. Dropping these for you.")
       these_samples_metadata = dplyr::filter(these_samples_metadata,seq_type!="mrna")
@@ -357,6 +361,9 @@ prettyOncoplot = function(
     # When no genes provided, display only genes above the specified min
     # mutation frequency threshold. Here we will define those genes
     if(missing(genes)){
+        if(verbose){
+            print("finding genes to include...")
+        }
         gene_summary <- maf_df %>%
             distinct(
                 Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
@@ -371,6 +378,10 @@ prettyOncoplot = function(
             summarize(MutatedSamples = n(), .groups = "drop") %>%
             arrange(desc(MutatedSamples))
         genes <- gene_summary ### HERE
+        if(verbose){
+            print(paste("numgenes:",length(genes[,1])))
+        }
+        
         colnames(genes)[2] = "mutload"
         genes$fractMutated <- genes$mutload / length(maf_patients)
         genes <- genes %>%
@@ -378,6 +389,8 @@ prettyOncoplot = function(
             pull(Hugo_Symbol)
 
         lg <- length(genes)
+       
+
         if(!recycleOncomatrix){
             message(paste("creating oncomatrix with", lg, "genes"))
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
@@ -414,6 +427,9 @@ prettyOncoplot = function(
                 "There are duplicated elements in the provided gene list (@param genes). Please ensure only unique entries are present in this list."
             )
         }
+        if(verbose){
+            print("summarizing genes...")
+        }
         gene_summary = maf_df %>%
             distinct(
                 Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
@@ -431,20 +447,39 @@ prettyOncoplot = function(
         gene_summary$fractMutated <- gene_summary$MutatedSamples / length(maf_patients)
         gene_summary <- gene_summary %>%
             filter(fractMutated * 100 >= minMutationPercent)
+
+        if(verbose){
+            print(gene_summary)
+            print(genes)
+        }
         if(!recycleOncomatrix){
+            if(verbose){
+                
+                print("creating oncomatrix ")
+                
+            }
+            npat = length(patients)
+            if(verbose){
+                print(paste("patients:",npat))
+            }
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
             mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
             tsbs = maf_df %>%
                 distinct(
                     Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
-                    Start_Position, End_Position
-                ) %>%
+                    Start_Position, End_Position, .keep_all = TRUE
+                )
+            
+            tsbs = tsbs %>%
                 filter(
                     Tumor_Sample_Barcode %in% patients,
                     Variant_Classification %in% onco_matrix_coding
                 ) %>%
+                ungroup() %>%
                 group_by(Tumor_Sample_Barcode) %>%
-                summarize(total = n(), .groups = "drop") %>%
+                summarize(total = n()) 
+            
+            tsbs = tsbs %>%
                 arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
             if(verbose){
                 print(paste("numcases:",length(tsbs)))
@@ -457,6 +492,9 @@ prettyOncoplot = function(
             colnames(tsb.include) = tsbs[!tsbs %in% colnames(mat_origin)]
             rownames(tsb.include) = rownames(mat_origin)
             mat_origin = cbind(mat_origin, tsb.include)
+            if(verbose){
+                print(head(tsbs))
+            }
         }else if(length(include_noncoding) > 0){
             print(
                 "You requested to include noncoding mutations and remove non-mutated patients ..."
