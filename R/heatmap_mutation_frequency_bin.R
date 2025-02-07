@@ -47,7 +47,7 @@
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
-#' @import dplyr tidyr tibble ComplexHeatmap circlize grid parallel
+#' @import dplyr tidyr tibble ComplexHeatmap circlize grid parallel GAMBLR.helpers
 #' @export
 #'
 #' @examples
