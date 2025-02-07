@@ -25,8 +25,10 @@ pretty_CN_heatmap(
   labelTheseGenes,
   bin_label_fontsize = 5,
   bin_label_nudge = 1.03,
+  bin_label_rotation = 45,
   drop_if_PGA_below = 0,
   drop_if_PGA_above = 1,
+  focus_on_these_bins,
   geneBoxPlot,
   show_bottom_annotation_name = FALSE,
   bottom_annotation_name_side = "left",
@@ -88,6 +90,8 @@ pretty_CN_heatmap(
 
 \item{drop_if_PGA_above}{Upper limit for proportion of genome altered (PGA). Samples above this value will be dropped (default 1)}
 
+\item{focus_on_these_bins}{Mask all regions outside these bins (set CN to 0). Useful for visualizing GISTIC results.}
+
 \item{geneBoxPlot}{Optional: Specify the Hugo symbol of a single gene to embed box plots adjacent to the heatmap. Expression data for this gene must be present in the metadata in a column of the same name.}
 
 \item{show_bottom_annotation_name}{set to TRUE to label the bottom annotation tracks with more details}
@@ -132,14 +136,15 @@ dlbcl_genome_meta = get_gambl_metadata() \%>\%
 
 # Create the copy number matrix using the helper functions
 all_segments = get_cn_segments()
-all_states_binned = get_cn_states(n_bins_split=2500,
-                                 missing_data_as_diploid = T,
-                                 seg_data = all_segments,
-                                 these_samples_metadata = dlbcl_genome_meta)
-
+dlbcl_cn_binned = segmented_data_to_cn_matrix(
+                                  seg_data = all_segments,
+                                  strategy="auto_split",
+                                  n_bins_split=2500,
+                                  missing_data_as_diploid = T,
+                                  these_samples_metadata = dlbcl_genome_meta)
 
 # Generate a basic genome-wide CN heatmap
-pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
                   these_samples_metadata = dlbcl_genome_meta,
                   hide_annotations = "chromosome")
 
