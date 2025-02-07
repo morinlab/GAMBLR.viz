@@ -28,6 +28,7 @@
 #' @param show_bottom_annotation_name set to TRUE to label the bottom annotation tracks with more details
 #' @param bottom_annotation_name_side If using show_bottom_annotation_name, set this to "left" or "right" to relocate the names
 #' @param bin_labels Instead of automatically labeling genes, you can instead explicitly provide a list of labels for any bins in the heatmap. The names of each element should match a bin. The value of each element is the label that will be shown. This option can be used to skip gene location look-ups (see examples).
+#' @param focus_on_these_bins Mask all regions outside these bins (set CN to 0). Useful for visualizing GISTIC results.
 #' @param legend_direction Which orientation to use for the legend
 #' @param legend_position Where to put the legend
 #' @param legend_row How many rows for the legend layout
@@ -52,14 +53,15 @@
 #'
 #' # Create the copy number matrix using the helper functions
 #' all_segments = get_cn_segments()
-#' all_states_binned = get_cn_states(n_bins_split=2500,
-#'                                  missing_data_as_diploid = T,
-#'                                  seg_data = all_segments,
-#'                                  these_samples_metadata = dlbcl_genome_meta)
-#'
+#' dlbcl_cn_binned = segmented_data_to_cn_matrix(
+#'                                   seg_data = all_segments,
+#'                                   strategy="auto_split",
+#'                                   n_bins_split=2500,
+#'                                   missing_data_as_diploid = T,
+#'                                   these_samples_metadata = dlbcl_genome_meta)
 #'
 #' # Generate a basic genome-wide CN heatmap
-#' pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+#' pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
 #'                   these_samples_metadata = dlbcl_genome_meta,
 #'                   hide_annotations = "chromosome")
 #'
@@ -115,8 +117,10 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              labelTheseGenes,
                              bin_label_fontsize=5,
                              bin_label_nudge = 1.03,
+                             bin_label_rotation=45,
                              drop_if_PGA_below=0,
                              drop_if_PGA_above=1,
+                             focus_on_these_bins,
                              geneBoxPlot,
                              show_bottom_annotation_name = FALSE,
                              bottom_annotation_name_side = "left",
@@ -143,7 +147,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     cn_state_matrix = round(cn_state_matrix)
     cn_state_matrix[cn_state_matrix<0]=0
   }
-
+  if(!missing(focus_on_these_bins)){
+    message("focus_on_these_bins provided. All other bins will be set to diploid!")
+    other_bins = colnames(cn_state_matrix)[!colnames(cn_state_matrix) %in% focus_on_these_bins]
+    cn_state_matrix[,other_bins] = 2
+  }
   map_bin_to_bin = function(query_region,regions=colnames(cn_state_matrix),first=TRUE){
     these_coords = suppressMessages(GAMBLR.data::region_to_chunks(query_region))
     these_coords$chromosome = str_remove(these_coords$chromosome,"chr")
@@ -172,7 +180,10 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }
 
   }
-  bin_labels = list()
+  if(missing(bin_labels)){
+    bin_labels = list()
+  }
+
   if(!missing(geneBoxPlot)){
     if(missing(labelTheseGenes)){
       labelTheseGenes = geneBoxPlot
@@ -274,7 +285,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                 "chr20"="#AF2064",
                 "chr21"="#E6C66F",
                 "chr22"="#5B665D",
-                "chrX"="#CA992C")
+                "chrX"="#CA992C",
+                "chrY"="white")
 
   #assume format is chrX:XXX-XXX
   column_chromosome = str_remove(colnames(cn_state_matrix),":.+")
@@ -286,6 +298,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     column_chromosome = column_chromosome[keep_cols]
 
   }
+  if(!grepl("chr",column_chromosome[1])){
+    #remove chr prefix from colours
+    names(chrom_col) = str_remove(names(chrom_col),"chr")
+  }
+
   splits = NULL
   if(!missing(sortByBins)){
     cluster_rows = FALSE
@@ -552,7 +569,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
-  if(!missing(labelTheseGenes)){
+  if(!missing(labelTheseGenes)|length(bin_labels)>0){
     for(i in c(1:length(bin_labels))){
         gene_region = names(bin_labels)[i]
         gene_name = unname(bin_labels[[i]])
@@ -562,7 +579,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                               {i=which(colnames(cn_state_matrix)==gene_region)
                               x=i/ncol(cn_state_matrix)
                               grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
-                                        unit(bin_label_nudge,"npc"),rot=45,just="top")
+                                        unit(bin_label_nudge,"npc"),
+                                        rot=bin_label_rotation,just="top")
                               grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))})
       }
         #decorate_column_title("CN",{grid.rect(gp = gpar(fill = "#00FF0040"))})
@@ -571,6 +589,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   if(return_data){
+    if(length(bin_labels)==0){
+      bin_labels=NULL
+    }
     return(list(heatmap_object=ho,
                 data=cn_state_matrix,
                 cumulative_gain = total_gain,
