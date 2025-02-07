@@ -23,6 +23,7 @@
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
 #' @param bin_label_fontsize Font size for the gene labels (default 5)
 #' @param bin_label_nudge Increase or decrease this value to shift the gene labels up/down (default 1.03)
+#' @param bin_label_rotation Rotate the direction of the bin label. Default is 45.
 #' @param drop_if_PGA_below Lower limit for proportion of genome altered (PGA). Samples below this value will be dropped (default 0)
 #' @param drop_if_PGA_above Upper limit for proportion of genome altered (PGA). Samples above this value will be dropped (default 1)
 #' @param show_bottom_annotation_name set to TRUE to label the bottom annotation tracks with more details
