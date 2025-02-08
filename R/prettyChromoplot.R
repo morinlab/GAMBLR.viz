@@ -20,7 +20,7 @@
 #'
 #' @return plot
 #'
-#' @import dplyr ggplot2 ggrepel readr
+#' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers
 #' @export
 #'
 #' @examples
