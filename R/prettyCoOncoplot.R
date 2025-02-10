@@ -110,15 +110,20 @@ prettyCoOncoplot = function(maf,
     oncoplot_args = oncoplot_args[names(oncoplot_args) %in% intersect(names(oncoplot_args),
                                                                       formalArgs(prettyOncoplot))]
     # Build oncoplot No1
-    op1 = do.call(prettyOncoplot, c(
-      list(
-        maf_df = ssm1,
-        these_samples_metadata = meta1
-      ),
-      oncoplot_args
-    ))
-    # convert it to ggplot object
-    op1 = grid.grabExpr(draw(op1), width = 10, height = 17)
+    op1 = grid.grabExpr(
+        do.call(
+            prettyOncoplot,
+            c(
+                list(
+                    maf_df = ssm1,
+                    these_samples_metadata = meta1
+                ),
+                oncoplot_args
+            )
+        ),
+        width = 10,
+        height = 17
+    )
     # if user provided annotation label, place it as a name for oncoplot No1
     if (!missing(label1)) {
       op1 = annotate_figure(op1,
@@ -127,15 +132,20 @@ prettyCoOncoplot = function(maf,
                                             size = 20))
     }
     # Build oncoplot No2
-    op2 = do.call(prettyOncoplot, c(
-      list(
-        maf_df = ssm2,
-        these_samples_metadata = meta2
-      ),
-      oncoplot_args
-    ))
-    # convert it to ggplot object
-    op2 = grid.grabExpr(draw(op2), width = 10, height = 17)
+    op2 = grid.grabExpr(
+        do.call(
+            prettyOncoplot,
+            c(
+                list(
+                    maf_df = ssm2,
+                    these_samples_metadata = meta2
+                ),
+                oncoplot_args
+            )
+        ),
+        width = 10,
+        height = 17
+    )
     # if user provided annotation label, place it as a name for oncoplot No2
     if (!missing(label2)) {
       op2 = annotate_figure(op2,
