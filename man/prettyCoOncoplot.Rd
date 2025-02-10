@@ -49,33 +49,35 @@ are expected to be out-of-the-box compatible with this function nd would not nee
 \examples{
 \dontrun{
 #get data for plotting
-meta = GAMBLR.data::get_gambl_metadata()
-meta = dplyr::filter(meta, cohort \%in\% c("BL_Adult", "BL_Pediatric"))
-ssm = GAMBLR.data::get_coding_ssm(
-    these_samples_metadata = meta,
-    projection = "hg38"
+meta <- get_gambl_metadata()
+meta <- meta \%>\%
+    dplyr::filter(
+        cohort \%in\% c("FL_Dreval"),
+        pathology \%in\% c("DLBCL", "FL")
+    )
+ssm <- get_coding_ssm(
+    these_samples_metadata = meta
 )
 
 #build plot
-prettyCoOncoplot(maf = ssm,
-                 metadata = meta,
-                 comparison_column = "cohort",
-                 genes = c("MYC",
-                           "TET2",
-                           "TP53",
-                           "DDX3X",
-                           "ID3"),
-                 metadataColumns = c("pathology",
-                                     "EBV_status_inf",
-                                     "pairing_status",
-                                     "cohort"),
-                 splitColumnName = "EBV_status_inf",
-                 metadataBarHeight = 10,
-                 fontSizeGene = 12,
-                 metadataBarFontsize = 10,
-                 legend_row = 2,
-                 label1 = "Adult",
-                 label2 = "Pediatric")
+prettyCoOncoplot(
+    maf = ssm,
+    metadata = meta,
+    comparison_column = "pathology",
+    genes = c("EZH2", "CREBBP", "BCL2", "KMT2D", "RRAGC"),
+    metadataColumns = c(
+        "pathology",
+        "lymphgen",
+        "pairing_status"
+    ),
+    splitColumnName = "lymphgen",
+    metadataBarHeight = 10,
+    fontSizeGene = 12,
+    metadataBarFontsize = 10,
+    legend_row = 2,
+    label1 = "FL",
+    label2 = "DLBCL"
+)
 }
 
 }
