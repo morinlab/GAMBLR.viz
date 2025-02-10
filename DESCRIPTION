@@ -20,6 +20,7 @@ Imports:
     ggplot2,
     ggpubr,
     ggrepel,
+    parallel,
     purrr,
     RColorBrewer,
     readr,

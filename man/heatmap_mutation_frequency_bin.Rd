@@ -12,7 +12,7 @@ heatmap_mutation_frequency_bin(
   this_seq_type = c("genome", "capture"),
   maf_data,
   mut_freq_matrix,
-  projection = "grch37",
+  projection,
   region_padding = 1000,
   drop_unmutated = FALSE,
   metadataColumns = c("pathology"),

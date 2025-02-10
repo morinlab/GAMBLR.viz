@@ -23,6 +23,7 @@
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
 #' @param bin_label_fontsize Font size for the gene labels (default 5)
 #' @param bin_label_nudge Increase or decrease this value to shift the gene labels up/down (default 1.03)
+#' @param bin_label_rotation Rotate the direction of the bin label. Default is 45.
 #' @param drop_if_PGA_below Lower limit for proportion of genome altered (PGA). Samples below this value will be dropped (default 0)
 #' @param drop_if_PGA_above Upper limit for proportion of genome altered (PGA). Samples above this value will be dropped (default 1)
 #' @param show_bottom_annotation_name set to TRUE to label the bottom annotation tracks with more details
@@ -41,6 +42,7 @@
 #' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
 #' @return list (when return_data = TRUE)
+#' @import GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -153,11 +155,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     cn_state_matrix[,other_bins] = 2
   }
   map_bin_to_bin = function(query_region,regions=colnames(cn_state_matrix),first=TRUE){
-    these_coords = suppressMessages(GAMBLR.data::region_to_chunks(query_region))
+    these_coords = suppressMessages(region_to_chunks(query_region))
     these_coords$chromosome = str_remove(these_coords$chromosome,"chr")
     all_matches = c()
     for(r in regions){
-      region_coords = GAMBLR.data::region_to_chunks(r)
+      region_coords = region_to_chunks(r)
       region_coords$chromosome = str_remove(region_coords$chromosome,"chr")
       if(these_coords$chromosome == region_coords$chromosome){
         if(((as.integer(these_coords$start) > as.integer(region_coords$start)) &
@@ -573,7 +575,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     for(i in c(1:length(bin_labels))){
         gene_region = names(bin_labels)[i]
         gene_name = unname(bin_labels[[i]])
-        gene_region_chunks = GAMBLR.data::region_to_chunks(gene_region)
+        gene_region_chunks = region_to_chunks(gene_region)
       if(gene_region_chunks$chromosome %in% column_chromosome){
           decorate_heatmap_body("CN",
                               {i=which(colnames(cn_state_matrix)==gene_region)
