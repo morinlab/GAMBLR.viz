@@ -1,28 +1,8 @@
 
-
-require(ggseqlogo)
-require(GAMBLR)
-require(cowplot)
-require(Rsamtools)
-
-#gene_hotspot_logo(maf_df=all_coding,annotate_motif=T)
-#gene_hotspot_logo(maf_df=all_coding,gene_symbol = "EZH2",hotspot_position = 148508728)
-# gene_hotspot_logo(maf_df=all_coding,gene_symbol = "CCND3",hotspot_position = 41903694)
-#gene_hotspot_logo(maf_df=all_coding,gene_symbol = "ID3",hotspot_position = 23885649,include_AA = T,pad_length = 44,annotate_motif=T)
-# gene_hotspot_logo(maf_df=all_coding,gene_symbol = "HNRNPU",hotspot_position = 245027101,include_AA = T,pad_length = 28,annotate_motif=T)
-# annotate_ssm_motif_context(all_HU,fastaPath = "~/Downloads/genome.fa")
-
-all_coding = get_coding_ssm(these_samples_metadata = get_gambl_metadata() %>% filter(seq_type=="genome"))
-
-gene_hotspot_logo(maf_df=all_coding,gene_symbol = "ID3",hotspot_position = 23885649,
-                  include_AA = T,pad_length = 44,annotate_motif=T)
-
-
-
-
-
-
-#' Visualize mutation density and context as a sequence logo
+#' @title Represent mutation hot spots as a sequence logo
+#'
+#' @description Generates a summary of the frequency of SSMs in a small
+#' region around a mutation hot spot using a "sequence logo"-style stacked plot
 #'
 #' @param maf_df 
 #' @param gene_symbol 
@@ -37,29 +17,30 @@ gene_hotspot_logo(maf_df=all_coding,gene_symbol = "ID3",hotspot_position = 23885
 #' @param return_data 
 #' @param base_size 
 #' @param aa_size 
-#'
-#' @returns
+#' @import ggseqlogo Rsamtools cowplot GenomicRanges IRanges
+#' @returns a named list containing a ggplot object and various processed data
 #' @export
 #'
 #' @examples
-#' 
-#' all_region = get_ssm_by_regions(regions_list = "chr2:136,875,000-136,875,097",
+#' meta = get_gambl_metadata() %>% dplyr::filter(seq_type=="genome")
+#' muts = get_ssm_by_regions(regions_list = "2:136875000-136875097",
 #'                                 streamlined = F,
-#'                                 these_samples_metadata = get_gambl_metadata() %>% 
-#'                                     dplyr::filter(seq_type=="genome"))
+#'                                 these_samples_metadata = meta
+#'                                     )
 #'                                     
 #'                                     
-#' gene_hotspot_logo(maf_df=all_region,
+#' gene_hotspot_logo(maf_df=muts,
 #'                       gene_symbol = "CXCR4",
 #'                       hotspot_position=136875037,
 #'                       include_AA = T,
 #'                       pad_length = 51,
 #'                       annotate_motif=T,
-#'                       base_size = 4
+#'                       base_size = 4)
 
 gene_hotspot_logo = function(maf_df,
                              gene_symbol="MYC",
                              hotspot_position=128750677,
+                             genome_build = "grch37",
                              pad_length=20,
                              fasta_path="~/Downloads/genome.fa",
                              include_reference = TRUE,
@@ -80,6 +61,7 @@ gene_hotspot_logo = function(maf_df,
   chrom = pull(mut_noindel,Chromosome)[1]
   start = hotspot_position - pad_length
   end = hotspot_position + pad_length
+  print(paste(chrom,start,end))
   some_mutations = filter(mut_noindel,Start_Position<=end, Start_Position >= start) %>%
     mutate(rel_start = Start_Position - start+1)
   context = as.character(Rsamtools::getSeq(fasta,GenomicRanges::GRanges(chrom,IRanges(start = start,end = end)))) %>% unname()
@@ -89,45 +71,47 @@ gene_hotspot_logo = function(maf_df,
   if(annotate_only){
     return(list(annotated=some_mutations,region=context))
   }
-  mod_string = function(original,index,newbase){
-    masked_string = paste0(rep("N",str_length(original)),collapse="")
-    str_sub(masked_string,index,index)<-newbase
+
+  mod_string <- function(original, index, newbase) {
+    # Create a string of N's with the same length as original
+    masked_string <- paste(rep("N", nchar(original)), collapse = "")
+    # Replace the character at the specified index with newbase
+    substr(masked_string, index, index) <- newbase
     return(masked_string)
   }
-  
-  
   count_bases = function(original,index,newbase,base_counts,exclude_unmutated=T){
     all_bases = unlist(strsplit(original,""))
-
-    
-    for( i in c(1:length(all_bases))){
-      
+    for (i in c(1:length(all_bases))) {
       if(i == index){
         base = newbase
-        
         base_counts[base,i] = base_counts[base,i] + 1
-      }else{
-        if(!exclude_unmutated){
+      }else {
+        if (!exclude_unmutated) {
           base = all_bases[i]
-         
           base_counts[base,i] = base_counts[base,i] + 1
         }
-        
       }
-      
     }
     return(base_counts)
   }
   
   
-  some_mutations = mutate(some_mutations,
-                          unmut = context,
-                          mut = mod_string(context,rel_start,Tumor_Seq_Allele2)) %>%
-   mutate(AA = str_remove(HGVSp_Short,"p\\.")) %>%
-    mutate(To_AA = str_extract(AA,"\\w$")) %>%
-    mutate(AA=str_replace(AA,"(\\d+).+","\\1"))
-  
-  base_counts = matrix(nrow=4,ncol=str_length(context))
+  #some_mutations = mutate(some_mutations,
+  #                        unmut = context,
+  #                        mut = mod_string(context,rel_start,Tumor_Seq_Allele2)) %>%
+  # mutate(AA = str_remove(HGVSp_Short,"p\\.")) %>%
+  #  mutate(To_AA = str_extract(AA,"\\w$")) %>%
+  #  mutate(AA=str_replace(AA,"(\\d+).+","\\1"))
+  some_mutations <- some_mutations %>%
+  mutate(
+    unmut = context,
+    mut = mod_string(context, rel_start, Tumor_Seq_Allele2),
+    AA = gsub("p\\.", "", HGVSp_Short),
+    To_AA = sub(".*(\\w)$", "\\1", AA),
+    AA = sub("(\\d+).+", "\\1", AA)
+  )
+
+  base_counts = matrix(nrow=4,ncol=nchar(context))
   rownames(base_counts)=c("A","T","G","C")
   base_counts[] =0
   for(i in c(1:nrow(some_mutations))){
@@ -140,12 +124,12 @@ gene_hotspot_logo = function(maf_df,
 
   region_name = paste0(hotspot_position - pad_length,"-",hotspot_position + pad_length)
   
-  p1 = ggseqlogo(base_counts, method='custom', seq_type='dna') + 
+  p1 = ggseqlogo::ggseqlogo(base_counts, method='custom', seq_type='dna') + 
     theme(axis.text.x = element_blank()) + ggtitle(paste(gene_symbol,region_name)) 
   if(include_reference){
     if(annotate_motif){
       aln_df = dplyr::select(some_mutations,rel_start,Reference_Allele,WRCY)
-      all_pos = data.frame(rel_start = c(1:str_length(context)))
+      all_pos = data.frame(rel_start = c(1:nchar(context)))
       all_pos$Reference_Allele = unlist(strsplit(context,""))
       aln_df = left_join(all_pos,aln_df) %>% unique()
       
@@ -153,7 +137,7 @@ gene_hotspot_logo = function(maf_df,
       print(aln_df)
       p2 = ggplot(aln_df, aes(rel_start,1)) +
         geom_text(aes(label=Reference_Allele, color=WRCY),size=base_size) + 
-        scale_x_continuous(breaks=1:str_length(context), expand = c(0.065, 0)) + xlab('') + 
+        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
         scale_color_manual(values=c('black', 'orange','red','grey')) + 
         theme_logo() + 
         #theme(legend.position = "none") + 
@@ -165,7 +149,7 @@ gene_hotspot_logo = function(maf_df,
     }else{
       aln = data.frame(
         letter=strsplit(context, "")[[1]], 
-        x=rep(1:str_length(context))
+        x=rep(1:nchar(context))
       )
       pos = some_mutations$rel_start
       aln$mut = 'no'
@@ -173,7 +157,7 @@ gene_hotspot_logo = function(maf_df,
       
       p2 = ggplot(aln, aes(x,1)) +
         geom_text(aes(label=letter, color=mut),size=base_size) + 
-        scale_x_continuous(breaks=1:str_length(context), expand = c(0.065, 0)) + xlab('') + 
+        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
         scale_color_manual(values=c('black', 'red')) + 
         theme_logo() + 
         #theme(legend.position = "none") + 
@@ -191,14 +175,14 @@ gene_hotspot_logo = function(maf_df,
       }
       
       dummy1 = data.frame(AA="",rel_start=1)
-      dummy2 = data.frame(AA="",rel_start=str_length(context))
+      dummy2 = data.frame(AA="",rel_start=nchar(context))
       aa_df = bind_rows(dummy1,aa_df,dummy2)
       print(aa_df)
       check = dplyr::select(some_mutations,AA,rel_start,HGVSp_Short)
 
       pAA = ggplot(aa_df, aes(rel_start,1)) +
         geom_text(aes(label=AA),size=aa_size,angle = 90) + 
-        scale_x_continuous(breaks=1:str_length(context), expand = c(0.065, 0)) + xlab('') + 
+        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
         scale_color_manual(values=c('black', 'red')) + 
         
         theme_logo() + theme(legend.position = "none") + 
@@ -209,10 +193,10 @@ gene_hotspot_logo = function(maf_df,
         ) +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) 
       #pAA
-      pp = plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(7,2,2))
+      pp = cowplot::plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(7,2,2))
       print(pp)
     }else{
-      pp = plot_grid(p1,p2,ncol=1,align="v",rel_heights = c(7,2))
+      pp = cowplot::plot_grid(p1,p2,ncol=1,align="v",rel_heights = c(7,2))
       print(pp)
     }
     
