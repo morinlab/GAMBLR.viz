@@ -156,11 +156,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   map_bin_to_bin = function(query_region,regions=colnames(cn_state_matrix),first=TRUE){
     these_coords = suppressMessages(region_to_chunks(query_region))
-    these_coords$chromosome = str_remove(these_coords$chromosome,"chr")
+    these_coords$chromosome = gsub("chr", "", these_coords$chromosome)
     all_matches = c()
     for(r in regions){
       region_coords = region_to_chunks(r)
-      region_coords$chromosome = str_remove(region_coords$chromosome,"chr")
+      region_coords$chromosome = gsub("chr", "", region_coords$chromosome)
       if(these_coords$chromosome == region_coords$chromosome){
         if(((as.integer(these_coords$start) > as.integer(region_coords$start)) &
            (as.integer(these_coords$start) < as.integer(region_coords$end))) ||
@@ -204,22 +204,23 @@ pretty_CN_heatmap = function(cn_state_matrix,
         if(g == geneBoxPlot){
           splitByBinState = this_gene_region
           if(missing(keep_these_chromosomes)){
-            keep_these_chromosomes = str_remove(this_gene_region,":.+")
+            keep_these_chromosomes = gsub(":.+","",this_gene_region)
           }
         }
       }
       #print(paste(g,gene_region))
-      if(is.na(this_gene_region)){
+      if (is.na(this_gene_region)){
         message(paste("no region for",g))
         next
       }
-      if(this_gene_region %in% names(bin_labels)){
-        message(paste("Gene",g, "and gene",bin_labels[[this_gene_region]], "share a region. I will only show the last one!"))
+      if (this_gene_region %in% names(bin_labels)){
+        message(paste("Gene", g, "and gene", bin_labels[[this_gene_region]],
+        "share a region. I will only show the last one!"))
       }
       bin_labels[[this_gene_region]]=g
     }
-  }else{
-    if(!missing(geneBoxPlot)){
+  }else {
+    if (!missing(geneBoxPlot)){
       gene_region = suppressMessages(gene_to_region(g))
       this_gene_region = map_bin_to_bin(gene_region)
 
@@ -235,7 +236,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }
       bin_labels[[this_gene_region]]=g
       if(missing(keep_these_chromosomes)){
-        keep_these_chromosomes = str_remove(this_gene_region,":.+")
+        keep_these_chromosomes = gsub(":.+","",this_gene_region)
       }
     }
   }
@@ -291,7 +292,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                 "chrY"="white")
 
   #assume format is chrX:XXX-XXX
-  column_chromosome = str_remove(colnames(cn_state_matrix),":.+")
+  column_chromosome = gsub(":.+", "", colnames(cn_state_matrix))
 
 
   if(!missing(hide_these_chromosomes)){
@@ -302,7 +303,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   if(!grepl("chr",column_chromosome[1])){
     #remove chr prefix from colours
-    names(chrom_col) = str_remove(names(chrom_col),"chr")
+    names(chrom_col) = gsub("chr", "", names(chrom_col))
   }
 
   splits = NULL
@@ -383,7 +384,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       available_bins = keep_these_bins[which(keep_these_bins %in% colnames(cn_state_matrix))]
       cn_state_matrix = cn_state_matrix[,available_bins]
 
-      column_chromosome = str_remove(colnames(cn_state_matrix),":.+")
+      column_chromosome = gsub(":.+", "", colnames(cn_state_matrix))
       total_gain = total_gain[available_bins]
       total_loss = total_loss[available_bins]
     }

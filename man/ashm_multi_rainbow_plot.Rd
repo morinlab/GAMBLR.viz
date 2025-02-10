@@ -6,10 +6,8 @@
 \usage{
 ashm_multi_rainbow_plot(
   regions_bed,
-  regions_to_display,
-  exclude_classifications,
-  metadata,
-  this_seq_type,
+  these_samples_metadata,
+  this_seq_type = "genome",
   custom_colours,
   classification_column = "lymphgen",
   maf_data,
@@ -20,11 +18,7 @@ ashm_multi_rainbow_plot(
 \arguments{
 \item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.}
 
-\item{regions_to_display}{Optional vector of names from default regions_bed to use.}
-
-\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadata file.}
-
-\item{metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
+\item{these_samples_metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
 \item{this_seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
 
@@ -53,10 +47,21 @@ In addition the user can also use the `metadata` parameter to use an already sub
 This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
-library(GAMBLR.data)
+library(GAMBLR.open)
 
 #get lymphgen colours
-lymphgen_colours = GAMBLR.helpers::get_gambl_colours(classification = "lymphgen")
+lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
+
+mm=these_samples_metadata = get_gambl_metadata() \%>\% 
+          dplyr::filter(pathology=="DLBCL",
+                 seq_type=="genome",
+                 cohort=="FL_Dreval") \%>\% 
+          dplyr::arrange(lymphgen)
+regions_bed = create_bed_data(grch37_ashm_regions,
+                              fix_names = "concat",
+                              concat_cols = c("gene","region"))
+regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
+ashm_multi_rainbow_plot(regions_bed,mm,custom_colours = lymphgen_colours)
 
 #build plot
 \dontrun{
