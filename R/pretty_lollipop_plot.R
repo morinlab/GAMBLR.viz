@@ -13,23 +13,36 @@
 #' 
 #' @return A lollipop plot.
 #'
-#' @import dplyr ggplot2
+#' @import dplyr ggplot2 GAMBLR.data
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
-#' 
+#' library(GAMBLR.open)
+
 #' #get meta data (BL_Thomas)
 #' metadata <- get_gambl_metadata() %>%
-#'     filter(cohort == "BL_Thomas")
+#'     dplyr::filter(cohort == "BL_Thomas")
 #' 
-#' maf_df <- get_ssm_by_samples(
+#' maf_df <- get_coding_ssm(
 #'     these_samples_metadata = metadata
 #' )
 #'
 #' #construct pretty_lollipop_plot.
-#' lolipop_result <- pretty_lollipop_plot(maf_df, "MYC")
-#'
+#' lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+#' print(lolipop_result)
+#' 
+#' \dontrun{
+#'  # Or, with GAMBLR.results:
+#'  library(GAMBLR.results)
+#'  metadata <- get_gambl_metadata() %>%
+#'     dplyr::filter(pathology == "BL")
+#' 
+#' maf_df <- get_all_coding_ssm(
+#'     these_samples_metadata = metadata
+#' )
+#' lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+#' lolipop_result
+#'}
 pretty_lollipop_plot <- function(
     maf_df, 
     gene = NULL,

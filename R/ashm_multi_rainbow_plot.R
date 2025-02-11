@@ -10,9 +10,7 @@
 #' This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.
-#' @param regions_to_display Optional vector of names from default regions_bed to use.
-#' @param exclude_classifications Optional argument for excluding specific classifications from a metadata file.
-#' @param metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
+#' @param these_samples_metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
 #' @param this_seq_type the seqtype you want results back for if `maf_data` is not provided.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
 #' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
@@ -26,11 +24,22 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' library(GAMBLR.open)
 #' 
 #' #get lymphgen colours
-#' lymphgen_colours = GAMBLR.helpers::get_gambl_colours(classification = "lymphgen")
-#'
+#' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
+#' 
+#' mm=these_samples_metadata = get_gambl_metadata() %>% 
+#'           dplyr::filter(pathology=="DLBCL",
+#'                  seq_type=="genome",
+#'                  cohort=="FL_Dreval") %>% 
+#'           dplyr::arrange(lymphgen)
+#' regions_bed = create_bed_data(grch37_ashm_regions,
+#'                               fix_names = "concat",
+#'                               concat_cols = c("gene","region"))
+#' regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
+#' ashm_multi_rainbow_plot(regions_bed,mm,custom_colours = lymphgen_colours)
+#' 
 #' #build plot
 #' \dontrun{
 #' ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
@@ -42,143 +51,140 @@
 #' }
 #'
 ashm_multi_rainbow_plot = function(regions_bed,
-                                   regions_to_display,
-                                   exclude_classifications,
-                                   metadata,
-                                   this_seq_type,
+                                   these_samples_metadata,
+                                   this_seq_type="genome",
                                    custom_colours,
                                    classification_column = "lymphgen",
                                    maf_data,
                                    projection = "grch37",
                                    verbose = TRUE) {
   
-  #get the mutations for each region and combine
-  #regions_bed should contain chr, start, end, name (with these exact names)
-  if("maf_data" %in% class(maf_df)){
-        #drop our S3 classes because these additional attributes seem to cause some problems when the data is subsequently munged.
-        maf_df = strip_genomic_classes(maf_df)
-  }
-  if(missing(metadata)){
-    metadata = get_gambl_metadata(seq_type_filter = this_seq_type)
-    meta_arranged = arrange(metadata, pathology_rank, lymphgen)
+
+  if(missing(these_samples_metadata)){
+    metadata = get_gambl_metadata() %>% dplyr::filter(seq_type %in% this_seq_type)
+    meta_arranged = arrange(metadata, pathology, lymphgen)
   }else{
+    metadata = these_samples_metadata  %>% dplyr::filter(seq_type %in% this_seq_type)
     meta_arranged = metadata #assume the user already arranged it the way they wanted
   }
-  
-  if(!missing(exclude_classifications)){
-    meta_arranged = dplyr::filter(meta_arranged, !get(classification_column) %in% exclude_classifications)
-  }
+
   
   if(!missing(regions_bed)) {
-    regions_bed = mutate(regions_bed, regions = paste0(chr, ":", start, "-", end))
-    regions_bed = mutate(regions_bed, name = name)
-    names = pull(regions_bed, name)
-    regions = pull(regions_bed, regions)
-    regions_bed = data.frame(regions = regions, names = names)
-  } else if (projection == "grch37") {
-      regions_bed = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest
-      regions_bed = mutate(regions_bed, regions = paste0(chr_name, ":", hg19_start, "-", hg19_end))
-      regions_bed = mutate(regions_bed, name = paste0(gene, "-", region))
-      names = pull(regions_bed, name)
-      names = c(names, "NFKBIZ-UTR", "MAF", "PAX5", "WHSC1", "CCND1",
-                "FOXP1-TSS1", "FOXP1-TSS2", "FOXP1-TSS3", "FOXP1-TSS4",
-                "FOXP1-TSS5", "BCL6", "IGH", "IGL", "IGK", "PVT1", "BCL2") #add some additional regions of interest
-      regions = pull(regions_bed, regions)
-      regions = c(regions,"chr3:101578214-101578365", "chr16:79627745-79634622", "chr9:36898851-37448583", "chr4:1867076-1977887", "chr11:69451233-69460334", "chr3:71623481-71641671",
-                  "chr3:71532613-71559445", "chr3:71343345-71363145", "chr3:71167050-71193679", "chr3:71105715-71118362", "chr3:187406804-188522799","chr14:106144562-106344765",
-                  "chr22:23217074-23250428","chr2:89073691-89320640", "chr8:128774985-128876311","chr18:60982124-60990180")
-      regions_bed = data.frame(regions = regions, names = names)
+    print("regions_bed provided")
+    if(nrow(regions_bed)>10){
+      stop("reduce the regions to display to at most 10")
+    }
+  } else {
+    if (projection == "grch37") {
+      regions_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+       fix_names="concat",
+       concat_cols=c("gene","region"),
+       sep="-"
+      )
     } else if (projection == "hg38") {
-      regions_bed = GAMBLR.data::somatic_hypermutation_locations_GRCh38_v_latest
-      regions_bed = mutate(regions_bed, regions = paste0(chr_name, ":", hg38_start, "-", hg38_end))
-      regions_bed = mutate(regions_bed, name = paste0(gene, "-", region))
-      names = pull(regions_bed, name)
-      regions = pull(regions_bed, regions)
-      regions_bed = data.frame(regions = regions, names = names)
+      regions_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+       fix_names="concat",
+       concat_cols=c("gene","region"),
+       sep="-"
+      )
     } else {
       stop(
         "Please specify one of grch37 or hg38 projections"
       )
     }
-
-
-  
+  }
   if(verbose){
     print(regions_bed)
   }
+
   
-  regions_bed = dplyr::filter(regions_bed, names %in% regions_to_display)
   
   if(nrow(regions_bed) == 0){
     stop("Region to display doesn't have coordinates in supplied bed or GAMBLR.data::somatic_hypermutation_locations_{genome_build}_v_latest."
     )
   }
-  
-  regions = pull(regions_bed, regions)
-  names = pull(regions_bed, names)
+  regions_bed = mutate.genomic_data(regions_bed,region_name=paste0(chrom,":",start,"-",end))
+  regions = pull(regions_bed, region_name)
+  names = pull(regions_bed, name)
   
   
   if(missing(maf_data)){
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, this_seq_type = this_seq_type, projection = projection)})
+    print("get_ssm_by_regions")
+    region_mafs = get_ssm_by_regions(
+      regions_bed=regions_bed,
+      these_samples_metadata = metadata,
+      projection = projection,
+      use_name_column = T
+    ) 
+    #%>% strip_genomic_classes() 
   }else{
-    region_mafs = lapply(regions, function(x){get_ssm_by_region(region = x, streamlined = TRUE, maf_data = maf_data, projection = projection)})
+    region_mafs = get_ssm_by_regions(maf_data=maf_data,
+      regions_bed=regions_bed,
+      these_samples_metadata = metadata,
+      projection = projection,
+      use_name_column = T,
+      this_seq_type = this_seq_type
+    ) %>% strip_genomic_classes()
   }
-  
-  tibbled_data = tibble(region_mafs, region_name = names)
-  unnested_df = tibbled_data %>%
-    unnest_longer(region_mafs)
-  
-  if(!missing(metadata)){
-    samples = pull(metadata, sample_id)
-    unnested_df = unnested_df[which(unnested_df$region_mafs$Tumor_Sample_Barcode %in% samples),]
-  }
-  
-  if(nrow(unnested_df) == 0){
+
+  print(head(region_mafs))
+  #check for regions not in names
+  outside = dplyr::filter(region_mafs,!region_name %in% names)
+
+
+  if(nrow(region_mafs) == 0){
     stop(
       "There are no mutations in the region/sample combination provided."
     )
   }
   
-  unlisted_df = mutate(unnested_df, start = region_mafs$Start_Position, sample_id = region_mafs$Tumor_Sample_Barcode) %>%
-    dplyr::select(start,sample_id, region_name)
   
   meta_arranged = meta_arranged %>% mutate_if(is.factor, as.character)
   meta_arranged = meta_arranged %>% mutate(classification = factor(!!sym(classification_column)))
+  print(head(meta_arranged))
   
-  
-  muts_anno = left_join(unlisted_df, meta_arranged)
+  muts_anno = dplyr::left_join(region_mafs, meta_arranged)
   muts_first = dplyr::select(muts_anno, start, region_name) %>%
     group_by(region_name) %>%
     arrange(start) %>%
     dplyr::filter(row_number() == 1)
-  
+  print(head(muts_first))
   eg = expand_grid(start = pull(muts_first, start), sample_id = pull(meta_arranged, sample_id))
   eg = left_join(eg, muts_first)
   
   #concatenate expanded frame of points with original mutation data
-  real_and_fake = bind_rows(unlisted_df, eg)
+  real_and_fake = bind_rows(region_mafs, eg)
   muts_anno = left_join(real_and_fake, meta_arranged)
-  
+  if(any(duplicated(meta_arranged$sample_id))){
+    group_by(meta_arranged, sample_id) %>%
+      filter(n() > 1) %>%
+      print()
+    stop("There are duplicated sample ids in the metadata file. Please ensure that each sample id is unique.")
+  }
+  print(head(muts_anno))
   muts_anno$sample_id = factor(muts_anno$sample_id, levels = meta_arranged$sample_id)
   
-  if(!missing(regions_to_display)){
-    muts_anno = dplyr::filter(muts_anno, region_name %in% regions_to_display)
-  }
+  #return(muts_anno)
   #make the plot
   p = muts_anno %>%
     ggplot() +
-    geom_point(aes(x = start, y = sample_id, colour = classification), alpha = 0.4, size = 0.6) +
+    geom_point(aes(x = start,
+                   y = sample_id, 
+                   colour = classification), alpha = 0.4, size = 0.6) +
     labs(title = "", subtitle = "", x = "", y = "Sample") +
     GAMBLR.helpers::theme_Morons() +
-    theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = ggplot2::margin(1,1,1,1, "cm"), title = element_blank(), plot.subtitle = element_blank(), axis.title.x = element_blank()) +
+    theme(axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          plot.margin = ggplot2::margin(1,1,1,1, "cm"),
+          title = element_blank(),
+          plot.subtitle = element_blank(),
+          axis.title.x = element_blank()) +
     facet_wrap(~region_name, scales = "free_x") +
     guides(color = guide_legend(reverse = TRUE,
                                 override.aes = list(size = 3),
                                 title={{ classification_column }}))
   
   if(! missing(custom_colours)){
-    # ensure only relevant color keys are present
-    custom_colours = custom_colours[intersect(names(custom_colours), pull(meta_arranged[,classification_column]))]
     p = p +
       scale_colour_manual(values = custom_colours)
   }
