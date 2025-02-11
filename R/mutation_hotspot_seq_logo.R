@@ -17,7 +17,9 @@
 #' @param return_data 
 #' @param base_size 
 #' @param aa_size 
-#' @import ggseqlogo Rsamtools cowplot GenomicRanges IRanges
+#' @rawNamespace import(IRanges, except = c("collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
+#' @rawNamespace import(GenomicRanges, except = c("union", "intersect", "setdiff", "reduce"))
+#' @import ggseqlogo Rsamtools cowplot
 #' @returns a named list containing a ggplot object and various processed data
 #' @export
 #'
