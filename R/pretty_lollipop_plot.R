@@ -20,7 +20,7 @@
 #' library(GAMBLR.data)
 #' 
 #' #get meta data (BL_Thomas)
-#' metadata <- get_gambl_metadata() %>%
+#' metadata <- suppressMessages(get_gambl_metadata()) %>%
 #'     filter(cohort == "BL_Thomas")
 #' 
 #' maf_df <- get_ssm_by_samples(

@@ -14,7 +14,7 @@
 #' library(GAMBLR.data)
 #' 
 #' #get metadata
-#' all_meta = get_gambl_metadata()
+#' all_meta = suppressMessages(get_gambl_metadata())
 #'
 #' #get colours
 #' all_cols = map_metadata_to_colours(
