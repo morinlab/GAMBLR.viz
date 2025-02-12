@@ -14,6 +14,7 @@
 #' 
 #'
 #' @return Nothing
+#' @import GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -115,8 +116,8 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
           }
           region1 = names(pretty_CN_heatmap_output$cumulative_gain)[i]
           region2 = names(pretty_CN_heatmap_output$cumulative_gain)[j]
-          chunks1 = GAMBLR.data::region_to_chunks(region1)
-          chunks2 = GAMBLR.data::region_to_chunks(region2)
+          chunks1 = region_to_chunks(region1)
+          chunks2 = region_to_chunks(region2)
           if(chunks1$chromosome == chunks2$chromosome){
             print(paste("skipping",region1,region2,correlations[i,j]))
             next;
@@ -180,7 +181,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
   label_end = c()
   label_text = c()
   for(i in c(1:length(bins_to_label))){
-    chunks = GAMBLR.data::region_to_chunks(bins_to_label[i])
+    chunks = region_to_chunks(bins_to_label[i])
     
     if(!bins_to_label[i] %in% bin_names){
       message(paste("NOT FOUND:",bins_to_label[i],labels[i]))
