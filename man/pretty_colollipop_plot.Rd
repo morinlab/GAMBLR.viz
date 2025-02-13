@@ -50,12 +50,12 @@ can then be visualized with the given maf data files, and comparison commands. S
 visualized setting include_silent to TRUE.
 }
 \examples{
-library(GAMBLR.data)
+library(GAMBLR.open)
 
 #get meta data (DLBCL_Hilton)
-meta = GAMBLR.data::get_gambl_metadata()
+meta = GAMBLR.open::get_gambl_metadata()
 metadata = dplyr::filter(meta, cohort \%in\% "DLBCL_Hilton")
-maf_df = GAMBLR.data::get_coding_ssm(
+maf_df = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = metadata
 )
 pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
@@ -64,5 +64,4 @@ pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
                                                         comparison_values = c("M", "F"),
                                                         gene = "IGLL5",
                                                         label_threshold = 2)
-
 }
