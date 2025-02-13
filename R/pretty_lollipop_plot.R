@@ -22,7 +22,7 @@
 #' 
 #' @return A lollipop plot.
 #'
-#' @import dplyr ggplot2 
+#' @import dplyr ggplot2 GAMBLR.data
 #' @export
 #'
 #' @examples
