@@ -20,8 +20,8 @@
 #' library(GAMBLR.open)
 
 #' #get meta data (BL_Thomas)
-#' metadata <- get_gambl_metadata() %>%
-#'     dplyr::filter(cohort == "BL_Thomas")
+#' metadata <- suppressMessages(get_gambl_metadata()) %>%
+#'     filter(cohort == "BL_Thomas")
 #' 
 #' maf_df <- get_coding_ssm(
 #'     these_samples_metadata = metadata
