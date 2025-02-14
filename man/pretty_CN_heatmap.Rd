@@ -132,7 +132,7 @@ Pretty Copy Number Heatmap
 
 
 #get some metadata for subsetting the data to just one pathology (DLBCL)
-dlbcl_genome_meta = get_gambl_metadata() \%>\%
+dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) \%>\%
                     filter(pathology=="DLBCL",
                     seq_type=="genome")
 
@@ -159,27 +159,28 @@ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
   cluster_rows=F,
   labelTheseGenes = c("CDKN2A","TP53"))
 
+\dontrun{
+ # get gene expression data
+ gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
 
-# get gene expression data
-gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
-
-genome_meta_exp = left_join(get_gambl_metadata() \%>\%
+ genome_meta_exp = left_join(get_gambl_metadata() \%>\%
     filter(seq_type=="genome") \%>\%
     select(sample_id,pathology,lymphgen),
     select(gene_exp_all,-sample_id),
     by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
-
+}
 # Include gene expression data and embed a box plot showing the expression of one gene across different CN states
 
-
-pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-  these_samples_metadata = filter(genome_meta_exp,pathology=="DLBCL"),
-  hide_annotations = "chromosomes",
-  cluster_rows=F,
-  geneBoxPlot = "TP53",
-  boxplot_orientation="horizontal",bin_label_fontsize = 9,bin_label_nudge = 19
-)
+\dontrun{
+ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+   these_samples_metadata = filter(genome_meta_exp,pathology=="DLBCL"),
+   hide_annotations = "chromosomes",
+   cluster_rows=F,
+   geneBoxPlot = "TP53",
+   boxplot_orientation="horizontal",bin_label_fontsize = 9,bin_label_nudge = 19
+ )
+}
 
 
 }

@@ -67,6 +67,9 @@ plot_sample_circos = function(this_sample_id,
   add_cnv = function(cnv_df){
     bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
     colnames(bed) = c("chr", "start", "end", "value1")
+    if(!any(grepl("chr",bed$chr))){
+      bed = mutate(bed,chr = paste0("chr",chr))
+    }
     col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
     circos.genomicTrackPlotRegion(bed, stack = TRUE, panel.fun = function(region, value, ...) {
       circos.genomicRect(region, value, col = col_fun(value), border = NA, posTransform = NULL, ...)
