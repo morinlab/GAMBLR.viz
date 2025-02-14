@@ -42,43 +42,49 @@
 #' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
 #' @return list (when return_data = TRUE)
-#' @import GAMBLR.helpers
+#' @import GAMBLR.helpers dplyr
 #' @export
 #'
 #' @examples
 #'
-#'
+#' suppressMessages(library(dplyr))
 #' #get some metadata for subsetting the data to just one pathology (DLBCL)
 #' dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) %>%
 #'                     filter(pathology=="DLBCL",
 #'                     seq_type=="genome")
-#'
+#' 
+#' #remove any duplicate sample_id/seq_type combinations
+#' meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
+#'                                       duplicate_action = "keep_first")
+#' 
 #' # Create the copy number matrix using the helper functions
-#' all_segments = get_cn_segments()
+#' all_segments = get_cn_segments(meta_clean)
 #' dlbcl_cn_binned = segmented_data_to_cn_matrix(
 #'                                   seg_data = all_segments,
 #'                                   strategy="auto_split",
 #'                                   n_bins_split=2500,
-#'                                   missing_data_as_diploid = T,
-#'                                   these_samples_metadata = dlbcl_genome_meta)
+#'                                   these_samples_metadata = meta_clean)
 #'
 #' # Generate a basic genome-wide CN heatmap
 #' pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
-#'                   these_samples_metadata = dlbcl_genome_meta,
+#'                   these_samples_metadata = meta_clean,
 #'                   hide_annotations = "chromosome")
 #'
 #' # Disable row (sample) clustering and restrict to a few chromosomes
 #' # and highlight some genes of interest
-#' pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-#'   these_samples_metadata = dlbcl_genome_meta,
+#' pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
+#'   these_samples_metadata = meta_clean,
 #'   hide_annotations = "chromosomes",
-#'   keep_these_chromosomes = c("chr9","chr17"),
+#'   keep_these_chromosomes = c("9","17"),
 #'   cluster_rows=F,
 #'   labelTheseGenes = c("CDKN2A","TP53"))
 #'
 #' \dontrun{
 #'  # get gene expression data
-#'  gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
+#'  gene_exp_all = get_gene_expression(all_genes=T,
+#'                                     lazy_join=T,
+#'                                      arbitrarily_pick = T,
+#'                                      HGNC=T,format="wide")
 #' 
 #'  genome_meta_exp = left_join(get_gambl_metadata() %>%
 #'     filter(seq_type=="genome") %>%
