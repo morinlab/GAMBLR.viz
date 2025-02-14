@@ -18,7 +18,9 @@ plot_sample_circos(
   this_seq_type = "genome",
   chrom_list,
   label_genes,
-  auto_label_sv = FALSE
+  auto_label_sv = FALSE,
+  auto_colour_links = FALSE,
+  hide_legend = FALSE
 )
 }
 \arguments{
@@ -49,6 +51,10 @@ plot_sample_circos(
 \item{label_genes}{Gene labels (df, list or what type?)}
 
 \item{auto_label_sv}{Default is FALSE}
+
+\item{auto_colour_links}{Whether to apply authomatic coloring of the links. Default is FALSE.}
+
+\item{hide_legend}{Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata}
 }
 \value{
 Nothing

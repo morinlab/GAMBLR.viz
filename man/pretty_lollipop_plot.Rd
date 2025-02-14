@@ -2,52 +2,54 @@
 % Please edit documentation in R/pretty_lollipop_plot.R
 \name{pretty_lollipop_plot}
 \alias{pretty_lollipop_plot}
-\title{Lollipop Plot}
+\title{Pretty Lollipop Plot.}
 \usage{
-pretty_lollipop_plot(
-  maf_df,
-  gene,
-  plot_title,
-  plot_theme = "cbioportal",
-  out_name = paste0("my_lollipop_plot_", gene)
-)
+pretty_lollipop_plot(maf_df, gene = NULL, plot_title, include_silent = FALSE)
 }
 \arguments{
-\item{maf_df}{A data frame containing the mutation data (from a MAF).}
+\item{maf_df}{A data frame containing the mutation data.}
 
 \item{gene}{The gene symbol to plot.}
 
-\item{plot_title}{Optional (defaults to gene name).}
+\item{plot_title}{Optional, the title of the plot. Default is gene.}
 
-\item{plot_theme}{Options: cbioportal(default), blue, simple, nature, nature2, ggplot2, and dark.}
-
-\item{out_name}{Optional, set the file name of the plot, if you export it to disk. Default name is my_lollipop_plot_{gene}.}
+\item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 }
 \value{
-Nothing.
+A lollipop plot.
 }
 \description{
-Generates a visually appealing and interactive lollipop plot.
+Generates a visually appealing lollipop plot.
 }
 \details{
-This function is depending on a modified version of `readMAF` from the `g3viz` package.
-Returned plot is interactive, meaning the user can hover over individual points in the plot to reveal more information.
-The plot can also be exported in a variety of file formats inside the interactive view of the lollipop plot.
+Retrieve maf data of a specific sample or a set of samples. A gene of interest
+can then be visualized with the given maf data. Silent mutations can be visualized setting
+include_silent to TRUE.
 }
 \examples{
-library(GAMBLR.data)
+library(GAMBLR.open)
+#get meta data (BL_Thomas)
+metadata <- get_gambl_metadata() \%>\%
+    dplyr::filter(cohort == "BL_Thomas")
 
-#get metadata (Fl and DLBCL)
-metadata = get_gambl_metadata()
-this_meta = dplyr::filter(metadata, pairing_status == "matched")
-this_meta = dplyr::filter(this_meta, pathology \%in\% c("FL", "DLBCL"))
-
-maf = get_ssm_by_sample(these_samples_metadata = this_meta)
+maf_df <- get_coding_ssm(
+    these_samples_metadata = metadata
+)
 
 #construct pretty_lollipop_plot.
-pretty_lollipop_plot(maf_df = maf,
-                     gene = "MYC",
-                     plot_title = "Mutation data for MYC",
-                     plot_theme = "nature2")
+lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+print(lolipop_result)
 
+\dontrun{
+ # Or, with GAMBLR.results:
+ library(GAMBLR.results)
+ metadata <- get_gambl_metadata() \%>\%
+    dplyr::filter(pathology == "BL")
+
+maf_df <- get_all_coding_ssm(
+    these_samples_metadata = metadata
+)
+lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+lolipop_result
+}
 }

@@ -47,8 +47,7 @@
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import dplyr tidyr tibble ComplexHeatmap circlize grid
+#' @import dplyr tidyr tibble ComplexHeatmap circlize grid parallel GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -62,7 +61,7 @@
 #' # get ashm regions of a set of genes.
 #' my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>%
 #'   rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") %>%
-#'   mutate(chrom = stringr::str_remove(chrom, "chr"))
+#'   mutate(chrom = gsub("chr", "", chrom))
 #'
 #' # create heatmap of mutation counts for the specified regions
 #' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
@@ -80,7 +79,7 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
                                            this_seq_type = c("genome", "capture"),
                                            maf_data,
                                            mut_freq_matrix,
-                                           projection = "grch37",
+                                           projection,
                                            region_padding = 1000,
                                            drop_unmutated = FALSE,
                                            metadataColumns = c("pathology"),
@@ -111,6 +110,34 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
                                            return_heatmap_obj = FALSE,
                                            from_indexed_flatfile = TRUE,
                                            mode = "slms-3") {
+  #this could definitely use a helper function that takes all arguments that can be a genome_bed type
+  if(missing(projection)){
+    if(!missing(regions_bed) & !missing(maf_data)){
+      if("genomic_data" %in% class(regions_bed) & "genomic_data" %in% class(maf_data)){
+        if(!get_genome_build(regions_bed)==get_genome_build(maf_data)){
+          stop("The genome build of the regions_bed and maf_data are different. Supply a regions_bed that matches the genome_build of maf_df!")
+        }
+        projection = get_genome_build(regions_bed)
+      }else{
+        if("genomic_data" %in% class(regions_bed)){
+          projection = get_genome_build(regions_bed)
+        }else if("genomic_data" %in% class(maf_data)){
+          projection = get_genome_build(maf_data)
+        }
+      }
+    }else if(!missing(regions_bed)){
+      if("genomic_data" %in% class(regions_bed)){
+        projection = get_genome_build(regions_bed)
+      }
+    }else if(!missing(regions_maf)){
+      if("genomic_data" %in% class(regions_bed)){
+        projection = get_genome_build(regions_bed)
+      }
+    }
+  }
+  if(missing(projection)){
+    stop("projection is missing and cannot be inferred from supplied arguments")
+  }
   # check arguments
   stopifnot(
     "Only one (or none) between regions_list and regions_bed arguments should be provided." =
@@ -134,12 +161,10 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
   regions_bed <- regions$regions_bed
   regions <- regions$regions_list
 
-  # Harmonize metadata and sample IDs
-  metadata <- id_ease(
-    these_samples_metadata,
-    these_sample_ids,
-    this_seq_type
-  )
+  if(missing(these_samples_metadata)){
+    stop("these_samples_metadata is required")
+  }
+  metadata = these_samples_metadata
 
   these_sample_ids <- metadata$sample_id
 
@@ -167,19 +192,21 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
     # Obtain sliding window mutation frequencies for all regions
     if (missing(maf_data)) {
       maf_data <- NULL
+    }else{
+      if("genomic_data" %in% class(maf_data)){
+        maf_data = strip_genomic_classes(maf_data)
+      }
     }
 
     all_wide <- calc_mutation_frequency_bin_regions(
-      maf_data = maf_data,
+      #maf_data = maf_data,
       regions_bed = regions_bed,
       these_samples_metadata = metadata,
       projection = projection,
       slide_by = slide_by,
       window_size = window_size,
       drop_unmutated = drop_unmutated,
-      return_format = "wide",
-      from_indexed_flatfile = from_indexed_flatfile,
-      mode = mode
+      return_format = "wide"
     )
 
     # Convert to a matrix with samples in colnames and bins in rownames
@@ -283,13 +310,16 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
       mutate(
         start = start - window_size,
         end = end + window_size
-      ) %>%
-      as.data.table()
-    setkey(regions.dt, chrom, start, end)
+      )
 
-    bin.dt <- as.data.table(bin_df)
-    setkey(bin.dt, chrom, start, end)
-    bin_overlapped <- foverlaps(bin.dt, regions.dt) %>%
+    bin.dt <- as.data.frame(bin_df)
+    bin_overlapped <- cool_overlaps(
+        bin.dt,
+        regions.dt,
+        columns1 = c("chrom", "start", "end"),
+        columns2 = c("chrom", "start", "end"),
+        nomatch = TRUE
+      ) %>%
       as.data.frame() %>%
       rename(label = !!sym(label_by)) %>%
       arrange(label, start) %>%

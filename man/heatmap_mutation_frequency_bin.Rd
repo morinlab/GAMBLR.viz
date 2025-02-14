@@ -12,7 +12,7 @@ heatmap_mutation_frequency_bin(
   this_seq_type = c("genome", "capture"),
   maf_data,
   mut_freq_matrix,
-  projection = "grch37",
+  projection,
   region_padding = 1000,
   drop_unmutated = FALSE,
   metadataColumns = c("pathology"),
@@ -143,7 +143,7 @@ my_meta <- get_gambl_metadata() \%>\%
 # get ashm regions of a set of genes.
 my_regions <- GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest \%>\%
   rename("chrom" = "chr_name", "start" = "hg19_start", "end" = "hg19_end", "name" = "gene") \%>\%
-  mutate(chrom = stringr::str_remove(chrom, "chr"))
+  mutate(chrom = gsub("chr", "", chrom))
 
 # create heatmap of mutation counts for the specified regions
 meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")

@@ -13,6 +13,7 @@
 #' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
 #' @param genes An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
+#' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
 #' @param min_mutations Optional parameter for when no `genes` is provided. This parameter ensures only genes with n mutations are kept in `genes`. Default value is 1, this means all genes in the incoming maf will be plotted.
 #' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
 #' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
@@ -25,8 +26,8 @@
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose", "melt", "dcast"))
-#' @import dplyr ggpubr forcats ggplot2 purrr tidyr broom GAMBLR.helpers
+#' @rawNamespace import(ggpubr, except = "get_legend")
+#' @import dplyr ggplot2 purrr tidyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -54,6 +55,7 @@ prettyForestPlot = function(maf,
                             mutmat,
                             metadata,
                             genes,
+                            keepGeneOrder = FALSE,
                             min_mutations = 1,
                             comparison_column,
                             rm_na_samples = FALSE,
@@ -77,6 +79,14 @@ prettyForestPlot = function(maf,
     if(length(comparison_values) != 2)
       stop(paste0("Your comparison must have two values. \nEither specify comparison_values as a vector of length 2 or subset your metadata so your comparison_column has only two unique values or factor levels."))
   }
+
+  # Need to properly sort the genes later
+  if(missing(genes)){
+    user_provided_gene_order = FALSE
+  }else{
+    user_provided_gene_order = TRUE
+  }
+
   #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
   metadata = metadata[metadata[[comparison_column]] %in% comparison_values, ]
 
@@ -134,12 +144,18 @@ prettyForestPlot = function(maf,
     dplyr::mutate(is_mutated = factor(is_mutated, levels = c("1", "0"))) %>%
     group_by(gene) %>%
     dplyr::summarise(table = list(table(is_mutated, comparison))) %>%
-    dplyr::mutate(test = map(table, fisher.test), tidy = map(test, broom::tidy)) %>%
-    unnest(tidy) %>%
+    dplyr::mutate(
+        test = map(table, fisher.test),
+        estimate = map_dbl(test, ~ .x$estimate),
+        p.value = map_dbl(test, ~ .x$p.value),
+        conf.low = map_dbl(test, ~ .x$conf.int[1]),
+        conf.high = map_dbl(test, ~ .x$conf.int[2]),
+        method = map_chr(test, ~ .x$method),
+        alternative = map_chr(test, ~ .x$alternative)
+    ) %>%
     dplyr::mutate(q.value = p.adjust(p.value, "BH")) %>%
     dplyr::select(-c(test, method, alternative)) %>%
-    dplyr::filter(q.value <= max_q) %>%
-    dplyr::mutate(gene = fct_reorder(gene, estimate))
+    dplyr::filter(q.value <= max_q)
 
   flatten_table <- function(Row){
 
@@ -191,8 +207,23 @@ prettyForestPlot = function(maf,
   t %>%
   as.data.frame %>%
   `rownames<-`(NULL) %>%
-  mutate_at(c(2:10), as.numeric) %>%
-  arrange(estimate)
+  mutate_at(c(2:10), as.numeric)
+
+
+  if(keepGeneOrder & user_provided_gene_order){
+    # account for possible gene loss due to the max_q cutoff
+    message(
+        "Supporting the custom-provided gene order instead of ordering on OR"
+    )
+    genes <- genes[genes %in% fish_test$gene]
+    # now order
+    # need to actually reverse the order here because there is coord_flip in ggplot
+    fish_test <- fish_test %>%
+        arrange(match(gene, rev(genes)))
+  }else{
+    fish_test <- fish_test %>%
+        arrange(estimate)
+  }
 
 
   point_size = 50 / round(length(fish_test$gene))

@@ -31,7 +31,7 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import dplyr ggplot2 GAMBLR.helpers stringr
+#' @import dplyr ggplot2 GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -134,7 +134,7 @@ fancy_sv_sizedens = function(this_sample_id,
   manta_sv$size = manta_sv$end - manta_sv$start
 
   #add chr prefix, if missing
-  if(!str_detect(manta_sv$chrom, "chr")[1]){
+  if(!grepl("chr", manta_sv$chrom[1])){
     manta_sv = mutate(manta_sv, chrom = paste0("chr", chrom))
   }
 
