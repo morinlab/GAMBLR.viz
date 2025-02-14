@@ -289,7 +289,7 @@ pretty_lollipop_plot <- function(
             distinct(Tumor_Sample_Barcode) %>% 
             nrow()
 
-        Somatic_Mutation_Denominator <- length(unique(maf_df$Tumor_Sample_Barcode))
+        Somatic_Mutation_Denominator <- length(unique(metadata$Tumor_Sample_Barcode))
 
         Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
         Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)
