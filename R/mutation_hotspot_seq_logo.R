@@ -4,22 +4,22 @@
 #' @description Generates a summary of the frequency of SSMs in a small
 #' region around a mutation hot spot using a "sequence logo"-style stacked plot
 #'
-#' @param maf_df 
-#' @param gene_symbol 
-#' @param hotspot_position 
-#' @param pad_length 
-#' @param fasta_path 
-#' @param include_reference 
-#' @param include_AA 
-#' @param group_AA 
-#' @param annotate_motif 
-#' @param annotate_only 
-#' @param return_data 
-#' @param base_size 
-#' @param aa_size 
+#' @param maf_df
+#' @param gene_symbol
+#' @param hotspot_position
+#' @param pad_length
+#' @param fasta_path
+#' @param include_reference
+#' @param include_AA
+#' @param group_AA
+#' @param annotate_motif
+#' @param annotate_only
+#' @param return_data
+#' @param base_size
+#' @param aa_size
 #' @rawNamespace import(IRanges, except = c("collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
 #' @rawNamespace import(GenomicRanges, except = c("union", "intersect", "setdiff", "reduce"))
-#' @import ggseqlogo Rsamtools cowplot
+#' @import ggseqlogo Rsamtools cowplot BSgenome
 #' @returns a named list containing a ggplot object and various processed data
 #' @export
 #'
@@ -29,8 +29,8 @@
 #'                                 streamlined = F,
 #'                                 these_samples_metadata = meta
 #'                                     )
-#'                                     
-#'                                     
+#'
+#'
 #' gene_hotspot_logo(maf_df=muts,
 #'                       gene_symbol = "CXCR4",
 #'                       hotspot_position=136875037,
@@ -39,12 +39,12 @@
 #'                       annotate_motif=T,
 #'                       base_size = 4)
 
-gene_hotspot_logo = function(maf_df,
+mutation_hotspot_logo = function(maf_df,
                              gene_symbol="MYC",
                              hotspot_position=128750677,
-                             genome_build = "grch37",
+                             genome_build,
                              pad_length=20,
-                             fasta_path="~/Downloads/genome.fa",
+                             fasta_path,
                              include_reference = TRUE,
                              include_AA = FALSE,
                              group_AA = FALSE,
@@ -52,24 +52,94 @@ gene_hotspot_logo = function(maf_df,
                              annotate_only=FALSE,
                              return_data=TRUE,
                              base_size=5,
-                             aa_size=3){
-  fasta <- Rsamtools::FaFile(file = fasta_path)
-  
+                             aa_size=3,
+                             text_size=5,
+                             include_title = TRUE){
+
+  bsgenome_loaded = FALSE
+
+  # If there is no fastaPath, it will read it from config key
+
+  # Based on the genome_build the fasta file which will be loaded is different
+  if (missing(fasta_path)){
+    if("maf_data" %in% class(maf_df)){
+      genome_build = get_genome_build(maf_df)
+    }
+    if(missing(genome_build)){
+      stop("no genome_build information provided or present in maf")
+    }
+    base <- check_config_value(config::get("repo_base"))
+    fasta_path <- paste0(
+      base,
+      "ref/lcr-modules-references-STABLE/genomes/",
+      genome_build,
+      "/genome_fasta/genome.fa"
+    )
+    if(!file.exists(fasta_path)){
+      #try BSgenome
+      installed = installed.genomes()
+      if(genome_build=="hg38"){
+        bsgenome_name = "BSgenome.Hsapiens.UCSC.hg38"
+      }else if(genome_build == "grch37"){
+        bsgenome_name = "BSgenome.Hsapiens.UCSC.hg19"
+      }else{
+        stop(paste("unsupported genome:",genome_build))
+      }
+      if(bsgenome_name %in% installed){
+        genome = getBSgenome(bsgenome_name)
+        bsgenome_loaded = TRUE
+      }else{
+        print(installed)
+        print(paste("Local Fasta file cannot be found and missing genome_build",bsgenome_name,"Supply a fastaPath for a local fasta file or install the missing BSGenome package and re-run"))
+      }
+    }
+  }
+  # It checks for the presence of a local fastaPath
+  if(!bsgenome_loaded){
+    # Create a reference to an indexed fasta file.
+    if (!file.exists(fasta_path)) {
+      stop("Failed to find the fasta file and no compatible BSgenome found")
+    }
+    fasta = Rsamtools::FaFile(file = fasta_path)
+  }
   mut_noindel = maf_df %>%
     dplyr::filter(Hugo_Symbol==gene_symbol) %>%
     filter(Variant_Type=="SNP")
-  
+
 
   chrom = pull(mut_noindel,Chromosome)[1]
   start = hotspot_position - pad_length
   end = hotspot_position + pad_length
   print(paste(chrom,start,end))
-  some_mutations = filter(mut_noindel,Start_Position<=end, Start_Position >= start) %>%
+  some_mutations = filter(mut_noindel,
+                          Start_Position<=end,
+                          Start_Position >= start) %>%
     mutate(rel_start = Start_Position - start+1)
-  context = as.character(Rsamtools::getSeq(fasta,GenomicRanges::GRanges(chrom,IRanges(start = start,end = end)))) %>% unname()
-  
-  some_mutations = annotate_ssm_motif_context(some_mutations,fastaPath = fasta_path)
-  
+  if(bsgenome_loaded){
+    if(genome_build == "grch37"){
+      chrom_pre = paste0("chr",chrom)
+    }else{
+      chrom_pre = chrom
+    }
+    context = as.character(Rsamtools::getSeq(
+                                           genome,
+                                           chrom_pre,
+                                           start = start,
+                                          end = end)
+                          )
+  }else{
+    context = as.character(Rsamtools::getSeq(fasta,
+                                             GenomicRanges::GRanges(chrom,
+                                                                    IRanges(start = start,
+                                                                            end = end)))) %>% unname()
+
+
+  }
+
+  some_mutations = annotate_ssm_motif_context(some_mutations,
+                                              fastaPath = fasta_path,
+                                              genome_build = genome_build)
+
   if(annotate_only){
     return(list(annotated=some_mutations,region=context))
   }
@@ -96,18 +166,14 @@ gene_hotspot_logo = function(maf_df,
     }
     return(base_counts)
   }
-  
-  
-  #some_mutations = mutate(some_mutations,
-  #                        unmut = context,
-  #                        mut = mod_string(context,rel_start,Tumor_Seq_Allele2)) %>%
-  # mutate(AA = str_remove(HGVSp_Short,"p\\.")) %>%
-  #  mutate(To_AA = str_extract(AA,"\\w$")) %>%
-  #  mutate(AA=str_replace(AA,"(\\d+).+","\\1"))
+
+
+
+
   some_mutations <- some_mutations %>%
   mutate(
     unmut = context,
-    mut = mod_string(context, rel_start, Tumor_Seq_Allele2),
+    #mut = mod_string(context, rel_start, Tumor_Seq_Allele2),
     AA = gsub("p\\.", "", HGVSp_Short),
     To_AA = sub(".*(\\w)$", "\\1", AA),
     AA = sub("(\\d+).+", "\\1", AA)
@@ -122,99 +188,131 @@ gene_hotspot_logo = function(maf_df,
                               as.character(some_mutations[i,"Tumor_Seq_Allele2"]),
                               base_counts)
   }
-  
+  num_base = nchar(context)
+  common_scale <- scale_x_continuous(
+    limits = c(0, num_base+1),
+    breaks = 1:num_base,
+    expand = c(0.1, 0.1)
+  )
 
-  region_name = paste0(hotspot_position - pad_length,"-",hotspot_position + pad_length)
-  
-  p1 = ggseqlogo::ggseqlogo(base_counts, method='custom', seq_type='dna') + 
-    theme(axis.text.x = element_blank()) + ggtitle(paste(gene_symbol,region_name)) 
+  region_name = paste0(chrom,":",
+                       hotspot_position - pad_length,
+                       "-",
+                       hotspot_position + pad_length)
+
+  p1 = ggseqlogo::ggseqlogo(base_counts,
+                            method='custom', seq_type='dna') +
+    theme(axis.title.y =element_blank(),
+          #axis.text.y=element_blank(),
+          axis.ticks.y=element_blank())+
+    common_scale +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size= text_size))
+  if(include_title){
+   p1 = p1 + ggtitle(paste(gene_symbol,region_name))
+  }
+
   if(include_reference){
     if(annotate_motif){
-      aln_df = dplyr::select(some_mutations,rel_start,Reference_Allele,WRCY)
+      aln_df = dplyr::select(some_mutations,
+                             rel_start,
+                             Reference_Allele,WRCY)
       all_pos = data.frame(rel_start = c(1:nchar(context)))
       all_pos$Reference_Allele = unlist(strsplit(context,""))
       aln_df = left_join(all_pos,aln_df) %>% unique()
-      
+
       aln_df = mutate(aln_df,WRCY=ifelse(is.na(WRCY),"unmutated",WRCY))
       print(aln_df)
       p2 = ggplot(aln_df, aes(rel_start,1)) +
-        geom_text(aes(label=Reference_Allele, color=WRCY),size=base_size) + 
-        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
-        scale_color_manual(values=c('black', 'orange','red','grey')) + 
-        theme_logo() + 
-        #theme(legend.position = "none") + 
+        geom_text(aes(label=Reference_Allele, color=WRCY),size=base_size) +
+        common_scale +
+        xlab('') +
+        scale_color_manual(values=c('black', 'orange','red','grey')) +
+        theme_logo() +
+        #theme(legend.position = "none") +
         theme(axis.title.y =element_blank(),
               axis.text.y=element_blank(),
-              axis.ticks.y=element_blank() 
+              axis.ticks.y=element_blank()
         ) +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) 
+        theme(axis.text.x = element_text(angle = 90,
+                                         vjust = 0.5,
+                                         hjust=1,
+                                         size = text_size))
     }else{
       aln = data.frame(
-        letter=strsplit(context, "")[[1]], 
+        letter=strsplit(context, "")[[1]],
         x=rep(1:nchar(context))
       )
       pos = some_mutations$rel_start
       aln$mut = 'no'
       aln$mut[ pos ] = 'yes'
-      
+
       p2 = ggplot(aln, aes(x,1)) +
-        geom_text(aes(label=letter, color=mut),size=base_size) + 
-        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
-        scale_color_manual(values=c('black', 'red')) + 
-        theme_logo() + 
-        #theme(legend.position = "none") + 
+        geom_text(aes(label=letter, color=mut),size=base_size) +
+        common_scale +
+                           xlab('') +
+        scale_color_manual(values=c('black', 'red')) +
+        theme_logo() +
+        #theme(legend.position = "none") +
         theme(axis.title.y =element_blank(),
               axis.text.y=element_blank(),
-              axis.ticks.y=element_blank() 
-        ) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) 
+              axis.ticks.y=element_blank()
+        ) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size = text_size))
     }
-    
+
     if(include_AA | group_AA){
       if(group_AA){
         aa_df = some_mutations %>% dplyr::select(AA,rel_start) %>% unique()
       }else{
         aa_df = some_mutations %>% dplyr::select(AA,rel_start) %>% unique()
       }
-      
+
       dummy1 = data.frame(AA="",rel_start=1)
       dummy2 = data.frame(AA="",rel_start=nchar(context))
       aa_df = bind_rows(dummy1,aa_df,dummy2)
-      print(aa_df)
+
       check = dplyr::select(some_mutations,AA,rel_start,HGVSp_Short)
 
       pAA = ggplot(aa_df, aes(rel_start,1)) +
-        geom_text(aes(label=AA),size=aa_size,angle = 90) + 
-        scale_x_continuous(breaks=1:nchar(context), expand = c(0.065, 0)) + xlab('') + 
-        scale_color_manual(values=c('black', 'red')) + 
-        
-        theme_logo() + theme(legend.position = "none") + 
-        
+        geom_text(aes(label=AA),size=aa_size,angle = 90) +
+        common_scale +
+        scale_color_manual(values=c('black', 'red')) +
+
+        theme_logo() + theme(legend.position = "none") +
+
         theme(axis.title.y =element_blank(),
               axis.text.y=element_blank(),
-              axis.ticks.y=element_blank() 
-        ) +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) 
+              axis.ticks.y=element_blank(),
+              axis.title.x = element_blank(),
+              axis.text.x=element_blank(),
+        )
+      #+
+      #  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size = text_size))
       #pAA
-      pp = cowplot::plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(7,2,2))
+      pp = cowplot::plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(14,3,5))
       print(pp)
     }else{
       pp = cowplot::plot_grid(p1,p2,ncol=1,align="v",rel_heights = c(7,2))
       print(pp)
     }
-    
   }else{
     print(p1)
   }
   if(return_data){
-    return(list(df=some_mutations,plot=pp))
+    if(include_AA){
+      return(list(df=some_mutations,plot=pp,freqs=base_counts,plot1=p1,plot2=p2,plot3=pAA))
+    }else{
+      return(list(df=some_mutations,plot=pp,freqs=base_counts,plot1=p1,plot2=p2))
+    }
+
   }
-  
+
 }
 
 plot_signature = function(maf_df,genes="MYC",return_data=FALSE,separate_silent=FALSE){
 
- 
-  all_mutations = expand_grid(ref=c("T","C"),alt=c("A","C","T","G")) %>% mutate(mutation=paste0(ref,">",alt))
+
+  all_mutations = expand_grid(ref=c("T","C"),alt=c("A","C","T","G")) %>%
+    mutate(mutation=paste0(ref,">",alt))
   all_contexts = expand_grid(up=c("A","C","T","G"),ref=c("T","C"),alt=c("A","C","T","G"),down=c("A","C","T","G"))
   all_contexts = mutate(all_contexts,seq=paste0(up,ref,down),mutation=paste0(ref,">",alt)) %>%
     dplyr::filter(!ref==alt) %>%
@@ -223,37 +321,37 @@ plot_signature = function(maf_df,genes="MYC",return_data=FALSE,separate_silent=F
   silent_mutations = dplyr::filter(all_mutations,Variant_Classification %in% c("Silent","5'UTR","3'UTR","5'Flank","3'Flank"))
   all_count = group_by(all_mutations,mutation,seq,Hugo_Symbol) %>% tally()
   silent_count = group_by(silent_mutations,mutation,seq,Hugo_Symbol) %>% tally()
-  all_count = left_join(all_contexts,all_count) 
-  silent_count = left_join(all_contexts,silent_count) 
+  all_count = left_join(all_contexts,all_count)
+  silent_count = left_join(all_contexts,silent_count)
   all_count$Hugo_Symbol = factor(all_count$Hugo_Symbol,levels=genes)
   silent_count$Hugo_Symbol = factor(silent_count$Hugo_Symbol,levels=genes)
   if(return_data){
-    all_count = dplyr::select(all_count,mutation_context,Hugo_Symbol,n) %>% 
+    all_count = dplyr::select(all_count,mutation_context,Hugo_Symbol,n) %>%
       pivot_wider(id_cols = Hugo_Symbol,names_from = mutation_context,values_from=n,values_fill = 0) %>%
       column_to_rownames("Hugo_Symbol")
     return(all_count)
-  }  
+  }
   if(separate_silent){
     silent_count = dplyr::filter(silent_count,!is.na(Hugo_Symbol))
     silent_count = mutate(silent_count,Hugo_Symbol = paste0(Hugo_Symbol,"-Silent"))
-    
+
     all_count = bind_rows(silent_count,all_count)
     all_count = filter(all_count,!is.na(Hugo_Symbol))
-    all_count = group_by(all_count,Hugo_Symbol) %>% 
+    all_count = group_by(all_count,Hugo_Symbol) %>%
       mutate(gene_total=sum(n)) %>%
       mutate(gene_norm=n/gene_total) %>%
       ungroup()
   }
-  ggplot(all_count,aes(x=mutation_context,y=gene_norm,fill=mutation)) + geom_col() + 
-    facet_wrap(~Hugo_Symbol,ncol=1) + 
+  ggplot(all_count,aes(x=mutation_context,y=gene_norm,fill=mutation)) + geom_col() +
+    facet_wrap(~Hugo_Symbol,ncol=1) +
     theme_Morons(base_size=8) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))
-  #ggplot(all_count,aes(x=mutation_context,y=n,fill=mutation)) + geom_col() + 
-  #  facet_wrap(~Hugo_Symbol,scales='free_y',ncol=1) + 
+  #ggplot(all_count,aes(x=mutation_context,y=n,fill=mutation)) + geom_col() +
+  #  facet_wrap(~Hugo_Symbol,scales='free_y',ncol=1) +
   #  theme_Morons(base_size=8) +
   #    theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust=0.5))
-  
-  
+
+
 }
-                             
-  
+
+
