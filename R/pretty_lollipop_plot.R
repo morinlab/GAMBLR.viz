@@ -87,6 +87,11 @@ pretty_lollipop_plot <- function(
         )]
     }
 
+    if (!"RefSeq" %in% colnames(maf_df)) {
+        stop("Error: The provided maf_df is missing the 'RefSeq' column. 
+              Ensure that get_ssm_by_samples() is run with basic_columns = FALSE.")
+    }
+
     max_splits <- maf_df %>%
         pull(RefSeq) %>%
         strsplit(",") %>%
