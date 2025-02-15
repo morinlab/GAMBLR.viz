@@ -164,13 +164,26 @@ to scale the copy number values to the average ploidy of each sample using `scal
 
 
 ```{r all_heatmap}
+#| fig.height: 9
+
 all_genome_meta = get_gambl_metadata()
 all_genome_meta = check_and_clean_metadata(all_genome_meta,
                                       duplicate_action = "keep_first")
-# Generate a basic genome-wide CN heatmap
+#drop any genomes that don't have copy number data
+
+all_genome_meta = dplyr::filter(all_genome_meta,
+  sample_id %in% rownames(all_cn_binned))
+  
+# Generate a genome-wide CN heatmap without clustering
+# Instead, we'll order samples based on pathology and lymphgen
 pretty_CN_heatmap(cn_state_matrix=all_cn_binned,
                   these_samples_metadata = all_genome_meta,
                   scale_by_sample = TRUE,
+                  cluster_rows=F,
+                  metadataColumns = c("pathology","lymphgen"),
+                  sortByMetadataColumns = c("pathology","lymphgen"),
+                  bin_label_nudge = 1.08,
+                  labelTheseGenes = c("CDKN2A","TP53"),
                   hide_annotations = "chromosome")
 
 ```
