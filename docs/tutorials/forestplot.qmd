@@ -27,9 +27,7 @@ We will first import the necessary packages:
 
 ```{r load_packages}
 # Load packages
-library(GAMBLR.data)
-library(GAMBLR.utils)
-library(GAMBLR.viz)
+library(GAMBLR.open)
 library(tibble)
 library(dplyr)
 ```
@@ -260,19 +258,17 @@ coding_matrix <- get_coding_ssm_status(
 Next, supplement this with the matrix of non-coding mutation across aSHM regions
 
 ```{r ashm_mat}
-# Use aSHM regions from GAMBLR.data
-regions_bed <- somatic_hypermutation_locations_GRCh37_v0.2
 
-# Add convenient name column
-regions_bed <- regions_bed %>%
-    mutate(
-        name = paste(gene, region, sep = "-")
-    )
+# We'll use the aSHM regions defined in GAMBLR.data
+# Let our helper function massage it into a consistent format
+regions_bed = create_bed_data(somatic_hypermutation_locations_GRCh37_v0.2,
+                              fix_names="concat",
+                              concat_cols=c("gene","region"),
+                              sep="-")
 
 # Generate matrix of mutations per each site
 ashm_matrix <- get_ashm_count_matrix(
     regions_bed = regions_bed,
-    maf_data = maf,
     these_samples_metadata = metadata
 )
 

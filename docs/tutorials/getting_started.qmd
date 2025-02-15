@@ -14,9 +14,7 @@ started.
 #| message: false
 
 # Load packages
-library(GAMBLR.data)
-library(GAMBLR.helpers)
-library(GAMBLR.viz)
+library(GAMBLR.open)
 library(tidyverse)
 ```
 

@@ -25,9 +25,7 @@ library(readxl)
 library(ComplexHeatmap)
 library(ggbeeswarm)
 library(ggpubr)
-library(GAMBLR.data)
-library(GAMBLR.helpers)
-library(GAMBLR.viz)
+library(GAMBLR.open)
 library(tidyverse)
 ```
 

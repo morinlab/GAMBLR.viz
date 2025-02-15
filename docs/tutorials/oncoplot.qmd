@@ -23,8 +23,7 @@ We will first import the necessary packages:
 
 ```{r load_packages}
 # Load packages
-library(GAMBLR.data)
-library(GAMBLR.viz)
+library(GAMBLR.open)
 library(dplyr)
 ```
 
@@ -408,6 +407,7 @@ In fact, there are genes that are mutated at significantly different
 frequencies! Now let's layer on this information to our oncoplot:
 
 ```{r oncoplot_fisher}
+#| eval: false
 prettyOncoplot(
     these_samples_metadata = metadata,
     maf_df = maf,
@@ -459,6 +459,7 @@ genes and does not have functionality to annotate all hotspots.
 Now, we can add annotation of the hotspots to the oncoplot display by toggling
 the `highlightHotspots` parameter:
 ```{r oncoplot_fisher_hotspot}
+#| eval: false
 highlightHotspots <- TRUE
 prettyOncoplot(
     these_samples_metadata = metadata,
@@ -500,7 +501,7 @@ see how cFL compares to dFL:
 #| fig-keep: last
 #| fig-height: 8
 #| fig-width: 15
-
+#| eval: false
 prettyCoOncoplot(
     metadata = metadata,
     maf = maf,
@@ -570,6 +571,7 @@ First, lets store the returned oncoplot in a variable:
 
 ```{r store_oncoplot}
 #| output: false
+#| eval: false
 my_oncoplot <- prettyOncoplot(
     these_samples_metadata = metadata,
     maf_df = maf,
@@ -603,6 +605,7 @@ library(ggpubr) # to arrange multiple panels
 
 After that, we will capture the display of the oncoplot:
 ```{r capture_oncoplot}
+#| eval: false
 my_oncoplot = grid.grabExpr(
     draw(my_oncoplot),
     width = 10,
@@ -616,7 +619,7 @@ oncoplot:
 ```{r multi_panel}
 #| fig-height: 8
 #| fig-width: 13
-
+#| eval: false
 multipanel_figure <- ggarrange(
     my_oncoplot, # left panel
     fisher_test$arranged, # right panel
@@ -639,6 +642,7 @@ to match the height of the oncoplot:
 #| fig-keep: last
 #| fig-height: 8
 #| fig-width: 13
+#| eval: false
 my_oncoplot <- prettyOncoplot(
     these_samples_metadata = metadata,
     maf_df = maf,

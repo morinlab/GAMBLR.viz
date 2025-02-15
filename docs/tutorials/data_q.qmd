@@ -29,10 +29,9 @@ We will first import the necessary packages:
 # Load packages
 library(ggbeeswarm)
 library(ggExtra)
-library(GAMBLR.data)
-library(GAMBLR.helpers)
-library(GAMBLR.viz)
 library(tidyverse)
+library(GAMBLR.open)
+
 ```
 
 Next, we will get some data to display. We have explored before how to obrain
@@ -188,9 +187,8 @@ not need search Pubmed for the gene lists, but can convently retreive from one
 of the [GAMBLR.data objects](https://morinlab.github.io/GAMBLR.data/resources/bundled_data.html):
 
 ```{r reddy_list}
-genes <- lymphoma_genes_dlbcl_v_latest %>%
-    filter(Reddy) %>%
-    pull(Gene)
+genes <- GAMBLR.data::reddy_genes %>%
+    pull(hgnc_symbol)
 ```
 
 We now can take a look at what genes are significantly different between high

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Why GAMBLR.viz? – GAMBLR.viz</title>
+<title>Tutorial: Copy Number Heatmaps – GAMBLR.viz</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,28 +20,62 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./logo.png" rel="icon" type="image/png">
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-23b8e6f3f748bc5bdbba311d511a5b21.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-5c1e972a709ec2345b6d43d3c093db11.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-87975c1f06ea9728b2e33a0530ae71dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-52b6150d4d757827abf3719cc818ca21.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../logo.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-23b8e6f3f748bc5bdbba311d511a5b21.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-5c1e972a709ec2345b6d43d3c093db11.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-87975c1f06ea9728b2e33a0530ae71dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-52b6150d4d757827abf3719cc818ca21.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -71,7 +105,7 @@ ul.task-list li input[type="checkbox"] {
 
 
 <link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="Why GAMBLR.viz? – GAMBLR.viz">
+<meta property="og:title" content="Tutorial: Copy Number Heatmaps – GAMBLR.viz">
 <meta property="og:description" content="Collection of functions for visualzation of genomic data.">
 <meta property="og:image" content="logo.png">
 <meta property="og:site_name" content="GAMBLR.viz">
@@ -84,10 +118,10 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./logo.png" alt="" class="navbar-logo">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../logo.png" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">GAMBLR.viz</span>
     </a>
   </div>
@@ -103,35 +137,35 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-getting-started">    
         <li>
-    <a class="dropdown-item" href="./install.html">
+    <a class="dropdown-item" href="../install.html">
  <span class="dropdown-text">Installation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./faq.html">
+    <a class="dropdown-item" href="../faq.html">
  <span class="dropdown-text">Frequently Asked Qestions</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/CopyNumberHeatmap.html">
+    <a class="dropdown-item" href="../tutorials/CopyNumberHeatmap.html">
  <span class="dropdown-text">Tutorial: Copy Number Heatmaps</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/data_q.html">
+    <a class="dropdown-item" href="../tutorials/data_q.html">
  <span class="dropdown-text">Tutorial: Exploring data quality</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/forestplot.html">
+    <a class="dropdown-item" href="../tutorials/forestplot.html">
  <span class="dropdown-text">Tutorial: The prettiest forestplot</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/getting_started.html">
+    <a class="dropdown-item" href="../tutorials/getting_started.html">
  <span class="dropdown-text">Tutorial: Getting started</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/oncoplot.html">
+    <a class="dropdown-item" href="../tutorials/oncoplot.html">
  <span class="dropdown-text">Tutorial: The prettiest oncoplot</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./tutorials/recap_figures.html">
+    <a class="dropdown-item" href="../tutorials/recap_figures.html">
  <span class="dropdown-text">Tutorial: Regenerating figures from published manuscripts</span></a>
   </li>  
     </ul>
@@ -142,15 +176,15 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-concepts">    
         <li>
-    <a class="dropdown-item" href="./why.html">
+    <a class="dropdown-item" href="../why.html">
  <span class="dropdown-text">Why GAMBLR.viz?</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./concepts/GAMBLR_family.html">
+    <a class="dropdown-item" href="../concepts/GAMBLR_family.html">
  <span class="dropdown-text">GAMBLR family of packages</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./concepts/glossary.html">
+    <a class="dropdown-item" href="../concepts/glossary.html">
  <span class="dropdown-text">GAMBLR.viz glossary</span></a>
   </li>  
     </ul>
@@ -161,11 +195,11 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-resources">    
         <li>
-    <a class="dropdown-item" href="./resources/contributing.html">
+    <a class="dropdown-item" href="../resources/contributing.html">
  <span class="dropdown-text">Contribution guidelines</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./resources/functions.html">
+    <a class="dropdown-item" href="../resources/functions.html">
  <span class="dropdown-text">Functions overview</span></a>
   </li>  
     </ul>
@@ -207,7 +241,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./why.html">Why GAMBLR.viz?</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../tutorials/CopyNumberHeatmap.html">Tutorial: Copy Number Heatmaps</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -221,20 +255,50 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./why.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Why GAMBLR.viz?</span></a>
+  <a href="../install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Installation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./concepts/GAMBLR_family.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GAMBLR family of packages</span></a>
+  <a href="../faq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Frequently Asked Qestions</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./concepts/glossary.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">GAMBLR.viz glossary</span></a>
+  <a href="../tutorials/CopyNumberHeatmap.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Tutorial: Copy Number Heatmaps</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/data_q.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tutorial: Exploring data quality</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/forestplot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tutorial: The prettiest forestplot</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/getting_started.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tutorial: Getting started</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/oncoplot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tutorial: The prettiest oncoplot</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../tutorials/recap_figures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tutorial: Regenerating figures from published manuscripts</span></a>
   </div>
 </li>
     </ul>
@@ -247,20 +311,21 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#gamblr-family" id="toc-gamblr-family" class="nav-link active" data-scroll-target="#gamblr-family">GAMBLR family</a></li>
-  <li><a href="#local-experience" id="toc-local-experience" class="nav-link" data-scroll-target="#local-experience">Local experience</a></li>
-  <li><a href="#use-cases" id="toc-use-cases" class="nav-link" data-scroll-target="#use-cases">Use cases</a></li>
-  <li><a href="#community" id="toc-community" class="nav-link" data-scroll-target="#community">Community</a></li>
-  <li><a href="#getting-started" id="toc-getting-started" class="nav-link" data-scroll-target="#getting-started">Getting started</a></li>
+  <li><a href="#prepare-setup" id="toc-prepare-setup" class="nav-link active" data-scroll-target="#prepare-setup">Prepare setup</a></li>
+  <li><a href="#metadata" id="toc-metadata" class="nav-link" data-scroll-target="#metadata">Metadata</a></li>
+  <li><a href="#projections" id="toc-projections" class="nav-link" data-scroll-target="#projections">Projections</a></li>
+  <li><a href="#from-segments-to-bins" id="toc-from-segments-to-bins" class="nav-link" data-scroll-target="#from-segments-to-bins">From segments to bins</a></li>
+  <li><a href="#dlbcl-copy-number-heatmap" id="toc-dlbcl-copy-number-heatmap" class="nav-link" data-scroll-target="#dlbcl-copy-number-heatmap">DLBCL Copy Number Heatmap</a></li>
+  <li><a href="#copy-number-heatmap-for-everything" id="toc-copy-number-heatmap-for-everything" class="nav-link" data-scroll-target="#copy-number-heatmap-for-everything">Copy Number Heatmap for everything</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/why.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/tutorials/CopyNumberHeatmap.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Why GAMBLR.viz?</h1>
+<h1 class="title">Tutorial: Copy Number Heatmaps</h1>
 </div>
 
 
@@ -277,38 +342,161 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>GAMBLR.viz is an open-source portable R library.</p>
-<p>If you dream of generating oncoplot with great flexibility of annotations but don’t have enough time or skill to look at ComplexHeatmap, need to have a simple function to look at hypermutated regions from birds-eye view or under microscope but don’t know how to approach this, or if you find yourself always struggling to adjusting your code for simple comparison of mutation frequency between two groups, GAMBLR.viz is for you.</p>
-<p>GAMBLR stands for <strong>G</strong>enomic <strong>A</strong>nalysis of <strong>M</strong>ature <strong>B</strong>-cell <strong>L</strong>ymphomas in <strong>R</strong>, and is part of the family of R packages for lymphoma cancer research developed in the <a href="https://morinlab.github.io/">Morin Lab</a> at the Simon Fraser University.</p>
-<section id="gamblr-family" class="level2">
-<h2 class="anchored" data-anchor-id="gamblr-family">GAMBLR family</h2>
-<p>GAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data.</p>
-<p>It is designed to provide simple and straightfoward ways to visualize genomic data and works well with other tools in the GAMBLR family. We continue to develop more visualization tools, as well as improve their functionality.</p>
-<p>For more details, please refer to the <a href="./concepts/GAMBLR_family.html">GAMBLR family</a> section.</p>
+<p>There is a wealth of copy number data bundled within <code>GAMBLR.data</code> in the form of segmented copy number profiles. This tutorial will give you an overview of this data. It will also demonstrate how to process segmented data into a set of bins such that the data can be represented as a matrix of CN values or log ratios.</p>
+<section id="prepare-setup" class="level2">
+<h2 class="anchored" data-anchor-id="prepare-setup">Prepare setup</h2>
+<p>We will first import the necessary packages:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load packages</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GAMBLR.open)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>(<span class="fu">library</span>(dplyr))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
-<section id="local-experience" class="level2">
-<h2 class="anchored" data-anchor-id="local-experience">Local experience</h2>
-<p>The functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations.</p>
+<section id="metadata" class="level2">
+<h2 class="anchored" data-anchor-id="metadata">Metadata</h2>
+<p>As usual, we typically begin an analysis by loading the metadata and restricting the rows to samples of interest based on any number of criteria. Here, we’ll separately look at the data from WGS (<code>genome</code> seq_type) and whole exome sequencing <code>capture</code> seq_type.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dlbcl_genome_meta <span class="ot">=</span> <span class="fu">suppressMessages</span>(<span class="fu">get_gambl_metadata</span>(<span class="at">seq_type_filter =</span> <span class="st">"genome"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">filter</span>(pathology<span class="sc">==</span><span class="st">"DLBCL"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>dlbcl_exome_meta <span class="ot">=</span> <span class="fu">suppressMessages</span>(<span class="fu">get_gambl_metadata</span>(<span class="at">seq_type_filter =</span> <span class="st">"capture"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">filter</span>(pathology<span class="sc">==</span><span class="st">"DLBCL"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#remove any duplicate sample_id/seq_type combinations</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>g_meta_clean <span class="ot">=</span> <span class="fu">check_and_clean_metadata</span>(dlbcl_genome_meta,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">duplicate_action =</span> <span class="st">"keep_first"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#remove any duplicate sample_id/seq_type combinations</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>e_meta_clean <span class="ot">=</span> <span class="fu">check_and_clean_metadata</span>(dlbcl_exome_meta,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">duplicate_action =</span> <span class="st">"keep_first"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(g_meta_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 529</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(e_meta_clean)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1783</code></pre>
+</div>
+</div>
+<p>This shows that we have data from 529 genomes and 1783 exomes just from DLBCLs.</p>
 </section>
-<section id="use-cases" class="level2">
-<h2 class="anchored" data-anchor-id="use-cases">Use cases</h2>
-<p>You can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.</p>
-<p>GAMBLR.viz helps with:</p>
-<ul>
-<li>generate manuscript-ready plots in a simple and reproducible manner.</li>
-<li>one-stop shop to generate high-level or region-specific visualizations for genomic data analysis.</li>
-<li>implement consistent coloring scheme and pallettes for different types of annotations.</li>
-<li>overcome learning curve using individual packages commonly implemented in the data visualization field.</li>
-</ul>
-<p>For more details, please refer to the <a href="./tutorials/getting_started.html">tutorials</a> section.</p>
+<section id="projections" class="level2">
+<h2 class="anchored" data-anchor-id="projections">Projections</h2>
+<p>The number of samples that have copy number results available isn’t necessarily going to match this. Importantly, some studies are older and relied on the <code>grch37</code> (i.e.&nbsp;hg19) genome build whereas other studies used some flavour of <code>hg38</code>. In GAMBL, we aim to <em>project</em> all results to both <code>grch37</code> and <code>hg38</code> so results are relatively comparable between studies. However, for efficiency, GAMBLR.data doesn’t have both projections for every data set (sorry!). Let’s start by determining which of our samples in the metadata have data available for in case there are some results only available for one or the other <em>projection</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>g_segments_grch37 <span class="ot">=</span> <span class="fu">get_cn_segments</span>(<span class="at">these =</span> g_meta_clean,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">projection =</span> <span class="st">'grch37'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>g_segments_hg38 <span class="ot">=</span> <span class="fu">get_cn_segments</span>(<span class="at">these =</span> g_meta_clean,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">projection =</span> <span class="st">'hg38'</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(g_segments_grch37<span class="sc">$</span>ID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 214</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(g_segments_hg38<span class="sc">$</span>ID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 48</code></pre>
+</div>
+</div>
+<p>We seem to only have copy number segments available from 48 samples for hg38. For grch37 we have data from 214 samples. How about the exome data?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>e_segments_grch37 <span class="ot">=</span> <span class="fu">get_cn_segments</span>(<span class="at">these =</span> e_meta_clean,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">projection =</span> <span class="st">'grch37'</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>e_segments_hg38 <span class="ot">=</span> <span class="fu">get_cn_segments</span>(<span class="at">these =</span> e_meta_clean,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">projection =</span> <span class="st">'hg38'</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(e_segments_grch37<span class="sc">$</span>ID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(e_segments_hg38<span class="sc">$</span>ID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
+</div>
+<p>Ouch! We only provided copy number data from <code>genome</code> samples (so far). Let’s proceed with the largest data set, which is the <code>genome</code> samples and grch37 projection.</p>
 </section>
-<section id="community" class="level2">
-<h2 class="anchored" data-anchor-id="community">Community</h2>
-<p>Community discussions primarily happen through issue submission on <a href="https://github.com/morinlab/GAMBLR.viz/issues">GitHub</a>.</p>
+<section id="from-segments-to-bins" class="level2">
+<h2 class="anchored" data-anchor-id="from-segments-to-bins">From segments to bins</h2>
+<p>Segmented copy number data can be difficult to work with for a variety of reasons. For any coordinate in the genome, it’s unnecessarily complicated to determine the copy number of all samples. We simplify this by breaking the genome into a series of <em>bins</em> and determining the copy number state of each bin across all samples. This yields a N by M matrix where N is the number of samples with copy number data and M is the number of bins. The <code>segmented_data_to_cn_matrix</code> function in <code>GAMBLR.utils</code> makes this easy. In this example, we’ll do this to our 214 using 2500 bins. I’ve provided the metadata here even though it’s not strictly necessary. This can be useful if you pass seg_data that contains rows from patients that you don’t plan to analyze. Those rows will be removed before the slow process begins.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>time_start <span class="ot">=</span> <span class="fu">Sys.time</span>();</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>dlbcl_cn_binned <span class="ot">=</span> <span class="fu">segmented_data_to_cn_matrix</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">seg_data =</span> g_segments_grch37,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">strategy=</span><span class="st">"auto_split"</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">n_bins_split=</span><span class="dv">2500</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">these_samples_metadata =</span> g_meta_clean)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>time_end <span class="ot">=</span> <span class="fu">Sys.time</span>();</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>elapsed <span class="ot">=</span> <span class="fu">round</span>(time_end <span class="sc">-</span> time_start)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(elapsed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Time difference of 18 secs</code></pre>
+</div>
+</div>
+<p>That took 18 to finish. As you might imagine, increasing the n_bins_split value will make this process slower but will increase the resolution of your analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>every_seg <span class="ot">=</span> <span class="fu">get_cn_segments</span>(<span class="fu">get_gambl_metadata</span>())</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(every_seg<span class="sc">$</span>ID))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 448</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>time_start <span class="ot">=</span> <span class="fu">Sys.time</span>();</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>all_cn_binned <span class="ot">=</span> <span class="fu">segmented_data_to_cn_matrix</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">seg_data =</span> every_seg,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">strategy=</span><span class="st">"auto_split"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">n_bins_split=</span><span class="dv">2500</span>) <span class="co">#no metadata provided</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "missing these_samples_metadata"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>time_end <span class="ot">=</span> <span class="fu">Sys.time</span>();</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>elapsed <span class="ot">=</span> <span class="fu">round</span>(time_end <span class="sc">-</span> time_start)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(elapsed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Time difference of 26 secs</code></pre>
+</div>
+</div>
+<p>As you can see, the process took considerably longer this time because of the additional samples that weren’t dropped.</p>
+<p>As you might have guessed from the <code>strategy</code> parameter, there are other strategies for converting segmented data into a copy number matrix that don’t rely on equal-sized bins. The other options are ‘custom_regions’,‘cytobands’ and ‘GISTIC’. Each of these will be covered in another tutorial. You can find out more about these in the <code>segmented_data_to_cn_matrix</code> documentation.</p>
 </section>
-<section id="getting-started" class="level2">
-<h2 class="anchored" data-anchor-id="getting-started">Getting started</h2>
-<p>If you’re interested in trying GAMBLR.viz we recommend the <a href="./tutorials/getting_started.html">getting started tutorial</a>.</p>
+<section id="dlbcl-copy-number-heatmap" class="level2">
+<h2 class="anchored" data-anchor-id="dlbcl-copy-number-heatmap">DLBCL Copy Number Heatmap</h2>
+<p>Let’s start with the most basic example. Using the copy number matrix we just created, we run <code>pretty_CN_heatmap</code>. As for most other functions, you have to provide your metadata table via <em>these_samples_metadata</em>. You can often unambiguously refer to this parameter with the word <em>these</em>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a basic genome-wide CN heatmap</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pretty_CN_heatmap</span>(<span class="at">cn_state_matrix=</span>dlbcl_cn_binned,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">these_samples_metadata =</span> g_meta_clean,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">hide_annotations =</span> <span class="st">"chromosome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="CopyNumberHeatmap_files/figure-html/dlbcl_heatmap-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="copy-number-heatmap-for-everything" class="level2">
+<h2 class="anchored" data-anchor-id="copy-number-heatmap-for-everything">Copy Number Heatmap for everything</h2>
+<p>In an earlier example, we generated a larger matrix from all the <code>grch37</code> copy number data in <code>GAMBLR.data</code>. There are <code>nrow(all_cn_binned)</code> samples in there. Let’s see what that looks like in a heatmap. This time, we’ll tell the function to scale the copy number values to the average ploidy of each sample using <code>scale_by_sample</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>all_genome_meta <span class="ot">=</span> <span class="fu">get_gambl_metadata</span>()</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>all_genome_meta <span class="ot">=</span> <span class="fu">check_and_clean_metadata</span>(all_genome_meta,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">duplicate_action =</span> <span class="st">"keep_first"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a basic genome-wide CN heatmap</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">pretty_CN_heatmap</span>(<span class="at">cn_state_matrix=</span>all_cn_binned,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">these_samples_metadata =</span> all_genome_meta,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">scale_by_sample =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">hide_annotations =</span> <span class="st">"chromosome"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="CopyNumberHeatmap_files/figure-html/all_heatmap-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 
 
 </section>
@@ -922,7 +1110,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/why.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/morinlab/GAMBLR.viz/edit/website/docs/tutorials/CopyNumberHeatmap.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
       <ul class="footer-items list-unstyled">
     <li class="nav-item compact">
