@@ -23,6 +23,8 @@ pretty_CN_heatmap(
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
+  labelTheseCytobands,
+  highlightTheseRegions,
   bin_label_fontsize = 5,
   bin_label_nudge = 1.03,
   bin_label_rotation = 45,
@@ -42,6 +44,7 @@ pretty_CN_heatmap(
   return_data = FALSE,
   drop_bin_if_sd_below = 0,
   flip = FALSE,
+  max_CN_allowed = 6,
   verbose = FALSE
 )
 }
