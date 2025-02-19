@@ -17,11 +17,19 @@ prettyChromoplot(
   segment.curvature = 0.25,
   segment.ncp = 4,
   segment.angle = 25,
-  hide_neutral = FALSE,
-  verbose = FALSE
+  hide_neutral = FALSE
 )
 }
 \arguments{
+\item{scores_path}{Output file scores.gistic from the run of GISTIC2.0}
+
+\item{scores_df}{Optional. Instead of specifying scores_path pass a pre-loaded scores file as a data frame using scores_df}
+
+\item{labels_bed}{Optional. A bed_data object specifying the regions to apply labels.}
+
+\item{genome_build}{Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.
+Automatically set if labels_bed is provided}
+
 \item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 
 \item{adjust_amps}{Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
@@ -38,13 +46,7 @@ prettyChromoplot(
 
 \item{segment.angle}{Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.}
 
-\item{verbose}{Optional. Set to TRUE for a more verbose output.}
-
-\item{scores}{Output file scores.gistic from the run of GISTIC2.0}
-
-\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.}
-
-\item{projection}{Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.}
+\item{hide_neutral}{Optional. Set to TRUE to hide all neutral (insignificant) regions instead of plotting them in grey}
 }
 \value{
 plot
