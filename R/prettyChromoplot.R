@@ -17,7 +17,7 @@
 #' @param segment.curvature Optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25.
 #' @param segment.ncp Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.
 #' @param segment.angle Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.
-#'
+#' @param verbose Optional. Set to TRUE for a more verbose output. 
 #' @return plot
 #'
 #' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers
@@ -25,32 +25,61 @@
 #'
 #' @examples
 #' \dontrun{
-#' #basic usage
-#' prettyChromoplot("path_to_gistic_results/scores.gistic")
-#'
-#' #advanced usages
-#' prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
-#'                  genes_to_label = "path_to_gene_coordinates_table.tsv",
-#'                  cutoff = 0.75) +
-#'                   ... #any ggplot options to customize plot appearance
+#' genes = c("MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M","RB1","TCL1A","CD70",
+#'   "BCL2","KLHL14","TCF4","REL","BCL6","HIST1H1C","SMARCA4","CDKN2A","RHOA",
+#'   "TNFAIP3","TP53","CDK14","RELN","ETS1","MDM1","MIR17HG","CD58","HNRNPD",
+#'   "TOX","PRAME","CD38")
+#' gene_bed = select(grch37_gene_coordinates,-1) %>% #remove ensembl ID column
+#'   dplyr::filter(hugo_symbol %in% genes) %>% #keep genes of interest
+#'   mutate(length = end - start,mid = start + length/2) %>%
+#'   mutate(start = mid,end=start+1) %>%
+#'   unique() %>%
+#'   create_bed_data(genome_build = "grch37") #convert to bed_data format
+#' # GISTIC run using grch37
+#' prettyChromoplot(scores_path = "scores.gistic",
+#'                  labels_bed = gene_bed)
+#' #NOTE: genome build is inferred from gene_bed
+#' 
+#'  # GISTIC run using hg38 data
+#' prettyChromoplot(scores_path="scores.gistic",
+#'                    cutoff = 0.9,
+#'                    label_size=2,
+#'                    adjust_amps = 0.5,
+#'                    adjust_dels = 0.8,
+#'                    genome_build="hg38",
+#'                    hide_neutral = T)
 #' }
-#'
-prettyChromoplot = function(scores,
-                            genes_to_label,
-                            projection = "grch37",
-                            cutoff = 0.5,
-                            adjust_amps = 0.5,
-                            adjust_dels = 2.75,
-                            label_size = 3,
-                            force_pull = 0,
-                            segment.curvature = 0.25,
-                            segment.ncp = 4,
-                            segment.angle = 25){
-
-  #read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
-  scores = read_tsv(scores) %>%
-    dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, - 1 * `G-score`)) %>%
-    dplyr::relocate(Type, .after = frequency)
+prettyChromoplot <- function(scores_path,
+                             scores_df,
+                             labels_bed,
+                             genome_build,
+                             cutoff = 0.5,
+                             adjust_amps = 0.5,
+                             adjust_dels = 2.75,
+                             label_size = 3,
+                             force_pull = 0,
+                             segment.curvature = 0.25,
+                             segment.ncp = 4,
+                             segment.angle = 25,
+                             hide_neutral = FALSE,
+                             verbose = FALSE) {
+  if (!missing(scores_path)) {
+    # read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
+    scores <- read_tsv(scores_path) %>%
+      dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, -1 * `G-score`)) %>%
+      dplyr::relocate(Type, .after = frequency) %>%
+      mutate(Chromosome = as.character(Chromosome))
+  } else {
+    if (!missing(scores_df)) {
+      if (!"G-score" %in% colnames(scores_df)) {
+        stop("scores_df doesn't contain the expected columns e.g. G-score")
+      }
+      scores <- scores_df %>%
+        dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, -1 * `G-score`)) %>%
+        dplyr::relocate(Type, .after = frequency) %>%
+        mutate(Chromosome = as.character(Chromosome))
+    }
+  }
 
   #annotate each region with direction of changes - used for coloring
   scores$fill = ifelse(scores$Type == "Amp" & scores$`-log10(q-value)` > cutoff, "up",

@@ -5,9 +5,10 @@
 \title{Chromosome Plot}
 \usage{
 prettyChromoplot(
-  scores,
-  genes_to_label,
-  projection = "grch37",
+  scores_path,
+  scores_df,
+  labels_bed,
+  genome_build,
   cutoff = 0.5,
   adjust_amps = 0.5,
   adjust_dels = 2.75,
@@ -15,16 +16,12 @@ prettyChromoplot(
   force_pull = 0,
   segment.curvature = 0.25,
   segment.ncp = 4,
-  segment.angle = 25
+  segment.angle = 25,
+  hide_neutral = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{scores}{Output file scores.gistic from the run of GISTIC2.0}
-
-\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.}
-
-\item{projection}{Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.}
-
 \item{cutoff}{Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.}
 
 \item{adjust_amps}{Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.}
@@ -40,6 +37,14 @@ prettyChromoplot(
 \item{segment.ncp}{Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.}
 
 \item{segment.angle}{Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.}
+
+\item{verbose}{Optional. Set to TRUE for a more verbose output.}
+
+\item{scores}{Output file scores.gistic from the run of GISTIC2.0}
+
+\item{genes_to_label}{Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.}
+
+\item{projection}{Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.}
 }
 \value{
 plot
@@ -54,14 +59,28 @@ Other parameters are all optional. For a detailed explanation of how to use thes
 }
 \examples{
 \dontrun{
-#basic usage
-prettyChromoplot("path_to_gistic_results/scores.gistic")
+genes = c("MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M","RB1","TCL1A","CD70",
+  "BCL2","KLHL14","TCF4","REL","BCL6","HIST1H1C","SMARCA4","CDKN2A","RHOA",
+  "TNFAIP3","TP53","CDK14","RELN","ETS1","MDM1","MIR17HG","CD58","HNRNPD",
+  "TOX","PRAME","CD38")
+gene_bed = select(grch37_gene_coordinates,-1) \%>\% #remove ensembl ID column
+  dplyr::filter(hugo_symbol \%in\% genes) \%>\% #keep genes of interest
+  mutate(length = end - start,mid = start + length/2) \%>\%
+  mutate(start = mid,end=start+1) \%>\%
+  unique() \%>\%
+  create_bed_data(genome_build = "grch37") #convert to bed_data format
+# GISTIC run using grch37
+prettyChromoplot(scores_path = "scores.gistic",
+                 labels_bed = gene_bed)
+#NOTE: genome build is inferred from gene_bed
 
-#advanced usages
-prettyChromoplot(scorees = "path_to_gistic_results/scores.gistic",
-                 genes_to_label = "path_to_gene_coordinates_table.tsv",
-                 cutoff = 0.75) +
-                  ... #any ggplot options to customize plot appearance
+ # GISTIC run using hg38 data
+prettyChromoplot(scores_path="scores.gistic",
+                   cutoff = 0.9,
+                   label_size=2,
+                   adjust_amps = 0.5,
+                   adjust_dels = 0.8,
+                   genome_build="hg38",
+                   hide_neutral = T)
 }
-
 }
