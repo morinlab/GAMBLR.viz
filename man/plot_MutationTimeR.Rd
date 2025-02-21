@@ -23,7 +23,7 @@ plot_MutationTimeR(
 This function plots the timing information from MutationTimeR for SSMs and CNAs.
 }
 \examples{
-
+\dontrun{
 my_meta = suppressMessages(get_gambl_metadata()) \%>\% 
   dplyr::filter(sample_id=="01-20985T",
                seq_type=="genome")
@@ -37,4 +37,5 @@ all_plots = plot_MutationTimeR(my_meta,timed$CNA,timed$SSM)
 all_plots$full
 
 all_plots$minimal
+}
 }
