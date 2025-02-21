@@ -24,15 +24,14 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.open)
+#' 
 #' 
 #' #get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 #' 
 #' mm=these_samples_metadata = get_gambl_metadata() %>% 
 #'           dplyr::filter(pathology=="DLBCL",
-#'                  seq_type=="genome",
-#'                  cohort=="FL_Dreval") %>% 
+#'                  seq_type=="genome") %>% 
 #'           dplyr::arrange(lymphgen)
 #' regions_bed = create_bed_data(grch37_ashm_regions,
 #'                               fix_names = "concat",
@@ -61,10 +60,15 @@ ashm_multi_rainbow_plot = function(regions_bed,
   
 
   if(missing(these_samples_metadata)){
-    metadata = get_gambl_metadata() %>% dplyr::filter(seq_type %in% this_seq_type)
+    if(verbose) {
+      print("finding metadata")
+    }
+    metadata = get_gambl_metadata() %>% 
+      dplyr::filter(seq_type %in% this_seq_type)
     meta_arranged = arrange(metadata, pathology, lymphgen)
   }else{
-    metadata = these_samples_metadata  %>% dplyr::filter(seq_type %in% this_seq_type)
+    metadata = these_samples_metadata  %>% 
+      dplyr::filter(seq_type %in% this_seq_type)
     meta_arranged = metadata #assume the user already arranged it the way they wanted
   }
 
@@ -103,7 +107,8 @@ ashm_multi_rainbow_plot = function(regions_bed,
     stop("Region to display doesn't have coordinates in supplied bed or GAMBLR.data::somatic_hypermutation_locations_{genome_build}_v_latest."
     )
   }
-  regions_bed = mutate.genomic_data(regions_bed,region_name=paste0(chrom,":",start,"-",end))
+  regions_bed = mutate(regions_bed,
+    region_name=paste0(chrom,":",start,"-",end))
   regions = pull(regions_bed, region_name)
   names = pull(regions_bed, name)
   

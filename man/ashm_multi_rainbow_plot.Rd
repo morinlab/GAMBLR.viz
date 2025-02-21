@@ -47,15 +47,14 @@ In addition the user can also use the `metadata` parameter to use an already sub
 This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
 }
 \examples{
-library(GAMBLR.open)
+
 
 #get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 
 mm=these_samples_metadata = get_gambl_metadata() \%>\% 
           dplyr::filter(pathology=="DLBCL",
-                 seq_type=="genome",
-                 cohort=="FL_Dreval") \%>\% 
+                 seq_type=="genome") \%>\% 
           dplyr::arrange(lymphgen)
 regions_bed = create_bed_data(grch37_ashm_regions,
                               fix_names = "concat",
