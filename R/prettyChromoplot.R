@@ -6,9 +6,11 @@
 #' The only required parameter for this function is `scores`, which is the path to a file with GISTIC2.0 scores.
 #' Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 #'
-#' @param scores Output file scores.gistic from the run of GISTIC2.0
-#' @param genes_to_label Optional. Provide a data frame of genes to label (if mutated). The first 3 columns must contain chromosome, start, and end coordinates. Another required column must contain gene names and be named `gene`. All other columns are ignored. If no data frame provided, oncogenes from GAMBLR package are used by default to annotate on the plot.
-#' @param projection Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.
+#' @param scores_path Output file scores.gistic from the run of GISTIC2.0
+#' @param scores_df Optional. Instead of specifying scores_path pass a pre-loaded scores file as a data frame using scores_df
+#' @param labels_bed Optional. A bed_data object specifying the regions to apply labels.
+#' @param genome_build Defines the chr prefix and the coordinates of the default genes to label if `genes_to_label` is not provided.
+#' Automatically set if labels_bed is provided
 #' @param cutoff Optional. Used to determine which regions to color as aberrant. Must be float in the range between 0 and 1. The higher the number, the less regions will be considered as aberrant. The default is 0.5.
 #' @param adjust_amps Optional. The value of G-score for highest amplification peak will be multiplied by this value to determine how far up the gene label will be displayed. Default 0.5.
 #' @param adjust_dels Optional. The value of G-score for highest deletion peak will be multiplied by this value to determine how far down the gene label will be displayed. Default 2.75.
@@ -17,7 +19,8 @@
 #' @param segment.curvature Optional. Indicates whether arrow to the data point should be curved. Accepts numeric value, where negative is for left-hand and positive for right-hand curves, and 0 for straight lines. Default 0.25.
 #' @param segment.ncp Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.
 #' @param segment.angle Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.
-#' @param verbose Optional. Set to TRUE for a more verbose output. 
+#' @param hide_neutral Optional. Set to TRUE to hide all neutral (insignificant) regions instead of plotting them in grey
+#' @param verbose TRUE for chatty mode
 #' @return plot
 #'
 #' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers
@@ -89,12 +92,12 @@ prettyChromoplot <- function(scores_path,
   cnv_palette = c("up" = "#bd0000", "down" = "#2e5096", "neutral" = "#D2D2D3")
 
   #if no file is provided, annotate with oncogenes in GAMBLR package
-  if(projection == "grch37"){
+  if(genome_build == "grch37"){
     default_genes <- GAMBLR.data::grch37_oncogene
   } else {
     default_genes <- GAMBLR.data::hg38_oncogene
   }
-  if(missing(genes_to_label)){
+  if(missing(labels_bed)){
     genes_to_label = default_genes %>%
       dplyr::mutate(across(c(chrom, start, end), as.integer))
   }else{
