@@ -27,24 +27,45 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' genes = c("MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M","RB1","TCL1A","CD70",
-#'   "BCL2","KLHL14","TCF4","REL","BCL6","HIST1H1C","SMARCA4","CDKN2A","RHOA",
-#'   "TNFAIP3","TP53","CDK14","RELN","ETS1","MDM1","MIR17HG","CD58","HNRNPD",
-#'   "TOX","PRAME","CD38")
-#' gene_bed = select(grch37_gene_coordinates,-1) %>% #remove ensembl ID column
-#'   dplyr::filter(hugo_symbol %in% genes) %>% #keep genes of interest
+#' 
+#' 
+#' # Bundled output from a GISTIC run using grch37 results
+#' gistic_scores = system.file("extdata",
+#'   "scores.gistic",
+#'   package="GAMBLR.viz")
+#' 
+#' # Automatic labeling of gene sets for a given pathology
+#' prettyChromoplot(scores_path = gistic_scores,
+#'                  default_gene_set = "FL",
+#'                  genome_build = "grch37")
+#' 
+#' ## Specifying your own gene list for labeling
+#' genes = c(
+#'   "MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M",
+#'   "RB1","TCL1A","CD70","TOX","PRAME","CD38",
+#'   "BCL2","KLHL14","TCF4","REL","BCL6",
+#'   "SMARCA4","CDKN2A","RHOA","HIST1H1C",
+#'   "TNFAIP3","TP53","CDK14","RELN","ETS1",
+#'   "MDM1","MIR17HG","CD58","HNRNPD"
+#'   )
+#' gene_bed = select(grch37_gene_coordinates,-1) %>%
+#' #remove ensembl ID column
+#'   dplyr::filter(hugo_symbol %in% genes) %>% 
+#' #keep genes of interest
 #'   mutate(length = end - start,mid = start + length/2) %>%
 #'   mutate(start = mid,end=start+1) %>%
 #'   unique() %>%
-#'   create_bed_data(genome_build = "grch37") #convert to bed_data format
-#' # GISTIC run using grch37
-#' prettyChromoplot(scores_path = "scores.gistic",
+#' #convert to bed_data format
+#'   create_bed_data(genome_build = "grch37")
+#' 
+
+#' 
+#' prettyChromoplot(scores_path = gistic_scores,
 #'                  labels_bed = gene_bed)
 #' #NOTE: genome build is inferred from gene_bed
-#' 
+#' \dontrun{
 #'  # GISTIC run using hg38 data
-#' prettyChromoplot(scores_path="scores.gistic",
+#' prettyChromoplot(scores_path=gistic_scores,
 #'                    cutoff = 0.9,
 #'                    label_size=2,
 #'                    adjust_amps = 0.5,
@@ -55,6 +76,7 @@
 prettyChromoplot <- function(scores_path,
                              scores_df,
                              labels_bed,
+                             default_gene_set = "oncogenes",
                              genome_build,
                              cutoff = 0.5,
                              adjust_amps = 0.5,
@@ -68,7 +90,7 @@ prettyChromoplot <- function(scores_path,
                              verbose = FALSE) {
   if (!missing(scores_path)) {
     # read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
-    scores <- read_tsv(scores_path) %>%
+    scores <- suppressMessages(read_tsv(scores_path,  show_col_types=F)) %>%
       dplyr::mutate(`G-score` = ifelse(Type == "Amp", `G-score`, -1 * `G-score`)) %>%
       dplyr::relocate(Type, .after = frequency) %>%
       mutate(Chromosome = as.character(Chromosome))
@@ -85,10 +107,13 @@ prettyChromoplot <- function(scores_path,
   }
 
   # annotate each region with direction of changes - used for coloring
-  scores$fill <- ifelse(scores$Type == "Amp" & scores$`-log10(q-value)` > cutoff, "up",
-    ifelse(scores$Type == "Del" & scores$`-log10(q-value)` > cutoff, "down", "neutral")
+  scores$fill <- ifelse(scores$Type == "Amp" &
+      scores$`-log10(q-value)` > cutoff, "up",
+    ifelse(scores$Type == "Del" &
+             scores$`-log10(q-value)` > cutoff, "down", "neutral")
   )
-  # drop all neutral to avoid genes being dropped when a del and amp peak both overlap
+  # drop all neutral to avoid genes being dropped when
+  # a del and amp peak both overlap
   if (hide_neutral) {
     scores_labeling <- dplyr::filter(scores, fill != "neutral")
   } else {
@@ -96,17 +121,37 @@ prettyChromoplot <- function(scores_path,
   }
 
   # colors to plot
-  cnv_palette <- c("up" = "#bd0000", "down" = "#2e5096", "neutral" = "#D2D2D389")
-
+  cnv_palette <- c("up" = "#bd0000",
+                   "down" = "#2e5096",
+                   "neutral" = "#D2D2D389")
 
   if (missing(labels_bed)) {
     if (missing(genome_build)) {
       stop("genome_build is required when labels_bed is not used")
     }
-    if (genome_build == "grch37") {
-      genes_to_label <- create_bed_data(GAMBLR.data::grch37_oncogene)
-    } else {
-      genes_to_label <- create_bed_data(GAMBLR.data::hg38_oncogene)
+    if(default_gene_set=="oncogenes"){
+      if (genome_build == "grch37") {
+        genes_to_label <- create_bed_data(GAMBLR.data::grch37_oncogene)
+      } else {
+        genes_to_label <- create_bed_data(GAMBLR.data::hg38_oncogene)
+      }
+    }else if(default_gene_set %in% c("DLBCL","FL","BL","MCL")){
+      genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
+      !!sym(default_gene_set)==TRUE) %>% pull(Gene)
+
+      if (genome_build == "grch37") {
+        all_genes = GAMBLR.data::grch37_gene_coordinates
+      } else {
+        all_genes = GAMBLR.data::hg38_gene_coordinates
+      }
+      genes_to_label <- dplyr::filter(all_genes,hugo_symbol %in% genes) %>%
+        mutate(length = end - start,mid = start + length/2) %>%
+        mutate(start = mid,end=start+1) %>%
+        dplyr::filter(!grepl("PATCH",chromosome)) %>%
+        dplyr::select(-ensembl_gene_id,-gene_name) %>%
+        group_by(hugo_symbol) %>%
+        slice_head(n=1) %>%
+        create_bed_data(genome_build=genome_build)
     }
   } else {
     if (!"bed_data" %in% class(labels_bed)) {
@@ -147,8 +192,11 @@ prettyChromoplot <- function(scores_path,
     type = "any",
     nomatch = TRUE
   )
-  print(scores)
-  print(genes_to_label)
+  if(verbose){
+    print(scores)
+    print(genes_to_label)
+  }
+  
   scores <- scores %>%
     # if gene to annotate is provided, but it is in region with no CNV, do not label it
     dplyr::mutate(name = ifelse(!is.na(name) & fill == "neutral", NA, name)) %>%
