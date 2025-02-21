@@ -111,6 +111,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              these_samples_metadata,
                              metadataColumns = c("pathology"),
                              expressionColumns,
+                             genome_build = "grch37",
                              cluster_columns=FALSE,
                              cluster_rows=TRUE,
                              show_row_names=FALSE,
@@ -200,6 +201,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   if(missing(bin_labels)){
     bin_labels = list()
+    cytoband_labels = list()
   }
 
   if(!missing(geneBoxPlot)){
@@ -221,6 +223,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   if(!missing(labelTheseGenes) | !missing(labelTheseCytobands)){
+
     if(!missing(labelTheseGenes)){
 
       message("mapping genes to bins")
@@ -246,8 +249,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }
       bin_labels[[this_gene_region]]=g
       }
-    }else if(!missing(labelTheseCytobands)){
-      message("mapping genes to bins")
+    } 
+    if(!missing(labelTheseCytobands)){
+      message("mapping cytobands to bins")
       if(genome_build=="grch37"){
         cytobands = cytobands_grch37 %>% 
           mutate(name=paste0(cb.chromosome,cb.name),
@@ -265,11 +269,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
           message(paste("no region for",g))
           next
         }
-        if (this_cyto_region %in% names(bin_labels)){
-          message(paste("Cytoband", g, "and region", bin_labels[[this_cyto_region]],
+        if (this_cyto_region %in% names(cytoband_labels)){
+          message(paste("Cytoband", g, "and region", cytoband_labels[[this_cyto_region]],
           "share a region. I will only show the last one!"))
         }
-        bin_labels[[this_cyto_region]]=g
+        cytoband_labels[[this_cyto_region]]=g
       }
     }
   }else {
@@ -620,22 +624,42 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
-  if(!missing(labelTheseGenes)|length(bin_labels)>0){
-    for(i in c(1:length(bin_labels))){
+  if(!missing(labelTheseGenes)|!missing(labelTheseCytobands)|length(bin_labels)>0){
+    if(!missing(labelTheseGenes)){
+      if(verbose){
+        print("gene labeling")
+      }
+      for(i in c(1:length(bin_labels))){
         gene_region = names(bin_labels)[i]
         gene_name = unname(bin_labels[[i]])
-        gene_region_chunks = region_to_chunks(gene_region)
-      if(gene_region_chunks$chromosome %in% column_chromosome){
-          #decorate_heatmap_body("CN",
-          #                    {i=which(colnames(cn_state_matrix)==gene_region)
-          #                    x=i/ncol(cn_state_matrix)
-          #                    grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
-          #                              unit(bin_label_nudge,"npc"),
-                              #          rot=bin_label_rotation,just="top")
-          #                              rot=bin_label_rotation,just="bottom")
-                              
-                              #grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))})
-          decorate_annotation("Gain",
+        region_chunks = region_to_chunks(gene_region)
+      if(region_chunks$chromosome %in% column_chromosome){
+        
+          decorate_heatmap_body("CN",
+                              {i=which(colnames(cn_state_matrix)==gene_region)
+                              x=i/ncol(cn_state_matrix)
+                              grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
+                                        unit(bin_label_nudge,"npc"),
+                                        rot=bin_label_rotation,just="top")
+                              grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))})
+
+        }
+
+      }
+    }
+    if(verbose){
+      print(cytoband_labels)
+    }
+    if(!missing(labelTheseCytobands)){
+      for(i in c(1:length(cytoband_labels))){
+        gene_region = names(cytoband_labels)[i]
+        gene_name = unname(cytoband_labels[[i]])
+        region_chunks = region_to_chunks(gene_region)
+        if(region_chunks$chromosome %in% column_chromosome){          
+            if(verbose){
+              print("cytoband labeling")
+            }
+            decorate_annotation("Gain",
                               {i=which(colnames(cn_state_matrix)==gene_region)
                                x=i/ncol(cn_state_matrix)
                                x2 = (i+1)/ncol(cn_state_matrix)
@@ -644,21 +668,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                grid.text(gene_name,x,1.04,gp=gpar(fontsize=bin_label_fontsize),
                                    unit(bin_label_nudge,"npc"),
                                    rot=bin_label_rotation,just="top")
-                               #grid.rect(x = x, 
-                               #          y = 0, 
-                               #          width = 0.8,
-                               #          height = 1,
-                               #          just = "bottom",
-                               #          gp = gpar(fill = "#00FF0040"),
-                               #          unit(bin_label_nudge,"npc"))})   
-                               #print(paste(x,x2))
-                              grid.lines(c(xmid, xmid), c(-1, 1), gp = gpar(lwd = 1,
+                               grid.lines(c(xmid, xmid), c(-1, 1), gp = gpar(lwd = 1,
                                                                         col = "#00FF0040"))
-                              #grid.lines(c(x2, x2), c(-1, 0), gp = gpar(lwd = 1,
-                              #                                          col = "#00FF0040"))
-                                                                        })
-      }
-        #decorate_column_title("CN",{grid.rect(gp = gpar(fill = "#00FF0040"))})
+                              })
+          }
+        }
     }
 
   }
