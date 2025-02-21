@@ -17,7 +17,8 @@ prettyChromoplot(
   segment.curvature = 0.25,
   segment.ncp = 4,
   segment.angle = 25,
-  hide_neutral = FALSE
+  hide_neutral = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{

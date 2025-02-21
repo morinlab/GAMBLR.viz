@@ -23,6 +23,8 @@ pretty_CN_heatmap(
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
+  labelTheseCytobands,
+  highlightTheseRegions,
   bin_label_fontsize = 5,
   bin_label_nudge = 1.03,
   bin_label_rotation = 45,
@@ -42,6 +44,7 @@ pretty_CN_heatmap(
   return_data = FALSE,
   drop_bin_if_sd_below = 0,
   flip = FALSE,
+  max_CN_allowed = 6,
   verbose = FALSE
 )
 }
@@ -141,7 +144,7 @@ meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
                                       duplicate_action = "keep_first")
 
 # Create the copy number matrix using the helper functions
-all_segments = get_cn_segments(meta_clean)
+all_segments = get_cn_segments()
 dlbcl_cn_binned = segmented_data_to_cn_matrix(
                                   seg_data = all_segments,
                                   strategy="auto_split",
@@ -164,7 +167,10 @@ pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
 
 \dontrun{
  # get gene expression data
- gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
+ gene_exp_all = get_gene_expression(all_genes=T,
+                                    lazy_join=T,
+                                     arbitrarily_pick = T,
+                                     HGNC=T,format="wide")
 
  genome_meta_exp = left_join(get_gambl_metadata() \%>\%
     filter(seq_type=="genome") \%>\%
