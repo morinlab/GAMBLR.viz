@@ -20,7 +20,7 @@
 #' @param segment.ncp Optional. Indicates number of control points to make a smoother curve. Higher value allows for more flexibility for the curve. Default 4.
 #' @param segment.angle Optional. Numeric value in the range 0-180, where less than 90 skews control points of the arrow from label to data point toward the start point. Default 25.
 #' @param hide_neutral Optional. Set to TRUE to hide all neutral (insignificant) regions instead of plotting them in grey
-#'
+#' @param verbose
 #' @return plot
 #'
 #' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers
@@ -64,7 +64,8 @@ prettyChromoplot <- function(scores_path,
                              segment.curvature = 0.25,
                              segment.ncp = 4,
                              segment.angle = 25,
-                             hide_neutral = FALSE) {
+                             hide_neutral = FALSE,
+                             verbose = FALSE) {
   if (!missing(scores_path)) {
     # read GISTIC scores file, convert G-score to be negative for deletions, and relocate chromosome, start, and end columns to be the first three
     scores <- read_tsv(scores_path) %>%
