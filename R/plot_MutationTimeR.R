@@ -8,21 +8,21 @@
 #' @param verbose Set to TRUE for a chattier experience. Default is FALSE.
 #' @import ggplot2 dplyr ggpubr
 #' @export
+#' @return a named list containing two plot objects, `full` with the plot of all chromosomes and `minimal` with the plot of only chromosomes with timed CNAs.
 #' @examples
 #'
+#' \dontrun{
 #' my_meta = suppressMessages(get_gambl_metadata()) %>%
 #'   dplyr::filter(sample_id=="01-20985T",
 #'                seq_type=="genome")
 #' timed = GAMBLR.results::get_timed_mutations(my_meta,"hg38")
-#' print(timed$SSM)
-#'
-#' print(timed$CNA)
 #'
 #' all_plots = plot_MutationTimeR(my_meta,timed$CNA,timed$SSM)
 #'
 #' all_plots$full
 #'
 #' all_plots$minimal
+#' }
 plot_MutationTimeR <- function(this_sample_metadata,
                               timed_cna,
                               timed_ssm,
@@ -63,7 +63,7 @@ plot_MutationTimeR <- function(this_sample_metadata,
     length_df$chromosome = factor(length_df$chromosome, levels = chr_levels)
     length_df = arrange(length_df, chromosome)
   }else{
-    stop("Unsupported projection")
+    stop(paste("Unsupported genome build,", projection, ". Please provide either hg378 or grch37."))
   }
   chrom_lengths = pull(length_df,length)
   names(chrom_lengths) = pull(length_df,chromosome)
@@ -113,10 +113,6 @@ plot_MutationTimeR <- function(this_sample_metadata,
         mutate(start = startpos, end = endpos)
       #x <- data.table(timed_ssm)
       #y <- data.table(just_timed)
-      #setkey(y, chr, start, end)
-      print("RUNNING COOL_OVERLAPS")
-      print(head(timed_ssm %>% arrange(Chromosome)))
-      print(head(just_timed %>% arrange(chr)))
       just_timed = mutate(just_timed,start = as.numeric(start),
       end = as.numeric(end))
       timed_ssm = mutate(timed_ssm,Start_Position = as.numeric(Start_Position),
