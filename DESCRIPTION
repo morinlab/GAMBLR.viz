@@ -25,6 +25,7 @@ Imports:
     ggrepel,
     ggseqlogo,
     IRanges,
+    magrittr,
     parallel,
     purrr,
     RColorBrewer,

@@ -79,7 +79,7 @@ prettyCoOncoplot = function(maf,
 
     #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
     if(missing(comparison_values)){
-      if(class(metadata[[comparison_column]]) == "factor"){
+      if("factor" %in% class(metadata[[comparison_column]])){
         comparison_values = levels(metadata[[comparison_column]])
       } else {
         comparison_values = unique(metadata[[comparison_column]])

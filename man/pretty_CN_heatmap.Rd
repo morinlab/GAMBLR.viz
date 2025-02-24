@@ -10,6 +10,7 @@ pretty_CN_heatmap(
   these_samples_metadata,
   metadataColumns = c("pathology"),
   expressionColumns,
+  genome_build = "grch37",
   cluster_columns = FALSE,
   cluster_rows = TRUE,
   show_row_names = FALSE,
