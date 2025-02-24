@@ -8,7 +8,8 @@
 #' @param verbose Set to TRUE for a chattier experience. Default is FALSE.
 #' @import ggplot2 dplyr ggpubr
 #' @export
-#' @return a named list containing two plot objects, `full` with the plot of all chromosomes and `minimal` with the plot of only chromosomes with timed CNAs.
+#' @return a named list containing two plot objects, `full` with the plot of
+#' all chromosomes and `minimal` with the plot of only chromosomes with timed CNAs.
 #' @examples
 #'
 #' \dontrun{
