@@ -7,12 +7,12 @@
 pretty_mutual_exclusivity(
   maf_data,
   mutmat,
+  corr_mat,
   genes,
   these_samples_metadata,
   q_threshold = 0.1,
   exclude_insignificant_genes = TRUE,
   engine = "ggcorrplot",
-  use_MCC = FALSE,
   font_size = 7,
   use_alpha = FALSE,
   clustering_distance = "binary",
@@ -23,38 +23,12 @@ pretty_mutual_exclusivity(
   include_silent = F,
   include_hotspots = F,
   review_hotspots = F,
-  bonferroni = FALSE
+  bonferroni = FALSE,
+  verbose = FALSE,
+  annotate_by_pathology = TRUE
 )
 }
 \arguments{
-\item{maf_data}{}
-
-\item{mutmat}{}
-
-\item{genes}{}
-
-\item{these_samples_metadata}{}
-
-\item{q_threshold}{}
-
-\item{exclude_insignificant_genes}{}
-
-\item{engine}{}
-
-\item{use_MCC}{}
-
-\item{font_size}{}
-
-\item{use_alpha}{}
-
-\item{clustering_distance}{}
-
-\item{gene_anno_df}{}
-
-\item{size_factor}{}
-
-\item{split}{}
-
 \item{return_data}{Default False}
 
 \item{include_silent}{Default False}
@@ -69,15 +43,58 @@ pretty_mutual_exclusivity(
 Pretty mutual exclusivity plot
 }
 \examples{
-dlbcl_meta = get_gambl_metadata() \%>\% dplyr::filter(pathology=="DLBCL",seq_type!="mrna")
-all_coding = get_all_coding_ssm(these = dlbcl_meta)
+dlbcl_meta <- get_gambl_metadata() \%>\% dplyr::filter(pathology == "DLBCL", seq_type != "mrna")
+all_coding <- GAMBLR.open::get_all_coding_ssm(these = dlbcl_meta)
+bl_fl_dlbcl_meta = get_gambl_metadata() \%>\% 
+  dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna")
 
-pretty_mutual_exclusivity(maf_data = all_coding, 
-                               genes = lg_genes,
-                               these=dlbcl_meta,
-                               engine = "ComplexHeatmap",
-                               font_size = 6,
-                               use_alpha = T,
-                               clustering_distance="binary",
-                               include_hotspots = T)
+\dontrun{
+lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+lg_feats = lymphgens$feature_annotation
+lg_genes = unique(lg_feats$Feature)
+
+pretty_mutual_exclusivity(
+   maf_data = all_coding,
+   genes = lg_genes,
+   these = dlbcl_meta,
+   size_factor =  0.007,
+   engine = "ComplexHeatmap",
+   font_size = 6,
+   use_alpha = F,
+   clustering_distance = "binary",
+   include_hotspots = T
+) 
+}
+fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
+  FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier ==1) \%>\%
+  pull(Gene)
+
+# because the first steps of this are slow we can
+# store the output matrix as a shortcut for subsequent runs
+Sys.date()
+
+outs = pretty_mutual_exclusivity(
+  maf_data = all_coding,
+  genes = fl_bl_dlbcl_genes,
+  these = bl_fl_dlbcl_meta,
+  engine = "ComplexHeatmap",
+  font_size = 6,
+  use_alpha = T,
+  clustering_distance = "binary",
+  include_hotspots = F
+)
+Sys.date()
+
+pretty_mutual_exclusivity(mutmat=outs$mut_mat,
+  corr_mat = outs$corr_mat,
+  p_mat = outs$p_mat,
+  maf_data = all_coding,
+  genes = fl_bl_dlbcl_genes,
+  these = bl_fl_dlbcl_meta,
+  engine = "ComplexHeatmap",
+  font_size = 6,
+  use_alpha = T,
+  clustering_distance = "binary",
+  include_hotspots = F
+)
 }
