@@ -7,8 +7,8 @@
 #' visualized setting include_silent to TRUE. 
 #'
 #' @param maf_df A data frame containing the mutation data.
-#' @param metadata Required argument. A data.frame with metadata for the CoLollipop Plot.
-#' @param comparison_column Required: the name of the metadata column containing the comparison values.
+#' @param these_samples_metadata Required argument. A data.frame with these_samples_metadata for the CoLollipop Plot.
+#' @param comparison_column Required: the name of the these_samples_metadata column containing the comparison values.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param gene The gene symbol to plot.
 #' @param label_threshold Threshold for labels to appear on plot. 
@@ -32,14 +32,14 @@
 #'   these_samples_metadata = metadata
 #' )
 #' pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
-#'                                                         metadata = metadata,
+#'                                                         these_samples_metadata = metadata,
 #'                                                         comparison_column = "sex",
 #'                                                         comparison_values = c("M", "F"),
 #'                                                         gene = "IGLL5",
 #'                                                         label_threshold = 2)
 pretty_colollipop_plot <- function(
     maf_df,
-    metadata,
+    these_samples_metadata,
     comparison_column,
     comparison_values,
     gene,
@@ -53,7 +53,7 @@ pretty_colollipop_plot <- function(
     # check for required arguments
     required <- c(
         "maf_df", 
-        "metadata", 
+        "these_samples_metadata", 
         "comparison_column"
         )
 
@@ -65,10 +65,10 @@ pretty_colollipop_plot <- function(
 
     # If no comparison_values are specified, derive the comparison_values from the specified comparison_column
     if(missing(comparison_values)){
-        if(class(metadata[[comparison_column]]) == "factor"){
-            comparison_values = levels(metadata[[comparison_column]])
+        if(class(these_samples_metadata[[comparison_column]]) == "factor"){
+            comparison_values = levels(these_samples_metadata[[comparison_column]])
         } else {
-            comparison_values = unique(metadata[[comparison_column]])
+            comparison_values = unique(these_samples_metadata[[comparison_column]])
         }
     }
 
@@ -79,8 +79,8 @@ pretty_colollipop_plot <- function(
     }
 
     # Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
-    meta1 <- metadata[metadata[[comparison_column]] %in% comparison_values[1], ]
-    meta2 <- metadata[metadata[[comparison_column]] %in% comparison_values[2], ]
+    meta1 <- these_samples_metadata[these_samples_metadata[[comparison_column]] %in% comparison_values[1], ]
+    meta2 <- these_samples_metadata[these_samples_metadata[[comparison_column]] %in% comparison_values[2], ]
 
     # Subset maf to only samples in the comparison values
     ssm1 <- maf_df %>%

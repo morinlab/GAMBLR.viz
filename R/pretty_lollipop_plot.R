@@ -7,6 +7,7 @@
 #' include_silent to TRUE. 
 #'
 #' @param maf_df A data frame containing the mutation data.
+#' @param these_samples_metadata Required argument. A data.frame with metadata.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest
@@ -37,7 +38,7 @@
 #' )
 #'
 #' #construct pretty_lollipop_plot.
-#' lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+#' lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
 #' print(lolipop_result)
 #' 
 #' \dontrun{
@@ -49,11 +50,12 @@
 #' maf_df <- get_all_coding_ssm(
 #'     these_samples_metadata = metadata
 #' )
-#' lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+#' lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
 #' lolipop_result
 #'}
 pretty_lollipop_plot <- function(
     maf_df,
+    these_samples_metadata,
     gene,
     plot_title,
     refseq_id,
@@ -289,7 +291,7 @@ pretty_lollipop_plot <- function(
             distinct(Tumor_Sample_Barcode) %>% 
             nrow()
 
-        Somatic_Mutation_Denominator <- length(unique(metadata$Tumor_Sample_Barcode))
+        Somatic_Mutation_Denominator <- length(unique(these_samples_metadata$Tumor_Sample_Barcode))
 
         Somatic_Mutation_Rate <- Somatic_Mutation_Numerator/Somatic_Mutation_Denominator *100
         Somatic_Mutation_Rate <- round(Somatic_Mutation_Rate, 2)

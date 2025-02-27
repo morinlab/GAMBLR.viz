@@ -6,7 +6,7 @@
 \usage{
 pretty_colollipop_plot(
   maf_df,
-  metadata,
+  these_samples_metadata,
   comparison_column,
   comparison_values,
   gene,
@@ -20,9 +20,9 @@ pretty_colollipop_plot(
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
 
-\item{metadata}{Required argument. A data.frame with metadata for the CoLollipop Plot.}
+\item{these_samples_metadata}{Required argument. A data.frame with these_samples_metadata for the CoLollipop Plot.}
 
-\item{comparison_column}{Required: the name of the metadata column containing the comparison values.}
+\item{comparison_column}{Required: the name of the these_samples_metadata column containing the comparison values.}
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
@@ -59,7 +59,7 @@ maf_df = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = metadata
 )
 pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
-                                                        metadata = metadata,
+                                                        these_samples_metadata = metadata,
                                                         comparison_column = "sex",
                                                         comparison_values = c("M", "F"),
                                                         gene = "IGLL5",

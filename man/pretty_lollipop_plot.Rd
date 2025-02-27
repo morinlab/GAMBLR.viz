@@ -6,6 +6,7 @@
 \usage{
 pretty_lollipop_plot(
   maf_df,
+  these_samples_metadata,
   gene,
   plot_title,
   refseq_id,
@@ -22,6 +23,8 @@ pretty_lollipop_plot(
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
+
+\item{these_samples_metadata}{Required argument. A data.frame with metadata.}
 
 \item{gene}{The gene symbol to plot.}
 
@@ -69,7 +72,7 @@ maf_df <- get_coding_ssm(
 )
 
 #construct pretty_lollipop_plot.
-lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
 print(lolipop_result)
 
 \dontrun{
@@ -81,7 +84,7 @@ print(lolipop_result)
 maf_df <- get_all_coding_ssm(
     these_samples_metadata = metadata
 )
-lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
 lolipop_result
 }
 }
