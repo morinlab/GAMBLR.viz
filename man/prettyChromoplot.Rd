@@ -8,6 +8,7 @@ prettyChromoplot(
   scores_path,
   scores_df,
   labels_bed,
+  default_gene_set = "oncogenes",
   genome_build,
   cutoff = 0.5,
   adjust_amps = 0.5,
@@ -17,7 +18,8 @@ prettyChromoplot(
   segment.curvature = 0.25,
   segment.ncp = 4,
   segment.angle = 25,
-  hide_neutral = FALSE
+  hide_neutral = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -60,24 +62,44 @@ The only required parameter for this function is `scores`, which is the path to 
 Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 }
 \examples{
-\dontrun{
-genes = c("MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M","RB1","TCL1A","CD70",
-  "BCL2","KLHL14","TCF4","REL","BCL6","HIST1H1C","SMARCA4","CDKN2A","RHOA",
-  "TNFAIP3","TP53","CDK14","RELN","ETS1","MDM1","MIR17HG","CD58","HNRNPD",
-  "TOX","PRAME","CD38")
-gene_bed = select(grch37_gene_coordinates,-1) \%>\% #remove ensembl ID column
-  dplyr::filter(hugo_symbol \%in\% genes) \%>\% #keep genes of interest
+
+
+# Bundled output from a GISTIC run using grch37 results
+gistic_scores = system.file("extdata",
+  "scores.gistic",
+  package="GAMBLR.viz")
+
+# Automatic labeling of gene sets for a given pathology
+prettyChromoplot(scores_path = gistic_scores,
+                 default_gene_set = "FL",
+                 genome_build = "grch37")
+
+## Specifying your own gene list for labeling
+genes = c(
+  "MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M",
+  "RB1","TCL1A","CD70","TOX","PRAME","CD38",
+  "BCL2","KLHL14","TCF4","REL","BCL6",
+  "SMARCA4","CDKN2A","RHOA","HIST1H1C",
+  "TNFAIP3","TP53","CDK14","RELN","ETS1",
+  "MDM1","MIR17HG","CD58","HNRNPD"
+  )
+gene_bed = select(grch37_gene_coordinates,-1) \%>\%
+#remove ensembl ID column
+  dplyr::filter(hugo_symbol \%in\% genes) \%>\% 
+#keep genes of interest
   mutate(length = end - start,mid = start + length/2) \%>\%
   mutate(start = mid,end=start+1) \%>\%
   unique() \%>\%
-  create_bed_data(genome_build = "grch37") #convert to bed_data format
-# GISTIC run using grch37
-prettyChromoplot(scores_path = "scores.gistic",
+#convert to bed_data format
+  create_bed_data(genome_build = "grch37")
+
+
+prettyChromoplot(scores_path = gistic_scores,
                  labels_bed = gene_bed)
 #NOTE: genome build is inferred from gene_bed
-
+\dontrun{
  # GISTIC run using hg38 data
-prettyChromoplot(scores_path="scores.gistic",
+prettyChromoplot(scores_path=gistic_scores,
                    cutoff = 0.9,
                    label_size=2,
                    adjust_amps = 0.5,

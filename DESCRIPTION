@@ -10,6 +10,7 @@ License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Imports:
+    BSgenome,
     circlize,
     ComplexHeatmap,
     cowplot,
@@ -24,6 +25,7 @@ Imports:
     ggrepel,
     ggseqlogo,
     IRanges,
+    magrittr,
     parallel,
     purrr,
     RColorBrewer,

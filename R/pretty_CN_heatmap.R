@@ -58,7 +58,7 @@
 #'                                       duplicate_action = "keep_first")
 #' 
 #' # Create the copy number matrix using the helper functions
-#' all_segments = get_cn_segments(meta_clean)
+#' all_segments = get_cn_segments()
 #' dlbcl_cn_binned = segmented_data_to_cn_matrix(
 #'                                   seg_data = all_segments,
 #'                                   strategy="auto_split",
@@ -111,6 +111,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              these_samples_metadata,
                              metadataColumns = c("pathology"),
                              expressionColumns,
+                             genome_build = "grch37",
                              cluster_columns=FALSE,
                              cluster_rows=TRUE,
                              show_row_names=FALSE,
@@ -124,6 +125,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              sortByPGA=FALSE,
                              sortByMetadataColumns,
                              labelTheseGenes,
+                             labelTheseCytobands,
+                             highlightTheseRegions,
                              bin_label_fontsize=5,
                              bin_label_nudge = 1.03,
                              bin_label_rotation=45,
@@ -143,16 +146,21 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              return_data = FALSE,
                              drop_bin_if_sd_below=0,
                              flip=FALSE,
+                             max_CN_allowed = 6,
                              verbose=FALSE){
-  cn_state_matrix[cn_state_matrix>5] = 5
+  cn_state_matrix[cn_state_matrix>max_CN_allowed] = max_CN_allowed
   #determine variance of each bin across the entire data set
-  bin_vars = apply(cn_state_matrix,2,sd)
+  bin_vars <- apply(cn_state_matrix, 2, function(x) sd(x, na.rm = TRUE))
+  
+  #bin_vars = apply(mat1,2,sd)
   old_col = ncol(cn_state_matrix)
   cn_state_matrix = cn_state_matrix[,which(bin_vars > drop_bin_if_sd_below)]
   new_col = ncol(cn_state_matrix)
-  #print(paste("original:",old_col,"new:",new_col))
+  if(verbose){
+    print(paste("original:",old_col,"new:",new_col))
+  }
   if(scale_by_sample){
-    cn_state_matrix = cn_state_matrix - rowMeans(cn_state_matrix) + 2
+    cn_state_matrix = cn_state_matrix - rowMeans(cn_state_matrix, na.rm = TRUE) + 2
     cn_state_matrix = round(cn_state_matrix)
     cn_state_matrix[cn_state_matrix<0]=0
   }
@@ -161,7 +169,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
     other_bins = colnames(cn_state_matrix)[!colnames(cn_state_matrix) %in% focus_on_these_bins]
     cn_state_matrix[,other_bins] = 2
   }
-  map_bin_to_bin = function(query_region,regions=colnames(cn_state_matrix),first=TRUE){
+  map_bin_to_bin = function(query_region,
+                            regions=colnames(cn_state_matrix),
+                            first=TRUE){
     these_coords = suppressMessages(region_to_chunks(query_region))
     these_coords$chromosome = gsub("chr", "", these_coords$chromosome)
     all_matches = c()
@@ -191,6 +201,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   if(missing(bin_labels)){
     bin_labels = list()
+    cytoband_labels = list()
   }
 
   if(!missing(geneBoxPlot)){
@@ -201,10 +212,22 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
     }
   }
+  regions_highlight = c()
+  if(!missing(highlightTheseRegions)){
+    for(a in c(1:nrow(highlightTheseRegions))){
+      this_region_bins = map_bin_to_bin(highlightTheseRegions[a,"name"],first=FALSE)
 
-  if(!missing(labelTheseGenes)){
-    message("mapping genes to bins")
-    for(g in labelTheseGenes){
+      regions_highlight = c(regions_highlight,this_region_bins)
+
+    }
+  }
+
+  if(!missing(labelTheseGenes) | !missing(labelTheseCytobands)){
+
+    if(!missing(labelTheseGenes)){
+
+      message("mapping genes to bins")
+      for(g in labelTheseGenes){
       gene_region = suppressMessages(gene_to_region(g))
       this_gene_region = map_bin_to_bin(gene_region)
       if(!missing(geneBoxPlot)){
@@ -225,6 +248,33 @@ pretty_CN_heatmap = function(cn_state_matrix,
         "share a region. I will only show the last one!"))
       }
       bin_labels[[this_gene_region]]=g
+      }
+    } 
+    if(!missing(labelTheseCytobands)){
+      message("mapping cytobands to bins")
+      if(genome_build=="grch37"){
+        cytobands = cytobands_grch37 %>% 
+          mutate(name=paste0(cb.chromosome,cb.name),
+          region=paste0(cb.chromosome,":",cb.start,"-",cb.end))
+      }else if(genome_build == "hg38"){
+        cytobands = cytobands_hg38 %>%
+          mutate(name=paste0(cb.chromosome,cb.name),
+          region=paste0(cb.chromosome,":",cb.start,"-",cb.end))
+      }
+      for(g in labelTheseCytobands){
+        cytoband_region = dplyr::filter(cytobands,name==g) %>% pull(region)
+        this_cyto_region = map_bin_to_bin(cytoband_region)
+      
+        if (is.na(this_cyto_region)){
+          message(paste("no region for",g))
+          next
+        }
+        if (this_cyto_region %in% names(cytoband_labels)){
+          message(paste("Cytoband", g, "and region", cytoband_labels[[this_cyto_region]],
+          "share a region. I will only show the last one!"))
+        }
+        cytoband_labels[[this_cyto_region]]=g
+      }
     }
   }else {
     if (!missing(geneBoxPlot)){
@@ -251,7 +301,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
 
   if(!missing(these_samples_metadata)){
-    keep_samples = pull(these_samples_metadata,sample_id)
+    keep_samples = pull(these_samples_metadata, sample_id)
     all_samples = rownames(cn_state_matrix)
     cn_state_matrix = cn_state_matrix[all_samples[all_samples %in% keep_samples],]
 
@@ -324,16 +374,14 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
   }
 
-
-
     gain_state = cn_state_matrix
     gain_state[gain_state<=2]=0
     gain_state[gain_state>0]=1
-    total_gain = colSums(gain_state)
+    total_gain = colSums(gain_state, na.rm = TRUE)
     loss_state = cn_state_matrix
     loss_state[loss_state>=2]=0
     loss_state[loss_state!=0]=1
-    total_loss = colSums(loss_state)
+    total_loss = colSums(loss_state, na.rm = TRUE)
     if(!missing(expressionColumns)){
       metadataColumns = c(metadataColumns,expressionColumns)
     }
@@ -341,7 +389,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
       column_to_rownames("sample_id")
     either_state = loss_state
     either_state[gain_state==1]=1
-    sample_average = rowMeans(either_state)
+    sample_average = rowMeans(either_state, na.rm = TRUE)
     samples_keep_PGA = which(sample_average >= drop_if_PGA_below & sample_average <= drop_if_PGA_above)
 
     cn_state_matrix = cn_state_matrix[samples_keep_PGA,]
@@ -352,11 +400,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     gain_state = cn_state_matrix
     gain_state[gain_state<=2]=0
     gain_state[gain_state>0]=1
-    total_gain = colSums(gain_state)
+    total_gain = colSums(gain_state, na.rm = TRUE)
     loss_state = cn_state_matrix
     loss_state[loss_state>=2]=0
     loss_state[loss_state!=0]=1
-    total_loss = colSums(loss_state)
+    total_loss = colSums(loss_state, na.rm = TRUE)
     #sample_CN_anno = HeatmapAnnotation(PGA=sample_average,which="row")
 
 
@@ -373,15 +421,12 @@ pretty_CN_heatmap = function(cn_state_matrix,
     flipped_data = cn_state_matrix
     for(i in c(1:length(total_gain))){
       bin_name = names(total_gain)[i]
-
       if(total_gain[i] > total_loss[i]){
         flipped_data[cn_state_matrix[,i]<2,i]=2
       }else{
         flipped_data[cn_state_matrix[,i]>2,i]=2
       }
     }
-
-
       cn_state_matrix = flipped_data
     }
 
@@ -390,7 +435,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     if(!missing(keep_these_bins)){
       available_bins = keep_these_bins[which(keep_these_bins %in% colnames(cn_state_matrix))]
       cn_state_matrix = cn_state_matrix[,available_bins]
-
+      regions_highlight = regions_highlight[which(regions_highlight %in% keep_these_bins)]
       column_chromosome = gsub(":.+", "", colnames(cn_state_matrix))
       total_gain = total_gain[available_bins]
       total_loss = total_loss[available_bins]
@@ -504,7 +549,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }else{
       show_legend=TRUE
     }
-    bin_average = colMeans(cn_state_matrix)
+    bin_average = colMeans(cn_state_matrix, na.rm = TRUE)
     cn_av_df = tibble(x=bin_average,coordinate=names(bin_average))
     cn_av_df = mutate(cn_av_df,
                       local.minima=ifelse(lag(x,n=15)>x & lead(x,n=15)  > x & x < 2,TRUE,FALSE),
@@ -517,10 +562,10 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                      annotation_name_side = bottom_annotation_name_side,
                                      show_legend=show_legend,
                                      col=list(Mean_CN=col_fun))
+
+    #need to create a data frame with the bin names as rownames and a different value depending on whether
+    # the bin is in regions_highlight
     cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
-
-
-
                                         Gain = anno_barplot(total_gain,
                                                             gp=gpar(fill="red",col="red")),
                                         loss=anno_barplot(total_loss,
@@ -579,12 +624,17 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
   draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
-  if(!missing(labelTheseGenes)|length(bin_labels)>0){
-    for(i in c(1:length(bin_labels))){
+  if(!missing(labelTheseGenes)|!missing(labelTheseCytobands)|length(bin_labels)>0){
+    if(!missing(labelTheseGenes)){
+      if(verbose){
+        print("gene labeling")
+      }
+      for(i in c(1:length(bin_labels))){
         gene_region = names(bin_labels)[i]
         gene_name = unname(bin_labels[[i]])
-        gene_region_chunks = region_to_chunks(gene_region)
-      if(gene_region_chunks$chromosome %in% column_chromosome){
+        region_chunks = region_to_chunks(gene_region)
+      if(region_chunks$chromosome %in% column_chromosome){
+        
           decorate_heatmap_body("CN",
                               {i=which(colnames(cn_state_matrix)==gene_region)
                               x=i/ncol(cn_state_matrix)
@@ -592,8 +642,37 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                         unit(bin_label_nudge,"npc"),
                                         rot=bin_label_rotation,just="top")
                               grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))})
+
+        }
+
       }
-        #decorate_column_title("CN",{grid.rect(gp = gpar(fill = "#00FF0040"))})
+    }
+    if(verbose){
+      print(cytoband_labels)
+    }
+    if(!missing(labelTheseCytobands)){
+      for(i in c(1:length(cytoband_labels))){
+        gene_region = names(cytoband_labels)[i]
+        gene_name = unname(cytoband_labels[[i]])
+        region_chunks = region_to_chunks(gene_region)
+        if(region_chunks$chromosome %in% column_chromosome){          
+            if(verbose){
+              print("cytoband labeling")
+            }
+            decorate_annotation("Gain",
+                              {i=which(colnames(cn_state_matrix)==gene_region)
+                               x=i/ncol(cn_state_matrix)
+                               x2 = (i+1)/ncol(cn_state_matrix)
+                               xsize = x2 - x
+                               xmid = x + xsize/2
+                               grid.text(gene_name,x,1.04,gp=gpar(fontsize=bin_label_fontsize),
+                                   unit(bin_label_nudge,"npc"),
+                                   rot=bin_label_rotation,just="top")
+                               grid.lines(c(xmid, xmid), c(-1, 1), gp = gpar(lwd = 1,
+                                                                        col = "#00FF0040"))
+                              })
+          }
+        }
     }
 
   }
@@ -614,4 +693,3 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
 
 }
-

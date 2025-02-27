@@ -24,40 +24,64 @@
 #' @export
 #'
 #' @examples
-#' meta = get_gambl_metadata() %>% dplyr::filter(seq_type=="genome")
+#' g_meta = suppressMessages(get_gambl_metadata()) %>% 
+#'   dplyr::filter(seq_type=="genome")
+#' # CXCR4 non-coding hotspot
 #' muts = get_ssm_by_regions(regions_list = "2:136875000-136875097",
 #'                                 streamlined = F,
-#'                                 these_samples_metadata = meta
+#'                                 these_samples_metadata = g_meta
 #'                                     )
 #'
 #'
-#' gene_hotspot_logo(maf_df=muts,
-#'                       gene_symbol = "CXCR4",
+#' mutation_hotspot_logo(maf_df=muts,
 #'                       hotspot_position=136875037,
 #'                       include_AA = T,
 #'                       pad_length = 51,
 #'                       annotate_motif=T,
-#'                       base_size = 4)
-
+#'                       base_size = 2,
+#'                       prepend_plot_label = "CXCR4")
+#'                       
+#'                       
+#' cap_meta = suppressMessages(get_gambl_metadata()) %>% 
+#'   dplyr::filter(seq_type=="capture")
+#'   
+#' #ID3 hotspot
+#' muts = get_ssm_by_regions(regions_list = "1:23885706-23885798",
+#'                                 streamlined = F,
+#'                                 this_seq_type = "capture",
+#'                                 these_samples_metadata = cap_meta
+#'                                     )
+#' 
+#' 
+#' mutation_hotspot_logo(maf_df=muts,
+#'                               hotspot_position=23885750,
+#'                               include_AA = T,aa_size = 3,
+#'                               pad_length = 42,
+#'                               annotate_motif=T,
+#'                               base_size = 3,
+#'                               prepend_plot_label = "ID3",text_size = 8)
+#'
 mutation_hotspot_logo = function(maf_df,
-                             gene_symbol="MYC",
                              hotspot_position=128750677,
                              genome_build,
                              pad_length=20,
                              fasta_path,
-                             include_reference = TRUE,
                              include_AA = FALSE,
                              group_AA = FALSE,
                              annotate_motif=FALSE,
                              annotate_only=FALSE,
-                             return_data=TRUE,
+                             return_data=FALSE,
                              base_size=5,
                              aa_size=3,
                              text_size=5,
-                             include_title = TRUE){
+                             prepend_plot_label="",
+                             include_title = TRUE,
+                             real_coordinates = TRUE,
+                             reverse = FALSE,
+                             verbose = FALSE){
 
   bsgenome_loaded = FALSE
-
+  include_reference = TRUE
   # If there is no fastaPath, it will read it from config key
 
   # Based on the genome_build the fasta file which will be loaded is different
@@ -103,14 +127,22 @@ mutation_hotspot_logo = function(maf_df,
     fasta = Rsamtools::FaFile(file = fasta_path)
   }
   mut_noindel = maf_df %>%
-    dplyr::filter(Hugo_Symbol==gene_symbol) %>%
     filter(Variant_Type=="SNP")
 
 
   chrom = pull(mut_noindel,Chromosome)[1]
   start = hotspot_position - pad_length
   end = hotspot_position + pad_length
-  print(paste(chrom,start,end))
+  maf_df_in_region = dplyr::filter(maf_df,Start_Position > start, Start_Position < end)
+  if(nrow(maf_df_in_region)==0){
+    print(paste0("Padded region: ",chrom,":",start,"-",end))
+    print(paste0("mutation coordinate range: ",
+                maf_df$Chromosome[1],":",
+                min(maf_df$Start_Position),"-",
+                max(maf_df$Start_Position)))
+    stop("no mutations in maf_df are in the padded region around the specified coordinate")
+  }
+  
   some_mutations = filter(mut_noindel,
                           Start_Position<=end,
                           Start_Position >= start) %>%
@@ -189,12 +221,22 @@ mutation_hotspot_logo = function(maf_df,
                               base_counts)
   }
   num_base = nchar(context)
-  common_scale <- scale_x_continuous(
-    limits = c(0, num_base+1),
-    breaks = 1:num_base,
-    expand = c(0.1, 0.1)
-  )
-
+  if(real_coordinates){
+    common_scale <- scale_x_continuous(
+      limits = c(0, num_base+1),
+      breaks = seq(1, num_base, by = 10),
+      expand = c(0.1, 0.1),
+      labels = seq(start, end, by = 10)
+    )
+  }else{
+    common_scale <- scale_x_continuous(
+      limits = c(0, num_base+1),
+      breaks = 1:num_base,
+      expand = c(0.1, 0.1)
+    )
+    
+  }
+  
   region_name = paste0(chrom,":",
                        hotspot_position - pad_length,
                        "-",
@@ -204,11 +246,29 @@ mutation_hotspot_logo = function(maf_df,
                             method='custom', seq_type='dna') +
     theme(axis.title.y =element_blank(),
           #axis.text.y=element_blank(),
-          axis.ticks.y=element_blank())+
+          #axis.ticks.y=element_blank()
+          )+
     common_scale +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size= text_size))
+    theme(
+      axis.line.x  = element_line(color = "black"),
+      axis.ticks.x = element_line(color = "black"),
+      axis.text.x = element_blank()
+    )
+    
+    #if(real_coordinates){
+    #  p1 = p1 + theme(axis.text.x = element_text(angle = 45,
+    #                                             vjust = 0.5,
+    #                                             hjust=1,
+    #                                             size = text_size))
+    #}else{
+    #  p1 = p1 + theme(axis.text.x = element_text(angle = 90,
+    #                                             vjust = 0.5,
+    #                                             hjust=1,
+    #                                             size = text_size))
+    #}
+  
   if(include_title){
-   p1 = p1 + ggtitle(paste(gene_symbol,region_name))
+   p1 = p1 + ggtitle(paste(prepend_plot_label,region_name))
   }
 
   if(include_reference){
@@ -221,7 +281,10 @@ mutation_hotspot_logo = function(maf_df,
       aln_df = left_join(all_pos,aln_df) %>% unique()
 
       aln_df = mutate(aln_df,WRCY=ifelse(is.na(WRCY),"unmutated",WRCY))
-      print(aln_df)
+      if(verbose){
+        print(aln_df)
+      }
+      
       p2 = ggplot(aln_df, aes(rel_start,1)) +
         geom_text(aes(label=Reference_Allele, color=WRCY),size=base_size) +
         common_scale +
@@ -233,10 +296,21 @@ mutation_hotspot_logo = function(maf_df,
               axis.text.y=element_blank(),
               axis.ticks.y=element_blank()
         ) +
-        theme(axis.text.x = element_text(angle = 90,
-                                         vjust = 0.5,
-                                         hjust=1,
-                                         size = text_size))
+        theme(
+          axis.line.x  = element_line(color = "black"),
+          axis.ticks.x = element_line(color = "black")
+        )
+      #if(real_coordinates){
+      #  p2 = p2 + theme(axis.text.x = element_text(angle = 45,
+      #                                             vjust = 0.5,
+      #                                             hjust=1,
+      #                                             size = text_size))
+      #}else{
+      #  p2 = p2 + theme(axis.text.x = element_text(angle = 90,
+      #                                             vjust = 0.5,
+      ##                                             hjust=1,
+      #                                             size = text_size))
+      #}
     }else{
       aln = data.frame(
         letter=strsplit(context, "")[[1]],
@@ -256,7 +330,18 @@ mutation_hotspot_logo = function(maf_df,
         theme(axis.title.y =element_blank(),
               axis.text.y=element_blank(),
               axis.ticks.y=element_blank()
-        ) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size = text_size))
+        ) 
+      #if(real_coordinates){
+      #  p2 = p2 + theme(axis.text.x = element_text(angle = 45,
+      #                                             vjust = 0.5,
+      ##                                             hjust=1,
+      #                                             size = text_size))
+      #}else{
+      #  p2 = p2 + theme(axis.text.x = element_text(angle = 90,
+      #                                             vjust = 0.5,
+      #                                             hjust=1,
+      #                                             size = text_size))
+      #}
     }
 
     if(include_AA | group_AA){
@@ -285,17 +370,20 @@ mutation_hotspot_logo = function(maf_df,
               axis.title.x = element_blank(),
               axis.text.x=element_blank(),
         )
-      #+
-      #  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size = text_size))
-      #pAA
-      pp = cowplot::plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(14,3,5))
-      print(pp)
+      p1 <- p1 + theme(plot.margin = margin(t = 5.5, r = 5.5, b = 0, l = 5.5))
+      pAA <- pAA + theme(plot.margin = margin(t = -5, r = 5.5, b = -2, l = 5.5))
+      p2 <- p2 + theme(plot.margin = margin(t = 0, r = 5.5, b = 5.5, l = 5.5))
+      
+      #pp = cowplot::plot_grid(pAA,p1,p2,ncol=1,align="v",rel_heights = c(3,14,5))
+      pp = cowplot::plot_grid(p1,pAA,p2,ncol=1,align="v",rel_heights = c(14,0.5,3))
+
+      
     }else{
+      p1 <- p1 + theme(plot.margin = margin(t = 5.5, r = 5.5, b = -5, l = 5.5))
+      p2 <- p2 + theme(plot.margin = margin(t = -4, r = 5.5, b = 5.5, l = 5.5))
       pp = cowplot::plot_grid(p1,p2,ncol=1,align="v",rel_heights = c(7,2))
-      print(pp)
+
     }
-  }else{
-    print(p1)
   }
   if(return_data){
     if(include_AA){
@@ -304,6 +392,8 @@ mutation_hotspot_logo = function(maf_df,
       return(list(df=some_mutations,plot=pp,freqs=base_counts,plot1=p1,plot2=p2))
     }
 
+  }else{
+    print(pp)
   }
 
 }
