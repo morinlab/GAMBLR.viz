@@ -18,7 +18,8 @@ pretty_lollipop_plot(
   meta1_counter,
   meta2_counter,
   Sample1 = Sample1,
-  Sample2 = Sample2
+  Sample2 = Sample2,
+  font
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ pretty_lollipop_plot(
 \item{Sample1}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
 
 \item{Sample2}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
+
+\item{font}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
 }
 \value{
 A lollipop plot.

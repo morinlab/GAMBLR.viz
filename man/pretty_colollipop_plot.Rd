@@ -14,15 +14,16 @@ pretty_colollipop_plot(
   plot_title,
   refseq_id,
   forestarg = TRUE,
+  font = 11,
   ...
 )
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
 
-\item{these_samples_metadata}{Required argument. A data.frame with these_samples_metadata for the CoLollipop Plot.}
+\item{these_samples_metadata}{Required argument. A data.frame with metadata for the CoLollipop Plot.}
 
-\item{comparison_column}{Required: the name of the these_samples_metadata column containing the comparison values.}
+\item{comparison_column}{Required: the name of the metadata column containing the comparison values.}
 
 \item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
 
@@ -35,6 +36,8 @@ pretty_colollipop_plot(
 \item{refseq_id}{Insert a specific NM_xxx value of interest.}
 
 \item{forestarg}{Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.}
+
+\item{font}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
 
 \item{...}{`pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.}
 }

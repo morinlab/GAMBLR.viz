@@ -20,6 +20,7 @@
 #' @param meta2_counter A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' @param Sample1 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' @param Sample2 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
+#' @param font Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.
 #' 
 #' @return A lollipop plot.
 #'
@@ -67,7 +68,8 @@ pretty_lollipop_plot <- function(
     meta1_counter,
     meta2_counter,
     Sample1 = Sample1,
-    Sample2 = Sample2
+    Sample2 = Sample2,
+    font
 ){
     if(missing(gene)){
         stop("Please provide a gene...")
@@ -547,6 +549,7 @@ pretty_lollipop_plot <- function(
                             Somatic_Mutation_Denominator[2]
                     )   
                 ),
+                font.label = list(size = font),  # Adjust font size 
                 label.y = c(0.85, 0, 0.35),
                 label.x = c(0.7, 0, 0.7),
                 legend = "none"
@@ -690,5 +693,4 @@ pretty_lollipop_plot <- function(
     } else {
         return(gene_counts)
     }
-
 }

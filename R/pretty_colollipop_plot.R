@@ -7,19 +7,20 @@
 #' visualized setting include_silent to TRUE. 
 #'
 #' @param maf_df A data frame containing the mutation data.
-#' @param these_samples_metadata Required argument. A data.frame with these_samples_metadata for the CoLollipop Plot.
-#' @param comparison_column Required: the name of the these_samples_metadata column containing the comparison values.
+#' @param these_samples_metadata Required argument. A data.frame with metadata for the CoLollipop Plot.
+#' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
 #' @param gene The gene symbol to plot.
 #' @param label_threshold Threshold for labels to appear on plot. 
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest.
 #' @param forestarg Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.
+#' @param font Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.
 #' @param ... `pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.
 #' 
 #' @return A mirrored lollipop plot.
 #'
-#' @import dplyr ggplot2 GAMBLR.data
+#' @import dplyr ggplot2
 #' @export
 #'
 #' @examples
@@ -47,6 +48,7 @@ pretty_colollipop_plot <- function(
     plot_title,
     refseq_id,
     forestarg = TRUE,
+    font = 11,
     ...
 ) {
 
@@ -158,7 +160,8 @@ pretty_colollipop_plot <- function(
         meta1_counter = meta1_counter,
         meta2_counter = meta2_counter,
         Sample1 = comparison_values[1],
-        Sample2 = comparison_values[2]
+        Sample2 = comparison_values[2],
+        font = font
     )
 
     forest_plot <- prettyForestPlot(
