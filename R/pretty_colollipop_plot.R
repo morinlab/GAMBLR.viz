@@ -108,6 +108,7 @@ pretty_colollipop_plot <- function(
     lp1_gene_counts <- do.call(pretty_lollipop_plot, c(
         list(
             maf_df = ssm1,
+            these_samples_metadata = metadata,
             gene = gene,
             plotarg = FALSE
         ), 
@@ -119,6 +120,7 @@ pretty_colollipop_plot <- function(
     lp2_gene_counts <- do.call(pretty_lollipop_plot, c(
         list(
             maf_df = ssm2,
+            these_samples_metadata = metadata,
             gene = gene,
             plotarg = FALSE
         ), 
@@ -143,7 +145,8 @@ pretty_colollipop_plot <- function(
 
     # Pass combined_gene_counts to pretty_lollipop_plot for plotting
     colollipop_plot <- pretty_lollipop_plot(
-        maf_df = maf_df, 
+        maf_df = maf_df,
+        these_samples_metadata = metadata, 
         gene = gene, 
         refseq_id,
         plot_title = plot_title,
