@@ -221,7 +221,9 @@ prettyOncoplot = function(
     numeric_heatmap_type = "aSHM",
     numeric_heatmap_location = "top",
     return_inputs = FALSE,
-    use_raster = NULL
+    use_raster = NULL,
+    plot_width = 14,
+    show_any_legend = TRUE
 ){
     if("maf_data" %in% class(maf_df)){
         #drop our S3 classes because these additional attributes seem to cause some problems when the data is subsequently munged.
@@ -977,6 +979,7 @@ prettyOncoplot = function(
     if(keepGeneOrder){
         gene_order = intersect(genes,genes_kept)
         print(gene_order)
+        print(genes_kept)
     }else{
         gene_order = NULL
     }
@@ -1129,7 +1132,7 @@ prettyOncoplot = function(
             col_order = patients_kept
         }
 
-
+        print(genes_kept)
         mat_list = list(
             Missense=as.matrix(snv_df[genes_kept,patients_kept]),
             Truncating=as.matrix(trunc_df[genes_kept,patients_kept]),
@@ -1152,7 +1155,10 @@ prettyOncoplot = function(
         }else{
             col_order = patients_kept
         }
+
         mat_input = mat[intersect(genes, genes_kept),patients_kept]
+        print(rownames(mat_input))
+        
         any_hit = mat_input
         any_hit[] = 0
         any_hit[mat_input != ""] = 1
@@ -1332,7 +1338,8 @@ prettyOncoplot = function(
             split_rows_kmeans=split_rows_kmeans,
             split_columns_kmeans=split_columns_kmeans,
             verbose=verbose,
-            use_raster = use_raster
+            use_raster = use_raster,
+            pw = plot_width
         )
         if(return_inputs){
             return(returned)
@@ -1383,7 +1390,9 @@ make_prettyoncoplot = function(mat_input,
                                split_rows_kmeans,
                                split_columns_kmeans,
                                verbose,
-                               use_raster){
+                               use_raster,
+                               pw,
+                               show_any_legend){
 
 
   if(plot_type == "simplify"){
@@ -1402,7 +1411,7 @@ make_prettyoncoplot = function(mat_input,
     if(stacked){
       #col_fun= circlize::colorRamp2(c(0, 0.5, 1), c("#f5f0f0","#f59f53", "#c41022"))
       #col_fun=  circlize::colorRamp2(c(0, 0.5, 1), c("blue","white", "red"))
-      heatmap_legend_param = list(title = "Alterations",
+      heatmap_legend_param = list(title = "Alterations",    
                                   at = at,
                                   labels = at,
                                   legend_direction = "vertical",
@@ -1413,6 +1422,7 @@ make_prettyoncoplot = function(mat_input,
                             alter_fun=alter_fun,
                             top_annotation=top_annotation,
                             right_annotation = right_annotation,
+                            
                             col = col,
                             row_order = gene_order,
                             column_order = col_order,
@@ -1547,10 +1557,7 @@ make_prettyoncoplot = function(mat_input,
         }
         return()
       }else if(numeric_heatmap_location == "bottom"){
-        if(return_inputs){
-          oncoprint_heatmap = do.call("oncoPrint",oncoprint_args)
-          numeric_heatmap = do.call("Heatmap",heatmap_args)
-        }
+
 
         ht_list =
           do.call("oncoPrint",oncoprint_args) %v%
@@ -1603,7 +1610,7 @@ make_prettyoncoplot = function(mat_input,
     return(x)
   }
   colours <- lapply(colours, modify_na_elements)
-
+  print(dim(mat_input$Missense))
   oncoprint_args = list(mat=mat_input,
                         alter_fun = alter_fun,
                         top_annotation = top_annotation,
@@ -1615,11 +1622,18 @@ make_prettyoncoplot = function(mat_input,
                         show_column_names = showTumorSampleBarcode,
                         column_title = column_title,
                         row_title = NULL,
-
+                        #show_heatmap_legend = show_any_legend,
                         heatmap_legend_param = heatmap_legend_param,
                         row_names_gp = gpar(fontsize = fontSizeGene),
                         pct_gp = gpar(fontsize = fontSizeGene),
-                        use_raster = use_raster)
+                        use_raster = use_raster
+                        
+                        )
+  #if(!is.null(width)){
+    #oncoprint_args[["width"]] = unit(plot_width, "cm")
+    #pw = plot_width
+    oncoprint_args[["width"]] = unit(pw, "cm")
+  #}
   oncoprint_args[["bottom_annotation"]] = ComplexHeatmap::HeatmapAnnotation(df = metadata_df,
                                                                              show_legend = show_legend,
                                                                              col = colours,
@@ -1647,6 +1661,7 @@ make_prettyoncoplot = function(mat_input,
   }else{
     oncoprint_args[['column_split']] = column_split
   }
+
   ch = do.call("oncoPrint",oncoprint_args)
   draw(ch, heatmap_legend_side = legend_position, annotation_legend_side = legend_position)
 

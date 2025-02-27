@@ -24,10 +24,10 @@
 #'
 #' @examples
 #' dlbcl_meta <- get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL", seq_type != "mrna")
-#' all_coding <- GAMBLR.open::get_all_coding_ssm(these = dlbcl_meta)
+#' all_coding <- get_all_coding_ssm()
 #' bl_fl_dlbcl_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna")
-#' 
+#' all_coding <- get_all_coding_ssm(get_gambl_metadata)
 #' \dontrun{
 #' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
 #' lg_feats = lymphgens$feature_annotation
@@ -101,7 +101,9 @@ pretty_mutual_exclusivity <- function(maf_data,
                                       review_hotspots = F,
                                       bonferroni = FALSE, 
                                       verbose = FALSE,
-                                      annotate_by_pathology = TRUE) {
+                                      annotate_by_pathology = TRUE,
+                                      show_heatmap_legend = TRUE,
+                                      width = 10) {
   print("STARTING")
   if (missing(mut_mat)) {
     if (missing(genes)) {
@@ -315,6 +317,7 @@ pretty_mutual_exclusivity <- function(maf_data,
         row_names_gp = gpar(fontsize = font_size),
         column_names_gp = gpar(fontsize = font_size)
       )
+      heatmap_args[["width"]] = unit(width,"cm")
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
         heatmap_args[["column_split"]] <- split
@@ -322,7 +325,13 @@ pretty_mutual_exclusivity <- function(maf_data,
       ht <- do.call("Heatmap", heatmap_args)
       draw(ht)
       if(return_data){
-        return(list(plot = ht,mut_mat=mutmat,corr_mat = mcor, p_mat = cpmat))
+        #get the order of rows in the heatmap
+        ordered_genes = rownames(M)[row_order(ht)]
+        return(list(plot = ht,
+                    mut_mat=mutmat,
+                    corr_mat = mcor,
+                    p_mat = cpmat,
+                    original_order = rownames(M) , order = ordered_genes))
       }
     } else {
       # Define a cell function that draws a circle in each cell based on the value
@@ -354,8 +363,11 @@ pretty_mutual_exclusivity <- function(maf_data,
         bottom_annotation = cann,
         right_annotation = rann,
         row_names_gp = gpar(fontsize = font_size),
-        column_names_gp = gpar(fontsize = font_size)
+        column_names_gp = gpar(fontsize = font_size),
+        show_heatmap_legend = show_heatmap_legend
+
       )
+      heatmap_args[["width"]] = unit(width,"cm")
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
         heatmap_args[["column_split"]] <- split
@@ -365,7 +377,13 @@ pretty_mutual_exclusivity <- function(maf_data,
       draw(ht)
       print(range(M))
       if (return_data) {
-        return(list(plot = ht,mut_mat=mutmat,corr_mat = mcor, p_mat = cpmat))
+        #get the order of rows in the heatmap
+        ordered_genes = rownames(M)[row_order(ht)]
+        return(list(plot = ht,
+                    mut_mat=mutmat,
+                    corr_mat = mcor,
+                    p_mat = cpmat,
+                    original_order = rownames(M) , order = ordered_genes))
       }
     }
   } else {
