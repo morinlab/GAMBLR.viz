@@ -396,7 +396,7 @@ prettyOncoplot = function(
         if(!recycleOncomatrix){
             message(paste("creating oncomatrix with", lg, "genes"))
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-            mat_origin <- mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+            mat_origin <- mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin), drop = FALSE]
             tsbs <- maf_df %>%
                 distinct(Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification, Start_Position, End_Position) %>%
                 filter(
@@ -465,7 +465,7 @@ prettyOncoplot = function(
                 print(paste("patients:",npat))
             }
             mat_origin <- GAMBLR.helpers::create_onco_matrix(maf_df, genes)
-            mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin)]
+            mat_origin = mat_origin[,!colSums(mat_origin=="") == nrow(mat_origin), drop = FALSE]
             tsbs = maf_df %>%
                 distinct(
                     Tumor_Sample_Barcode, Hugo_Symbol, Variant_Classification,
@@ -485,7 +485,7 @@ prettyOncoplot = function(
                 arrange(desc(total)) %>% pull(Tumor_Sample_Barcode)
             if(verbose){
                 print(paste("numcases:",length(tsbs)))
-                print(paste("numgenes:",length(mat_origin[,1])))
+                print(paste("numgenes:",length(mat_origin[,1, drop = FALSE])))
             }
         }
 
@@ -596,8 +596,8 @@ prettyOncoplot = function(
         genes_kept = genes[genes %in% genes_keep]
     }
 
-    mat = mat[,patients_kept]
-    mat = mat[which(rownames(mat) %in% genes_kept),]
+    mat = mat[,patients_kept, drop = FALSE]
+    mat = mat[which(rownames(mat) %in% genes_kept),, drop = FALSE]
 
     if(!missing(cnv_df)){
         genes_kept = c(extra_cnv_genes,genes_kept)
@@ -1152,7 +1152,7 @@ prettyOncoplot = function(
         }else{
             col_order = patients_kept
         }
-        mat_input = mat[intersect(genes, genes_kept),patients_kept]
+        mat_input = mat[intersect(genes, genes_kept),patients_kept, drop = FALSE]
         any_hit = mat_input
         any_hit[] = 0
         any_hit[mat_input != ""] = 1
