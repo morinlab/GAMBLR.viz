@@ -129,10 +129,6 @@ heatmap_mutation_frequency_bin <- function(regions_list = NULL,
       if("genomic_data" %in% class(regions_bed)){
         projection = get_genome_build(regions_bed)
       }
-    }else if(!missing(regions_maf)){
-      if("genomic_data" %in% class(regions_bed)){
-        projection = get_genome_build(regions_bed)
-      }
     }
   }
   if(missing(projection)){
