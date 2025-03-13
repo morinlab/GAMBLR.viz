@@ -11,6 +11,9 @@
 #' @param use_alpha
 #' @param clustering_distance
 #' @param gene_anno_df
+#' @param metadataBarHeight
+#' @param metadataBarFontsize
+#' @param legend_direction
 #' @param size_factor
 #' @param split
 #' @param return_data Default False
@@ -19,15 +22,18 @@
 #' @param review_hotspots Default False
 #' @param bonferroni Default False
 #'
+#' @import ggcorrplot
+#'
 #' @returns
 #' @export
 #'
 #' @examples
-#' dlbcl_meta <- get_gambl_metadata() %>% dplyr::filter(pathology == "DLBCL", seq_type != "mrna")
-#' all_coding <- get_all_coding_ssm()
 #' bl_fl_dlbcl_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna")
-#' all_coding <- get_all_coding_ssm(get_gambl_metadata)
+#' dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL")
+#' 
+#' all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
+#' 
 #' \dontrun{
 #' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
 #' lg_feats = lymphgens$feature_annotation
@@ -58,7 +64,7 @@
 #'   genes = fl_bl_dlbcl_genes,
 #'   these = bl_fl_dlbcl_meta,
 #'   engine = "ComplexHeatmap",
-#'   font_size = 6,
+#'   font_size = 5,
 #'   use_alpha = T,
 #'   clustering_distance = "binary",
 #'   include_hotspots = F,
@@ -66,27 +72,45 @@
 #' )
 #' Sys.Date()
 #' 
-#' outs = pretty_mutual_exclusivity(mutmat=outs$mut_mat,
+#' outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
 #'   corr_mat = outs$corr_mat,
 #'   p_mat = outs$p_mat,
 #'   maf_data = all_coding,
 #'   genes = fl_bl_dlbcl_genes,
 #'   these = bl_fl_dlbcl_meta,
 #'   engine = "ComplexHeatmap",
-#'   font_size = 6,
+#'   font_size = 5,
 #'   use_alpha = T,
 #'   size_factor = 0.004,
 #'   clustering_distance = "euclidean",
 #'   include_hotspots = F
 #' )
 #' Sys.Date()
+#' 
+#' outs = pretty_mutual_exclusivity(
+#'   p_mat = outs$p_mat,
+#'   maf_data = all_coding,
+#'   genes = fl_bl_dlbcl_genes,
+#'   these = dlbcl_meta,
+#'   engine = "ComplexHeatmap",
+#'   font_size = 5,
+#'   use_alpha = T,
+#'   size_factor = 0.004,
+#'   clustering_distance = "euclidean",
+#'   legend_direction = "vertical",
+#'   width = 15,
+#'   include_hotspots = F)
+#'
 pretty_mutual_exclusivity <- function(maf_data,
                                       mut_mat,
+                                      cn_mat,
                                       corr_mat,
                                       p_mat,
+                                      min_mutation_percent=2,
                                       genes,
                                       these_samples_metadata,
-                                      q_threshold = 0.1,
+                                      q_threshold = 0.05,
+                                      drop_positive_correlations = FALSE,
                                       exclude_insignificant_genes = TRUE,
                                       engine = "ggcorrplot",
                                       font_size = 7,
@@ -101,8 +125,12 @@ pretty_mutual_exclusivity <- function(maf_data,
                                       review_hotspots = F,
                                       bonferroni = FALSE, 
                                       verbose = FALSE,
+                                      metadataBarHeight = 3,
+                                      metadataBarFontsize = 4,
+                                      legend_direction = "horizontal",
                                       annotate_by_pathology = TRUE,
                                       show_heatmap_legend = TRUE,
+                                      cut_k,
                                       width = 10) {
   print("STARTING")
   if (missing(mut_mat)) {
@@ -124,35 +152,76 @@ pretty_mutual_exclusivity <- function(maf_data,
     if(verbose){
       print(dim(mutmat))
     }
-    
+    if(!missing(cn_mat)){
+      print(dim(mutmat))
+      print(dim(cn_mat))
+      mutmat = bind_cols(cn_mat[rownames(cn_mat) %in% rownames(mutmat), ],mutmat[rownames(mutmat) %in% rownames(cn_mat),])
+      print(dim(mutmat))
+      #return(mutmat)
+    }
   } else {
-    mutmat = mut_mat
+    if(missing(cn_mat)){
+      mutmat = mut_mat
+    }else{
+      mutmat = bind_cols(cn_mat,mutmat)
+      print(dim(mutmat))
+    }
+    
     if (missing(genes)) {
       genes <- colnames(mutmat)
     }
   }
+  mut_percents = 100*colSums(mutmat)/nrow(mutmat)
+  keep_g = names(which(mut_percents > min_mutation_percent))
+  print(keep_g)
+  drop_g = names(which(!mut_percents > min_mutation_percent))
+  print(drop_g)
+  mutmat = mutmat[,keep_g]
   if(missing(corr_mat) | missing(p_mat)){
     print("calculating correlation")
+    
     mcor <- cor(mutmat)
     cpmat <- cor_pmat(mutmat)
     print("done")
   }else{
-    mcor = corr_mat
-    cpmat = p_mat
+    mcor = corr_mat[keep_g,keep_g]
+    cpmat = p_mat[keep_g,keep_g]
   }
   
-  # bonferroni correction
-  if (bonferroni) {
-    cpmat <- cpmat * nrow(cpmat)^2
-  }
+  
 
   M <- mcor
   M[cpmat > q_threshold] <- 0
   diag(M) <- 0
+  diag(cpmat) <- 1
   M[is.na(M)] <- 0
-
-
-
+  best_p = apply(cpmat,1,function(x){min(x)})
+  best_p = best_p * nrow(cpmat)^2
+  print(best_p)
+  print(table(best_p < q_threshold))
+  # kick out insignificant genes in both dimensions
+  if(exclude_insignificant_genes){
+    good_g = names(which(best_p< q_threshold))
+  #print(good_g)
+    M = M[good_g,good_g]
+    cpmat = cpmat[good_g,good_g]
+  }
+  drop_pos = TRUE
+  if(drop_positive_correlations){
+    M[M>0]=0
+    print(rowSums(M))
+    not_empty = rowSums(M)<0
+    M = M[not_empty,not_empty]
+    
+  }
+  print(dim(M))
+  gene_lowest  = apply(M,1,function(x){min(x)})
+  gene_highest = apply(M,1,function(x){max(x)})
+  
+    # bonferroni correction
+  if (bonferroni) {
+    cpmat <- cpmat * nrow(cpmat)^2
+  }
   if (engine == "ggcorrplot") {
     print("GGCORRPLOT")
     pp <- ggcorrplot(M,
@@ -210,6 +279,8 @@ pretty_mutual_exclusivity <- function(maf_data,
         }
         gene_anno <- gene_anno[rownames(M), ]
         rann <- HeatmapAnnotation(
+          simple_anno_size = unit(metadataBarHeight, "mm"),
+          annotation_name_gp = gpar(fontsize = metadataBarFontsize),
           show_legend = FALSE,
           annotation_name_side = "top",
           df = gene_anno, which = "row",
@@ -221,6 +292,8 @@ pretty_mutual_exclusivity <- function(maf_data,
           )
         )
         cann <- HeatmapAnnotation(
+          simple_anno_size = unit(metadataBarHeight, "mm"),
+          annotation_name_gp = gpar(fontsize = metadataBarFontsize),
           df = gene_anno,
           show_legend = FALSE,
           which = "column",
@@ -258,6 +331,8 @@ pretty_mutual_exclusivity <- function(maf_data,
       )
       gene_anno <- gene_anno[rownames(M), ]
       rann <- HeatmapAnnotation(
+        simple_anno_size = unit(metadataBarHeight, "mm"),
+        annotation_name_gp = gpar(fontsize = metadataBarFontsize),
         annotation_name_side = "top",
         df = gene_anno, which = "row",
         show_legend=FALSE,
@@ -269,12 +344,16 @@ pretty_mutual_exclusivity <- function(maf_data,
         )
       )
        cann = HeatmapAnnotation(df=gene_anno,
-       which="column",
-       show_legend = FALSE,
-                               col=list(Class=cols,
-                                        DLBCL=get_gambl_colours("pos_neg"),
-                                        FL = get_gambl_colours("pos_neg"),
-                                        BL = get_gambl_colours("pos_neg")))
+         simple_anno_size = unit(metadataBarHeight, "mm"),
+         annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+         which="column",
+         show_legend = FALSE,
+         col = list(
+          Class = cols,
+          DLBCL = c("1" = unname(get_gambl_colours("pathology")["DLBCL"]), "0" = "white"),
+          FL = c("1" = unname(get_gambl_colours("pathology")["FL"]), "0" = "white"),
+          BL = c("1" = unname(get_gambl_colours("pathology")["BL"]), "0" = "white")
+        ))
     }
 
 
@@ -317,7 +396,11 @@ pretty_mutual_exclusivity <- function(maf_data,
         row_names_gp = gpar(fontsize = font_size),
         column_names_gp = gpar(fontsize = font_size)
       )
+      if(!missing(cut_k)){
+        heatmap_args["row_km"] = cut_k
+      }
       heatmap_args[["width"]] = unit(width,"cm")
+      heatmap_args[['heatmap_legend_param']] = list(direction=legend_direction)
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
         heatmap_args[["column_split"]] <- split
@@ -326,12 +409,28 @@ pretty_mutual_exclusivity <- function(maf_data,
       draw(ht)
       if(return_data){
         #get the order of rows in the heatmap
-        ordered_genes = rownames(M)[row_order(ht)]
+        rord = row_order(ht)
+        ordered_gene_ind = c()
+        if("list" %in% class(rord)){
+          for(clust in names(rord)){
+            ordered_gene_ind = c(ordered_gene_ind,rord[[clust]])
+          }
+        }else{
+          ordered_gene_ind = rord
+        }
+
+        ordered_genes = rownames(M)[ordered_gene_ind]
         return(list(plot = ht,
-                    mut_mat=mutmat,
+                    M_filt = M,
+                    mut_mat=mutmat[,rownames(M)],
                     corr_mat = mcor,
                     p_mat = cpmat,
-                    original_order = rownames(M) , order = ordered_genes))
+                    final_order = ordered_genes,
+                    original_order = rownames(M),
+                    gene_lowest_corr = sort(gene_lowest),
+                    gene_highest_corr = sort(gene_highest)) 
+                    )
+                 
       }
     } else {
       # Define a cell function that draws a circle in each cell based on the value
@@ -367,23 +466,40 @@ pretty_mutual_exclusivity <- function(maf_data,
         show_heatmap_legend = show_heatmap_legend
 
       )
+      if(!missing(cut_k)){
+        heatmap_args["row_km"] = cut_k
+      }
       heatmap_args[["width"]] = unit(width,"cm")
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
         heatmap_args[["column_split"]] <- split
       }
+      heatmap_args[['heatmap_legend_param']] = list(direction=legend_direction)
       ht <- do.call("Heatmap", heatmap_args)
       # Draw the heatmap.
       draw(ht)
       print(range(M))
       if (return_data) {
         #get the order of rows in the heatmap
-        ordered_genes = rownames(M)[row_order(ht)]
+        rord = row_order(ht)
+        ordered_gene_ind = c()
+        if("list" %in% class(rord)){
+          for(clust in names(rord)){
+            ordered_gene_ind = c(ordered_gene_ind,rord[[clust]])
+          }
+        }else{
+          ordered_gene_ind = rord
+        }
+        
+        ordered_genes = rownames(M)[ordered_gene_ind]
         return(list(plot = ht,
-                    mut_mat=mutmat,
+                    M_filt = M,
+                    mut_mat=mutmat[,rownames(M) ],
                     corr_mat = mcor,
                     p_mat = cpmat,
-                    original_order = rownames(M) , order = ordered_genes))
+                    original_order = rownames(M) ,
+                    final_order = ordered_genes,
+                    gene_lowest_corr = sort(gene_lowest)))
       }
     }
   } else {

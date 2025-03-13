@@ -6,11 +6,15 @@
 \usage{
 pretty_mutual_exclusivity(
   maf_data,
-  mutmat,
+  mut_mat,
+  cn_mat,
   corr_mat,
+  p_mat,
+  min_mutation_percent = 2,
   genes,
   these_samples_metadata,
-  q_threshold = 0.1,
+  q_threshold = 0.05,
+  drop_positive_correlations = FALSE,
   exclude_insignificant_genes = TRUE,
   engine = "ggcorrplot",
   font_size = 7,
@@ -19,13 +23,19 @@ pretty_mutual_exclusivity(
   gene_anno_df,
   size_factor = 0.01,
   split,
-  return_data = F,
+  return_data = FALSE,
   include_silent = F,
   include_hotspots = F,
   review_hotspots = F,
   bonferroni = FALSE,
   verbose = FALSE,
-  annotate_by_pathology = TRUE
+  metadataBarHeight = 3,
+  metadataBarFontsize = 4,
+  legend_direction = "horizontal",
+  annotate_by_pathology = TRUE,
+  show_heatmap_legend = TRUE,
+  cut_k,
+  width = 10
 )
 }
 \arguments{
@@ -43,10 +53,11 @@ pretty_mutual_exclusivity(
 Pretty mutual exclusivity plot
 }
 \examples{
-dlbcl_meta <- get_gambl_metadata() \%>\% dplyr::filter(pathology == "DLBCL", seq_type != "mrna")
-all_coding <- GAMBLR.open::get_all_coding_ssm(these = dlbcl_meta)
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\% 
   dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna")
+dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL")
+
+all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
 
 \dontrun{
 lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
@@ -71,30 +82,48 @@ fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
 
 # because the first steps of this are slow we can
 # store the output matrix as a shortcut for subsequent runs
-Sys.date()
+Sys.Date()
 
 outs = pretty_mutual_exclusivity(
   maf_data = all_coding,
   genes = fl_bl_dlbcl_genes,
   these = bl_fl_dlbcl_meta,
   engine = "ComplexHeatmap",
-  font_size = 6,
+  font_size = 5,
   use_alpha = T,
   clustering_distance = "binary",
-  include_hotspots = F
+  include_hotspots = F,
+  return_data = TRUE
 )
-Sys.date()
+Sys.Date()
 
-pretty_mutual_exclusivity(mutmat=outs$mut_mat,
+outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
   corr_mat = outs$corr_mat,
   p_mat = outs$p_mat,
   maf_data = all_coding,
   genes = fl_bl_dlbcl_genes,
   these = bl_fl_dlbcl_meta,
   engine = "ComplexHeatmap",
-  font_size = 6,
+  font_size = 5,
   use_alpha = T,
-  clustering_distance = "binary",
+  size_factor = 0.004,
+  clustering_distance = "euclidean",
   include_hotspots = F
 )
+Sys.Date()
+
+outs = pretty_mutual_exclusivity(
+  p_mat = outs$p_mat,
+  maf_data = all_coding,
+  genes = fl_bl_dlbcl_genes,
+  these = dlbcl_meta,
+  engine = "ComplexHeatmap",
+  font_size = 5,
+  use_alpha = T,
+  size_factor = 0.004,
+  clustering_distance = "euclidean",
+  legend_direction = "vertical",
+  width = 15,
+  include_hotspots = F)
+
 }
