@@ -1,10 +1,12 @@
 
 
+
 #' Pretty Copy Number Heatmap
 #'
 #' @param cn_state_matrix The output of get_cn_states
 #' @param scale_by_sample Set to TRUE to scale CN values within each sample_id
 #' @param these_samples_metadata The output of get_gambl_metadata
+#' @param keep_sample_order FALSE. Set to TRUE to ensure samples are in the same order as in the metadata
 #' @param metadataColumns One or more columns from the metadata you want to display beside the heatmap
 #' @param expressionColumns Optional: One or more columns from the metadata that include gene expression values you want shown
 #' @param geneBoxPlot Optional: Specify the Hugo symbol of a single gene to embed box plots adjacent to the heatmap. Expression data for this gene must be present in the metadata in a column of the same name.
@@ -15,6 +17,7 @@
 #' @param keep_these_bins A vector of bin names to include (all others will be excluded)
 #' @param hide_annotations A vector of annotation names to suppress from legends in the plot
 #' @param cluster_columns Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap
+#' @param cluster_samples Alias for cluster_rows and more intuitive when combining with rotate = TRUE
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
@@ -39,6 +42,7 @@
 #' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded
 #' @param return_data Specify TRUE to get some of the internal data back including the heatmap object
 #' @param flip Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.
+#' @param width Set the width of the heatmap. Default is 10.
 #' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
 #' @return list (when return_data = TRUE)
@@ -58,11 +62,11 @@
 #'                                       duplicate_action = "keep_first")
 #' 
 #' # Create the copy number matrix using the helper functions
-#' all_segments = get_cn_segments()
+#' all_segments = get_cn_segments(these = meta_clean)
 #' dlbcl_cn_binned = segmented_data_to_cn_matrix(
 #'                                   seg_data = all_segments,
 #'                                   strategy="auto_split",
-#'                                   n_bins_split=2500,
+#'                                   n_bins_split=1300,
 #'                                   these_samples_metadata = meta_clean)
 #'
 #' # Generate a basic genome-wide CN heatmap
@@ -109,6 +113,7 @@
 pretty_CN_heatmap = function(cn_state_matrix,
                              scale_by_sample=FALSE,
                              these_samples_metadata,
+                             keep_sample_order = FALSE,
                              metadataColumns = c("pathology"),
                              expressionColumns,
                              genome_build = "grch37",
@@ -121,6 +126,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              keep_these_bins,
                              hide_annotations,
                              sortByBins,
+                             sortByGenes,
                              splitByBinState,
                              sortByPGA=FALSE,
                              sortByMetadataColumns,
@@ -142,12 +148,27 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              legend_position = "bottom",
                              legend_row=2,
                              legend_col=3,
+                             metadataBarFontsize = 5,
+                             metadataBarHeight = 1.5,
                              boxplot_orientation="vertical",
                              return_data = FALSE,
                              drop_bin_if_sd_below=0,
                              flip=FALSE,
                              max_CN_allowed = 6,
-                             verbose=FALSE){
+                             verbose=FALSE,
+                             rotate = FALSE,
+                             width = 15,
+                             height = 6,
+                             cluster_samples,
+                             cluster_bins){
+  #aliases
+  if(!missing(cluster_samples)){
+    cluster_rows = cluster_samples
+  }
+  if(!missing(cluster_bins)){
+    cluster_columns = cluster_bins
+  }
+
   cn_state_matrix[cn_state_matrix>max_CN_allowed] = max_CN_allowed
   #determine variance of each bin across the entire data set
   bin_vars <- apply(cn_state_matrix, 2, function(x) sd(x, na.rm = TRUE))
@@ -221,8 +242,36 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
     }
   }
+  gene_bins = list()
+  if(!missing(labelTheseGenes) | !missing(labelTheseCytobands) | !missing(sortByGenes)){
 
-  if(!missing(labelTheseGenes) | !missing(labelTheseCytobands)){
+    if(!missing(sortByGenes)){
+
+      message("mapping genes to bins")
+      for(g in sortByGenes){
+      gene_region = suppressMessages(gene_to_region(g))
+      this_gene_region = map_bin_to_bin(gene_region)
+      if(!missing(geneBoxPlot)){
+        if(g == geneBoxPlot){
+          splitByBinState = this_gene_region
+          if(missing(keep_these_chromosomes)){
+            keep_these_chromosomes = gsub(":.+","",this_gene_region)
+          }
+        }
+      }
+      #print(paste(g,gene_region))
+      if (is.na(this_gene_region)){
+        message(paste("no region for",g))
+        next
+      }
+      #if (this_gene_region %in% names(bin_labels)){
+      #  message(paste("Gene", g, "and gene", bin_labels[[this_gene_region]],
+      #  "share a region. I will only show the last one!"))
+      #}
+      #bin_labels[[this_gene_region]]=g
+      gene_bins[[g]] = this_gene_region
+      }
+    } 
 
     if(!missing(labelTheseGenes)){
 
@@ -248,6 +297,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
         "share a region. I will only show the last one!"))
       }
       bin_labels[[this_gene_region]]=g
+      #gene_bins[[g]] = this_gene_region
       }
     } 
     if(!missing(labelTheseCytobands)){
@@ -303,7 +353,12 @@ pretty_CN_heatmap = function(cn_state_matrix,
   if(!missing(these_samples_metadata)){
     keep_samples = pull(these_samples_metadata, sample_id)
     all_samples = rownames(cn_state_matrix)
-    cn_state_matrix = cn_state_matrix[all_samples[all_samples %in% keep_samples],]
+    overlap_samples = all_samples[all_samples %in% keep_samples]
+    if(keep_sample_order){
+      cn_state_matrix = cn_state_matrix[keep_samples,]
+    }
+
+    
 
   }
 
@@ -362,9 +417,14 @@ pretty_CN_heatmap = function(cn_state_matrix,
     #remove chr prefix from colours
     names(chrom_col) = gsub("chr", "", names(chrom_col))
   }
-
+  
   splits = NULL
-  if(!missing(sortByBins)){
+  if(!missing(sortByGenes)){
+    cluster_columns = FALSE
+    sortByBins = unlist(gene_bins)
+    cn_state_matrix = arrange(cn_state_matrix,desc(across(sortByBins)))
+
+  } else if(!missing(sortByBins)){
     cluster_rows = FALSE
     cn_state_matrix = arrange(cn_state_matrix,desc(across(sortByBins)))
   }else if(!missing(sortByMetadataColumns)){
@@ -507,9 +567,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
       left_anno = HeatmapAnnotation(df=anno_rows,
                                     col=colours,
+                                    simple_anno_size = unit(metadataBarHeight, "mm"),
                                     which="row",
                                     show_legend=show_legend,
                                     annotation_name_side = left_annotation_name_side,
+                                    annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                     annotation_legend_param =
                                       list(
                                            by_row=F,
@@ -517,7 +579,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                            ncol = legend_col,
                                            direction=legend_direction))
 
-    }else{
+    }else{ #no splitByBinState
 
       if(!missing(hide_annotations)){
         show_legend = rep(TRUE, length(colnames(anno_rows)))
@@ -526,18 +588,35 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }else{
         show_legend = rep(TRUE, length(colnames(anno_rows)))
       }
-
-      left_anno = HeatmapAnnotation(df=anno_rows,
-                                    col=colours,
-                                    which="row",
-                                    show_legend = show_legend,
-                                    annotation_name_side = left_annotation_name_side,
-                                    annotation_legend_param =
-                                      list(
-                                           by_row=F,
-                                           nrow=legend_row,
-                                           ncol = legend_col,
-                                           direction=legend_direction))
+      if(rotate){
+        bottom_annotation = HeatmapAnnotation(df=anno_rows,
+                                      col=colours,
+                                      simple_anno_size = unit(metadataBarHeight, "mm"),
+                                      which="column",
+                                      show_legend=show_legend,
+                                      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                      annotation_name_side = "left",
+                                      annotation_legend_param =
+                                        list(
+                                             by_row=F,
+                                             nrow=legend_row,
+                                             ncol = legend_col,
+                                             direction=legend_direction))
+      }else{
+        left_anno = HeatmapAnnotation(df=anno_rows,
+                                      col=colours,
+                                      simple_anno_size = unit(metadataBarHeight, "mm"),
+                                      which="row",
+                                      show_legend=show_legend,
+                                      annotation_name_side = left_annotation_name_side,
+                                      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                      annotation_legend_param =
+                                        list(
+                                             by_row=F,
+                                             nrow=legend_row,
+                                             ncol = legend_col,
+                                             direction=legend_direction))
+      }
     }
 
     if(!missing(hide_annotations)){
@@ -555,17 +634,51 @@ pretty_CN_heatmap = function(cn_state_matrix,
                       local.minima=ifelse(lag(x,n=15)>x & lead(x,n=15)  > x & x < 2,TRUE,FALSE),
                       local.maxima=ifelse(lag(x,n=15)<x & lead(x,n=15)< x & x > 2,TRUE,FALSE),
                       extreme=ifelse(local.maxima | local.minima,TRUE,FALSE))
-
-    average_anno = HeatmapAnnotation(Mean_CN = bin_average,
-                                     which = "column",
+    if(rotate){
+      average_anno = HeatmapAnnotation(Mean_CN = bin_average,
+                                     which = "row",
                                      show_annotation_name = show_bottom_annotation_name,
-                                     annotation_name_side = bottom_annotation_name_side,
+                                     #annotation_name_side = "left",
                                      show_legend=show_legend,
                                      col=list(Mean_CN=col_fun))
+    }else{
+      average_anno = HeatmapAnnotation(Mean_CN = bin_average,
+                                     which = "column",
+                                     show_annotation_name = show_bottom_annotation_name,
+                                     #annotation_name_side = "left",
+                                     show_legend=show_legend,
+                                     col=list(Mean_CN=col_fun))
+    }
+    
 
     #need to create a data frame with the bin names as rownames and a different value depending on whether
     # the bin is in regions_highlight
-    cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+    if(rotate){
+      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+                                        Gain = anno_barplot(total_gain,
+                                                            gp=gpar(fill="red",col="red"),
+                                                            axis_param = list(direction = "reverse",side="top")),
+                                        loss=anno_barplot(total_loss,
+                                                          gp=gpar(fill="blue",col="blue"),
+                                                          axis_param = list(side = "top")),
+                                        
+                                                          #),
+                                        annotation_legend_param =
+                                          list(title = "Chromosome",
+                                               nrow=legend_row,
+                                               ncol = legend_col,
+                                               direction=legend_direction,
+                                               by_row=F),
+                                 which = "row",
+                                 show_annotation_name = show_bottom_annotation_name,
+                                 #annotation_name_side = "right",
+                                 annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                 show_legend=show_legend,
+                                 col=list(chromosome=chrom_col))
+
+    }else{
+      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+                                        #annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                         Gain = anno_barplot(total_gain,
                                                             gp=gpar(fill="red",col="red")),
                                         loss=anno_barplot(total_loss,
@@ -579,10 +692,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                                by_row=F),
                                  which = "column",
                                  show_annotation_name = show_bottom_annotation_name,
-                                 annotation_name_side = bottom_annotation_name_side,
+                                 #annotation_name_side = "right",
+                                 annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
                                  col=list(chromosome=chrom_col))
-    heatmap_legend_param = list(title = "Copy Number",
+
+    }
+        heatmap_legend_param = list(title = "Copy Number",
 
                                 by_row=F,
                                 legend_direction = legend_direction)
@@ -606,7 +722,30 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    heatmap_legend_param = heatmap_legend_param
       )
     }else{
-      ho = Heatmap(cn_state_matrix,name="CN",
+      if(rotate){
+
+        ho = Heatmap(t(cn_state_matrix),
+                   name="CN",
+                   column_title=" ",
+                   cluster_columns=cluster_rows,
+                   cluster_rows=cluster_columns,
+                   show_row_names = show_row_names,
+                   show_column_names = show_column_names,
+                   col = col_fun,
+                   bottom_annotation = bottom_annotation,
+                   #top_annotation = average_anno,
+                   #left_annotation=left_anno,
+                   #row_split=splits,
+                   
+                   width = unit(width, "cm"),
+                   height = unit(height, "cm"),
+                   right_annotation = cumulative_anno,
+                   #column_split  = column_chromosome,
+                   heatmap_legend_param = heatmap_legend_param)
+
+      }else{
+
+        ho = Heatmap(cn_state_matrix,name="CN",
                    column_title=" ",
                    cluster_columns=cluster_columns,
                    cluster_rows=cluster_rows,
@@ -619,33 +758,47 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    row_split=splits,
                    #right_annotation = sample_CN_anno,
                    #column_split  = column_chromosome,
-                   heatmap_legend_param = heatmap_legend_param
-      )
+                   heatmap_legend_param = heatmap_legend_param)
+      }
   }
-
-  draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
+  if(!return_data){
+    draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
+  }
   if(!missing(labelTheseGenes)|!missing(labelTheseCytobands)|length(bin_labels)>0){
     if(!missing(labelTheseGenes)){
       if(verbose){
         print("gene labeling")
       }
+      tmat = t(cn_state_matrix)
       for(i in c(1:length(bin_labels))){
-        gene_region = names(bin_labels)[i]
-        gene_name = unname(bin_labels[[i]])
-        region_chunks = region_to_chunks(gene_region)
-      if(region_chunks$chromosome %in% column_chromosome){
-        
-          decorate_heatmap_body("CN",
-                              {i=which(colnames(cn_state_matrix)==gene_region)
-                              x=i/ncol(cn_state_matrix)
-                              grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
-                                        unit(bin_label_nudge,"npc"),
-                                        rot=bin_label_rotation,just="top")
-                              grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))})
-
-        }
-
+          gene_region = names(bin_labels)[i]
+          gene_name = unname(bin_labels[[i]])
+          region_chunks = region_to_chunks(gene_region)
+          if(region_chunks$chromosome %in% column_chromosome){           
+            if(rotate){
+              decorate_heatmap_body("CN",
+              {
+                i=which(rownames(tmat)==gene_region)
+                y=1-i/nrow(tmat)
+                grid.text(gene_name,y=y,gp=gpar(fontsize=bin_label_fontsize),
+                  unit(bin_label_nudge,"npc"),
+                      rot=bin_label_rotation,just="top")
+                grid.lines(c(1.01, 1), c(y,y), gp = gpar(lwd = 1))
+              })
+              }else{
+              decorate_heatmap_body("CN",
+              {
+                i=which(colnames(cn_state_matrix)==gene_region)
+                x=i/ncol(cn_state_matrix)
+                grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
+                      unit(bin_label_nudge,"npc"),
+                      rot=bin_label_rotation,just="top")
+                grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))
+              })
+              }
+          }
       }
+
     }
     if(verbose){
       print(cytoband_labels)
