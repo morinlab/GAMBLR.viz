@@ -51,8 +51,14 @@ pretty_lollipop_plot <- function(
     gene = NULL,
     plot_title,
     by_allele = TRUE,
+    max_count = 15,
     include_silent = FALSE,
-    labelPos = NULL
+    labelPos = NULL,
+    show_rate = FALSE,
+    title_size = 8,
+    x_axis_size = 4,
+    domain_label_size = 0,
+    aa_label_size = 4
 ) {
     if(missing(gene)){
         stop("Please provide a gene...")
@@ -108,7 +114,7 @@ pretty_lollipop_plot <- function(
         arrange(AA) %>%
         summarise(mutation_count = n()) %>%
         ungroup()
-      gene_counts = mutate(gene_counts,label=HGVSp_Short)
+      gene_counts = mutate(gene_counts,label=HGVSp_Short,size=ifelse(mutation_count>max_count,max_count,mutation_count))
     }else{
       gene_counts <- gene_df %>%
         group_by(
@@ -122,7 +128,7 @@ pretty_lollipop_plot <- function(
         arrange(AA) %>%
         summarise(mutation_count = n()) %>%
         ungroup()
-      gene_counts = mutate(gene_counts,label=AA)
+      gene_counts = mutate(gene_counts,label=AA,size=ifelse(mutation_count>max_count,max_count,mutation_count))
     }
 
     #select(gene_counts,AA,HGVSp_Short,mutation_count) %>% arrange(desc(mutation_count)) %>% print()
@@ -186,8 +192,8 @@ pretty_lollipop_plot <- function(
             aes(
                 x = AA,
                 y = mutation_count,
-                color = Variant_Classification,
-                size = mutation_count
+                color = Variant_Classification, 
+                size = size,    
                 )
         ) +
         # Background rectangle for regions without domain data
@@ -213,15 +219,20 @@ pretty_lollipop_plot <- function(
                 ),
             color = "black",
             show.legend = FALSE
-        ) +
-        geom_text(
+        )
+        if(domain_label_size > 0){
+        plot = plit +  
+          geom_text(
             data = domain_data,
             aes(
                 x = text.position,
                 y = 0,
-                label = text.label
+                label = text.label,
+                size = domain_label_size
                 )
         )
+        }
+        
 
         if(!is.null(labelPos)){
           dplyr::filter(gene_counts, AA %in% labelPos) %>%
@@ -234,31 +245,40 @@ pretty_lollipop_plot <- function(
                                    aes(
                                      x = AA,
                                      y = mutation_count,
-                                     label = label
+                                     label = label,
+                                     size = aa_label_size
                                    ),nudge_y =0.5,
                                    nudge_x = maxAA/10,
                                    max.overlaps=2)
         }
-        plot = plot +
-        labs(
-            x = "AA Position",
-            y = "Mutation Count",
-            title = paste0(
+        if(show_rate){
+            plot_title = paste0(
                 plot_title,
                 "\n[Somatic Mutation Rate: ",
                 Somatic_Mutation_Rate,
                 "%]"
                 )
+        }
+
+        plot = plot +
+        labs(
+            x = "AA Position",
+            y = "Mutation Count",
+            title = plot_title
         ) +
         theme_bw() +
         theme(
             plot.title = element_text(
-                hjust = 0.5
+                hjust = 0.5,
+                size = title_size,
                 ),
             axis.text.x = element_text(
               angle = 45,
               hjust = 1
-              )
+              ),
+            axis.title = element_text(
+              size = x_axis_size
+            )
         ) +
         scale_color_manual(
           name = "Legend",
