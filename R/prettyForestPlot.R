@@ -245,8 +245,8 @@ prettyForestPlot = function(maf,
     coord_flip() +
     geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
     ylab("ln(Odds Ratio)") +
-    xlab("Mutated Genes") +
-    theme_Morons() +
+    xlab("Mutated Genes\n") +
+    theme_Morons(base_size = 12) +
     theme(axis.text.y = element_text(size = font_size))
 
   if(comparison_name == FALSE){
@@ -293,7 +293,7 @@ prettyForestPlot = function(maf,
     xlab("") + ylab("% Mutated") +
     coord_flip() +
     scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
-    theme_Morons() +
+    theme_Morons(base_size = 12) +
     theme(axis.text.y = element_blank(), legend.position = "bottom")
 
   arranged_plot = ggarrange(
