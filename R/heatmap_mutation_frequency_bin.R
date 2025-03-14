@@ -41,6 +41,8 @@
 #' @param show_legend Boolean. Default TRUE.
 #' @param legend_direction Control aesthetics of the heatmap legend. Default "horizontal".
 #' @param legendFontSize Control aesthetics of the heatmap legend. Default 10.
+#' @param metadataBarHeight Optional argument to adjust the height of bar with annotations. The default is 1.5.
+#' @param metadataBarFontsize Optional argument to control for the font size of metadata annotations. The default is 5.
 #' @param legend_side Control aesthetics of the heatmap legend. Default "bottom".
 #' @param returnEverything Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
@@ -117,6 +119,8 @@ prettyMutationDensity <- function(regions_list = NULL,
                                            show_legend = TRUE,
                                            legend_direction = "horizontal",
                                            legendFontSize = 10,
+                                           metadataBarHeight = 1.5,
+                                           metadataBarFontsize = 5,
                                            region_annotation_name_side = "top",
                                            sample_annotation_name_side = "left",
                                            legend_side = "bottom",
@@ -125,7 +129,7 @@ prettyMutationDensity <- function(regions_list = NULL,
                                            mode = "slms-3",
                                            width = 10,
                                            height = 10) {
-  print("prettyMutationDensity")
+  #print("prettyMutationDensity")
   #this could definitely use a helper function that takes all arguments that can be a genome_bed type
   if(missing(projection)){
     if(!missing(regions_bed) & !missing(maf_data)){
@@ -274,7 +278,7 @@ if(scale_values){
    #stop()
    #meta_show <- meta_show[rownames(meta_show) %in% rownames(matrix_show), , drop = FALSE]
    bin_vals <- quantile(matrix_show, probs = seq(0, 1, length.out = 5), na.rm = TRUE)
-   print(head(matrix_show[,c(1:10)]))
+   #print(head(matrix_show[,c(1:10)]))
 
    bin_col_fun = colorRamp2(bin_vals,
                             c(backgroundColour,"yellow","orange","red","purple"))
@@ -289,9 +293,9 @@ if(scale_values){
   c(backgroundColour, "orange", "red", "purple", "black")
 )
 }
-print("RANGE:")
-print(range(matrix_show))
-print(dim(matrix_show))
+#print("RANGE:")
+#print(range(matrix_show))
+#print(dim(matrix_show))
 #print(head(matrix_show[,c(1:10)]))
 #stop()
 
@@ -408,7 +412,7 @@ if(any(is.nan(matrix_show))){
     label_by = label_regions_by,
     just_genes = merge_genes
   )
-  print(head(bin_annot))
+  #print(head(bin_annot))
   if(scale_values){
     heatmap_legend_param <- list(
       title = "Mutation count", 
@@ -449,6 +453,8 @@ if(any(is.nan(matrix_show))){
         df = bin_annot,
         show_legend = F,
         which = "col",
+        simple_anno_size = unit(metadataBarHeight, "mm"),
+        annotation_name_gp = gpar(fontsize = metadataBarFontsize),
         annotation_legend_param = annotation_legend_param
       )
     } else {
@@ -479,6 +485,8 @@ if(any(is.nan(matrix_show))){
       which = "col",
       col = annoColours,
       na_col = naColour,
+      simple_anno_size = unit(metadataBarHeight, "mm"),
+      annotation_name_gp = gpar(fontsize = metadataBarFontsize),
       annotation_name_side = sample_annotation_name_side,
       annotation_legend_param = annotation_legend_param
     )

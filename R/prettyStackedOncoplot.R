@@ -111,6 +111,31 @@
 #'                      genes_CN_thresh = CN_thresh,
 #'                      genes = genes,
 #'                      secondPlotHeight=9)
+#' 
+#' 
+#' some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+#'                               fix_names = "concat",
+#'                               concat_cols = c("gene","region"),sep="-")
+#'
+#'simple_ashm_mat = 
+#'  get_ashm_count_matrix(some_regions,
+#'                        these_samples_metadata = dlbcl_genome_meta)
+#'
+#'
+#'prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
+#'                      maf_data = dlbcl_maf,
+#'                      regions_bed= some_regions,
+#'                      metadataColumns = c("pathology","lymphgen"),
+#'                      oncoplot_location = "bottom",
+#'                      ashm_matrix = simple_ashm_mat,
+#'                     secondPlotType = "prettyMutationDensity",
+#'                      secondPlotArgs = list("merge_genes"=TRUE,
+#'                                            region_fontsize=3),
+#'                      genes = genes,
+#'                     cluster_samples = T,                      
+#'                     secondPlotHeight = 9)
+#'
+#'
 #'
 #' 
 prettyStackedOncoplot <- function(these_samples_metadata,
@@ -386,7 +411,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         width = plot_width,
         height = secondPlotHeight,
         backgroundColour = "white",
-        return_heatmap_obj = TRUE
+        returnEverything = TRUE
       )
     }
     if (!missing(secondPlotArgs)) {
@@ -627,9 +652,12 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                           "plot_width" = plot_width,
                           "plot_height" = oncoplotHeight,
                           "simplify_annotation" = TRUE,
-                          "return_inputs" = TRUE
+                          "return_inputs" = TRUE,
+                          pctFontSize = pctFontSize
     )
-
+    if(pctFontSize==0){
+      oncoplot_args[["show_pct"]] = FALSE
+    }
     if(plot_flavour == "CN"){
       oncoplot_args[["gene_cnv_df"]] = cnv_df
     }
