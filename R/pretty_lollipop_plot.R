@@ -51,14 +51,14 @@ pretty_lollipop_plot <- function(
     gene = NULL,
     plot_title,
     by_allele = TRUE,
-    max_count = 15,
+    max_count = 10,
     include_silent = FALSE,
     labelPos = NULL,
     show_rate = FALSE,
     title_size = 8,
     x_axis_size = 4,
     domain_label_size = 0,
-    aa_label_size = 4
+    aa_label_size = 3
 ) {
     if(missing(gene)){
         stop("Please provide a gene...")
@@ -130,7 +130,7 @@ pretty_lollipop_plot <- function(
         ungroup()
       gene_counts = mutate(gene_counts,label=AA,size=ifelse(mutation_count>max_count,max_count,mutation_count))
     }
-
+    max_mutation_count = max(gene_counts$mutation_count)
     #select(gene_counts,AA,HGVSp_Short,mutation_count) %>% arrange(desc(mutation_count)) %>% print()
     # protein_domains a bundled object with GAMBLR.data
     protein_domain_subset <- subset(
@@ -187,23 +187,16 @@ pretty_lollipop_plot <- function(
                 yend = mutation_count
                 )
         ) +
-        geom_point(
-            data = gene_counts,
-            aes(
-                x = AA,
-                y = mutation_count,
-                color = Variant_Classification, 
-                size = size,    
-                )
-        ) +
         # Background rectangle for regions without domain data
         geom_rect(
             aes(
-                xmin = x_min,
-                xmax = x_max,
-                ymin = -0.2,
-                ymax = 0.2
-                ),
+                xmin = x_min ,
+                xmax = x_max
+                
+                ),           
+                ymin = -0.01, #* max_mutation_count,
+                ymax = 0.01, #* max_mutation_count,     
+
             fill = "black",
             color = "black"
         ) +
@@ -213,15 +206,27 @@ pretty_lollipop_plot <- function(
             aes(
                 xmin = start.points,
                 xmax = end.points,
-                ymin = -0.4,
-                ymax = 0.4,
+                
                 fill = color
                 ),
+            ymin = -0.02 * max_mutation_count,
+            ymax = 0.02 * max_mutation_count,
             color = "black",
             show.legend = FALSE
-        )
+        ) +
+        geom_point(
+            data = gene_counts,
+            colour = "black",
+            shape = 21,   
+            aes(
+                x = AA,
+                y = mutation_count,
+                fill = Variant_Classification, 
+                size = size,    
+                )
+        ) 
         if(domain_label_size > 0){
-        plot = plit +  
+        plot = plot +  
           geom_text(
             data = domain_data,
             aes(
@@ -239,16 +244,19 @@ pretty_lollipop_plot <- function(
             unique() %>% print()
           maxAA = dplyr::filter(gene_counts, AA %in% labelPos) %>%
             select(AA,label,mutation_count) %>% pull(AA) %>% max()
+          gene_counts = mutate(gene_counts,label=gsub("p.","",label))
           plot = plot + geom_text_repel(data = dplyr::filter(gene_counts, AA %in% labelPos) %>%
                                           select(AA,label,mutation_count) %>%
                                           unique(),
                                    aes(
                                      x = AA,
                                      y = mutation_count,
-                                     label = label,
-                                     size = aa_label_size
-                                   ),nudge_y =0.5,
-                                   nudge_x = maxAA/10,
+                                     label = label
+                                     
+                                   ),
+                                   size = aa_label_size,
+                                   nudge_y = max_mutation_count * 0.2,
+                                   nudge_x = maxAA/3,
                                    max.overlaps=2)
         }
         if(show_rate){
@@ -259,7 +267,12 @@ pretty_lollipop_plot <- function(
                 "%]"
                 )
         }
-
+        max_y = max_mutation_count + max_mutation_count * 0.2
+        #if(max_mutation_count > max_count){
+        #    max_y = max_y + max_count/2
+        #}else {
+        #    max_y = max_y + max_mutation_count/2
+        #}
         plot = plot +
         labs(
             x = "AA Position",
@@ -280,10 +293,11 @@ pretty_lollipop_plot <- function(
               size = x_axis_size
             )
         ) +
-        scale_color_manual(
+        scale_fill_manual(
           name = "Legend",
           values = colours_manual
-        )
-
+        ) + 
+        ylim(c(0,max_y))
+  #print(colours_manual)
   return(plot)
 }
