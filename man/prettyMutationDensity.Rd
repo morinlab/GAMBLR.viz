@@ -46,6 +46,9 @@ prettyMutationDensity(
   show_legend = TRUE,
   legend_direction = "horizontal",
   legendFontSize = 10,
+  metadataBarHeight = 1.5,
+  metadataBarFontsize = 5,
+  metadataSide = "bottom",
   region_annotation_name_side = "top",
   sample_annotation_name_side = "left",
   legend_side = "bottom",
@@ -53,7 +56,8 @@ prettyMutationDensity(
   from_indexed_flatfile = TRUE,
   mode = "slms-3",
   width = 10,
-  height = 10
+  height = 10,
+  hide_annotation_name = FALSE
 )
 }
 \arguments{
@@ -124,6 +128,12 @@ prettyMutationDensity(
 \item{legend_direction}{Control aesthetics of the heatmap legend. Default "horizontal".}
 
 \item{legendFontSize}{Control aesthetics of the heatmap legend. Default 10.}
+
+\item{metadataBarHeight}{Optional argument to adjust the height of bar with annotations. The default is 1.5.}
+
+\item{metadataBarFontsize}{Optional argument to control for the font size of metadata annotations. The default is 5.}
+
+\item{metadataSide}{Default location for metadata is the bottom. Set to "top" if you want to move it}
 
 \item{legend_side}{Control aesthetics of the heatmap legend. Default "bottom".}
 

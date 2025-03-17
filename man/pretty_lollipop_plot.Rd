@@ -9,8 +9,14 @@ pretty_lollipop_plot(
   gene = NULL,
   plot_title,
   by_allele = TRUE,
+  max_count = 10,
   include_silent = FALSE,
-  labelPos = NULL
+  labelPos = NULL,
+  show_rate = FALSE,
+  title_size = 8,
+  x_axis_size = 4,
+  domain_label_size = 0,
+  aa_label_size = 3
 )
 }
 \arguments{

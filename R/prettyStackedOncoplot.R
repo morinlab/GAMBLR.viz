@@ -455,7 +455,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     # the other heatmap will specify the sample order
     # get a basic mutation status matrix to allow ordering of samples to be 
     # driven by information in both plot types
-    print(paste("BOTTOM",plot_flavour))
+    #print(paste("BOTTOM",plot_flavour))
     if(!missing(sortByGenes) | !missing(genes_CN_thresh)){
       if(plot_flavour == "CN"){
         if(!missing(genes_CN_thresh)){
@@ -486,9 +486,9 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         }
         
         cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
-        print("HERE@@@@")
+        #print("HERE@@@@")
         colnames(cn_state_mat) = c("sample_id",cn_name)
-        print(colnames(cn_state_mat))
+        #print(colnames(cn_state_mat))
         if(!missing(sortByGenes)){
           sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
         }
@@ -591,8 +591,8 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     if(plot_flavour == "mutation"){
         second_plot_args[["cluster_samples"]] <- cluster_samples
     }
-    print("cluster_rows:")
-    print(second_plot_args[["cluster_rows"]])
+    #print("cluster_rows:")
+    #print(second_plot_args[["cluster_rows"]])
     if(verbose){
       print(second_plot_args)
     }
@@ -623,8 +623,8 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       )
 
     }
-    print("CLUSTER SAMPLES:")
-    print(second_plot_args[['cluster_samples']])
+    #print("CLUSTER SAMPLES:")
+    #print(second_plot_args[['cluster_samples']])
 
     pcn <- do.call(secondPlotType, second_plot_args)
     second_heatmap <- pcn$heatmap_object

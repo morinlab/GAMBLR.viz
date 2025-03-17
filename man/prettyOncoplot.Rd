@@ -48,6 +48,7 @@ prettyOncoplot(
   legend_col = 3,
   metadataBarHeight = 1.5,
   metadataBarFontsize = 5,
+  metadataSide = "bottom",
   legendFontSize = 10,
   fontSizeGene = 6,
   annotation_row = 2,
@@ -73,6 +74,7 @@ prettyOncoplot(
   pctFontSize = 6,
   row_names_side = "right",
   show_pct = TRUE,
+  hide_annotation_name = FALSE,
   cnv_df
 )
 }
@@ -204,6 +206,8 @@ indicate the maximum or minimum CN states to consider for that gene. For example
 \item{use_raster}{Whether to rasterize image}
 
 \item{show_pct}{TRUE by default. Set to FALSE to hide percentage.}
+
+\item{hide_annotation_name}{Default: FALSE}
 
 \item{cluster_numeric_rows}{Deprecated. See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
 

@@ -43,6 +43,7 @@
 #' @param legendFontSize Control aesthetics of the heatmap legend. Default 10.
 #' @param metadataBarHeight Optional argument to adjust the height of bar with annotations. The default is 1.5.
 #' @param metadataBarFontsize Optional argument to control for the font size of metadata annotations. The default is 5.
+#' @param metadataSide Default location for metadata is the bottom. Set to "top" if you want to move it
 #' @param legend_side Control aesthetics of the heatmap legend. Default "bottom".
 #' @param returnEverything Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
@@ -121,6 +122,7 @@ prettyMutationDensity <- function(regions_list = NULL,
                                            legendFontSize = 10,
                                            metadataBarHeight = 1.5,
                                            metadataBarFontsize = 5,
+                                           metadataSide = "bottom", 
                                            region_annotation_name_side = "top",
                                            sample_annotation_name_side = "left",
                                            legend_side = "bottom",
@@ -128,7 +130,8 @@ prettyMutationDensity <- function(regions_list = NULL,
                                            from_indexed_flatfile = TRUE,
                                            mode = "slms-3",
                                            width = 10,
-                                           height = 10) {
+                                           height = 10,
+                                           hide_annotation_name = FALSE) {
   #print("prettyMutationDensity")
   #this could definitely use a helper function that takes all arguments that can be a genome_bed type
   if(missing(projection)){
@@ -146,10 +149,6 @@ prettyMutationDensity <- function(regions_list = NULL,
         }
       }
     }else if(!missing(regions_bed)){
-      if("genomic_data" %in% class(regions_bed)){
-        projection = get_genome_build(regions_bed)
-      }
-    }else if(!missing(regions_maf)){
       if("genomic_data" %in% class(regions_bed)){
         projection = get_genome_build(regions_bed)
       }
@@ -357,7 +356,6 @@ if(any(is.nan(matrix_show))){
   # assign bins back to regions for better annotation
   assign_bins_to_region <- function(bin_names, rdf, label_by = "name", just_genes = FALSE) {
     if(all(bin_names %in% rdf$name)){
-      
       if(just_genes){
         #strip down to just the gene name
         short_names = gsub("-.+","",bin_names)
@@ -366,8 +364,6 @@ if(any(is.nan(matrix_show))){
         bin_overlapped = data.frame(Locus = bin_names)
       }
       #names are already correct. Nothing else needed
-      
-      
       
       rownames(bin_overlapped) <- bin_names
       return(bin_overlapped)
@@ -443,6 +439,7 @@ if(any(is.nan(matrix_show))){
     row_annot <- HeatmapAnnotation(
       df = meta_show,
       show_legend = show_legend,
+      show_annotation_name = !hide_annotation_name,
       which = "row",
       col = annoColours,
       na_col = naColour,
@@ -451,6 +448,7 @@ if(any(is.nan(matrix_show))){
     if (show_gene_colours) {
       col_annot <- HeatmapAnnotation(
         df = bin_annot,
+        show_annotation_name = !hide_annotation_name,
         show_legend = F,
         which = "col",
         simple_anno_size = unit(metadataBarHeight, "mm"),
@@ -468,15 +466,16 @@ if(any(is.nan(matrix_show))){
       col = bin_col_fun,
       bottom_annotation = col_annot,
       left_annotation = row_annot,
-      show_row_names = F,
-      show_column_names = F,
+      show_row_names = show_row_names,
+      show_column_names = show_column_names,
       column_split = factor(bin_annot$Locus),
       column_title_gp = gpar(fontsize = region_fontsize),
       column_title_rot = label_regions_rotate,
       row_title_gp = gpar(fontsize = 10),
       heatmap_legend_param = heatmap_legend_param,
       width = unit(width, "cm"),
-      height = unit(height, "cm")
+      height = unit(height, "cm"), 
+      show_heatmap_legend =show_legend
     )
   } else { #Samples in columns
     col_annot <- HeatmapAnnotation(
@@ -485,6 +484,7 @@ if(any(is.nan(matrix_show))){
       which = "col",
       col = annoColours,
       na_col = naColour,
+      show_annotation_name = !hide_annotation_name,
       simple_anno_size = unit(metadataBarHeight, "mm"),
       annotation_name_gp = gpar(fontsize = metadataBarFontsize),
       annotation_name_side = sample_annotation_name_side,
@@ -505,12 +505,12 @@ if(any(is.nan(matrix_show))){
   
     hargs = list(
       as.matrix(matrix_show)[rownames(bin_annot), rownames(meta_show)],
-      show_heatmap_legend = T,
+      show_heatmap_legend = show_legend,
       cluster_rows = cluster_regions,
       #cluster_row_slices = cluster_regions,
       cluster_columns = cluster_samples,
       col = bin_col_fun,
-      bottom_annotation = col_annot,
+      
       right_annotation = row_annot,
       show_row_names = show_row_names,
       show_column_names = show_column_names,
@@ -522,6 +522,11 @@ if(any(is.nan(matrix_show))){
       width = unit(width, "cm"),
       height = unit(height, "cm")
     )
+    if (metadataSide == "top") {
+      hargs[["top_annotation"]]  = col_annot
+    }else {
+      hargs[["bottom_annotation"]]  = col_annot
+    }
     if(cluster_samples){
       hargs[["clustering_distance_columns"]] = clustering_distance_samples
     }

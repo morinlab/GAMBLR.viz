@@ -135,7 +135,32 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      cn_state_matrix = cn_mat,
                      genes_CN_thresh = CN_thresh,
                      genes = genes,
-                     secondPlotHeight=4)
+                     secondPlotHeight=9)
+
+
+some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+                              fix_names = "concat",
+                              concat_cols = c("gene","region"),sep="-")
+
+simple_ashm_mat = 
+ get_ashm_count_matrix(some_regions,
+                       these_samples_metadata = dlbcl_genome_meta)
+
+
+prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
+                     maf_data = dlbcl_maf,
+                     regions_bed= some_regions,
+                     metadataColumns = c("pathology","lymphgen"),
+                     oncoplot_location = "bottom",
+                     ashm_matrix = simple_ashm_mat,
+                    secondPlotType = "prettyMutationDensity",
+                     secondPlotArgs = list("merge_genes"=TRUE,
+                                           region_fontsize=3),
+                     genes = genes,
+                    cluster_samples = T,                      
+                    secondPlotHeight = 9)
+
+
 
 
 }
