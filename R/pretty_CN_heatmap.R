@@ -17,7 +17,8 @@
 #' @param keep_these_bins A vector of bin names to include (all others will be excluded)
 #' @param hide_annotations A vector of annotation names to suppress from legends in the plot
 #' @param cluster_columns Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap
-#' @param cluster_samples Alias for cluster_rows and more intuitive when combining with rotate = TRUE
+#' @param cluster_regions More intuitive alias for cluster_columns
+#' @param cluster_samples More intuitive alias for cluster_rows, especially when combining with rotate = TRUE
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
@@ -160,13 +161,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              width = 15,
                              height = 6,
                              cluster_samples,
-                             cluster_bins){
+                             cluster_regions){
   #aliases
   if(!missing(cluster_samples)){
     cluster_rows = cluster_samples
   }
-  if(!missing(cluster_bins)){
-    cluster_columns = cluster_bins
+  if(!missing(cluster_regions)){
+    cluster_columns = cluster_regions
   }
 
   cn_state_matrix[cn_state_matrix>max_CN_allowed] = max_CN_allowed

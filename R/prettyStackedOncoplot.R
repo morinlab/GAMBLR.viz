@@ -435,7 +435,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         print(names(second_plot_args))
       }
     }
-    # disable sortByGenes for the second plot because it will break the linkage
+    # disable sortByGenes for the second plot because it will break the linkage if we try to re-sort again
     if(plot_flavour=="CN"){
       second_plot_args[['sortByGenes']] = NULL
     }
@@ -472,7 +472,8 @@ prettyStackedOncoplot <- function(these_samples_metadata,
           }
         }
 
-        cn_thresh = data.frame(gene_id=names(genes_CN_thresh),cn_thresh = genes_CN_thresh)
+        cn_thresh = data.frame(gene_id=names(genes_CN_thresh),
+                               cn_thresh = genes_CN_thresh)
         cn_state_mat = get_cnv_and_ssm_status(genes_and_cn_threshs = cn_thresh,
                               #seg_data=dlbcl_seg,
                               cn_matrix = cn_state_matrix,
@@ -480,20 +481,21 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                               maf_df = maf_data,
                               only_cnv="all") 
         old_names= colnames(cn_state_mat)
-        cn_name = sapply(old_names,function(x){paste0(x,"_cn")})
+        cn_name = sapply(old_names, function(x){paste0(x, "_cn")})
         if(!missing(sortByGenes)){
-          sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
+          sort_cn_name = sapply(sortByGenes,
+                                function(x){paste0(x,"_cn")})
         }
         
         cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
-        #print("HERE@@@@")
         colnames(cn_state_mat) = c("sample_id",cn_name)
-        #print(colnames(cn_state_mat))
         if(!missing(sortByGenes)){
           sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
         }
+        print(paste(sort_cn_name))
+        print(colnames(cn_state_mat))
         these_samples_metadata = left_join(these_samples_metadata,
-                                            cn_state_mat) 
+                                            cn_state_mat)
 
 
       }
@@ -507,7 +509,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
             cn_state_mat = data.frame(sample_id = these_samples_metadata$sample_id,
                              matrix(0,nrow=length(these_samples_metadata$sample_id),
                                     ncol=length(sortByGenes)))
-            print(head(colnames(cn_state_mat)))
+            #print(head(colnames(cn_state_mat)))
             cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
             cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
             colnames(cn_state_mat) = c("sample_id",cn_name)
@@ -517,7 +519,10 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                                             cn_state_mat) 
 
         }
-        if(verbose){
+      }
+    }
+    if(!missing(sortByGenes)){
+      if(verbose){
             print("getting mutation status for sorting")
         }
 
@@ -528,12 +533,11 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
         these_samples_metadata = these_samples_metadata %>%
                                   left_join(.,ssm_state_mat)
-      }
-    }
-    if(!missing(sortByGenes)){
       if(plot_flavour == "CN"){
-                        these_samples_metadata = these_samples_metadata %>% 
-                                  arrange(across(any_of(sort_cn_name),desc),across(any_of(sortByGenes),desc))
+
+        these_samples_metadata = these_samples_metadata %>% 
+                                  arrange(across(any_of(sort_cn_name),desc),
+                                  across(any_of(sortByGenes),desc))
       }else{
                         these_samples_metadata = these_samples_metadata %>% 
                                   arrange(across(any_of(sortByGenes),desc))
@@ -541,8 +545,10 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     }
     
     if(plot_flavour == "CN"){
-       cnv_df = select(these_samples_metadata,sample_id,all_of(cn_name)) 
-       cnv_df = column_to_rownames(cnv_df,"sample_id")
+       cnv_df = select(these_samples_metadata,
+                       sample_id,all_of(cn_name)
+                       ) 
+       cnv_df = column_to_rownames(cnv_df, "sample_id")
        colnames(cnv_df) = gsub("_cn","",colnames(cnv_df))
        if(verbose){
          print(head(cnv_df))
@@ -582,7 +588,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       second_plot_args[["keep_sample_order"]] <- TRUE
     } else if (cluster_samples) {
       if(plot_flavour=="CN"){
-        second_plot_args[["cluster_rows"]] <- TRUE
+        second_plot_args[["cluster_rows"]] <- TRUE #seems a sane default
       }
     } else if (!missing(sortByMetadataColumns)) {
       second_plot_args[["sortByMetadataColumns"]] <- sortByMetadataColumns
@@ -591,8 +597,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     if(plot_flavour == "mutation"){
         second_plot_args[["cluster_samples"]] <- cluster_samples
     }
-    #print("cluster_rows:")
-    #print(second_plot_args[["cluster_rows"]])
+
     if(verbose){
       print(second_plot_args)
     }
@@ -623,8 +628,6 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       )
 
     }
-    #print("CLUSTER SAMPLES:")
-    #print(second_plot_args[['cluster_samples']])
 
     pcn <- do.call(secondPlotType, second_plot_args)
     second_heatmap <- pcn$heatmap_object
