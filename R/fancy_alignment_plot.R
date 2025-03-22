@@ -29,6 +29,7 @@
 #'
 #' @examples
 #' #load packages
+#' \dontrun{
 #' library(dplyr)
 #' library(GAMBLR.data)
 #'
@@ -42,7 +43,7 @@
 #'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
 #' fancy_alignment_plot(these_sample_ids = my_samples)
-#'
+#' }
 fancy_alignment_plot = function(these_sample_ids,
                                 metadata,
                                 these_samples_metadata,

@@ -52,6 +52,8 @@ the only option tested with this function.}
 Pretty stacked oncoplot
 }
 \examples{
+library(GAMBLR.open)
+
 # Prepare some metadata
  dlbcl_genome_meta = get_gambl_metadata() \%>\% 
   dplyr::filter(pathology=="DLBCL",seq_type=="genome")

@@ -38,6 +38,7 @@ g_meta = suppressMessages(get_gambl_metadata()) \%>\%
 # CXCR4 non-coding hotspot
 muts = get_ssm_by_regions(regions_list = "2:136875000-136875097",
                                 streamlined = F,
+                                projection = "grch37",
                                 these_samples_metadata = g_meta
                                     )
 
@@ -57,6 +58,7 @@ cap_meta = suppressMessages(get_gambl_metadata()) \%>\%
 #ID3 hotspot
 muts = get_ssm_by_regions(regions_list = "1:23885706-23885798",
                                 streamlined = F,
+                                projection = "grch37",
                                 this_seq_type = "capture",
                                 these_samples_metadata = cap_meta
                                     )

@@ -52,25 +52,28 @@
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
-#' @import dplyr tidyr tibble ComplexHeatmap circlize grid parallel GAMBLR.helpers
+#' @import dplyr tidyr tibble ComplexHeatmap circlize grid parallel GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
-#' library(dplyr)
-#'
+#' \dontrun{
+#' library(GAMBLR.open)
 #' # get meta data
 #' my_meta <- get_gambl_metadata() %>%
 #'   dplyr::filter(pathology %in% c("FL","DLBCL"), seq_type != "mrna") %>%
 #'   check_and_clean_metadata(duplicate_action = "keep_first")
 #'
 #' # get ashm regions of a set of genes.
-#' my_regions = create_bed_data(GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest,
+#' my_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
 #'   fix_names = "concat",
 #'   concat_cols = c("gene","region"),sep = "-")
 #'
 #' # create heatmap of mutation counts for the specified regions
-#' meta_columns <- c("pathology", "lymphgen", "COO_consensus", "DHITsig_consensus")
+#' meta_columns <- c("pathology",
+#'                   "lymphgen",
+#'                   "COO_consensus", 
+#'                   "DHITsig_consensus")
+#' print("prettyMutationDensity")
 #' prettyMutationDensity(
 #'   regions_bed = my_regions,
 #'   these_samples_metadata = my_meta,
@@ -78,7 +81,7 @@
 #'   sortByMetadataColumns = meta_columns,
 #'   projection = "grch37"
 #' )
-#'
+#'}
 prettyMutationDensity <- function(regions_list = NULL,
                                            regions_bed = NULL,
                                            these_samples_metadata = NULL,

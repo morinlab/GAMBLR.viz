@@ -24,9 +24,13 @@
 #' @param verbose Set to TRUE for ultra chatty mode
 #'
 #' @return
+#' 
+#' @import GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.open)
+#' 
 #' # Prepare some metadata
 #'  dlbcl_genome_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology=="DLBCL",seq_type=="genome")

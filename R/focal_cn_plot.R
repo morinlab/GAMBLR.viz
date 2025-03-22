@@ -23,7 +23,8 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' \dontrun{
+#' library(GAMBLR.open)
 #'
 #' #get metadata
 #' this_metadata = get_gambl_metadata()
@@ -37,7 +38,7 @@
 #'               region = myc_region,
 #'               type = "loss",
 #'               crop_distance = 100000000)
-#'
+#'}
 focal_cn_plot = function(region,
                          gene,
                          these_samples_metadata,

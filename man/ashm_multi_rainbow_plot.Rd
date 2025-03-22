@@ -12,7 +12,7 @@ ashm_multi_rainbow_plot(
   classification_column = "lymphgen",
   maf_data,
   projection = "grch37",
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{
@@ -48,19 +48,23 @@ This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called.
 }
 \examples{
 
-
+library(GAMBLR.open)
 #get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 
-mm=these_samples_metadata = get_gambl_metadata() \%>\% 
+metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) \%>\% 
           dplyr::filter(pathology=="DLBCL",
                  seq_type=="genome") \%>\% 
           dplyr::arrange(lymphgen)
+metadata = check_and_clean_metadata(metadata,duplicate_action ="keep_first")
 regions_bed = create_bed_data(grch37_ashm_regions,
                               fix_names = "concat",
                               concat_cols = c("gene","region"))
 regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
-ashm_multi_rainbow_plot(regions_bed,mm,custom_colours = lymphgen_colours)
+ashm_multi_rainbow_plot(regions_bed,
+                        metadata,
+                        custom_colours = lymphgen_colours,
+                        verbose = TRUE)
 
 #build plot
 \dontrun{
