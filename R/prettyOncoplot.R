@@ -661,6 +661,10 @@ prettyOncoplot <- function (
             for (s in missing_s) {
                 snv_wide[, s] = FALSE
             }
+            if(verbose){
+                print(nrow(snv_wide))
+                print(ncol(snv_wide))
+            }
             return(snv_wide[rownames(mat), colnames(mat)])
         }
         col["Missense"] = col["Missense_Mutation"]
@@ -682,12 +686,12 @@ prettyOncoplot <- function (
                 grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(fill = col["Splice_Site"], 
                   col = NA))
             }, CNV = function(x, y, w, h) {
-                grid.rect(x, y, w * width_adj, h * 0.5, gp = gpar(fill = col["CNV"], 
+                grid.rect(x, y, w * width_adj, h * 0.6, gp = gpar(fill = col["CNV"], 
                   col = NA))
             }, HotSpot = function(x, y, w, h) {
                 grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(fill = col["Missense"], 
                   col = NA))
-                grid.rect(x, y, w * width_adj, h * 0.3, gp = gpar(fill = col["HotSpot"], 
+                grid.rect(x, y, w * width_adj, h * 0.5, gp = gpar(fill = col["HotSpot"], 
                   col = NA))
             }, col = col)
         snv_df = summarize_mutation_by_class(mutation_set = c("Missense_Mutation", 
@@ -700,16 +704,22 @@ prettyOncoplot <- function (
             "Frame_Shift_Del", "Frame_Shift_Ins", "Nonstop_Mutation"))
         splice_df = summarize_mutation_by_class(mutation_set = "Splice_Site")
         if (highlightHotspots) {
+            if(verbose){
+                print('summarize hot spots')
+            }
             hotspot_df = summarize_mutation_by_class(mutation_set = "hot_spot")
+            print(dim(hotspot_df))
             snv_df[trunc_df == TRUE | splice_df == TRUE] = FALSE
             snv_df[hotspot_df == TRUE] = FALSE
             trunc_df[hotspot_df == TRUE] = FALSE
             splice_df[hotspot_df == TRUE] = FALSE
+        }else{
+            snv_df[trunc_df == TRUE | splice_df == TRUE] = FALSE
+            splice_df[trunc_df == TRUE] = FALSE
+            snv_df[trunc_df == TRUE | splice_df == TRUE] = FALSE
+            splice_df[trunc_df == TRUE] = FALSE
         }
-        snv_df[trunc_df == TRUE | splice_df == TRUE] = FALSE
-        splice_df[trunc_df == TRUE] = FALSE
-        snv_df[trunc_df == TRUE | splice_df == TRUE] = FALSE
-        splice_df[trunc_df == TRUE] = FALSE
+
         if (!missing(cnv_df)) {
             transposed_cnv_df = t(cnv_df)
             cn_df = matrix(nrow = nrow(transposed_cnv_df), ncol = ncol(transposed_cnv_df))
@@ -758,7 +768,7 @@ prettyOncoplot <- function (
                 print(table(unlist(cn_df[1, ])))
             }
         }
-    }
+    } #end simplifyAnnotation
     else {
         alter_fun = list(background = function(x, y, w, h) {
             grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling, 
@@ -823,21 +833,35 @@ prettyOncoplot <- function (
         if (!"hot_spot" %in% colnames(maf_df)) {
             stop("maf_df requires a hot_spot column. Did you forget to run annotate_hotspots?")
         }
+        if(verbose){
+            print("annotating hot spots")
+        }
         hot_samples = dplyr::filter(maf_df, hot_spot == TRUE & 
             Hugo_Symbol %in% genes_kept) %>% dplyr::select(Hugo_Symbol, 
             Tumor_Sample_Barcode) %>% mutate(mutated = "hot_spot") %>% 
             unique()
+  
         all_genes_df = data.frame(Hugo_Symbol = rownames(mat))
         all_samples_df = data.frame(Tumor_Sample_Barcode = colnames(mat))
         hs = left_join(all_samples_df, hot_samples)
-        hot_mat = hs %>% pivot_wider(names_from = "Tumor_Sample_Barcode", 
-            values_from = "mutated") %>% left_join(all_genes_df, 
-            .) %>% column_to_rownames("Hugo_Symbol") %>% as.matrix()
-        #annotate hotspots in matrix
+        hot_mat = hs %>% 
+            pivot_wider(names_from = "Tumor_Sample_Barcode", 
+                        values_from = "mutated") %>% 
+            left_join(all_genes_df, .) %>% 
+            column_to_rownames("Hugo_Symbol") %>% 
+            as.matrix()
+
         for (i in colnames(mat)) {
-            mat[genes, i][!is.na(hot_mat[genes_kept, i])] = paste0(mat[genes_kept, 
-                i][!is.na(hot_mat[genes_kept, i])], ";", hot_mat[genes_kept, 
-                i][!is.na(hot_mat[genes_kept, i])])
+            
+            mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])] = 
+            paste0(mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])],
+                   ";",
+                   hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])]
+                   )
+        }
+
+        if(verbose){
+            print("done annotating hot spots")
         }
     }
     if (verbose) {
@@ -1043,6 +1067,10 @@ prettyOncoplot <- function (
         trunc_df = trunc_df[genes_kept, patients_kept]
         snv_df = snv_df[genes_kept, patients_kept]
         splice_df = splice_df[genes_kept, patients_kept]
+        if(verbose){
+            print("HERE")
+        }
+
         any_hit = trunc_df
         all_hit = trunc_df
         all_hit[] = ""
@@ -1395,6 +1423,10 @@ make_prettyoncoplot <- function (mat_input, metadata_df, metadata_df_numeric = m
             any_mut[mat_input$Missense] = 1
             any_mut[mat_input$Truncating] = 1
             any_mut[mat_input$Splice_Site] = 1
+            if("HotSpot" %in% names(all_out$mut_mat)){
+                print("Counting hot spots!")
+                any_mut[mat_input$HotSpot] = 1
+            }
             mut_status = as.data.frame(t(any_mut))
             metadata_df = bind_cols(metadata_df, mut_status)
             return(list(Heatmap = ch, mut_mat = mat_input, mut_status = mut_status, 
