@@ -128,8 +128,8 @@
 #'     splitGeneGroups = split_genes,
 #'     minMutationPercent = 5)
 #' 
-#' #Was that too slow for you? Enable the simplify_annotation
-#' parameter for a quicker result.
+#' # Was that too slow for you? Enable the simplify_annotation
+#' # parameter for a quicker result.
 #' 
 #' prettyOncoplot(maf_df=maf_data,genes=genes,
 #'    these_samples_metadata = maf_metadata,
@@ -164,13 +164,13 @@
 #'      these_samples_metadata = maf_metadata,
 #'      cluster_rows = T,
 #'      metadataColumns = c("pathology",
-#'                          "genetic_subgroup",
+#'                          "lymphgen",
 #'                          "seq_type",
 #'                          "ffpe_or_frozen"),
 #'      cluster_cols = F,
 #'      simplify_annotation=T,
 #'      cnv_df=gene_cnv,
-#'      sortByColumns = c("pathology","genetic_subgroup"))
+#'      sortByColumns = c("pathology","lymphgen"))
 #'
 #' # Option 2: 
 #' # The second way to incorporate copy number relies instead on a binned copy number matrix
@@ -278,8 +278,8 @@ prettyOncoplot <- function (
     return_inputs = FALSE,
     gap = 0,
     use_raster = NULL,
-    plot_width = 14,
-    plot_height = 10,
+    plot_width = NULL,
+    plot_height = NULL,
     show_any_legend = TRUE,
     pct_side = "left",
     pctFontSize = 6,
@@ -1377,9 +1377,12 @@ make_prettyoncoplot <- function (mat_input, metadata_df, metadata_df_numeric = m
         pct_gp = gpar(fontsize = pctFontSize), use_raster = use_raster, 
         row_names_side = row_names_side, pct_side = pct_side)
     oncoprint_args[["show_pct"]] = show_pct
-    
-    oncoprint_args[["width"]] = unit(pw, "cm")
-    oncoprint_args[["height"]] = unit(ph, "cm")
+    if(!is.null(pw)){
+        oncoprint_args[["width"]] = unit(pw, "cm")
+    }
+    if(!is.null(ph)){
+        oncoprint_args[["height"]] = unit(ph, "cm")
+    }
     colanno = ComplexHeatmap::HeatmapAnnotation(df = metadata_df, 
         show_legend = show_legend,
         show_annotation_name = !hide_annotation_name,
@@ -1423,7 +1426,7 @@ make_prettyoncoplot <- function (mat_input, metadata_df, metadata_df_numeric = m
             any_mut[mat_input$Missense] = 1
             any_mut[mat_input$Truncating] = 1
             any_mut[mat_input$Splice_Site] = 1
-            if("HotSpot" %in% names(all_out$mut_mat)){
+            if("HotSpot" %in% names(mat_input$mut_mat)){
                 print("Counting hot spots!")
                 any_mut[mat_input$HotSpot] = 1
             }
