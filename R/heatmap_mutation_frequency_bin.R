@@ -48,7 +48,7 @@
 #' @param returnEverything Boolean. FALSE will plot the heatmap automatically. TRUE will return a heatmap object to allow further tweaking with the draw() function. Default FALSE.
 #' @param from_indexed_flatfile Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).
 #' @param mode Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".
-#'
+#' @param use_raster Control whether ComplexHeatmap uses rastering. default: TRUE
 #'
 #' @return A table of mutation counts for sliding windows across one or more regions. May be long or wide.
 #'
@@ -131,8 +131,8 @@ prettyMutationDensity <- function(regions_list = NULL,
                                            mode = "slms-3",
                                            width = 10,
                                            height = 10,
-                                           hide_annotation_name = FALSE) {
-  #print("prettyMutationDensity")
+                                           hide_annotation_name = FALSE,
+                                           use_raster = FALSE) {
   #this could definitely use a helper function that takes all arguments that can be a genome_bed type
   if(missing(projection)){
     if(!missing(regions_bed) & !missing(maf_data)){
@@ -287,11 +287,33 @@ if(scale_values){
   }else{
     bin_vals = c(0,4,26,32,64)
   }
-  bin_col_fun <- colorRamp2(
-  bin_vals,
-  c(backgroundColour, "orange", "red", "purple", "black")
-)
+  #bin_col_fun <- colorRamp2(
+  #bin_vals,
+  #c(backgroundColour, "orange", "red", "purple", "black"))
+  if(tolower(backgroundColour) == "transparent") {
+    # We want the lowest value to be transparent.
+    # We use "#FFFFFF00" as the transparent colour.
+    bin_col_fun_raw <- colorRamp2(bin_vals, c("#FFFFFF00", "orange", "red", "purple", "black"))
+    # Create a vectorized wrapper that forces the minimum value to be transparent.
+    bin_col_fun <- function(x) {
+      # Get the base colors for all x.
+      res <- bin_col_fun_raw(x)
+      # Ensure result is a character vector.
+      res <- as.character(res)
+      # Use ifelse to check each element: if x equals the minimum bin value, force transparency.
+      forced <- ifelse(x == min(bin_vals), "#FFFFFF00", res)
+      return(forced)
+    }
+  } else {
+    # Use the user-specified background colour as the first color.
+    # Note: if bg_color is "transparent", this branch won't execute.
+    bin_col_fun <- colorRamp2(bin_vals, c(backgroundColour, "orange", "red", "purple", "black"))
+  }
+
 }
+
+
+
 #print("RANGE:")
 #print(range(matrix_show))
 #print(dim(matrix_show))
@@ -475,7 +497,8 @@ if(any(is.nan(matrix_show))){
       heatmap_legend_param = heatmap_legend_param,
       width = unit(width, "cm"),
       height = unit(height, "cm"), 
-      show_heatmap_legend =show_legend
+      show_heatmap_legend =show_legend,
+      use_raster = use_raster
     )
   } else { #Samples in columns
     col_annot <- HeatmapAnnotation(
@@ -519,6 +542,7 @@ if(any(is.nan(matrix_show))){
       row_title_rot = label_regions_rotate,
       #column_title_gp = gpar(fontsize = 8),
       #heatmap_legend_param = heatmap_legend_param,
+      use_raster = use_raster,
       width = unit(width, "cm"),
       height = unit(height, "cm")
     )
