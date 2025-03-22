@@ -57,7 +57,8 @@ prettyMutationDensity(
   mode = "slms-3",
   width = 10,
   height = 10,
-  hide_annotation_name = FALSE
+  hide_annotation_name = FALSE,
+  use_raster = FALSE
 )
 }
 \arguments{
@@ -142,6 +143,8 @@ prettyMutationDensity(
 \item{from_indexed_flatfile}{Set to TRUE to avoid using the database and instead rely on flat files (only works for streamlined data, not full MAF details).}
 
 \item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
+
+\item{use_raster}{Control whether ComplexHeatmap uses rastering. default: TRUE}
 
 \item{cluster_rows_heatmap}{Boolean. Default FALSE.}
 

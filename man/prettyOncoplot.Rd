@@ -67,8 +67,8 @@ prettyOncoplot(
   return_inputs = FALSE,
   gap = 0,
   use_raster = NULL,
-  plot_width = 14,
-  plot_height = 10,
+  plot_width = NULL,
+  plot_height = NULL,
   show_any_legend = TRUE,
   pct_side = "left",
   pctFontSize = 6,
@@ -271,8 +271,8 @@ prettyOncoplot(maf_df=maf_data,genes=genes,
     splitGeneGroups = split_genes,
     minMutationPercent = 5)
 
-#Was that too slow for you? Enable the simplify_annotation
-parameter for a quicker result.
+# Was that too slow for you? Enable the simplify_annotation
+# parameter for a quicker result.
 
 prettyOncoplot(maf_df=maf_data,genes=genes,
    these_samples_metadata = maf_metadata,
@@ -307,13 +307,13 @@ gene_cnv = get_cnv_and_ssm_status(only_cnv="all",
      these_samples_metadata = maf_metadata,
      cluster_rows = T,
      metadataColumns = c("pathology",
-                         "genetic_subgroup",
+                         "lymphgen",
                          "seq_type",
                          "ffpe_or_frozen"),
      cluster_cols = F,
      simplify_annotation=T,
      cnv_df=gene_cnv,
-     sortByColumns = c("pathology","genetic_subgroup"))
+     sortByColumns = c("pathology","lymphgen"))
 
 # Option 2: 
 # The second way to incorporate copy number relies instead on a binned copy number matrix

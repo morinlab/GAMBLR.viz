@@ -103,11 +103,11 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                       genes = genes)
 # make a list of arguments for the second (here, the upper) plot
 CN_args = list("keep_these_chromosomes"=c("2"),
-              "sortByGenes" = "REL",
               "scale_by_sample" = TRUE)
 
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      maf_data = dlbcl_maf,
+                     sortByGenes = "REL",
                      metadataColumns = c("pathology","lymphgen"),
                      oncoplot_location = "bottom",
                      secondPlotArgs = CN_args,
@@ -119,11 +119,12 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
 
 # make a list of arguments for the second (here, the upper) plot
 CN_args = list(
-              "sortByGenes" = "TP53",
               "scale_by_sample" = TRUE,
               "hide_these_chromosomes" = "X")
-# Specifying sortByGenes for both plots will arrange samples with relevant
-# CN events or mutations towards one end where possible. 
+
+# Specifying sortByGenes automatically ensures those genes
+# are sorted by their CN status then mutation status when
+# oncoplot_location is "bottom".
 # The order in the upper plot restricts the order of the lower plot.
 
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,

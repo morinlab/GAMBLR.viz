@@ -55,7 +55,7 @@ pretty_CN_heatmap(
   width = 15,
   height = 6,
   cluster_samples,
-  cluster_bins
+  cluster_regions
 )
 }
 \arguments{
@@ -139,7 +139,9 @@ pretty_CN_heatmap(
 
 \item{width}{Set the width of the heatmap. Default is 10.}
 
-\item{cluster_samples}{Alias for cluster_rows and more intuitive when combining with rotate = TRUE}
+\item{cluster_samples}{More intuitive alias for cluster_rows, especially when combining with rotate = TRUE}
+
+\item{cluster_regions}{More intuitive alias for cluster_columns}
 }
 \value{
 list (when return_data = TRUE)
