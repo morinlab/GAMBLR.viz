@@ -4,7 +4,20 @@
 \alias{pretty_lollipop_plot}
 \title{Pretty Lollipop Plot.}
 \usage{
-pretty_lollipop_plot(maf_df, gene = NULL, plot_title, include_silent = FALSE)
+pretty_lollipop_plot(
+  maf_df,
+  gene = NULL,
+  plot_title,
+  by_allele = TRUE,
+  max_count = 10,
+  include_silent = FALSE,
+  labelPos = NULL,
+  show_rate = FALSE,
+  title_size = 8,
+  x_axis_size = 4,
+  domain_label_size = 0,
+  aa_label_size = 3
+)
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
@@ -13,7 +26,12 @@ pretty_lollipop_plot(maf_df, gene = NULL, plot_title, include_silent = FALSE)
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
 
+\item{by_allele}{Set to FALSE to consider all mutations at the same codon as equivalent.
+When FALSE, and combined with labelPos, the labels will only indicate the amino acid number. Default is TRUE.}
+
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
+
+\item{labelPos}{Specify which AA positions to label in the plot (default is no labels).}
 }
 \value{
 A lollipop plot.
