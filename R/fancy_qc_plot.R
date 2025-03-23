@@ -30,9 +30,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' #load packages
 #' library(dplyr)
-#' library(GAMBLR.data)
+#' library(GAMBLR.open)
 #'
 #' #get sample IDs for available genome samples
 #' genome_collated = collate_results(seq_type_filter = "genome") %>%
@@ -44,7 +45,7 @@
 #'   dplyr::filter(pathology == "BL") %>% pull(sample_id)
 #'
 #' fancy_qc_plot(these_sample_ids = my_samples, plot_data = "AverageBaseQuality")
-#'
+#'}
 fancy_qc_plot = function(these_sample_ids,
                          keep_cohort,
                          keep_pathology,

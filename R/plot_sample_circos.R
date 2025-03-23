@@ -30,6 +30,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #'
 #' plot_sample_circos(this_sample_id = "02-13135T",
@@ -45,7 +46,7 @@
 #'                                   "chr8",
 #'                                   "chr14",
 #'                                   "chr18"))
-#'
+#'}
 plot_sample_circos = function(this_sample_id,
                               sv_df,
                               cnv_df,

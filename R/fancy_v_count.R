@@ -37,11 +37,12 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #'
 #' #count all variants for one sample (default parameters)
 #' fancy_v_count(this_sample_id = "DOHH-2")
-#'
+#'}
 fancy_v_count = function(this_sample_id,
                          maf_data,
                          maf_path = NULL,

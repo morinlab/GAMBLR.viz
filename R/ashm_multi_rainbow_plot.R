@@ -25,19 +25,23 @@
 #'
 #' @examples
 #' 
-#' 
+#' library(GAMBLR.open)
 #' #get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 #' 
-#' mm=these_samples_metadata = get_gambl_metadata() %>% 
+#' metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) %>% 
 #'           dplyr::filter(pathology=="DLBCL",
 #'                  seq_type=="genome") %>% 
 #'           dplyr::arrange(lymphgen)
+#' metadata = check_and_clean_metadata(metadata,duplicate_action ="keep_first")
 #' regions_bed = create_bed_data(grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols = c("gene","region"))
 #' regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
-#' ashm_multi_rainbow_plot(regions_bed,mm,custom_colours = lymphgen_colours)
+#' ashm_multi_rainbow_plot(regions_bed,
+#'                         metadata,
+#'                         custom_colours = lymphgen_colours,
+#'                         verbose = TRUE)
 #' 
 #' #build plot
 #' \dontrun{
@@ -56,9 +60,11 @@ ashm_multi_rainbow_plot = function(regions_bed,
                                    classification_column = "lymphgen",
                                    maf_data,
                                    projection = "grch37",
-                                   verbose = TRUE) {
+                                   verbose = FALSE) {
   
-
+  if(verbose){
+    print("ashm_multi_rainbow_plot")
+  }
   if(missing(these_samples_metadata)){
     if(verbose) {
       print("finding metadata")
@@ -132,11 +138,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
     ) %>% strip_genomic_classes()
   }
 
-  print(head(region_mafs))
-  #check for regions not in names
-  outside = dplyr::filter(region_mafs,!region_name %in% names)
-
-
+  if(verbose){
+    print(head(region_mafs))
+  }
   if(nrow(region_mafs) == 0){
     stop(
       "There are no mutations in the region/sample combination provided."
@@ -146,15 +150,19 @@ ashm_multi_rainbow_plot = function(regions_bed,
   
   meta_arranged = meta_arranged %>% mutate_if(is.factor, as.character)
   meta_arranged = meta_arranged %>% mutate(classification = factor(!!sym(classification_column)))
-  print(head(meta_arranged))
+  if(verbose){
+    print(head(meta_arranged[,c(1:8)]))
+  }
+  
   
   muts_anno = dplyr::left_join(region_mafs, meta_arranged)
   muts_first = dplyr::select(muts_anno, start, region_name) %>%
     group_by(region_name) %>%
     arrange(start) %>%
     dplyr::filter(row_number() == 1)
-  print(head(muts_first))
-  eg = expand_grid(start = pull(muts_first, start), sample_id = pull(meta_arranged, sample_id))
+
+  eg = expand_grid(start = pull(muts_first, start),
+                   sample_id = pull(meta_arranged, sample_id))
   eg = left_join(eg, muts_first)
   
   #concatenate expanded frame of points with original mutation data
@@ -166,10 +174,14 @@ ashm_multi_rainbow_plot = function(regions_bed,
       print()
     stop("There are duplicated sample ids in the metadata file. Please ensure that each sample id is unique.")
   }
-  print(head(muts_anno))
-  muts_anno$sample_id = factor(muts_anno$sample_id, levels = meta_arranged$sample_id)
+  if(verbose){
+    print(head(muts_anno[,c(1:10)]))
+  }
   
-  #return(muts_anno)
+  muts_anno$sample_id = factor(muts_anno$sample_id, levels = meta_arranged$sample_id)
+  if(verbose){
+    print("plotting")
+  }
   #make the plot
   p = muts_anno %>%
     ggplot() +
@@ -193,7 +205,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
     p = p +
       scale_colour_manual(values = custom_colours)
   }
-  
-  print(p)
+  if(verbose){
+    print("done")
+  }
+  return(p)
   
 }
