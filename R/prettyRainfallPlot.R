@@ -38,7 +38,8 @@
 #' @export
 #'
 #' @examples
-#' # Will annotate and label SVs
+#' \dontrun{
+#' # This mode will annotate and label SVs
 #' prettyRainfallPlot(
 #'      this_sample_id = "DOHH-2",
 #'      this_seq_type = "genome",
@@ -67,6 +68,7 @@
 #'      sv_data = sv,
 #'      label_sv = TRUE
 #' )
+#' }
 #'
 prettyRainfallPlot = function(
     this_sample_id = NULL,

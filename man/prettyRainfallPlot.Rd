@@ -69,7 +69,8 @@ Create a sample-level rainfall plot visualizing single nucleotide
      substitutions mutations for selected chromosomes.
 }
 \examples{
-# Will annotate and label SVs
+\dontrun{
+# This mode will annotate and label SVs
 prettyRainfallPlot(
      this_sample_id = "DOHH-2",
      this_seq_type = "genome",
@@ -98,5 +99,6 @@ prettyRainfallPlot(
      sv_data = sv,
      label_sv = TRUE
 )
+}
 
 }
