@@ -31,6 +31,7 @@
 #' @examples
 #'
 #' library(GAMBLR.data)
+#' library(dplyr)
 #' 
 #' metadata <- get_gambl_metadata() %>%
 #'    filter(!seq_type == "mrna") %>%
@@ -50,7 +51,7 @@
 #'     genes = genes,
 #'     minMutationPercent = 2,
 #'     these_samples_metadata = metadata,
-#'     simplify = TRUE,
+#'     simplify_annotation = TRUE,
 #'     return_inputs = TRUE
 #' )
 #' 
@@ -75,7 +76,7 @@
 #'         mutated = "POS"
 #'     ) %>%
 #'     distinct %>%
-#'     pivot_wider(
+#'     tidyr::pivot_wider(
 #'         names_from = gene,
 #'         values_from = mutated
 #'     ) %>%
@@ -87,20 +88,20 @@
 #'     prettyOncoplot_output = oncoplot_output,
 #'     these_samples_metadata = metadata
 #' )
-#' 
+#' regions_bed = create_bed_data(grch37_ashm_regions,
+#'                               fix_names = "concat",
+#'                               concat_cols =c("gene","region"),
+#'                               sep="-")
 #' # Add aSHM data
 #' ashm_freq <- get_ashm_count_matrix(
-#'     regions_bed = mutate(
-#'         grch37_ashm_regions,
-#'         name = paste(gene, region, sep = "_")
-#'     ),
+#'     regions_bed = regions_bed,
 #'     this_seq_type = "genome"
 #' )
 #' 
 #' ashm_freq_collated <- mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))
 #' 
 #' ashm_freq_collated <- ashm_freq_collated[,colSums(ashm_freq_collated) >130]
-#' ashm_freq_collated <- rownames_to_column(ashm_freq_collated,"sample_id")
+#' ashm_freq_collated <- tibble::rownames_to_column(ashm_freq_collated,"sample_id")
 #' 
 #' # Comprehensive plot with SSM + SV + aSHM and some non-default arguments
 #' pretty_circular_mutation_frequency_heatmap(

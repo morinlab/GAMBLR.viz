@@ -1117,14 +1117,35 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         metadataColumns, numericMetadataColumns,
         expressionColumns
       )))
+      #Warn the user and deal with NA values, if present
+      na_columns <- metadata_df %>%
+        summarise(across(all_of(numericMetadataColumns), ~ any(is.na(.)))) %>%
+        pivot_longer(everything(),
+                     names_to = "column",
+                     values_to = "has_na") %>%
+        filter(has_na) %>%
+        pull(column)
+
+    if (length(na_columns) > 0) {
+      warning(paste("The following numeric columns contain NA values: ",
+                      paste(na_columns, collapse = ", "),
+                      "\nThese will be replaced with 0\n",
+                      "If NAs are unexpected, you should investigate"))
+    }
+    metadata_df <- metadata_df %>%
+      mutate(across(
+        na_columns,
+        ~ ifelse(is.na(.x), 0, .x)
+      ))
     if (!missing(numericMetadataMax)) {
       max_list <- setNames(numericMetadataMax, numericMetadataColumns)
-      metadata_df <- metadata_df %>% mutate(across(
-        names(max_list),
-        ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]],
-          .x
-        )
-      ))
+      metadata_df <- metadata_df %>%
+        mutate(across(
+          names(max_list),
+          ~ ifelse(.x > max_list[[cur_column()]], max_list[[cur_column()]],
+            .x
+          )
+        ))
     }
   } else {
     metadata_df <- dplyr::filter(these_samples_metadata, sample_id %in%
@@ -1312,7 +1333,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         "mm"
       ), annotation_legend_param = list(
         title = "Enriched in",
-        nrow = legend_row, ncol = legend_col, direction = legend_direction,
+        nrow = legend_row,
+        ncol = legend_col,
+        direction = legend_direction,
         labels_gp = gpar(fontsize = legendFontSize)
       )
     )
@@ -1779,7 +1802,7 @@ make_prettyoncoplot <- function(
       sample_order = ch_ord
     ))
   }
-  draw(ch,
+  suppressMessages(draw(ch,
        heatmap_legend_side = legend_position,
-       annotation_legend_side = legend_position)
+       annotation_legend_side = legend_position))
 }

@@ -1,43 +1,73 @@
 #' @title Forest Plot.
 #'
-#' @description Create a forest plot comparing mutation frequencies for a set of genes between two groups.
+#' @description Create a forest plot comparing mutation frequencies
+#' for a set of genes between two groups.
 #'
-#' @details This function returns two types of plot (box plot and forest plot), the user can either view them separately or arranged on the same grob.
-#' In addition this function also lets the user control the mutation frequencies of the plotted genes.
-#' If no `genes` is provided, this function auto-defaults to all genes in the incoming maf.
-#' The user can then control the minimum number of mutations requirement for a gene to be included in the plot.
+#' @details This function returns two types of plot (box plot and
+#' forest plot), the user can either view them separately or arranged
+#' on the same grob.
+#' In addition this function also lets the user control the mutation
+#' frequencies of the plotted genes.
+#' If no `genes` is provided, this function auto-defaults to all genes
+#' in the incoming maf.
+#' The user can then control the minimum number of mutations requirement
+#' for a gene to be included in the plot.
 #' This is done with the `min_mutations` parameter.
-#' For extended examples on how to use this function, refer to the example inside the function documentation or the vignettes.
+#' For extended examples on how to use this function, refer to the example
+#' inside the function documentation or the vignettes.
 #'
-#' @param maf A maf data frame. Minimum required columns are Hugo_Symbol and Tumor_Sample_Barcode.
-#' @param mutmat Optional argument for binary mutation matrix. If not supplied, function will generate this matrix from the file used in argument "maf".
-#' @param metadata Metadata for the comparisons. Minimum required columns are Tumor_Sample_Barcode and the column assigning each case to one of two groups.
-#' @param genes An optional vector of genes to restrict your plot to. If no gene-list is supplied, the function will extract all mutated genes from the incoming maf. See min_mutations parameter for more info.
-#' @param keepGeneOrder Set to TRUE if you want to preserve the gene order specified.
-#' @param min_mutations Optional parameter for when no `genes` is provided. This parameter ensures only genes with n mutations are kept in `genes`. Default value is 1, this means all genes in the incoming maf will be plotted.
-#' @param comparison_column Mandatory: the name of the metadata column containing the comparison values.
-#' @param rm_na_samples Set to TRUE to remove 0 mutation samples. Default is FALSE.
-#' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param separate_hotspots Optional: If you would like to treat hotspots separately from other mutations in any gene. Requires that the maf file is annotated with [GAMBLR::annotate_hotspots].
-#' @param comparison_name Optional: Specify the legend title if different from the comparison column name.
-#' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
-#' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
+#' @param maf A maf data frame. Minimum required columns are Hugo_Symbol
+#' and Tumor_Sample_Barcode.
+#' @param mutmat Optional argument for binary mutation matrix. If not
+#' supplied, function will generate this matrix from the file used in 
+#' argument "maf".
+#' @param metadata Metadata for the comparisons. Minimum required
+#' columns are Tumor_Sample_Barcode and the column assigning each case
+#' to one of two groups.
+#' @param genes An optional vector of genes to restrict your plot to.
+#' If no gene-list is supplied, the function will extract all mutated
+#' genes from the incoming maf. See min_mutations parameter for more info.
+#' @param keepGeneOrder Set to TRUE if you want to preserve the gene
+#' order specified.
+#' @param min_mutations Optional parameter for when no `genes` is provided.
+#' This parameter ensures only genes with n mutations are kept in `genes`.
+#' Default value is 1, this means all genes in the incoming maf will be plotted.
+#' @param comparison_column Mandatory: the name of the metadata column
+#' containing the comparison values.
+#' @param rm_na_samples Set to TRUE to remove 0 mutation samples.
+#' Default is FALSE.
+#' @param comparison_values Optional: If the comparison column contains
+#' more than two values or is not a factor, specify a character vector
+#' of length two in the order you would like the factor levels to be set,
+#' reference group first.
+#' @param separate_hotspots Optional: If you would like to treat hotspots
+#' separately from other mutations in any gene. Requires that the maf file
+#' is annotated with [GAMBLR::annotate_hotspots].
+#' @param comparison_name Optional: Specify the legend title if different
+#' from the comparison column name.
+#' @param custom_colours Optional: Specify a named vector of colours that
+#' match the values in the comparison column.
+#' @param custom_labels Optional: Specify custom labels for the legend
+#' categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
 #'
-#' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
+#' @return A convenient list containing all the data frames that were
+#' created in making the plot, including the mutation matrix. It also
+#' produces (and returns) ggplot object with a side-by-side forest plot
+#' and bar plot showing mutation incidences across two groups.
 #'
 #' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import dplyr ggplot2 purrr tidyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' library(GAMBLR.open)
 #'
 #' metadata = get_gambl_metadata()
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
 #'
-#' maf = get_ssm_by_samples(these_samples_metadata = this_meta)
+#' maf = get_coding_ssm(these_samples_metadata = this_meta)
 #'
 #' prettyForestPlot(maf = maf,
 #'                  metadata = this_meta,
@@ -66,7 +96,8 @@ prettyForestPlot = function(maf,
                             custom_labels = FALSE,
                             max_q = 1){
 
-  #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
+  #If no comparison_values are specified, derive the comparison_values
+  # from the specified comparison_column
   if(comparison_values[1] == FALSE){
     if("factor" %in% class(metadata[[comparison_column]])){
       comparison_values = levels(metadata[[comparison_column]])
@@ -87,11 +118,13 @@ prettyForestPlot = function(maf,
     user_provided_gene_order = TRUE
   }
 
-  #Subset the metadata to the specified comparison_values and the maf to the remaining sample_ids
+  # Subset the metadata to the specified comparison_values
+  # and the maf to the remaining sample_ids
   metadata = metadata[metadata[[comparison_column]] %in% comparison_values, ]
 
   #Ensure the metadata comparison column is a factor with levels matching the input
-  metadata$comparison = factor(metadata[[comparison_column]], levels = comparison_values)
+  metadata$comparison = factor(metadata[[comparison_column]],
+                               levels = comparison_values)
 
   #read maf into r
   if(!missing(maf)){
