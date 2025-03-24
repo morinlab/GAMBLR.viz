@@ -154,10 +154,13 @@
 #' @export
 #'
 #' @examples
+#' 
+#' suppressMessages(
+#'   suppressWarnings({
 #' # load packages
 #' library(grid)
 #' library(dplyr)
-#' library(GAMBLR.open)
+#' library(GAMBLR)
 #'
 #' # Using GAMBLR.open
 #' maf_metadata <- GAMBLR.open::get_gambl_metadata(
@@ -169,19 +172,9 @@
 #' maf_data <- get_coding_ssm(
 #'   these_samples_metadata = maf_metadata
 #' )
-#' \dontrun{
-#' # or using GAMBLR.results (note: cohort names differ!)
-#' maf_metadata <- GAMBLR.results::get_gambl_metadata() %>%
-#'   dplyr::filter(
-#'     pathology %in% c("FL", "DLBCL"),
-#'     cohort != "FL_Crouch"
-#'   )
+#' }))
 #'
-#' maf_data <- GAMBLR.results::get_all_coding_ssm(
-#'   these_samples_metadata = maf_metadata
-#' )
-#' }
-# define some genes of interest
+#' # define some genes of interest
 #' fl_genes <- GAMBLR.data::lymphoma_genes %>%
 #'   dplyr::filter(FL_Tier == 1) %>%
 #'   pull(Gene)
@@ -197,16 +190,22 @@
 #'                  rep("DLBCL", length(dlbcl_genes)))
 #' names(split_genes) <- genes
 #'
+#' suppressMessages(
+#'   suppressWarnings({
 #' prettyOncoplot(
 #'   maf_df = maf_data, genes = genes,
 #'   these_samples_metadata = maf_metadata,
 #'   splitGeneGroups = split_genes,
 #'   minMutationPercent = 5
 #' )
+#' }))
 #'
 #' # Was that too slow for you? Enable the simplify_annotation
 #' # parameter for a quicker result.
 #'
+#' suppressMessages(
+#'   suppressWarnings({
+#' 
 #' prettyOncoplot(
 #'   maf_df = maf_data, genes = genes,
 #'   these_samples_metadata = maf_metadata,
@@ -214,6 +213,8 @@
 #'   minMutationPercent = 5,
 #'   simplify_annotation = TRUE
 #' )
+#' 
+#' }))
 #'
 #' # Want to include copy number? You have two options.
 #' # Option 1:
@@ -237,13 +238,20 @@
 #' # for BCL2, deletions for the rest
 #' print(gene_regions)
 #'
+#' suppressMessages(
+#'   suppressWarnings({
+#' 
 #' gene_cnv <- get_cnv_and_ssm_status(
 #'   only_cnv = "all",
 #'   these_samples_metadata = get_gambl_metadata(),
 #'   genes_and_cn_threshs = gene_regions
 #' )
+#' 
+#' }))
 #'
-#'
+#' suppressMessages(
+#'   suppressWarnings({
+#' 
 #' prettyOncoplot(
 #'   maf_df = maf_data, genes = c(
 #'     "CREBBP", "EZH2", "MYD88",
@@ -267,6 +275,7 @@
 #'   cnv_df = gene_cnv,
 #'   sortByColumns = c("pathology", "lymphgen")
 #' )
+#' }))
 #'
 #' # Option 2:
 #' # The second way to incorporate copy number relies
@@ -301,7 +310,9 @@
 #'   "TNFAIP3" = 1
 #' )
 #'
-#'
+#' suppressMessages(
+#'   suppressWarnings({
+#' 
 #' prettyOncoplot(
 #'   maf_df = maf_data,
 #'   binned_cnv_df = all_states_binned,
@@ -320,7 +331,8 @@
 #'   sortByColumns = c("pathology", "genetic_subgroup"),
 #'   minMutationPercent = 0
 #' )
-#'
+#' 
+#'}))
 prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            gene_cnv_df,
                            binned_cnv_df,

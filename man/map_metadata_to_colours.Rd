@@ -46,3 +46,4 @@ all_cols = map_metadata_to_colours(
 )
 
 }
+\keyword{internal}

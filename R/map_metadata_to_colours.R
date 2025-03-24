@@ -27,6 +27,7 @@
 #' )
 #'
 #' @export
+#' @keywords internal
 map_metadata_to_colours = function(metadataColumns,
                                    these_samples_metadata,
                                    column_alias = list(),

@@ -27,12 +27,14 @@
 #'
 #' @examples
 #' \dontrun{
-#' #create a PDF report for one sample, as well as exporting all individual plots.
+#' # create a PDF report for one sample, as well as exporting all 
+#' # individual plots.
 #' comp_report(this_sample_id = "HTMCP-01-06-00422-01A-01D",
 #'             out = "./",
 #'             export_individual_plots = TRUE)
 #' }
 #'
+#' @keywords internal
 comp_report = function(this_sample_id,
                        export_individual_plots = FALSE,
                        out = "./",
