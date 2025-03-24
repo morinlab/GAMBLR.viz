@@ -129,13 +129,13 @@ prettyGeneCloud = function(maf_df,
       if(wordcloud_version == 1){
         wc = wordcloud::wordcloud(these_genes_unique$Hugo_Symbol,
                                   these_genes_unique$n,random.color=TRUE,
-                                  colors=RColorBrewer::brewer.pal(12,"Set2"))
+                                  colors=RColorBrewer::brewer.pal(8,"Set2"))
       }else if(wordcloud_version == 2){
          wc = make_wordcloud2(these_genes_unique$Hugo_Symbol,
                           these_genes_unique$n,
                           random.order=F,
                           ordered.colors=T,
-                          colours=RColorBrewer::brewer.pal(12,"Set2"),
+                          colours=RColorBrewer::brewer.pal(8,"Set2"),
                           zoomout=zoomout,
                           fontFamily=fontFamily)
       }
