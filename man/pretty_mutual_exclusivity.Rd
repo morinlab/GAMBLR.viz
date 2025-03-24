@@ -56,7 +56,7 @@ Pretty mutual exclusivity plot
 }
 \examples{
 library(GAMBLR)
-library(ComplexHeatmap)
+suppressMessages(library(ComplexHeatmap))
 
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\% 
   dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna")

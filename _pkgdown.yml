@@ -19,3 +19,14 @@ reference:
       - plot_sample_circos
       - splendidHeatmap
     examples: false
+figures:
+  dev: ragg::agg_png
+  dpi: 96
+  dev.args: []
+  fig.ext: png
+  fig.width: 9
+  fig.height: 9
+  fig.retina: 2
+  fig.asp: 1.618
+  bg: NA
+  other.parameters: []
