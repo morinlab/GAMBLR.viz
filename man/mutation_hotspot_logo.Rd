@@ -33,6 +33,7 @@ Generates a summary of the frequency of SSMs in a small
 region around a mutation hot spot using a "sequence logo"-style stacked plot
 }
 \examples{
+library(GAMBLR)
 g_meta = suppressMessages(get_gambl_metadata()) \%>\% 
   dplyr::filter(seq_type=="genome")
 # CXCR4 non-coding hotspot

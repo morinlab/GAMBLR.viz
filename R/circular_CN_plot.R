@@ -346,6 +346,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #' select(aneuploidies,1:5) %>% head()
 #' 
 #' }
+#' @keywords internal
 categorize_CN_events = function(pretty_CN_heatmap_output){
   CN_mat = pretty_CN_heatmap_output$data
   labels = pretty_CN_heatmap_output$labels

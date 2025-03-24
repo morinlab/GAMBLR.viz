@@ -52,25 +52,34 @@ the only option tested with this function.}
 Pretty stacked oncoplot
 }
 \examples{
-library(GAMBLR.open)
+
+suppressMessages(
+  suppressWarnings({
+
+library(GAMBLR)
 
 # Prepare some metadata
  dlbcl_genome_meta = get_gambl_metadata() \%>\% 
   dplyr::filter(pathology=="DLBCL",seq_type=="genome")
 # Get CN segments for these samples
 dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
+
 # Prepare CN matrix
 cn_mat = segmented_data_to_cn_matrix(dlbcl_seg,
                                      these = dlbcl_genome_meta,
                                       adjust_for_ploidy = TRUE)
+
 dlbcl_maf = get_all_coding_ssm(dlbcl_genome_meta)
+
+}))
 
 genes=c("KMT2D","BCL2","CREBBP","EZH2","MYD88","CD79B","TP53",
         "PIM1","CARD11","SGK1","SOCS1",'TET2',"SPEN",
         "ETV6","CD83","B2M","S1PR2","GNA13","BTG1",
         "BTG2","DDX3X","KLHL6","HIST1H1E","TBL1XR1","SMARCA4")
 
-# we will only sort on the mutation status of these genes and in this order
+# we will only sort on the mutation status of these
+# genes and in this order
 sortGenes = c("TP53","KMT2D","BCL2","EZH2","MYD88","CD79B")
 
 
@@ -84,6 +93,8 @@ sortGenes = c("TP53","KMT2D","BCL2","EZH2","MYD88","CD79B")
 # oncoplot on top with column order dicted by the mutation status
 # of sortGenes (in the order of the genes appearance in that vector)
 
+suppressMessages(
+  suppressWarnings({
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,  
                         maf_data = dlbcl_maf,
                         metadataColumns = c("pathology","lymphgen"),
@@ -93,9 +104,10 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                         genes = genes, 
                         sortByGenes = sortGenes)
 
-
+}))
 # oncoplot on top. Clustering of mutations is used to order the columns.
-
+suppressMessages(
+  suppressWarnings({
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,  
                       maf_data = dlbcl_maf,
                       metadataColumns = c("pathology","lymphgen"),
@@ -103,9 +115,13 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                       cn_state_matrix = cn_mat,
                       genes_CN_thresh = CN_thresh,
                       genes = genes)
+
+}))
 # make a list of arguments for the second (here, the upper) plot
 CN_args = list("keep_these_chromosomes"=c("2"),
               "scale_by_sample" = TRUE)
+suppressMessages(
+  suppressWarnings({
 
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      maf_data = dlbcl_maf,
@@ -119,6 +135,7 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      oncoplotHeight = 8,
                      secondPlotHeight=3)
 
+}))
 # make a list of arguments for the second (here, the upper) plot
 CN_args = list(
               "scale_by_sample" = TRUE,
@@ -129,6 +146,8 @@ CN_args = list(
 # oncoplot_location is "bottom".
 # The order in the upper plot restricts the order of the lower plot.
 
+suppressMessages(
+  suppressWarnings({
 prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      maf_data = dlbcl_maf,
                      sortByGenes = "TP53",
@@ -139,12 +158,14 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      genes_CN_thresh = CN_thresh,
                      genes = genes,
                      secondPlotHeight=9)
-
+}))
 
 some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
                               fix_names = "concat",
                               concat_cols = c("gene","region"),sep="-")
 
+suppressMessages(
+  suppressWarnings({
 simple_ashm_mat = 
  get_ashm_count_matrix(some_regions,
                        these_samples_metadata = dlbcl_genome_meta)
@@ -160,10 +181,9 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      secondPlotArgs = list("merge_genes"=TRUE,
                                            region_fontsize=3),
                      genes = genes,
-                    cluster_samples = T,                      
+                    cluster_samples = T,
                     secondPlotHeight = 9)
 
-
-
+}))
 
 }

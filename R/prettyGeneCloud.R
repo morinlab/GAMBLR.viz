@@ -54,7 +54,7 @@ prettyGeneCloud = function(maf_df,
     slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally()
   these_genes_unique = group_by(these_genes_maf,Hugo_Symbol,Tumor_Sample_Barcode) %>%
     slice_head() %>% ungroup() %>% group_by(Hugo_Symbol) %>% tally()
-  print(as.data.frame(head(these_genes_unique,25)))
+
   if(!missing(other_genes)){
     #assign a colour to each gene list
     these_genes_unique = these_genes_unique %>%

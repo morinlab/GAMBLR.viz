@@ -25,7 +25,7 @@
 #'
 #' @examples
 #' 
-#' library(GAMBLR.open)
+#' suppressMessages(library(GAMBLR.open))
 #' #get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 #' 
@@ -33,7 +33,8 @@
 #'           dplyr::filter(pathology=="DLBCL",
 #'                  seq_type=="genome") %>% 
 #'           dplyr::arrange(lymphgen)
-#' metadata = check_and_clean_metadata(metadata,duplicate_action ="keep_first")
+#' metadata = suppressMessages(check_and_clean_metadata(metadata,
+#'                             duplicate_action ="keep_first"))
 #' regions_bed = create_bed_data(grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols = c("gene","region"))

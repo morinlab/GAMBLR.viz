@@ -28,6 +28,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR)
+#' 
 #' bl_fl_dlbcl_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna")
 #' dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL")

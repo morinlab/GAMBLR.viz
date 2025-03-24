@@ -69,7 +69,7 @@
 #'
 #' maf = get_coding_ssm(these_samples_metadata = this_meta)
 #'
-#' prettyForestPlot(maf = maf,
+#' plots = prettyForestPlot(maf = maf,
 #'                  metadata = this_meta,
 #'                  genes = c("ATP6V1B2",
 #'                            "EZH2",
@@ -80,7 +80,7 @@
 #'                                        "FL"),
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
-#'
+#' plots$arranged
 prettyForestPlot = function(maf,
                             mutmat,
                             metadata,
