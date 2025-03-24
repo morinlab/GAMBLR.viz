@@ -160,3 +160,37 @@ Obtain a heatmap of mutation counts across sliding windows for multiple regions.
 This function takes a metadata table with `these_samples_metadata` parameter and internally calls [GAMBLR::calc_mutation_frequency_bin_region] (that internally calls [GAMBLR::get_ssm_by_regions]).
 to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 }
+\examples{
+
+library(GAMBLR.open)
+# get meta data
+my_meta <- get_gambl_metadata() \%>\%
+  dplyr::filter(pathology \%in\% c("FL","DLBCL"), seq_type != "mrna") \%>\%
+  check_and_clean_metadata(duplicate_action = "keep_first")
+
+# get ashm regions of a set of genes.
+my_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+  fix_names = "concat",
+  concat_cols = c("gene","region"),sep = "-")
+
+# create heatmap of mutation counts for the specified regions
+meta_columns <- c("pathology",
+                  "lymphgen",
+                  "COO_consensus", 
+                  "DHITsig_consensus")
+suppressMessages(
+  suppressWarnings({
+
+prettyMutationDensity(
+   regions_bed = my_regions,
+   these_samples_metadata = my_meta,
+   metadataColumns = meta_columns,
+   orientation="sample_columns",
+   sortByMetadataColumns = meta_columns,
+   projection = "grch37",
+   backgroundColour = "transparent",
+   show_legend = FALSE,
+   region_fontsize = 3)
+
+}))
+}

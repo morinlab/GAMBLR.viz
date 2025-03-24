@@ -30,6 +30,7 @@
 #'
 #' @examples
 #' library(GAMBLR)
+#' suppressMessages(library(ComplexHeatmap))
 #' 
 #' bl_fl_dlbcl_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna")
@@ -60,7 +61,7 @@
 #' 
 #' # because the first steps of this are slow we can
 #' # store the output matrix as a shortcut for subsequent runs
-#' Sys.Date()
+#' 
 #' suppressWarnings(
 #'   suppressMessages({
 #' outs = pretty_mutual_exclusivity(
@@ -71,14 +72,18 @@
 #'   font_size = 5,
 #'   use_alpha = T,
 #'   clustering_distance = "binary",
-#'   include_hotspots = F,
-#'   return_data = TRUE
+#'   include_hotspots = F, 
+#'   return_data = T
 #' )
-#' Sys.Date()
+#' draw(outs$plot)
+#' 
 #' }))
+#' 
 #' suppressWarnings(
 #'   suppressMessages({
-#' outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
+#' 
+#' pretty_mutual_exclusivity(
+#'   mut_mat=outs$mut_mat,
 #'   corr_mat = outs$corr_mat,
 #'   p_mat = outs$p_mat,
 #'   maf_data = all_coding,
@@ -91,12 +96,13 @@
 #'   clustering_distance = "euclidean",
 #'   include_hotspots = F
 #' )
-#' Sys.Date()
+#' 
 #' }))
 #' 
 #' suppressWarnings(
 #'   suppressMessages({
-#' outs = pretty_mutual_exclusivity(
+#' 
+#' pretty_mutual_exclusivity(
 #'   p_mat = outs$p_mat,
 #'   maf_data = all_coding,
 #'   genes = fl_bl_dlbcl_genes,
@@ -107,7 +113,6 @@
 #'   size_factor = 0.004,
 #'   clustering_distance = "euclidean",
 #'   legend_direction = "vertical",
-#'   width = 15,
 #'   include_hotspots = F)
 #'
 #' }))
@@ -408,7 +413,7 @@ pretty_mutual_exclusivity <- function(maf_data,
         heatmap_args[["column_split"]] <- split
       }
       ht <- do.call("Heatmap", heatmap_args)
-      draw(ht)
+      
       if(return_data){
         #get the order of rows in the heatmap
         rord = row_order(ht)
@@ -434,6 +439,7 @@ pretty_mutual_exclusivity <- function(maf_data,
                     )
                  
       }
+      return(ht)
     } else {
       # Define a cell function that draws a circle in each cell based on the value
       cell_fun <- function(j, i, x, y, width, height, fill) {
@@ -478,9 +484,8 @@ pretty_mutual_exclusivity <- function(maf_data,
       }
       heatmap_args[['heatmap_legend_param']] = list(direction=legend_direction)
       ht <- do.call("Heatmap", heatmap_args)
-      # Draw the heatmap.
-      draw(ht)
-      print(range(M))
+      
+      #print(range(M))
       if (return_data) {
         #get the order of rows in the heatmap
         rord = row_order(ht)
@@ -503,6 +508,7 @@ pretty_mutual_exclusivity <- function(maf_data,
                     final_order = ordered_genes,
                     gene_lowest_corr = sort(gene_lowest)))
       }
+      return(ht)
     }
   } else {
     stop("engine must be ComplexHeatmap or ggcorrplot")

@@ -56,6 +56,7 @@ Pretty mutual exclusivity plot
 }
 \examples{
 library(GAMBLR)
+library(ComplexHeatmap)
 
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\% 
   dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna")
@@ -86,7 +87,7 @@ fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
 
 # because the first steps of this are slow we can
 # store the output matrix as a shortcut for subsequent runs
-Sys.Date()
+
 suppressWarnings(
   suppressMessages({
 outs = pretty_mutual_exclusivity(
@@ -97,14 +98,18 @@ outs = pretty_mutual_exclusivity(
   font_size = 5,
   use_alpha = T,
   clustering_distance = "binary",
-  include_hotspots = F,
-  return_data = TRUE
+  include_hotspots = F, 
+  return_data = T
 )
-Sys.Date()
+draw(outs$plot)
+
 }))
+
 suppressWarnings(
   suppressMessages({
-outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
+
+pretty_mutual_exclusivity(
+  mut_mat=outs$mut_mat,
   corr_mat = outs$corr_mat,
   p_mat = outs$p_mat,
   maf_data = all_coding,
@@ -117,12 +122,13 @@ outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
   clustering_distance = "euclidean",
   include_hotspots = F
 )
-Sys.Date()
+
 }))
 
 suppressWarnings(
   suppressMessages({
-outs = pretty_mutual_exclusivity(
+
+pretty_mutual_exclusivity(
   p_mat = outs$p_mat,
   maf_data = all_coding,
   genes = fl_bl_dlbcl_genes,
@@ -133,7 +139,6 @@ outs = pretty_mutual_exclusivity(
   size_factor = 0.004,
   clustering_distance = "euclidean",
   legend_direction = "vertical",
-  width = 15,
   include_hotspots = F)
 
 }))

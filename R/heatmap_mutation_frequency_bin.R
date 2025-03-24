@@ -73,6 +73,9 @@
 #'                   "lymphgen",
 #'                   "COO_consensus", 
 #'                   "DHITsig_consensus")
+#' suppressMessages(
+#'   suppressWarnings({
+#' 
 #' prettyMutationDensity(
 #'    regions_bed = my_regions,
 #'    these_samples_metadata = my_meta,
@@ -80,9 +83,11 @@
 #'    orientation="sample_columns",
 #'    sortByMetadataColumns = meta_columns,
 #'    projection = "grch37",
-#'    backgroundColour = "transparent"
-#')
-#'}
+#'    backgroundColour = "transparent",
+#'    show_legend = FALSE,
+#'    region_fontsize = 3)
+#'
+#'}))
 prettyMutationDensity <- function(regions_list = NULL,
                                   regions_bed = NULL,
                                   these_samples_metadata = NULL,
