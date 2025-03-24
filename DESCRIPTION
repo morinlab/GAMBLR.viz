@@ -9,6 +9,8 @@ Description: This package is part of the Genomic Analysis of Mature B-cell
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
+VignetteBuilder:
+    quarto
 Imports:
     circlize,
     ComplexHeatmap,
