@@ -62,7 +62,9 @@
 #'
 #' @examples
 #' library(GAMBLR.open)
-#'
+#' suppressWarnings(
+#'   suppressMessages({
+#' 
 #' metadata = get_gambl_metadata()
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL"))
@@ -81,6 +83,8 @@
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #' plots$arranged
+#' 
+#' }))
 prettyForestPlot = function(maf,
                             mutmat,
                             metadata,

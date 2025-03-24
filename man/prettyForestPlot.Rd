@@ -96,6 +96,8 @@ inside the function documentation or the vignettes.
 }
 \examples{
 library(GAMBLR.open)
+suppressWarnings(
+  suppressMessages({
 
 metadata = get_gambl_metadata()
 this_meta = dplyr::filter(metadata, pairing_status == "matched")
@@ -115,4 +117,6 @@ plots = prettyForestPlot(maf = maf,
                  separate_hotspots = FALSE,
                  comparison_name = "FL vs DLBCL")
 plots$arranged
+
+}))
 }

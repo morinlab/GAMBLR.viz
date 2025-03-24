@@ -46,18 +46,21 @@ include_silent to TRUE.
 }
 \examples{
 library(GAMBLR.open)
+suppressMessages(
+  suppressWarnings({
+
 #get meta data (BL_Thomas)
 metadata <- suppressMessages(get_gambl_metadata()) \%>\%
-    filter(cohort == "BL_Thomas")
+    filter(seq_type == "genome")
 
 maf_df <- get_coding_ssm(
     these_samples_metadata = metadata
 )
 
 #construct pretty_lollipop_plot.
-lolipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
-print(lolipop_result)
-
+lollipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
+print(lollipop_result)
+}))
 \dontrun{
  # Or, with GAMBLR.results:
  library(GAMBLR.results)
