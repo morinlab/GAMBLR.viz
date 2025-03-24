@@ -88,8 +88,9 @@ pretty_circular_mutation_frequency_heatmap
 }
 \examples{
 
-library(GAMBLR.data)
 library(dplyr)
+suppressMessages(
+  suppressWarnings({
 
 metadata <- get_gambl_metadata() \%>\%
    filter(!seq_type == "mrna") \%>\%
@@ -120,7 +121,9 @@ pretty_circular_mutation_frequency_heatmap(
         "FL", "DLBCL", "PMBCL", "BL", "HGBL"
     )
 )
-
+})) 
+suppressMessages(
+  suppressWarnings({
 # Add sv layer
 all_sv <- get_manta_sv(these_samples_metadata = metadata)
 annotated_sv <- annotate_sv(all_sv) \%>\%
@@ -146,6 +149,10 @@ pretty_circular_mutation_frequency_heatmap(
     prettyOncoplot_output = oncoplot_output,
     these_samples_metadata = metadata
 )
+})) 
+
+suppressMessages(
+  suppressWarnings({
 regions_bed = create_bed_data(grch37_ashm_regions,
                               fix_names = "concat",
                               concat_cols =c("gene","region"),
@@ -159,7 +166,8 @@ ashm_freq <- get_ashm_count_matrix(
 ashm_freq_collated <- mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))
 
 ashm_freq_collated <- ashm_freq_collated[,colSums(ashm_freq_collated) >130]
-ashm_freq_collated <- tibble::rownames_to_column(ashm_freq_collated,"sample_id")
+ashm_freq_collated <- tibble::rownames_to_column(ashm_freq_collated,
+                                                 "sample_id")
 
 # Comprehensive plot with SSM + SV + aSHM and some non-default arguments
 pretty_circular_mutation_frequency_heatmap(
@@ -174,4 +182,5 @@ pretty_circular_mutation_frequency_heatmap(
     include_legend = TRUE
 )
 
+}))
 }

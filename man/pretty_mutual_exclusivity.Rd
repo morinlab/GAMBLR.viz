@@ -48,6 +48,8 @@ pretty_mutual_exclusivity(
 \item{review_hotspots}{Default False}
 
 \item{bonferroni}{Default False}
+
+\item{verbose}{Default FALSE}
 }
 \description{
 Pretty mutual exclusivity plot
@@ -75,9 +77,9 @@ pretty_mutual_exclusivity(
    font_size = 6,
    use_alpha = F,
    clustering_distance = "binary",
-   include_hotspots = T
-) 
+   include_hotspots = T) 
 }
+
 fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
   FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier ==1) \%>\%
   pull(Gene)
@@ -85,7 +87,8 @@ fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
 # because the first steps of this are slow we can
 # store the output matrix as a shortcut for subsequent runs
 Sys.Date()
-
+suppressWarnings(
+  suppressMessages({
 outs = pretty_mutual_exclusivity(
   maf_data = all_coding,
   genes = fl_bl_dlbcl_genes,
@@ -98,7 +101,9 @@ outs = pretty_mutual_exclusivity(
   return_data = TRUE
 )
 Sys.Date()
-
+}))
+suppressWarnings(
+  suppressMessages({
 outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
   corr_mat = outs$corr_mat,
   p_mat = outs$p_mat,
@@ -113,7 +118,10 @@ outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
   include_hotspots = F
 )
 Sys.Date()
+}))
 
+suppressWarnings(
+  suppressMessages({
 outs = pretty_mutual_exclusivity(
   p_mat = outs$p_mat,
   maf_data = all_coding,
@@ -128,4 +136,5 @@ outs = pretty_mutual_exclusivity(
   width = 15,
   include_hotspots = F)
 
+}))
 }

@@ -47,37 +47,41 @@ you want to be plotted on the left side. For developers: new arguments added to 
 are expected to be out-of-the-box compatible with this function nd would not need code modifications.
 }
 \examples{
-\dontrun{
+library(GAMBLR.open)
 #get data for plotting
 meta <- get_gambl_metadata()
 meta <- meta \%>\%
     dplyr::filter(
-        cohort \%in\% c("FL_Dreval"),
         pathology \%in\% c("DLBCL", "FL")
     )
 ssm <- get_coding_ssm(
     these_samples_metadata = meta
 )
 
+suppressMessages(
+  suppressWarnings({
 #build plot
 prettyCoOncoplot(
     maf = ssm,
     metadata = meta,
     comparison_column = "pathology",
-    genes = c("EZH2", "CREBBP", "BCL2", "KMT2D", "RRAGC"),
+    comparison_values = c("DLBCL","FL"),
+    genes=dplyr::filter(lymphoma_genes,
+                        FL_Tier==1 | DLBCL_Tier==1) \%>\% pull(Gene),
     metadataColumns = c(
         "pathology",
         "lymphgen",
         "pairing_status"
     ),
-    splitColumnName = "lymphgen",
     metadataBarHeight = 10,
     fontSizeGene = 12,
     metadataBarFontsize = 10,
     legend_row = 2,
     label1 = "FL",
-    label2 = "DLBCL"
+    label2 = "DLBCL",
+    simplify_annotation =T,
+    minMutationPercent = 5
 )
-}
 
+}))
 }

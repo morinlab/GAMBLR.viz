@@ -21,6 +21,7 @@
 #' @param include_hotspots Default False
 #' @param review_hotspots Default False
 #' @param bonferroni Default False
+#' @param verbose Default FALSE
 #'
 #' @import ggcorrplot
 #'
@@ -50,9 +51,9 @@
 #'    font_size = 6,
 #'    use_alpha = F,
 #'    clustering_distance = "binary",
-#'    include_hotspots = T
-#' ) 
+#'    include_hotspots = T) 
 #' }
+#' 
 #' fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
 #'   FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier ==1) %>%
 #'   pull(Gene)
@@ -60,7 +61,8 @@
 #' # because the first steps of this are slow we can
 #' # store the output matrix as a shortcut for subsequent runs
 #' Sys.Date()
-#' 
+#' suppressWarnings(
+#'   suppressMessages({
 #' outs = pretty_mutual_exclusivity(
 #'   maf_data = all_coding,
 #'   genes = fl_bl_dlbcl_genes,
@@ -73,7 +75,9 @@
 #'   return_data = TRUE
 #' )
 #' Sys.Date()
-#' 
+#' }))
+#' suppressWarnings(
+#'   suppressMessages({
 #' outs = pretty_mutual_exclusivity(mut_mat=outs$mut_mat,
 #'   corr_mat = outs$corr_mat,
 #'   p_mat = outs$p_mat,
@@ -88,7 +92,10 @@
 #'   include_hotspots = F
 #' )
 #' Sys.Date()
+#' }))
 #' 
+#' suppressWarnings(
+#'   suppressMessages({
 #' outs = pretty_mutual_exclusivity(
 #'   p_mat = outs$p_mat,
 #'   maf_data = all_coding,
@@ -103,6 +110,7 @@
 #'   width = 15,
 #'   include_hotspots = F)
 #'
+#' }))
 pretty_mutual_exclusivity <- function(maf_data,
                                       mut_mat,
                                       cn_mat,
@@ -134,7 +142,9 @@ pretty_mutual_exclusivity <- function(maf_data,
                                       show_heatmap_legend = TRUE,
                                       cut_k,
                                       width = 10) {
-  print("STARTING")
+  if(verbose){
+    print("STARTING")
+  }
   if (missing(mut_mat)) {
     if (missing(genes)) {
       stop("genes is a required argument")
@@ -155,18 +165,13 @@ pretty_mutual_exclusivity <- function(maf_data,
       print(dim(mutmat))
     }
     if(!missing(cn_mat)){
-      print(dim(mutmat))
-      print(dim(cn_mat))
       mutmat = bind_cols(cn_mat[rownames(cn_mat) %in% rownames(mutmat), ],mutmat[rownames(mutmat) %in% rownames(cn_mat),])
-      print(dim(mutmat))
-      #return(mutmat)
     }
   } else {
     if(missing(cn_mat)){
       mutmat = mut_mat
     }else{
       mutmat = bind_cols(cn_mat,mutmat)
-      print(dim(mutmat))
     }
     
     if (missing(genes)) {
@@ -175,16 +180,14 @@ pretty_mutual_exclusivity <- function(maf_data,
   }
   mut_percents = 100*colSums(mutmat)/nrow(mutmat)
   keep_g = names(which(mut_percents > min_mutation_percent))
-  print(keep_g)
   drop_g = names(which(!mut_percents > min_mutation_percent))
-  print(drop_g)
   mutmat = mutmat[,keep_g]
   if(missing(corr_mat) | missing(p_mat)){
-    print("calculating correlation")
-    
+    if(verbose){
+      print("calculating correlation")
+    }
     mcor <- cor(mutmat)
     cpmat <- cor_pmat(mutmat)
-    print("done")
   }else{
     mcor = corr_mat[keep_g,keep_g]
     cpmat = p_mat[keep_g,keep_g]
@@ -199,8 +202,7 @@ pretty_mutual_exclusivity <- function(maf_data,
   M[is.na(M)] <- 0
   best_p = apply(cpmat,1,function(x){min(x)})
   best_p = best_p * nrow(cpmat)^2
-  print(best_p)
-  print(table(best_p < q_threshold))
+
   # kick out insignificant genes in both dimensions
   if(exclude_insignificant_genes){
     good_g = names(which(best_p< q_threshold))
@@ -216,7 +218,6 @@ pretty_mutual_exclusivity <- function(maf_data,
     M = M[not_empty,not_empty]
     
   }
-  print(dim(M))
   gene_lowest  = apply(M,1,function(x){min(x)})
   gene_highest = apply(M,1,function(x){max(x)})
   
@@ -225,7 +226,6 @@ pretty_mutual_exclusivity <- function(maf_data,
     cpmat <- cpmat * nrow(cpmat)^2
   }
   if (engine == "ggcorrplot") {
-    print("GGCORRPLOT")
     pp <- ggcorrplot(M,
       method = "circle",
       # size=1,
@@ -254,7 +254,7 @@ pretty_mutual_exclusivity <- function(maf_data,
     # Determine the maximum absolute value in M for scaling:
     
     lim <- max(abs(M), na.rm = TRUE)
-    print("gene_anno_df check")
+
     if (missing(gene_anno_df)) {
 
       if(annotate_by_pathology){

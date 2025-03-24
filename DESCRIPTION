@@ -56,7 +56,8 @@ Imports:
     Rsamtools,
     tibble,
     tidyr,
-    wordcloud
+    wordcloud,
+    wordcloud2
 Remotes:
     morinlab/GAMBLR.data,
     morinlab/GAMBLR.helpers,

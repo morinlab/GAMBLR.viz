@@ -69,10 +69,14 @@ gistic_scores = system.file("extdata",
   "scores.gistic",
   package="GAMBLR.viz")
 
+suppressMessages(
+  suppressWarnings({
 # Automatic labeling of gene sets for a given pathology
 prettyChromoplot(scores_path = gistic_scores,
                  default_gene_set = "FL",
                  genome_build = "grch37")
+
+}))
 
 ## Specifying your own gene list for labeling
 genes = c(
@@ -93,9 +97,13 @@ gene_bed = select(grch37_gene_coordinates,-1) \%>\%
 #convert to bed_data format
   create_bed_data(genome_build = "grch37")
 
+suppressMessages(
+  suppressWarnings({
 
 prettyChromoplot(scores_path = gistic_scores,
                  labels_bed = gene_bed)
+
+}))
 #NOTE: genome build is inferred from gene_bed
 \dontrun{
  # GISTIC run using hg38 data
