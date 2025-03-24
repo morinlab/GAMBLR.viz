@@ -56,7 +56,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' library(GAMBLR.open)
 #' # get meta data
 #' my_meta <- get_gambl_metadata() %>%
@@ -73,69 +73,71 @@
 #'                   "lymphgen",
 #'                   "COO_consensus", 
 #'                   "DHITsig_consensus")
-#' print("prettyMutationDensity")
 #' prettyMutationDensity(
-#'   regions_bed = my_regions,
-#'   these_samples_metadata = my_meta,
-#'   metadataColumns = meta_columns,
-#'   sortByMetadataColumns = meta_columns,
-#'   projection = "grch37"
-#' )
+#'    regions_bed = my_regions,
+#'    these_samples_metadata = my_meta,
+#'    metadataColumns = meta_columns,
+#'    orientation="sample_columns",
+#'    sortByMetadataColumns = meta_columns,
+#'    projection = "grch37",
+#'    backgroundColour = "transparent"
+#')
 #'}
 prettyMutationDensity <- function(regions_list = NULL,
-                                           regions_bed = NULL,
-                                           these_samples_metadata = NULL,
-                                           these_sample_ids = NULL,
-                                           this_seq_type = c("genome", "capture"),
-                                           maf_data,
-                                           mut_freq_matrix,
-                                           projection,
-                                           region_padding = 1000,
-                                           drop_unmutated = FALSE,
-                                           metadataColumns = c("pathology"),
-                                           sortByMetadataColumns = NULL,
-                                           expressionColumns = NULL,
-                                           orientation = "sample_rows",
-                                           skip_regions,
-                                           only_regions,
-                                           customColours = NULL,
-                                           naColour = "white",
-                                           backgroundColour = "grey90",
-                                           slide_by = 100,
-                                           window_size = 500,
-                                           split_regions = TRUE,
-                                           min_count_per_bin = 0,
-                                           min_bin_recurrence = 5,
-                                           min_mut_tumour = 0,
-                                           region_fontsize = 8,
-                                           clustering_distance_samples = "euclidean",
-                                           cluster_samples = FALSE,
-                                           split_samples_kmeans,
-                                           show_row_names = TRUE,
-                                           show_column_names = FALSE,
-                                           cluster_regions = FALSE,
-                                           show_gene_colours = FALSE,
-                                           label_regions_by = "name",
-                                           merge_genes = FALSE,
-                                           label_regions_rotate = 0,
-                                           legend_row = 3,
-                                           legend_col = 3,
-                                           show_legend = TRUE,
-                                           legend_direction = "horizontal",
-                                           legendFontSize = 10,
-                                           metadataBarHeight = 1.5,
-                                           metadataBarFontsize = 5,
-                                           metadataSide = "bottom", 
-                                           region_annotation_name_side = "top",
-                                           sample_annotation_name_side = "left",
-                                           legend_side = "bottom",
-                                           returnEverything = FALSE,
-                                           from_indexed_flatfile = TRUE,
-                                           mode = "slms-3",
-                                           width = 10,
-                                           height = 10,
-                                           hide_annotation_name = FALSE,
-                                           use_raster = FALSE) {
+                                  regions_bed = NULL,
+                                  these_samples_metadata = NULL,
+                                  these_sample_ids = NULL,
+                                  this_seq_type = c("genome",
+                                                  "capture"),
+                                  maf_data,
+                                  mut_freq_matrix,
+                                  projection,
+                                  region_padding = 1000,
+                                  drop_unmutated = FALSE,
+                                  metadataColumns = c("pathology"),
+                                  sortByMetadataColumns = NULL,
+                                  expressionColumns = NULL,
+                                  orientation = "sample_rows",
+                                  skip_regions,
+                                  only_regions,
+                                  customColours = NULL,
+                                  naColour = "white",
+                                  backgroundColour = "transparent",
+                                  slide_by = 100,
+                                  window_size = 500,
+                                  split_regions = TRUE,
+                                  min_count_per_bin = 0,
+                                  min_bin_recurrence = 5,
+                                  min_mut_tumour = 0,
+                                  region_fontsize = 8,
+                                  clustering_distance_samples = "euclidean",
+                                  cluster_samples = FALSE,
+                                  split_samples_kmeans,
+                                  show_row_names = TRUE,
+                                  show_column_names = FALSE,
+                                  cluster_regions = FALSE,
+                                  show_gene_colours = FALSE,
+                                  label_regions_by = "name",
+                                  merge_genes = FALSE,
+                                  label_regions_rotate = 0,
+                                  legend_row = 3,
+                                  legend_col = 3,
+                                  show_legend = TRUE,
+                                  legend_direction = "horizontal",
+                                  legendFontSize = 10,
+                                  metadataBarHeight = 1.5,
+                                  metadataBarFontsize = 5,
+                                  metadataSide = "bottom", 
+                                  region_annotation_name_side = "top",
+                                  sample_annotation_name_side = "left",
+                                  legend_side = "bottom",
+                                  returnEverything = FALSE,
+                                  from_indexed_flatfile = TRUE,
+                                  mode = "slms-3",
+                                  width,
+                                  height,
+                                  hide_annotation_name = FALSE,
+                                  use_raster = FALSE) {
   #this could definitely use a helper function that takes all arguments that can be a genome_bed type
   if(missing(projection)){
     if(!missing(regions_bed) & !missing(maf_data)){
@@ -317,17 +319,11 @@ if(scale_values){
 
 
 
-#print("RANGE:")
-#print(range(matrix_show))
-#print(dim(matrix_show))
-#print(head(matrix_show[,c(1:10)]))
-#stop()
-
-
+matrix_show = as.matrix(matrix_show)
 if(any(is.nan(matrix_show))){
   stop("contains NAN")
 }
-  
+
 
 
 
@@ -335,10 +331,8 @@ if(any(is.nan(matrix_show))){
   annoColumns <- unique(c(metadataColumns, sortByMetadataColumns))
   # Get columns with no custom colours specified
   needsColour <- annoColumns[!annoColumns %in% names(customColours)]
-  
   gamblColours <- NULL
   if (length(needsColour) > 0) {
-    
     gamblColours <- lapply(needsColour, function(x) {
       colours <- GAMBLR.helpers::get_gambl_colours()[levels(meta_show[[x]])]
       colours <- colours[unique(names(colours))][!is.na(names(colours))]
@@ -484,7 +478,8 @@ if(any(is.nan(matrix_show))){
       col_annot <- HeatmapAnnotation(value = anno_empty(border = FALSE), show_legend = show_legend)
       #col_annot = NULL
     }
-    ht <- Heatmap(
+
+    hargs <- list(
       to_show_t[rownames(meta_show), rownames(bin_annot)],
       cluster_columns = cluster_regions,
       cluster_rows = cluster_samples,
@@ -498,11 +493,16 @@ if(any(is.nan(matrix_show))){
       column_title_rot = label_regions_rotate,
       row_title_gp = gpar(fontsize = 10),
       heatmap_legend_param = heatmap_legend_param,
-      width = unit(width, "cm"),
-      height = unit(height, "cm"), 
       show_heatmap_legend =show_legend,
       use_raster = use_raster
     )
+    if(!missing(width)){
+      hargs[["width"]]=unit(width, "cm")
+    }
+    if(!missing(height)){
+      hargs[["height"]]=unit(height, "cm")
+    }
+    ht = do.call("Heatmap",hargs)
   } else { #Samples in columns
     col_annot <- HeatmapAnnotation(
       df = meta_show,
@@ -545,9 +545,7 @@ if(any(is.nan(matrix_show))){
       row_title_rot = label_regions_rotate,
       #column_title_gp = gpar(fontsize = 8),
       #heatmap_legend_param = heatmap_legend_param,
-      use_raster = use_raster,
-      width = unit(width, "cm"),
-      height = unit(height, "cm")
+      use_raster = use_raster
     )
     if (metadataSide == "top") {
       hargs[["top_annotation"]]  = col_annot
@@ -559,6 +557,12 @@ if(any(is.nan(matrix_show))){
     }
     if(!missing(split_samples_kmeans)){
       hargs[["column_km"]] = split_samples_kmeans
+    }
+    if(!missing(width)){
+      hargs[["width"]]=unit(width, "cm")
+    }
+    if(!missing(height)){
+      hargs[["height"]]=unit(height, "cm")
     }
     if(split_regions){
       #hargs[["show_row_names"]] = FALSE
