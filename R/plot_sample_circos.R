@@ -31,7 +31,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.data)
+#' library(GAMBLR.open)
 #'
 #' plot_sample_circos(this_sample_id = "02-13135T",
 #'                    legend_metadata_columns = c("pathology",

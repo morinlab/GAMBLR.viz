@@ -101,7 +101,8 @@ suppressWarnings(
 
 metadata = get_gambl_metadata()
 this_meta = dplyr::filter(metadata, pairing_status == "matched")
-this_meta = dplyr::filter(this_meta, pathology \%in\% c("FL", "DLBCL"))
+this_meta = dplyr::filter(this_meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+            check_and_clean_metadata(.,duplicate_action="keep_first")
 
 maf = get_coding_ssm(these_samples_metadata = this_meta)
 

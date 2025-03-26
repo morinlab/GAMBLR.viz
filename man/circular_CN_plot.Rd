@@ -63,7 +63,7 @@ all_states_binned = segmented_data_to_cn_matrix(
 labelTheseGenes = c("REL","TP53")
 CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
                            these_samples_metadata = meta,
-                           return_data = T,
+                           return_data = TRUE,
                            labelTheseGenes = labelTheseGenes)
 
 circular_CN_plot(CN_out)

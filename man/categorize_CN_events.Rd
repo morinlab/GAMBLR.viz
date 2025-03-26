@@ -30,10 +30,10 @@ all_states_binned = segmented_data_to_cn_matrix(
                                  these_samples_metadata = meta)
 labelTheseGenes = c("REL","TP53")
 cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-    scale_by_sample = T,
+    scale_by_sample = TRUE,
     these_samples_metadata = meta,
     metadataColumns = c("pathology","seq_type"),
-    return_data = T)
+    return_data = TRUE)
     
 aneuploidies = categorize_CN_events(cn_out)
 

@@ -30,8 +30,6 @@
 #' @param min_bin_recurrence Specify how many samples a bin must be mutated in to be displayed. Default 5.
 #' @param min_mut_tumour Specify how many bins a tumour must be mutated in to be displayed. Default 0.
 #' @param region_fontsize Fontsize of region labels on the heatmap. Default 8.
-#' @param cluster_rows_heatmap Boolean. Default FALSE.
-#' @param cluster_cols_heatmap Boolean.  Default FALSE.
 #' @param show_gene_colours Boolean. Whether to add heatmap annotation colours for each region. Default FALSE.
 #' @param label_regions_by Specify which feature of the regions to label the heatmap with. Heatmap will be split according to this value, and ordered by factor levels if the specified column is a factor. Default name.
 #' @param merge_genes Set to TRUE to drop everything after "-" in the label to collpse regions from the same gene/locus. Default FALSE. 
@@ -117,6 +115,7 @@ prettyMutationDensity <- function(regions_list = NULL,
                                   region_fontsize = 8,
                                   clustering_distance_samples = "euclidean",
                                   cluster_samples = FALSE,
+                                  cluster_rows_heatmap,
                                   split_samples_kmeans,
                                   show_row_names = TRUE,
                                   show_column_names = FALSE,
@@ -143,6 +142,7 @@ prettyMutationDensity <- function(regions_list = NULL,
                                   height,
                                   hide_annotation_name = FALSE,
                                   use_raster = FALSE) {
+
   #this could definitely use a helper function that takes all arguments that can be a genome_bed type
   if(missing(projection)){
     if(!missing(regions_bed) & !missing(maf_data)){

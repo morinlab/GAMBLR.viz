@@ -51,7 +51,8 @@ suppressMessages(
 
 #get meta data (BL_Thomas)
 metadata <- suppressMessages(get_gambl_metadata()) \%>\%
-    filter(seq_type == "genome")
+    filter(seq_type == "genome") \%>\%
+    check_and_clean_metadata(.,duplicate_action="keep_first")
 
 maf_df <- get_coding_ssm(
     these_samples_metadata = metadata

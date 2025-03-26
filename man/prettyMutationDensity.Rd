@@ -33,6 +33,7 @@ prettyMutationDensity(
   region_fontsize = 8,
   clustering_distance_samples = "euclidean",
   cluster_samples = FALSE,
+  cluster_rows_heatmap,
   split_samples_kmeans,
   show_row_names = TRUE,
   show_column_names = FALSE,
@@ -145,10 +146,6 @@ prettyMutationDensity(
 \item{mode}{Only works with indexed flat files. Accepts 2 options of "slms-3" and "strelka2" to indicate which variant caller to use. Default is "slms-3".}
 
 \item{use_raster}{Control whether ComplexHeatmap uses rastering. default: TRUE}
-
-\item{cluster_rows_heatmap}{Boolean. Default FALSE.}
-
-\item{cluster_cols_heatmap}{Boolean.  Default FALSE.}
 }
 \value{
 A table of mutation counts for sliding windows across one or more regions. May be long or wide.

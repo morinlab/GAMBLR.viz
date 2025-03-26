@@ -33,7 +33,7 @@
 #' labelTheseGenes = c("REL","TP53")
 #' CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
 #'                            these_samples_metadata = meta,
-#'                            return_data = T,
+#'                            return_data = TRUE,
 #'                            labelTheseGenes = labelTheseGenes)
 #' 
 #' circular_CN_plot(CN_out)
@@ -336,10 +336,10 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #'                                  these_samples_metadata = meta)
 #' labelTheseGenes = c("REL","TP53")
 #' cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-#'     scale_by_sample = T,
+#'     scale_by_sample = TRUE,
 #'     these_samples_metadata = meta,
 #'     metadataColumns = c("pathology","seq_type"),
-#'     return_data = T)
+#'     return_data = TRUE)
 #'     
 #' aneuploidies = categorize_CN_events(cn_out)
 #' 

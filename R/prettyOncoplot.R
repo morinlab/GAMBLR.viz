@@ -160,7 +160,7 @@
 #' # load packages
 #' library(grid)
 #' library(dplyr)
-#' library(GAMBLR)
+#' library(GAMBLR.open)
 #'
 #' # Using GAMBLR.open
 #' maf_metadata <- GAMBLR.open::get_gambl_metadata(
@@ -241,17 +241,15 @@
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
-#' gene_cnv <- get_cnv_and_ssm_status(
+#' gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
 #'   only_cnv = "all",
 #'   these_samples_metadata = get_gambl_metadata(),
 #'   genes_and_cn_threshs = gene_regions
 #' )
 #' 
-#' }))
-#'
-#' suppressMessages(
-#'   suppressWarnings({
 #' 
+#'
+#'
 #' prettyOncoplot(
 #'   maf_df = maf_data, genes = c(
 #'     "CREBBP", "EZH2", "MYD88",
@@ -263,26 +261,27 @@
 #'     "TMEM30A", "TNFAIP3"
 #'   ),
 #'   these_samples_metadata = maf_metadata,
-#'   cluster_rows = T,
+#'   cluster_rows = TRUE,
 #'   metadataColumns = c(
 #'     "pathology",
 #'     "lymphgen",
 #'     "seq_type",
 #'     "ffpe_or_frozen"
 #'   ),
-#'   cluster_cols = F,
-#'   simplify_annotation = T,
+#'   cluster_cols = FALSE,
+#'   simplify_annotation = TRUE,
 #'   cnv_df = gene_cnv,
 #'   sortByColumns = c("pathology", "lymphgen")
 #' )
 #' }))
+#'
 #'
 #' # Option 2:
 #' # The second way to incorporate copy number relies
 #' # instead on a binned copy number matrix
 #' # If you already have one on hand, this is clearly the preferred approach!
 #' # First let's make one with the help of segmented_data_to_cn_matrix
-#'
+#' \dontrun{
 #' all_segments <- get_cn_segments(these_samples_metadata = maf_metadata)
 #' all_states_binned <- segmented_data_to_cn_matrix(
 #'   seg_data = all_segments,
@@ -310,8 +309,6 @@
 #'   "TNFAIP3" = 1
 #' )
 #'
-#' suppressMessages(
-#'   suppressWarnings({
 #' 
 #' prettyOncoplot(
 #'   maf_df = maf_data,
@@ -319,20 +316,20 @@
 #'   genes_CN_thresh = CN_thresh,
 #'   genes = head(genes, 25),
 #'   these_samples_metadata = maf_metadata,
-#'   cluster_rows = T,
+#'   cluster_rows = TRUE,
 #'   metadataColumns = c(
 #'     "pathology",
 #'     "genetic_subgroup",
 #'     "seq_type",
 #'     "ffpe_or_frozen"
 #'   ),
-#'   cluster_cols = F,
-#'   simplify_annotation = T,
+#'   cluster_cols = FALSE,
+#'   simplify_annotation = TRUE,
 #'   sortByColumns = c("pathology", "genetic_subgroup"),
 #'   minMutationPercent = 0
 #' )
 #' 
-#'}))
+#'}
 prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            gene_cnv_df,
                            binned_cnv_df,
@@ -436,6 +433,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       )
       stop(error)
     } else {
+      
       cn_thresh <- data.frame(
         gene_id = names(genes_CN_thresh),
         cn_thresh = genes_CN_thresh
@@ -445,8 +443,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         genes_and_cn_threshs = cn_thresh,
         cn_matrix = binned_cnv_df,
         these_samples_metadata = these_samples_metadata,
-        maf_df = maf_df,
-        only_cnv = "all"
+         maf_df = maf_df,
+         only_cnv = "all"
       )
     }
   }
@@ -484,7 +482,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     these_samples_metadata <- these_samples_metadata %>%
       dplyr::mutate(Tumor_Sample_Barcode = sample_id)
   }
-  patients <- pull(these_samples_metadata, sample_id) %>% unique()
+  patients <- dplyr::pull(these_samples_metadata, sample_id) %>% unique()
   if (verbose) {
     print(
       paste(
@@ -564,8 +562,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     colnames(genes)[2] <- "mutload"
     genes$fractMutated <- genes$mutload / length(maf_patients)
     genes <- genes %>%
-      filter(fractMutated * 100 >= minMutationPercent) %>%
-      pull(Hugo_Symbol)
+      dplyr::filter(fractMutated * 100 >= minMutationPercent) %>%
+      dplyr::pull(Hugo_Symbol)
     lg <- length(genes)
     if (!recycleOncomatrix) {
       message(paste("creating oncomatrix with", lg, "genes"))
@@ -573,21 +571,21 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       mat_origin <- mat_origin[, !colSums(mat_origin == "") ==
                                  nrow(mat_origin), drop = FALSE]
       tsbs <- maf_df %>%
-        distinct(
+        dplyr::distinct(
           Tumor_Sample_Barcode,
           Hugo_Symbol,
           Variant_Classification,
           Start_Position,
           End_Position
         ) %>%
-        filter(
+        dplyr::filter(
           Tumor_Sample_Barcode %in% patients,
           Variant_Classification %in% onco_matrix_coding
         ) %>%
-        group_by(Tumor_Sample_Barcode) %>%
-        summarize(total = n(), .groups = "drop") %>%
-        arrange(desc(total)) %>%
-        pull(Tumor_Sample_Barcode)
+        dplyr::group_by(Tumor_Sample_Barcode) %>%
+        dplyr::summarize(total = n(), .groups = "drop") %>%
+        dplyr::arrange(desc(total)) %>%
+        dplyr::pull(Tumor_Sample_Barcode)
       if (!removeNonMutated) {
         tsb.include <- matrix( # nolint: object_name_linter.
           data = 0, nrow = nrow(mat_origin),

@@ -63,6 +63,7 @@ Other parameters are all optional. For a detailed explanation of how to use thes
 }
 \examples{
 
+suppressMessages(library(GAMBLR.open))
 
 # Bundled output from a GISTIC run using grch37 results
 gistic_scores = system.file("extdata",
@@ -87,15 +88,15 @@ genes = c(
   "TNFAIP3","TP53","CDK14","RELN","ETS1",
   "MDM1","MIR17HG","CD58","HNRNPD"
   )
-gene_bed = select(grch37_gene_coordinates,-1) \%>\%
+gene_bed = dplyr::select(GAMBLR.data::grch37_gene_coordinates,-1) \%>\%
 #remove ensembl ID column
   dplyr::filter(hugo_symbol \%in\% genes) \%>\% 
 #keep genes of interest
-  mutate(length = end - start,mid = start + length/2) \%>\%
-  mutate(start = mid,end=start+1) \%>\%
+  dplyr::mutate(length = end - start,mid = start + length/2) \%>\%
+  dplyr::mutate(start = mid,end=start+1) \%>\%
   unique() \%>\%
 #convert to bed_data format
-  create_bed_data(genome_build = "grch37")
+ GAMBLR.utils::create_bed_data(genome_build = "grch37")
 
 suppressMessages(
   suppressWarnings({
@@ -113,6 +114,6 @@ prettyChromoplot(scores_path=gistic_scores,
                    adjust_amps = 0.5,
                    adjust_dels = 0.8,
                    genome_build="hg38",
-                   hide_neutral = T)
+                   hide_neutral = TRUE)
 }
 }

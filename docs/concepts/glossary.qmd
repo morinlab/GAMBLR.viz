@@ -1,0 +1,16 @@
+---
+title: "GAMBLR.viz glossary"
+---
+
+There are several key concepts underlying the logic behind the GAMBLR.viz
+package. The main terms are:
+
+* **these_samples_metadata:** This is a data frame with a set of minimal required columns:
+`patient_id`, `Tumor_Sample_Barcode`, `sample_id`, `seq_type`, `sex`, `cohort`,
+and `pathology`. The columns like sex and cohort can contain NA values but must
+be present in the metadata. The main purpose of this data frame is to provide
+a structure for the metadata that is always expected to be available and
+provides linkage between unique sample identifiers and associated basic metadata
+values. The columns `Tumor_Sample_Barcode` and `sample_id` are expected to
+share the same values, but are required to be present for direct operation on
+the outputs of different upstream tools.

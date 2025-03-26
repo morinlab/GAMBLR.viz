@@ -89,19 +89,20 @@ pretty_circular_mutation_frequency_heatmap
 \examples{
 
 library(dplyr)
+library(GAMBLR.open)
 suppressMessages(
   suppressWarnings({
 
 metadata <- get_gambl_metadata() \%>\%
-   filter(!seq_type == "mrna") \%>\%
-   filter(pathology \%in\% names(get_gambl_colours("pathology"))) \%>\%
-   distinct(sample_id, .keep_all = TRUE)
+   dplyr::filter(!seq_type == "mrna") \%>\%
+   dplyr::filter(pathology \%in\% names(get_gambl_colours("pathology"))) \%>\%
+   check_and_clean_metadata(.,duplicate_action="keep_first")
 
 all_coding <- get_coding_ssm(these_samples_metadata = metadata)
 
 genes <- lymphoma_genes \%>\%
-    filter(DLBCL|FL|BL) \%>\%
-    pull(Gene) \%>\%
+    dplyr::filter(DLBCL|FL|BL) \%>\%
+    dplyr::pull(Gene) \%>\%
     unique \%>\%
     sort
 
@@ -127,16 +128,16 @@ suppressMessages(
 # Add sv layer
 all_sv <- get_manta_sv(these_samples_metadata = metadata)
 annotated_sv <- annotate_sv(all_sv) \%>\%
-    filter(gene \%in\% genes, !is.na(partner)) \%>\%
-    select(sample_id = tumour_sample_id, gene)
+    dplyr::filter(gene \%in\% genes, !is.na(partner)) \%>\%
+    dplyr::select(sample_id = tumour_sample_id, gene)
 
 # This is to replicate the output format of collate_sv
 sv_collated <- annotated_sv \%>\%
-    mutate(
+    dplyr::mutate(
         gene = paste("manta", gene, "sv", sep = "_"),
         mutated = "POS"
     ) \%>\%
-    distinct \%>\%
+    dplyr::distinct() \%>\%
     tidyr::pivot_wider(
         names_from = gene,
         values_from = mutated
@@ -153,14 +154,16 @@ pretty_circular_mutation_frequency_heatmap(
 
 suppressMessages(
   suppressWarnings({
-regions_bed = create_bed_data(grch37_ashm_regions,
+regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
                               fix_names = "concat",
                               concat_cols =c("gene","region"),
                               sep="-")
 # Add aSHM data
 ashm_freq <- get_ashm_count_matrix(
+    these_samples_metadata = metadata,
     regions_bed = regions_bed,
-    this_seq_type = "genome"
+    this_seq_type = "genome",
+    projection = "grch37"
 )
 
 ashm_freq_collated <- mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))

@@ -29,20 +29,22 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR)
+#' suppressMessages(library(GAMBLR.open))
 #' suppressMessages(library(ComplexHeatmap))
-#' 
-#' bl_fl_dlbcl_meta = get_gambl_metadata() %>% 
-#'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna")
-#' dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL")
-#' 
+#'
+#' bl_fl_dlbcl_meta = get_gambl_metadata() %>%
+#'   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna") %>%
+#'   check_and_clean_metadata(.,duplicate_action="keep_first")
+#' dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL") %>%
+#'              check_and_clean_metadata(.,duplicate_action="keep_first")
+#'
 #' all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
-#' 
+#'
 #' \dontrun{
 #' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
 #' lg_feats = lymphgens$feature_annotation
 #' lg_genes = unique(lg_feats$Feature)
-#' 
+#'
 #' pretty_mutual_exclusivity(
 #'    maf_data = all_coding,
 #'    genes = lg_genes,
@@ -50,18 +52,18 @@
 #'    size_factor =  0.007,
 #'    engine = "ComplexHeatmap",
 #'    font_size = 6,
-#'    use_alpha = F,
+#'    use_alpha = FALSE,
 #'    clustering_distance = "binary",
-#'    include_hotspots = T) 
+#'    include_hotspots = TRUE)
 #' }
-#' 
+#'
 #' fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
 #'   FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier ==1) %>%
 #'   pull(Gene)
-#' 
+#'
 #' # because the first steps of this are slow we can
 #' # store the output matrix as a shortcut for subsequent runs
-#' 
+#'
 #' suppressWarnings(
 #'   suppressMessages({
 #' outs = pretty_mutual_exclusivity(
@@ -70,10 +72,10 @@
 #'   these = bl_fl_dlbcl_meta,
 #'   engine = "ComplexHeatmap",
 #'   font_size = 5,
-#'   use_alpha = T,
+#'   use_alpha = TRUE,
 #'   clustering_distance = "binary",
-#'   include_hotspots = F, 
-#'   return_data = T
+#'   include_hotspots = FALSE,
+#'   return_data = TRUE
 #' )
 #' draw(outs$plot)
 #' 
@@ -91,10 +93,10 @@
 #'   these = bl_fl_dlbcl_meta,
 #'   engine = "ComplexHeatmap",
 #'   font_size = 5,
-#'   use_alpha = T,
+#'   use_alpha = TRUE,
 #'   size_factor = 0.004,
 #'   clustering_distance = "euclidean",
-#'   include_hotspots = F
+#'   include_hotspots = FALSE
 #' )
 #' 
 #' }))
@@ -109,11 +111,11 @@
 #'   these = dlbcl_meta,
 #'   engine = "ComplexHeatmap",
 #'   font_size = 5,
-#'   use_alpha = T,
+#'   use_alpha = TRUE,
 #'   size_factor = 0.004,
 #'   clustering_distance = "euclidean",
 #'   legend_direction = "vertical",
-#'   include_hotspots = F)
+#'   include_hotspots = FALSE)
 #'
 #' }))
 pretty_mutual_exclusivity <- function(maf_data,
@@ -135,9 +137,9 @@ pretty_mutual_exclusivity <- function(maf_data,
                                       size_factor = 0.01,
                                       split,
                                       return_data = FALSE,
-                                      include_silent = F,
-                                      include_hotspots = F,
-                                      review_hotspots = F,
+                                      include_silent = FALSE,
+                                      include_hotspots = FALSE,
+                                      review_hotspots = FALSE,
                                       bonferroni = FALSE, 
                                       verbose = FALSE,
                                       metadataBarHeight = 3,
