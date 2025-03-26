@@ -4,7 +4,13 @@
 \alias{pretty_MAF_summary}
 \title{Pretty MAF summary}
 \usage{
-pretty_MAF_summary(maf_data, base_size = 4, top_n = 10, point_size = 0.5)
+pretty_MAF_summary(
+  maf_data,
+  base_size = 4,
+  top_n = 10,
+  point_size = 0.5,
+  returnEverything = FALSE
+)
 }
 \arguments{
 \item{maf_data}{A data frame containing the mutation data.}
@@ -14,6 +20,9 @@ pretty_MAF_summary(maf_data, base_size = 4, top_n = 10, point_size = 0.5)
 \item{top_n}{Number of genes to show in top_n panel (default 10)}
 
 \item{point_size}{Size of points to use in ggbeeswarm plot (default 0.5)}
+
+\item{returnEverything}{Set to TRUE to get the underlying numbers
+and all panels as a list}
 }
 \value{
 A plot

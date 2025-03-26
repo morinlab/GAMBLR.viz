@@ -11,10 +11,12 @@
 #' @param base_size Base size of fonts to use in Morons theme
 #' @param top_n Number of genes to show in top_n panel (default 10)
 #' @param point_size Size of points to use in ggbeeswarm plot (default 0.5)
+#' @param returnEverything Set to TRUE to get the underlying numbers
+#' and all panels as a list
 #'
 #' @return A plot
 #'
-#' @import dplyr ggplot2 cowplot ggbeeswarm
+#' @import dplyr ggplot2 cowplot ggbeeswarm GAMBLR.utils
 #' @export
 #'
 #' @examples
@@ -27,9 +29,13 @@
 #' pretty_MAF_summary(FL_coding, top_n = 22, base_size = 6)
 #'
 pretty_MAF_summary <- function(maf_data,
+                              these_samples_metadata,
                               base_size = 4,
                               top_n = 10,
-                              point_size = 0.5) {
+                              point_size = 0.5,
+                              one_per_sample = FALSE,
+                              gene_sizes,
+                              returnEverything = FALSE) {
   p1 <- make_panel1(maf_data,
     base_size = base_size, title = "Variant Classification"
   )
@@ -47,12 +53,61 @@ pretty_MAF_summary <- function(maf_data,
     point_size = point_size,
     title = "Variant Classification Summary"
   )
-  p6 <- make_panel6(maf_data,
+  if(one_per_sample){
+    title6 <- paste("Top", top_n, "genes (per sample)")
+  }else{
+    title6 <- paste("Top", top_n, "genes (cumulative)")
+  }
+  p6_list <- make_panel6(maf_data,
     top = top_n,
     base_size = base_size,
-    title = paste("Top", top_n, "genes")
+    title = title6,
+    one_per_sample = one_per_sample 
   )
+  p6 = p6_list$plot
+  if(!missing(gene_sizes)){
+    #subset to these_samples_metadata
+    samples = these_samples_metadata$sample_id
+    p6_background = make_panel6(dplyr::filter(maf_data,
+                                              !Tumor_Sample_Barcode %in% samples),
+                                top = top_n,
+                                base_size = base_size,
+                                title = title6,
+                                one_per_sample = one_per_sample 
+    )
+    p6_foreground = make_panel6(dplyr::filter(maf_data,
+                                              Tumor_Sample_Barcode %in% samples),
+                                top = top_n,
+                                base_size = base_size,
+                                title = title6,
+                                one_per_sample = one_per_sample 
+    )
+    print("Panel 7")
+    p7_out <- make_panel7(strip_genomic_classes(p6_foreground$tabulated),
+                         strip_genomic_classes(p6_background$tabulated),
+                         gene_sizes)
+
+    
+  }
+  
   all_p <- cowplot::plot_grid(p1, p2, p3, p4, p5, p6, nrow = 2, ncol = 3)
+  if(returnEverything){
+    to_ret = list(gene_freq = GAMBLR.utils::strip_genomic_classes(p6_list$tabulated),
+                combined=all_p,
+                panel1=p1,
+                panel2=p2,
+                panel3=p3,
+                panel4=p4,
+                panel5=p5,
+                panel6=p6)
+    if(!missing(gene_sizes)){
+        #for(p7 in names(p7_out)){
+        #    to_ret[[p7]] = p7_out[[p7]]
+        #}
+        to_ret[["tabulated"]] = p7_out$tabulated
+    }
+    return(to_ret)
+  }
   all_p
 }
 
@@ -218,8 +273,14 @@ make_panel5 <- function(maf_data, base_size = 5, point_size = 0.5, title = "") {
     p5
 }
 #' @keywords internal
-make_panel6 <- function(maf_data, base_size = 6, top = 10, title = "") {
-    type_counted <- maf_data %>%
+make_panel6 <- function(maf_data, base_size = 6, top = 10, title = "", one_per_sample = FALSE) {
+    if(one_per_sample){
+        #only one mutation per gene is counted per patient
+        
+        maf_data = maf_data %>%
+            slice_head(n=1, by=c(Tumor_Sample_Barcode, Hugo_Symbol)) 
+    }
+    type_counted <-  maf_data %>%
         group_by(Hugo_Symbol, Variant_Classification) %>%
         count() %>%
         arrange(n)
@@ -229,11 +290,10 @@ make_panel6 <- function(maf_data, base_size = 6, top = 10, title = "") {
         arrange(desc(total)) %>%
         slice_head(n = top) %>%
         pull(Hugo_Symbol)
-    print(top_n)
+    
     some_type_counted <- dplyr::filter(type_counted, Hugo_Symbol %in% top_n)
     some_type_counted$Hugo_Symbol <- factor(some_type_counted$Hugo_Symbol,
-        levels = rev(top_n)
-    )
+        levels = rev(top_n))
     p6 <-
         ggplot(some_type_counted, aes(y = Hugo_Symbol, x = n, fill = Variant_Classification)) +
         geom_col() +
@@ -249,5 +309,30 @@ make_panel6 <- function(maf_data, base_size = 6, top = 10, title = "") {
         ) +
         ggtitle(title)
 
-    p6
+    return(list(plot=p6, tabulated=type_counted))
+}
+
+make_panel7 <- function(mutcounts_these,
+                        mutcounts_all,
+                        gene_sizes){
+  # use all samples in the MAF that aren't in these_samples_metadata as the background
+  # use all samples in these_samples_metadata as the foreground
+  # scale mutation frequency to the gene CDS length
+  # e.g. as mutations per 1000 codons, per_kilocodon
+  # separately consider Silent and non-silent
+  coding_counts = dplyr::filter(mutcounts_these,
+                                Variant_Classification!="Silent") %>%
+    summarise(total_coding=sum(n), .by=Hugo_Symbol)
+  
+  silent_counts = dplyr::filter(mutcounts_all,
+                                Variant_Classification=="Silent") %>%
+    dplyr::rename("total_noncoding" = "n") %>% 
+    dplyr::select(-Variant_Classification)
+  all_counts = full_join(coding_counts,silent_counts,by="Hugo_Symbol") 
+  all_counts = left_join(all_counts,gene_sizes) %>% 
+    mutate(total_noncoding = ifelse(is.na(total_noncoding),0,total_noncoding)) %>%
+    mutate(coding_per_kilocodon = total_coding * 1000 / CDS) %>%
+    mutate(noncoding_per_kilocodon = total_noncoding * 1000 / CDS)
+all_counts 
+  return(list(plot=all_counts,tabulated=all_counts))
 }
