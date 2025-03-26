@@ -18,8 +18,10 @@
 #' @export
 #'
 #' @examples
+#' suppressMessages(library(GAMBLR.open))
 #' FL_meta <- GAMBLR.open::get_gambl_metadata() %>%
-#'     dplyr::filter(pathology == "FL")
+#'     dplyr::filter(pathology == "FL") %>%
+#'     check_and_clean_metadata(.,duplicate_action="keep_first")
 #' FL_coding <- GAMBLR.open::get_coding_ssm(these_samples_metadata = FL_meta)
 #'
 #' pretty_MAF_summary(FL_coding)

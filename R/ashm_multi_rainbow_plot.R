@@ -33,9 +33,8 @@
 #' metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) %>% 
 #'           dplyr::filter(pathology=="DLBCL",
 #'                  seq_type=="genome") %>% 
+#'           check_and_clean_metadata(.,duplicate_action="keep_first") %>%
 #'           dplyr::arrange(lymphgen)
-#' metadata = suppressMessages(check_and_clean_metadata(metadata,
-#'                             duplicate_action ="keep_first"))
 #' regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols = c("gene","region"))

@@ -152,6 +152,7 @@ Pretty Copy Number Heatmap
 \examples{
 
 suppressMessages(library(dplyr))
+suppressMessages(library(GAMBLR.open))
 #get some metadata for subsetting the data to just one pathology (DLBCL)
 dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) \%>\%
                     filter(pathology=="DLBCL",
@@ -180,7 +181,7 @@ pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
   these_samples_metadata = meta_clean,
   hide_annotations = "chromosomes",
   keep_these_chromosomes = c("9","17"),
-  cluster_rows=F,
+  cluster_rows=FALSE,
   labelTheseGenes = c("CDKN2A","TP53"))
 
 \dontrun{

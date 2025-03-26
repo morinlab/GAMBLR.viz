@@ -39,6 +39,7 @@
 #'
 #' @examples
 #' 
+#' suppressMessages(library(GAMBLR.open))
 #' maf = GAMBLR.data::sample_data$grch37$maf
 #' prettyRainfallPlot(this_sample_id = "14-35026",
 #'                    this_maf = maf,
@@ -135,7 +136,7 @@ prettyRainfallPlot = function(
 
     if (label_ashm_genes) {
         if (projection == "grch37") {
-        ashm_regions <- grch37_ashm_regions %>%
+        ashm_regions <- GAMBLR.data::grch37_ashm_regions %>%
             dplyr::rename(
                 "start" = "hg19_start",
                 "end" = "hg19_end",

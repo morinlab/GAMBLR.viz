@@ -28,6 +28,7 @@
 #'
 #' @examples
 #' 
+#' suppressMessages(library(GAMBLR.open))
 #' 
 #' # Bundled output from a GISTIC run using grch37 results
 #' gistic_scores = system.file("extdata",

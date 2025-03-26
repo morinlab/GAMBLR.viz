@@ -33,12 +33,14 @@
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
-#' library(GAMBLR)
+#' library(GAMBLR.open)
 #' 
 #' # Prepare some metadata
 #'  dlbcl_genome_meta = get_gambl_metadata() %>% 
 #'   dplyr::filter(pathology=="DLBCL",
-#'                 seq_type=="genome")
+#'                 seq_type=="genome") %>%
+#'   check_and_clean_metadata(.,duplicate_action="keep_first")
+#' 
 #' # Get CN segments for these samples
 #' dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
 #' 

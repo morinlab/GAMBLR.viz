@@ -31,13 +31,14 @@
 #' @examples
 #'
 #' library(dplyr)
+#' library(GAMBLR.open)
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
 #' metadata <- get_gambl_metadata() %>%
 #'    dplyr::filter(!seq_type == "mrna") %>%
 #'    dplyr::filter(pathology %in% names(get_gambl_colours("pathology"))) %>%
-#'    dplyr::distinct(sample_id, .keep_all = TRUE)
+#'    check_and_clean_metadata(.,duplicate_action="keep_first")
 #' 
 #' all_coding <- get_coding_ssm(these_samples_metadata = metadata)
 #' 
@@ -78,7 +79,7 @@
 #'         gene = paste("manta", gene, "sv", sep = "_"),
 #'         mutated = "POS"
 #'     ) %>%
-#'     dplyr::distinct %>%
+#'     dplyr::distinct() %>%
 #'     tidyr::pivot_wider(
 #'         names_from = gene,
 #'         values_from = mutated
@@ -95,7 +96,7 @@
 #'
 #' suppressMessages(
 #'   suppressWarnings({
-#' regions_bed = create_bed_data(grch37_ashm_regions,
+#' regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols =c("gene","region"),
 #'                               sep="-")

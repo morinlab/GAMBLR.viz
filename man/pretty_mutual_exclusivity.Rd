@@ -55,12 +55,13 @@ pretty_mutual_exclusivity(
 Pretty mutual exclusivity plot
 }
 \examples{
-library(GAMBLR)
+suppressMessages(library(GAMBLR.open))
 suppressMessages(library(ComplexHeatmap))
 
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\%
-  dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna")
-dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL")
+  dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna") 
+dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL") \%>\%
+             check_and_clean_metadata(.,duplicate_action="keep_first")
 
 all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
 

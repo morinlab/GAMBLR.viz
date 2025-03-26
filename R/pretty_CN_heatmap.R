@@ -53,6 +53,7 @@
 #' @examples
 #'
 #' suppressMessages(library(dplyr))
+#' suppressMessages(library(GAMBLR.open))
 #' #get some metadata for subsetting the data to just one pathology (DLBCL)
 #' dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) %>%
 #'                     filter(pathology=="DLBCL",
@@ -81,7 +82,7 @@
 #'   these_samples_metadata = meta_clean,
 #'   hide_annotations = "chromosomes",
 #'   keep_these_chromosomes = c("9","17"),
-#'   cluster_rows=F,
+#'   cluster_rows=FALSE,
 #'   labelTheseGenes = c("CDKN2A","TP53"))
 #'
 #' \dontrun{
