@@ -49,7 +49,8 @@ are expected to be out-of-the-box compatible with this function nd would not nee
 \examples{
 library(GAMBLR.open)
 #get data for plotting
-meta <- get_gambl_metadata()
+meta <- get_gambl_metadata() \%>\%
+  GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 meta <- meta \%>\%
     dplyr::filter(
         pathology \%in\% c("DLBCL", "FL")
@@ -67,7 +68,8 @@ prettyCoOncoplot(
     comparison_column = "pathology",
     comparison_values = c("DLBCL","FL"),
     genes=dplyr::filter(lymphoma_genes,
-                        FL_Tier==1 | DLBCL_Tier==1) \%>\% pull(Gene),
+                        FL_Tier==1 | DLBCL_Tier==1) \%>\% 
+                        dplyr::pull(Gene),
     metadataColumns = c(
         "pathology",
         "lymphgen",
@@ -79,7 +81,7 @@ prettyCoOncoplot(
     legend_row = 2,
     label1 = "FL",
     label2 = "DLBCL",
-    simplify_annotation =T,
+    simplify_annotation =TRUE,
     minMutationPercent = 5
 )
 

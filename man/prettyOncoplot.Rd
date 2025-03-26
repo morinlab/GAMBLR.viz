@@ -304,7 +304,7 @@ suppressMessages(
 # load packages
 library(grid)
 library(dplyr)
-library(GAMBLR)
+library(GAMBLR.open)
 
 # Using GAMBLR.open
 maf_metadata <- GAMBLR.open::get_gambl_metadata(
@@ -385,16 +385,14 @@ print(gene_regions)
 suppressMessages(
   suppressWarnings({
 
-gene_cnv <- get_cnv_and_ssm_status(
+gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
   only_cnv = "all",
   these_samples_metadata = get_gambl_metadata(),
   genes_and_cn_threshs = gene_regions
 )
 
-}))
 
-suppressMessages(
-  suppressWarnings({
+
 
 prettyOncoplot(
   maf_df = maf_data, genes = c(
@@ -407,26 +405,27 @@ prettyOncoplot(
     "TMEM30A", "TNFAIP3"
   ),
   these_samples_metadata = maf_metadata,
-  cluster_rows = T,
+  cluster_rows = TRUE,
   metadataColumns = c(
     "pathology",
     "lymphgen",
     "seq_type",
     "ffpe_or_frozen"
   ),
-  cluster_cols = F,
-  simplify_annotation = T,
+  cluster_cols = FALSE,
+  simplify_annotation = TRUE,
   cnv_df = gene_cnv,
   sortByColumns = c("pathology", "lymphgen")
 )
 }))
+
 
 # Option 2:
 # The second way to incorporate copy number relies
 # instead on a binned copy number matrix
 # If you already have one on hand, this is clearly the preferred approach!
 # First let's make one with the help of segmented_data_to_cn_matrix
-
+\dontrun{
 all_segments <- get_cn_segments(these_samples_metadata = maf_metadata)
 all_states_binned <- segmented_data_to_cn_matrix(
   seg_data = all_segments,
@@ -454,8 +453,6 @@ CN_thresh <- c(
   "TNFAIP3" = 1
 )
 
-suppressMessages(
-  suppressWarnings({
 
 prettyOncoplot(
   maf_df = maf_data,
@@ -463,18 +460,18 @@ prettyOncoplot(
   genes_CN_thresh = CN_thresh,
   genes = head(genes, 25),
   these_samples_metadata = maf_metadata,
-  cluster_rows = T,
+  cluster_rows = TRUE,
   metadataColumns = c(
     "pathology",
     "genetic_subgroup",
     "seq_type",
     "ffpe_or_frozen"
   ),
-  cluster_cols = F,
-  simplify_annotation = T,
+  cluster_cols = FALSE,
+  simplify_annotation = TRUE,
   sortByColumns = c("pathology", "genetic_subgroup"),
   minMutationPercent = 0
 )
 
-}))
+}
 }

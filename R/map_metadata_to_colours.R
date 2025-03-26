@@ -11,7 +11,8 @@
 #' @import dplyr
 #'
 #' @examples
-#' library(GAMBLR.data)
+#'
+#' library(GAMBLR.open)
 #' 
 #' #get metadata
 #' all_meta = suppressMessages(get_gambl_metadata() %>%

@@ -187,13 +187,13 @@ pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
  # get gene expression data
  gene_exp_all = get_gene_expression(all_genes=T,
                                     lazy_join=T,
-                                     arbitrarily_pick = T,
+                                     arbitrarily_pick = TRUE,
                                      HGNC=T,format="wide")
 
  genome_meta_exp = left_join(get_gambl_metadata() \%>\%
-    filter(seq_type=="genome") \%>\%
-    select(sample_id,pathology,lymphgen),
-    select(gene_exp_all,-sample_id),
+    dplyr::filter(seq_type=="genome") \%>\%
+    dplyr::select(sample_id,pathology,lymphgen),
+    dplyr::select(gene_exp_all,-sample_id),
     by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
 }

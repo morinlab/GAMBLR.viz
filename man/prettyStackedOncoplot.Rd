@@ -60,14 +60,15 @@ library(GAMBLR)
 
 # Prepare some metadata
  dlbcl_genome_meta = get_gambl_metadata() \%>\% 
-  dplyr::filter(pathology=="DLBCL",seq_type=="genome")
+  dplyr::filter(pathology=="DLBCL",
+                seq_type=="genome")
 # Get CN segments for these samples
 dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
 
 # Prepare CN matrix
 cn_mat = segmented_data_to_cn_matrix(dlbcl_seg,
                                      these = dlbcl_genome_meta,
-                                      adjust_for_ploidy = TRUE)
+                                     adjust_for_ploidy = TRUE)
 
 dlbcl_maf = get_all_coding_ssm(dlbcl_genome_meta)
 
@@ -101,7 +102,7 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                         sortByMetadataColumns = c("pathology","lymphgen"),
                         cn_state_matrix = cn_mat,
                         genes_CN_thresh = CN_thresh,
-                        genes = genes, 
+                        genes = genes,
                         sortByGenes = sortGenes)
 
 }))
@@ -181,7 +182,7 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      secondPlotArgs = list("merge_genes"=TRUE,
                                            region_fontsize=3),
                      genes = genes,
-                    cluster_samples = T,
+                    cluster_samples = TRUE,
                     secondPlotHeight = 9)
 
 }))

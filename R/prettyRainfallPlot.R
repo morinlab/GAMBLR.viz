@@ -42,7 +42,8 @@
 #' maf = GAMBLR.data::sample_data$grch37$maf
 #' prettyRainfallPlot(this_sample_id = "14-35026",
 #'                    this_maf = maf,
-#'                    label_sv = FALSE,chromosome = "3")
+#'                    label_sv = FALSE,
+#'                    chromosome = "3")
 #'
 #' \dontrun{
 #' # This mode will annotate and label SVs

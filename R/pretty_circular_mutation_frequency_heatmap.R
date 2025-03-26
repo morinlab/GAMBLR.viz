@@ -35,15 +35,15 @@
 #'   suppressWarnings({
 #' 
 #' metadata <- get_gambl_metadata() %>%
-#'    filter(!seq_type == "mrna") %>%
-#'    filter(pathology %in% names(get_gambl_colours("pathology"))) %>%
-#'    distinct(sample_id, .keep_all = TRUE)
+#'    dplyr::filter(!seq_type == "mrna") %>%
+#'    dplyr::filter(pathology %in% names(get_gambl_colours("pathology"))) %>%
+#'    dplyr::distinct(sample_id, .keep_all = TRUE)
 #' 
 #' all_coding <- get_coding_ssm(these_samples_metadata = metadata)
 #' 
 #' genes <- lymphoma_genes %>%
-#'     filter(DLBCL|FL|BL) %>%
-#'     pull(Gene) %>%
+#'     dplyr::filter(DLBCL|FL|BL) %>%
+#'     dplyr::pull(Gene) %>%
 #'     unique %>%
 #'     sort
 #' 
@@ -69,16 +69,16 @@
 #' # Add sv layer
 #' all_sv <- get_manta_sv(these_samples_metadata = metadata)
 #' annotated_sv <- annotate_sv(all_sv) %>%
-#'     filter(gene %in% genes, !is.na(partner)) %>%
-#'     select(sample_id = tumour_sample_id, gene)
+#'     dplyr::filter(gene %in% genes, !is.na(partner)) %>%
+#'     dplyr::select(sample_id = tumour_sample_id, gene)
 #' 
 #' # This is to replicate the output format of collate_sv
 #' sv_collated <- annotated_sv %>%
-#'     mutate(
+#'     dplyr::mutate(
 #'         gene = paste("manta", gene, "sv", sep = "_"),
 #'         mutated = "POS"
 #'     ) %>%
-#'     distinct %>%
+#'     dplyr::distinct %>%
 #'     tidyr::pivot_wider(
 #'         names_from = gene,
 #'         values_from = mutated

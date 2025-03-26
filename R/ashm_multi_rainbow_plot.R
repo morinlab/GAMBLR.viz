@@ -7,7 +7,8 @@
 #' The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 #' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 #' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-#' This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+#' This function will try to obtain mutations internally if `maf_data` is not given.
+#' For more info, refer to the parameter descriptions of this function.
 #'
 #' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.
 #' @param these_samples_metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
@@ -35,7 +36,7 @@
 #'           dplyr::arrange(lymphgen)
 #' metadata = suppressMessages(check_and_clean_metadata(metadata,
 #'                             duplicate_action ="keep_first"))
-#' regions_bed = create_bed_data(grch37_ashm_regions,
+#' regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols = c("gene","region"))
 #' regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
@@ -87,13 +88,13 @@ ashm_multi_rainbow_plot = function(regions_bed,
     }
   } else {
     if (projection == "grch37") {
-      regions_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+      regions_bed = GAMBLR.utils::create_bed_data()(GAMBLR.data::grch37_ashm_regions,
        fix_names="concat",
        concat_cols=c("gene","region"),
        sep="-"
       )
     } else if (projection == "hg38") {
-      regions_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions,
+      regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
        fix_names="concat",
        concat_cols=c("gene","region"),
        sep="-"
