@@ -77,6 +77,8 @@ identifiers <- grch37_gene_coordinates %>%
 
 Now we can access the gene expression data and prepare it for plotting
 ```{r ge_fl}
+#| eval: false
+#| include: true
 # get gene expression
 expression <- read_tsv(
         "https://www.bcgsc.ca/downloads/morinlab/cFL_Blood_2023_GE.tsv.gz"
@@ -119,6 +121,7 @@ expression <- expression %>%
 Now we can perform statistical comparisons to find differences in gene
 expression:
 ```{r ge_pwc}
+#| eval: false
 pwc <- expression %>%
     group_by(gene_name) %>%
     rstatix::wilcox_test(
@@ -132,6 +135,7 @@ pwc <- pwc %>%
 
 The Plot!
 ```{r ge_plot}
+#| eval: false
 p <- expression %>%
     ggplot(
         aes(
