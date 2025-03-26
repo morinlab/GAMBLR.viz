@@ -59,7 +59,8 @@ suppressMessages(library(GAMBLR.open))
 suppressMessages(library(ComplexHeatmap))
 
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\%
-  dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna") 
+  dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna") \%>\%
+  check_and_clean_metadata(.,duplicate_action="keep_first")
 dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL") \%>\%
              check_and_clean_metadata(.,duplicate_action="keep_first")
 

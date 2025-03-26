@@ -160,8 +160,10 @@ regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
                               sep="-")
 # Add aSHM data
 ashm_freq <- get_ashm_count_matrix(
+    these_samples_metadata = metadata,
     regions_bed = regions_bed,
-    this_seq_type = "genome"
+    this_seq_type = "genome",
+    projection = "grch37"
 )
 
 ashm_freq_collated <- mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))
