@@ -18,7 +18,8 @@ prettyForestPlot(
   comparison_name = FALSE,
   custom_colours = FALSE,
   custom_labels = FALSE,
-  max_q = 1
+  max_q = 1,
+  base_size = 10
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ prettyForestPlot(
 \item{custom_labels}{Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.}
 
 \item{max_q}{cut off for q values to be filtered in fish test}
+
+\item{base_size}{Numeric value to specify font size of the gene labels on the plot. Default is 10.}
 }
 \value{
 A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
