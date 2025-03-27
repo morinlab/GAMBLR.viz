@@ -281,14 +281,14 @@ some_regions$name <- factor(
 Now, we can plot the heatmap of mutations using the GAMBLR.viz function
 `prettyMutationDensity`:
 ```{r ashm_plot}
-#| fig-height: 10
+#| fig-height: 7
 ashm_heatmap <- prettyMutationDensity(
     these_samples_metadata = metadata,
     maf_data = maf,
     cluster_samples = FALSE,
     regions_bed = some_regions,
     min_bin_recurrence = 10,
-    region_fontsize = 12,
+    region_fontsize = 5,
     window_size = 1000,
     slide_by = 500,
     orientation = "sample_columns",

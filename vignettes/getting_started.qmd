@@ -1,5 +1,5 @@
 ---
-title: "Working with metadata"
+title: "Metadata and GAMBLR colours"
 vignette: >
   %\VignetteIndexEntry{quarto vignettes}
   %\VignetteEngine{quarto::html}
@@ -26,8 +26,8 @@ This tutorial explores how to generate some basic and most common plots,
 commonly occurring arguments across different functions, best practices and
 recommendations in the scope of visualizing data.
 
-## What are standartized colours?
-First, let's explore the standartized color pallettes in the GAMBLR.viz. They
+## What are standardized colours?
+First, let's explore the standardized color pallettes in the GAMBLR.viz. They
 are stored as list in one of the GAMBLR.viz dependencies
 ([GAMBLR.helpers](https://github.com/morinlab/GAMBLR.helpers/blob/master/R/get_gambl_colours.R))
 and are an integral part of visualizations.

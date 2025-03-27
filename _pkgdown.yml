@@ -1,3 +1,4 @@
+url: https://morinlab.github.io/GAMBLR.viz/
 template:
   bootstrap: 5
 
@@ -7,7 +8,6 @@ articles:
   contents:
     - why
     - install
-    - getting_started
 - title: Tutorials
   navbar: Tutorials
   contents:
@@ -17,10 +17,12 @@ articles:
     - data_q
     - oncoplot
     - recap_figures
-- title: Help!
+    - getting_started
+- title: Reference
   navbar: Help
   contents:
     - faq
+
 
 reference:
   - title: prettyPlots
@@ -50,9 +52,12 @@ figures:
   dev.args: []
   fig.ext: png
   fig.width: 9
-  fig.height: 9
+  fig.height: ~
   fig.retina: 2
-  fig.asp: 1.618
+  fig.asp: 0.9
   bg: NA
   other.parameters: []
+
+redirects:
+  - ["articles/why.html", "why.html"]
 

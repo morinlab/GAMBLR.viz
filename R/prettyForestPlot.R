@@ -99,7 +99,8 @@ prettyForestPlot = function(maf,
                             comparison_name = FALSE,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
-                            max_q = 1){
+                            max_q = 1,
+                            base_size = 10){
 
   #If no comparison_values are specified, derive the comparison_values
   # from the specified comparison_column
@@ -133,6 +134,7 @@ prettyForestPlot = function(maf,
 
   #read maf into r
   if(!missing(maf)){
+    maf = strip_genomic_classes(maf)
     #extract gene symbols from maf with minimum N mutations (if no genes list is provided)
     if(missing(genes)){
       genes = maf %>%
@@ -268,12 +270,7 @@ prettyForestPlot = function(maf,
   if(point_size < 1){
     point_size = 1
   }
-  font_size = 360 / round(length(fish_test$gene))
-  if(font_size < 4){
-    font_size = 4
-  }else if(font_size > 20){
-    font_size = 20
-  }
+  font_size <- base_size
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
     dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
@@ -284,7 +281,7 @@ prettyForestPlot = function(maf,
     geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
     ylab("ln(Odds Ratio)") +
     xlab("Mutated Genes\n") +
-    theme_Morons(base_size = 12) +
+    theme_Morons(base_size = base_size) +
     theme(axis.text.y = element_text(size = font_size))
 
   if(comparison_name == FALSE){
@@ -331,7 +328,7 @@ prettyForestPlot = function(maf,
     xlab("") + ylab("% Mutated") +
     coord_flip() +
     scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
-    theme_Morons(base_size = 12) +
+    theme_Morons(base_size = base_size) +
     theme(axis.text.y = element_blank(), legend.position = "bottom")
 
   arranged_plot = ggarrange(

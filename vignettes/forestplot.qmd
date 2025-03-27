@@ -6,16 +6,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 warning: false
 message: false
-fig.width: 10
-fig.height: 8
+fig.width: 8
+fig.height: 6
 fig.align: "center"
 ---
 
-One of the integral parts of this package is the analysis and display of the
-differences in the frequency of mutations for two different groups in a given
-cohort. Because it is easy to use, conducts flexible comparisons, and generates
-easy-to-follow display items, it is called `prettyForestPlot` and it belongs to
-the `pretty` family of GAMBLR.viz functions.
+This tutorial introduces one of the ways GAMBLR.viz facilitates exploration of
+mutation incidence differences between groups of samples. Offering our take on
+forest plots, `prettyForestPlot` is part of a group of similarly named GAMBLR.viz
+functions.
 There is no specific formatting or data preparation needed for the analysis and
 visualization, and the only required inputs are the mutation data (can be maf
 format or binary feature matrix), metadata (containing sample identifiers in
@@ -45,20 +44,24 @@ genetic subgroup of Burkitt lymphoma (BL).
 
 ```{r get_metadata}
 metadata <- get_gambl_metadata() %>%
-    filter(study == "BL_Thomas")
+    filter(study == "BL_Thomas") 
 ```
 
-Next, we will obtain the coding mutations that will be used in the plotting.
-The data is a data frame in a standartized maf format.
+Next, with the help of GAMBLR.open and GAMBLR.data, we will obtain the coding
+mutations that will be used in the plotting.
+Many of the `get_` family of functions return a data frame with mutations annotated
+in the familiar MAF format.
 
 ```{r get_maf}
-maf <- get_ssm_by_samples(
+
+maf <- get_coding_ssm(
     these_samples_metadata = metadata,
     tool_name = "publication",
-    projection = "hg38"
+    projection = "hg38",
+    include_silent = FALSE
 )
 
-# How does it look like?
+# What does it look like?
 dim(maf)
 
 head(maf) %>%
@@ -73,7 +76,10 @@ For the purpose of this tutorial, we will focus on a small subset of genes known
 to be significantly mutated in BL.
 
 ```{r goi}
-genes <- lymphoma_genes_bl_v_latest$Gene
+#genes <- lymphoma_genes_bl_v_latest$Gene
+genes <- GAMBLR.data::lymphoma_genes %>%
+    filter(BL_Tier == 1) %>%
+    pull(Gene)
 head(genes)
 ```
 
@@ -95,7 +101,7 @@ fp <- prettyForestPlot(
     genes = genes,
     comparison_column = comparison_column,
     comparison_values = comparison_vals
-)
+) 
 ```
 
 The output of the function is a list containing the following objects:
@@ -127,14 +133,38 @@ fp <- prettyForestPlot(
     genes = genes,
     comparison_column = comparison_column,
     comparison_values = comparison_vals,
-    max_q = max_q
+    max_q = max_q,
+    base_size = 7
 )
 ```
 
 We now can take a look at what genes are passing the significance cutoff:
 ```{r fdr_plot}
-fp$arranged
+fp$arranged 
 ```
+
+`r nmut=10`
+
+If we don't provide a set of candidate genes, the Fisher's exact test is applied to every gene mutated in at least one sample, which is incredibly ambitious. Because `prettyForestPlot` automatically corrests for multiple testing, this can limit how many significant associations you end up with. Here, we raised the minimum to `r nmut` mutations and excluded the candidate gene restriction. As you can see, this can lead to additional differences being detected. 
+
+```{r all_genes}
+
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf,
+    comparison_column = comparison_column,
+    comparison_values = comparison_vals,
+    max_q = max_q,
+    min_mutations = nmut,
+    base_size = 7
+)
+fp$arranged
+
+num_genes = nrow(fp$fisher)
+```
+
+A total of `r num_genes` remained significant after correcting for multiple tests.
+
 
 ## Comparing categories with more than two groups
 
@@ -155,7 +185,8 @@ fp <- prettyForestPlot(
     genes = genes,
     comparison_column = comparison_column,
     comparison_values = comparison_values,
-    max_q = max_q
+    max_q = max_q,
+    base_size = 7
 )
 
 fp$arranged
@@ -237,8 +268,9 @@ fp$arranged
 
 ## Using binary matrix as input
 
-Sometimes it might be useful to have different input format instead of maf - for example, binary matrix of features. Can we use the `prettyForestPlot` in this
-case? Yes, sure we can!
+Sometimes it might be useful to have different input format instead of maf - for example, you already have
+a one-hot encoded matrix of feature status (i.e. a binary matrix). We can run `prettyForestPlot` using this 
+as input in lieu of the MAF. This also means we can apply it to more than just simple somatic mutation profiles.
 
 First, let's construct the binary matrix. We will supplement our maf with the
 non-coding mutations to look at the aSHM regions in addition to coding
