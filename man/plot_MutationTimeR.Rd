@@ -4,33 +4,31 @@
 \alias{plot_MutationTimeR}
 \title{Plot MutationTimeR Results}
 \usage{
-plot_MutationTimeR(
-  this_sample_metadata,
-  timed_cna,
-  timed_ssm,
-  genome_build,
-  verbose = FALSE
-)
+plot_MutationTimeR(this_sample_metadata, timed_cna, timed_ssm, verbose = FALSE)
 }
 \arguments{
 \item{this_sample_metadata}{Metadata with one row containing your sample details}
 
-\item{verbose}{Set to TRUE for a chattier experience. Default is FALSE.}
+\item{timed_cna}{Timed CNAs from `GAMBLR.results::get_timed_mutations`}
 
-\item{projection}{Genome build projection (e.g., "hg38" or "grch37").}
+\item{timed_ssm}{Timed SSMs from `GAMBLR.results::get_timed_mutations`}
+
+\item{verbose}{Set to TRUE for a chattier experience. Default is FALSE.}
+}
+\value{
+a named list containing two plot objects, `full` with the plot of
+all chromosomes and `minimal` with the plot of only chromosomes with timed CNAs.
 }
 \description{
 This function plots the timing information from MutationTimeR for SSMs and CNAs.
 }
 \examples{
+
 \dontrun{
-my_meta = suppressMessages(get_gambl_metadata()) \%>\% 
+my_meta = suppressMessages(get_gambl_metadata()) \%>\%
   dplyr::filter(sample_id=="01-20985T",
                seq_type=="genome")
 timed = GAMBLR.results::get_timed_mutations(my_meta,"hg38")
-print(timed$SSM)
-
-print(timed$CNA)
 
 all_plots = plot_MutationTimeR(my_meta,timed$CNA,timed$SSM)
 
