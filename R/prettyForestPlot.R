@@ -23,6 +23,7 @@
 #' @param custom_colours Optional: Specify a named vector of colours that match the values in the comparison column.
 #' @param custom_labels Optional: Specify custom labels for the legend categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
+#' @param base_size Numeric value to specify font size of the gene labels on the plot. Default is 10.
 #'
 #' @return A convenient list containing all the data frames that were created in making the plot, including the mutation matrix. It also produces (and returns) ggplot object with a side-by-side forest plot and bar plot showing mutation incidences across two groups.
 #'
@@ -64,7 +65,8 @@ prettyForestPlot = function(maf,
                             comparison_name = FALSE,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
-                            max_q = 1){
+                            max_q = 1,
+                            base_size = 10){
 
   #If no comparison_values are specified, derive the comparison_values from the specified comparison_column
   if(comparison_values[1] == FALSE){
@@ -95,6 +97,7 @@ prettyForestPlot = function(maf,
 
   #read maf into r
   if(!missing(maf)){
+    maf <- GAMBLR.utils::strip_genomic_classes(maf)
     #extract gene symbols from maf with minimum N mutations (if no genes list is provided)
     if(missing(genes)){
       genes = maf %>%
@@ -230,12 +233,7 @@ prettyForestPlot = function(maf,
   if(point_size < 1){
     point_size = 1
   }
-  font_size = 360 / round(length(fish_test$gene))
-  if(font_size < 4){
-    font_size = 4
-  }else if(font_size > 20){
-    font_size = 20
-  }
+  font_size <- base_size
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
     dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
