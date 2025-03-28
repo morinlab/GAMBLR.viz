@@ -70,6 +70,8 @@ match the values in the comparison column.}
 categories. Must be in the same order as comparison_values.}
 
 \item{max_q}{cut off for q values to be filtered in fish test}
+
+\item{base_size}{Numeric value to specify font size of the gene labels on the plot. Default is 10.}
 }
 \value{
 A convenient list containing all the data frames that were

@@ -50,6 +50,7 @@
 #' @param custom_labels Optional: Specify custom labels for the legend
 #' categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
+#' @param base_size Numeric value to specify font size of the gene labels on the plot. Default is 10.
 #'
 #' @return A convenient list containing all the data frames that were
 #' created in making the plot, including the mutation matrix. It also
@@ -134,7 +135,7 @@ prettyForestPlot = function(maf,
 
   #read maf into r
   if(!missing(maf)){
-    maf = strip_genomic_classes(maf)
+    maf <- GAMBLR.utils::strip_genomic_classes(maf)
     #extract gene symbols from maf with minimum N mutations (if no genes list is provided)
     if(missing(genes)){
       genes = maf %>%
@@ -270,6 +271,7 @@ prettyForestPlot = function(maf,
   if(point_size < 1){
     point_size = 1
   }
+  font_size <- base_size
   font_size <- base_size
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
