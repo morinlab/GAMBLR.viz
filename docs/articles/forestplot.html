@@ -48,7 +48,7 @@
     <li><a class="dropdown-item" href="../articles/getting_started.html">Metadata and GAMBLR colours</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Help</h6></li>
-    <li><a class="dropdown-item" href="../articles/faq.html">Frequently Asked Qestions</a></li>
+    <li><a class="dropdown-item" href="../articles/faq.html">Frequently Asked Questions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -80,7 +80,7 @@
 
 
 
-    <p>This tutorial introduces one of the ways GAMBLR.viz facilitates exploration of mutation incidence differences between groups of samples. Offering our take on forest plots, <code>prettyForestPlot</code> is part of a group of similarly named GAMBLR.viz functions. There is no specific formatting or data preparation needed for the analysis and visualization, and the only required inputs are the mutation data (can be maf format or binary feature matrix), metadata (containing sample identifiers in <code>sample_id</code> column and annotation of the group that will be used in comparison), and a character of the column name in metadata where the sample annotations are specified. This tutorial will demonstate the example of the inputs and showcase the main features of this function.</p>
+    <p>This tutorial introduces one of the ways GAMBLR.viz facilitates exploration of mutation incidence differences between groups of samples. Forest plots are a popular approach to summarize the result of a set univariate tests or a multivariate model. <code>prettyForestPlot</code> is a convenient approach to generate our take on forest plots and is part of a <a href="../reference/index.html#prettyplots">group of GAMBLR.viz functions</a>. If you want to compare the frequency of mutations in a set of genes (or across all genes), all you need is a MAF and some basic sample metadata. The metadata need only contain a row for each sample identifiers in the MAF (<code>Tumor_Sample_Barcode</code>) and another column containing the labels for how you want the samples stratified. This tutorial will demonstate the example of the inputs and showcase the main features of this function.</p>
 <section class="level2"><h2 id="prepare-setup">Prepare setup<a class="anchor" aria-label="anchor" href="#prepare-setup"></a>
 </h2>
 <p>We will first import the necessary packages:</p>
@@ -181,7 +181,7 @@ Showing first 10 rows:
 <span>    comparison_column <span class="op">=</span> <span class="va">comparison_column</span>,</span>
 <span>    comparison_values <span class="op">=</span> <span class="va">comparison_vals</span>,</span>
 <span>    max_q <span class="op">=</span> <span class="va">max_q</span>,</span>
-<span>    base_size <span class="op">=</span> <span class="fl">7</span></span>
+<span>    base_size <span class="op">=</span> <span class="fl">9</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p>We now can take a look at what genes are passing the significance cutoff:</p>
@@ -205,7 +205,7 @@ Showing first 10 rows:
 <span>    comparison_values <span class="op">=</span> <span class="va">comparison_vals</span>,</span>
 <span>    max_q <span class="op">=</span> <span class="va">max_q</span>,</span>
 <span>    min_mutations <span class="op">=</span> <span class="va">nmut</span>,</span>
-<span>    base_size <span class="op">=</span> <span class="fl">7</span></span>
+<span>    base_size <span class="op">=</span> <span class="fl">9</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">fp</span><span class="op">$</span><span class="va">arranged</span></span></code></pre></div>
 <div class="cell-output-display">
@@ -232,7 +232,7 @@ Showing first 10 rows:
 <span>    comparison_column <span class="op">=</span> <span class="va">comparison_column</span>,</span>
 <span>    comparison_values <span class="op">=</span> <span class="va">comparison_values</span>,</span>
 <span>    max_q <span class="op">=</span> <span class="va">max_q</span>,</span>
-<span>    base_size <span class="op">=</span> <span class="fl">7</span></span>
+<span>    base_size <span class="op">=</span> <span class="fl">9</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fp</span><span class="op">$</span><span class="va">arranged</span></span></code></pre></div>

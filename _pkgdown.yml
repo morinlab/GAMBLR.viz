@@ -1,6 +1,9 @@
 url: https://morinlab.github.io/GAMBLR.viz/
 template:
   bootstrap: 5
+  theme:
+    light: [flatly, theme-light.scss]
+    dark: [darkly, theme-dark.scss]
 
 navbar:
   structure:

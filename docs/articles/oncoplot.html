@@ -48,7 +48,7 @@
     <li><a class="dropdown-item" href="../articles/getting_started.html">Metadata and GAMBLR colours</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Help</h6></li>
-    <li><a class="dropdown-item" href="../articles/faq.html">Frequently Asked Qestions</a></li>
+    <li><a class="dropdown-item" href="../articles/faq.html">Frequently Asked Questions</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -80,7 +80,7 @@
 
 
 
-    <p>One of the main features and integral parts of this package is the display of coding mutations across a set of genes in a given cohort. Because it outperforms other tools and generates display items with a lot of supported features and flexibility, it is called <code>prettyOncoplot</code> and it belongs to the <code>pretty</code> family of GAMBLR.viz functions. This tutorial will demonstate how to prepare inputs for it (spoiler alert: no specific formatting is necessary) and what is the format of metadata expected by <code>prettyOncoplot</code> (spoiler alert: just Tumor_Sample_Barcode column and column for any annotation you want to display).</p>
+    <p>One of the most popular represntations of cancer genomic data is a rectangular sample-by-gene summary of all protein-coding mutations in a given cohort known as an <em>oncoprint</em> or <em>oncoplot</em>. Although there are many ways to generate one, we feel that our implementation affords a desirable level of flexibility while consistently yielding a satisfying result. <code>prettyOncoplot</code> is another member of the <a href="../reference/index.html#prettyplots"><code>pretty</code> family</a> of GAMBLR.viz functions. This tutorial will demonstate how to prepare inputs for it (spoiler alert: no specific formatting is necessary) and what is the format of metadata expected by <code>prettyOncoplot</code> (spoiler alert: just Tumor_Sample_Barcode column and column for any annotation you want to display).</p>
 <section class="level2"><h2 id="prepare-setup">Prepare setup<a class="anchor" aria-label="anchor" href="#prepare-setup"></a>
 </h2>
 <p>We will first import the necessary packages:</p>
@@ -220,7 +220,8 @@ Showing first 10 rows:
 <span>    metadataBarFontsize <span class="op">=</span> <span class="va">metadataBarFontsize</span>,</span>
 <span>    fontSizeGene <span class="op">=</span> <span class="va">fontSizeGene</span>,</span>
 <span>    legendFontSize <span class="op">=</span> <span class="va">legendFontSize</span>,</span>
-<span>    sortByColumns <span class="op">=</span> <span class="va">metadataColumns</span></span>
+<span>    sortByColumns <span class="op">=</span> <span class="va">metadataColumns</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -253,7 +254,8 @@ Showing first 10 rows:
 <span>    fontSizeGene <span class="op">=</span> <span class="va">fontSizeGene</span>,</span>
 <span>    legendFontSize <span class="op">=</span> <span class="va">legendFontSize</span>,</span>
 <span>    sortByColumns <span class="op">=</span> <span class="va">metadataColumns</span>,</span>
-<span>    genes <span class="op">=</span> <span class="va">genes</span></span>
+<span>    genes <span class="op">=</span> <span class="va">genes</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -281,7 +283,8 @@ Showing first 10 rows:
 <span>    legendFontSize <span class="op">=</span> <span class="va">legendFontSize</span>,</span>
 <span>    sortByColumns <span class="op">=</span> <span class="va">metadataColumns</span>,</span>
 <span>    genes <span class="op">=</span> <span class="va">genes</span>,</span>
-<span>    keepGeneOrder <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    keepGeneOrder <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -322,7 +325,8 @@ Showing first 10 rows:
 <span>    legendFontSize <span class="op">=</span> <span class="va">legendFontSize</span>,</span>
 <span>    sortByColumns <span class="op">=</span> <span class="va">metadataColumns</span>,</span>
 <span>    genes <span class="op">=</span> <span class="va">genes</span>,</span>
-<span>    splitGeneGroups <span class="op">=</span> <span class="va">gene_groups</span></span>
+<span>    splitGeneGroups <span class="op">=</span> <span class="va">gene_groups</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -360,7 +364,8 @@ Showing first 10 rows:
 <span>    genes <span class="op">=</span> <span class="va">genes</span>,</span>
 <span>    splitGeneGroups <span class="op">=</span> <span class="va">gene_groups</span>,</span>
 <span>    splitColumnName <span class="op">=</span> <span class="st">"pathology"</span>,</span>
-<span>    groupNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Follicular lymphoma"</span>, <span class="st">"DLBCL"</span>, <span class="st">"COMFL"</span><span class="op">)</span></span>
+<span>    groupNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Follicular lymphoma"</span>, <span class="st">"DLBCL"</span>, <span class="st">"COMFL"</span><span class="op">)</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -391,7 +396,8 @@ Showing first 10 rows:
 <span>    splitColumnName <span class="op">=</span> <span class="st">"pathology"</span>,</span>
 <span>    groupNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Follicular lymphoma"</span>, <span class="st">"DLBCL"</span>, <span class="st">"COMFL"</span><span class="op">)</span>,</span>
 <span>    hideTopBarplot <span class="op">=</span> <span class="va">hideTopBarplot</span>,</span>
-<span>    tally_all_mutations <span class="op">=</span> <span class="va">tally_all_mutations</span></span>
+<span>    tally_all_mutations <span class="op">=</span> <span class="va">tally_all_mutations</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -449,7 +455,8 @@ Showing first 10 rows:
 <span>    hideTopBarplot <span class="op">=</span> <span class="va">hideTopBarplot</span>,</span>
 <span>    tally_all_mutations <span class="op">=</span> <span class="va">tally_all_mutations</span>,</span>
 <span>    numericMetadataColumns <span class="op">=</span> <span class="st">"n"</span>,</span>
-<span>    arrange_descending <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    arrange_descending <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
@@ -514,7 +521,8 @@ Showing first 10 rows:
 <span>    hide_annotations <span class="op">=</span> <span class="st">"n"</span>,</span>
 <span>    hide_annotations_tracks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    annotate_specific_genes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span></span>
+<span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 </section><section class="level2"><h2 id="annotating-genes-with-hotspots">Annotating genes with hotspots<a class="anchor" aria-label="anchor" href="#annotating-genes-with-hotspots"></a>
@@ -572,7 +580,8 @@ Hugo_Symbol TRUE
 <span>    hide_annotations_tracks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    annotate_specific_genes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span>,</span>
-<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span></span>
+<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 </section><section class="level2"><h2 id="co-oncoplot-two-plots-side-by-side">Co-oncoplot: two plots side-by-side<a class="anchor" aria-label="anchor" href="#co-oncoplot-two-plots-side-by-side"></a>
@@ -603,12 +612,25 @@ Hugo_Symbol TRUE
 <span>    arrange_descending <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    hide_annotations <span class="op">=</span> <span class="st">"n"</span>,</span>
 <span>    hide_annotations_tracks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    annotate_specific_genes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span>,</span>
-<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span>,</span>
+<span>    <span class="co">#annotate_specific_genes = TRUE,</span></span>
+<span>    <span class="co">#this_forest_object = fisher_test,</span></span>
+<span>    highlightHotspots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    legend_row <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>    annotation_row <span class="op">=</span> <span class="fl">2</span></span>
+<span>    annotation_row <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  10 110</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  10 333</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="oncoplot_files/figure-html/cooncoplot-1.png" width="1440"></p>
+</figure>
+</div>
+</div>
 </div>
 <div>
 <blockquote>
@@ -627,7 +649,7 @@ Hugo_Symbol TRUE
 </h2>
 <p>When arranging items for the multi-panel figure when preparing manuscript or experiment report, it may be needed to use the generated oncoplot on the same page as other display items. The <code>prettyOncoplot</code> (and, therefore, <code>prettyCoOncoplot</code>), handles the ComplexHeatmap under the hood to generate graphics, and it is not readily available to be combined with the plots generated with other tools, for example <code>ggplot2</code>. Not readily available - but definitely not impossible! The output of <code>prettyCoOncoplot</code> is directly compatible with the arrangement on multi-panel figure since it uses the trick shown below under the hood to put two panels side-by-side, but the otuput of <code>prettyOncoplot</code> is a ComplexHeatmap object so needs some extra steps to allow multi-panel arrangement. First, lets store the returned oncoplot in a variable:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_oncoplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prettyOncoplot.html">prettyOncoplot</a></span><span class="op">(</span></span>
 <span>    these_samples_metadata <span class="op">=</span> <span class="va">metadata</span>,</span>
 <span>    maf_df <span class="op">=</span> <span class="va">maf</span>,</span>
@@ -649,18 +671,19 @@ Hugo_Symbol TRUE
 <span>    hide_annotations_tracks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    annotate_specific_genes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span>,</span>
-<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span></span>
+<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <p>Next, we will import some of the packages needed to handle the trick:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jokergoo/ComplexHeatmap" class="external-link">ComplexHeatmap</a></span><span class="op">)</span> <span class="co"># to handle the ComplexHeatmap object</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rpkgs.datanovia.com/ggpubr/" class="external-link">ggpubr</a></span><span class="op">)</span> <span class="co"># to arrange multiple panels</span></span></code></pre></div>
 </div>
 <p>After that, we will capture the display of the oncoplot:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_oncoplot</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/grid.grab.html" class="external-link">grid.grabExpr</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/ComplexHeatmap/man/draw-dispatch.html" class="external-link">draw</a></span><span class="op">(</span><span class="va">my_oncoplot</span><span class="op">)</span>,</span>
 <span>    width <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -669,7 +692,7 @@ Hugo_Symbol TRUE
 </div>
 <p>Now, it is ready for us to arrange in multi-panel figure. We can use the forest plot we already looked at as an example, and put it to the right of the oncoplot:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">multipanel_figure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rpkgs.datanovia.com/ggpubr/reference/ggarrange.html" class="external-link">ggarrange</a></span><span class="op">(</span></span>
 <span>    <span class="va">my_oncoplot</span>, <span class="co"># left panel</span></span>
 <span>    <span class="va">fisher_test</span><span class="op">$</span><span class="va">arranged</span>, <span class="co"># right panel</span></span>
@@ -685,7 +708,7 @@ Hugo_Symbol TRUE
 </div>
 <p>Final note: it would be nice to have the genes in the forest plot directly aligned with the genes as they are displayed on the oncoplot, and we can do this by providing consistent ordering and adding some white space below forest plot to match the height of the oncoplot:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">my_oncoplot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prettyOncoplot.html">prettyOncoplot</a></span><span class="op">(</span></span>
 <span>    these_samples_metadata <span class="op">=</span> <span class="va">metadata</span>,</span>
 <span>    maf_df <span class="op">=</span> <span class="va">maf</span>,</span>
@@ -708,7 +731,8 @@ Hugo_Symbol TRUE
 <span>    hide_annotations_tracks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    annotate_specific_genes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    this_forest_object <span class="op">=</span> <span class="va">fisher_test</span>,</span>
-<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span></span>
+<span>    highlightHotspots <span class="op">=</span> <span class="va">highlightHotspots</span>,</span>
+<span>    simplify_annotation <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">my_oncoplot</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/grid.grab.html" class="external-link">grid.grabExpr</a></span><span class="op">(</span></span>

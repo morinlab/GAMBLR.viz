@@ -6,16 +6,19 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 warning: false
 message: false
+execute:
+    cache: true
 fig.width: 7
 fig.height: 5
 fig.align: "center"
 ---
 
-One of the main features and integral parts of this package is the display of
-coding mutations across a set of genes in a given cohort. Because it outperforms
-other tools and generates display items with a lot of supported features and
-flexibility, it is called `prettyOncoplot` and it belongs to the `pretty` family
-of GAMBLR.viz functions.
+One of the most popular represntations of cancer genomic data is a rectangular
+sample-by-gene summary of all protein-coding mutations in a given cohort known as
+an *oncoprint* or *oncoplot*. Although there are many ways to generate one, we
+feel that our implementation affords a desirable level of flexibility while consistently
+yielding a satisfying result. `prettyOncoplot` is another member of the
+[`pretty` family](../reference/index.html#prettyplots) of GAMBLR.viz functions.
 This tutorial will demonstate how to prepare inputs for it (spoiler alert: no
 specific formatting is necessary) and what is the format of metadata expected by
 `prettyOncoplot` (spoiler alert: just Tumor_Sample_Barcode column and column for
@@ -162,7 +165,8 @@ prettyOncoplot(
     metadataBarFontsize = metadataBarFontsize,
     fontSizeGene = fontSizeGene,
     legendFontSize = legendFontSize,
-    sortByColumns = metadataColumns
+    sortByColumns = metadataColumns,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -197,7 +201,8 @@ prettyOncoplot(
     fontSizeGene = fontSizeGene,
     legendFontSize = legendFontSize,
     sortByColumns = metadataColumns,
-    genes = genes
+    genes = genes,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -222,7 +227,8 @@ prettyOncoplot(
     legendFontSize = legendFontSize,
     sortByColumns = metadataColumns,
     genes = genes,
-    keepGeneOrder = TRUE
+    keepGeneOrder = TRUE,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -255,7 +261,8 @@ prettyOncoplot(
     legendFontSize = legendFontSize,
     sortByColumns = metadataColumns,
     genes = genes,
-    splitGeneGroups = gene_groups
+    splitGeneGroups = gene_groups,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -291,7 +298,8 @@ prettyOncoplot(
     genes = genes,
     splitGeneGroups = gene_groups,
     splitColumnName = "pathology",
-    groupNames = c("Follicular lymphoma", "DLBCL", "COMFL")
+    groupNames = c("Follicular lymphoma", "DLBCL", "COMFL"),
+    simplify_annotation = TRUE
 )
 ```
 
@@ -324,7 +332,8 @@ prettyOncoplot(
     splitColumnName = "pathology",
     groupNames = c("Follicular lymphoma", "DLBCL", "COMFL"),
     hideTopBarplot = hideTopBarplot,
-    tally_all_mutations = tally_all_mutations
+    tally_all_mutations = tally_all_mutations,
+    simplify_annotation = TRUE
 )
 ```
 ::: {.callout-tip}
@@ -369,7 +378,8 @@ prettyOncoplot(
     hideTopBarplot = hideTopBarplot,
     tally_all_mutations = tally_all_mutations,
     numericMetadataColumns = "n",
-    arrange_descending = TRUE
+    arrange_descending = TRUE,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -432,7 +442,8 @@ prettyOncoplot(
     hide_annotations = "n",
     hide_annotations_tracks = TRUE,
     annotate_specific_genes = TRUE,
-    this_forest_object = fisher_test
+    this_forest_object = fisher_test,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -486,7 +497,8 @@ prettyOncoplot(
     hide_annotations_tracks = TRUE,
     annotate_specific_genes = TRUE,
     this_forest_object = fisher_test,
-    highlightHotspots = highlightHotspots
+    highlightHotspots = highlightHotspots,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -505,7 +517,6 @@ see how cFL compares to dFL:
 #| fig-keep: last
 #| fig-height: 8
 #| fig-width: 15
-#| eval: false
 prettyCoOncoplot(
     metadata = metadata,
     maf = maf,
@@ -529,11 +540,12 @@ prettyCoOncoplot(
     arrange_descending = TRUE,
     hide_annotations = "n",
     hide_annotations_tracks = TRUE,
-    annotate_specific_genes = TRUE,
-    this_forest_object = fisher_test,
-    highlightHotspots = highlightHotspots,
+    #annotate_specific_genes = TRUE,
+    #this_forest_object = fisher_test,
+    highlightHotspots = TRUE,
     legend_row = 2,
-    annotation_row = 2
+    annotation_row = 2,
+    simplify_annotation = TRUE
 )
 ```
 
@@ -574,7 +586,6 @@ object so needs some extra steps to allow multi-panel arrangement.
 First, lets store the returned oncoplot in a variable:
 
 ```{r store_oncoplot}
-#| output: false
 #| eval: false
 my_oncoplot <- prettyOncoplot(
     these_samples_metadata = metadata,
@@ -597,12 +608,14 @@ my_oncoplot <- prettyOncoplot(
     hide_annotations_tracks = TRUE,
     annotate_specific_genes = TRUE,
     this_forest_object = fisher_test,
-    highlightHotspots = highlightHotspots
+    highlightHotspots = highlightHotspots,
+    simplify_annotation = TRUE
 )
 ```
 
 Next, we will import some of the packages needed to handle the trick:
 ```{r load_extra}
+#| eval: false
 library(ComplexHeatmap) # to handle the ComplexHeatmap object
 library(ggpubr) # to arrange multiple panels
 ```
@@ -669,7 +682,8 @@ my_oncoplot <- prettyOncoplot(
     hide_annotations_tracks = TRUE,
     annotate_specific_genes = TRUE,
     this_forest_object = fisher_test,
-    highlightHotspots = highlightHotspots
+    highlightHotspots = highlightHotspots,
+    simplify_annotation = TRUE
 )
 
 my_oncoplot = grid.grabExpr(

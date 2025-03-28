@@ -6,6 +6,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 warning: false
 message: false
+execute:
+    cache: true
 fig.width: 10
 fig.height: 8
 fig.align: "center"

@@ -6,21 +6,22 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 warning: false
 message: false
+execute:
+    cache: true
 fig.width: 8
 fig.height: 6
 fig.align: "center"
 ---
 
 This tutorial introduces one of the ways GAMBLR.viz facilitates exploration of
-mutation incidence differences between groups of samples. Offering our take on
-forest plots, `prettyForestPlot` is part of a group of similarly named GAMBLR.viz
-functions.
-There is no specific formatting or data preparation needed for the analysis and
-visualization, and the only required inputs are the mutation data (can be maf
-format or binary feature matrix), metadata (containing sample identifiers in
-`sample_id` column and annotation of the group that will be used in comparison),
-and a character of the column name in metadata where the sample annotations are
-specified.
+mutation incidence differences between groups of samples. Forest plots are a popular
+approach to summarize the result of a set univariate tests or a multivariate model.
+`prettyForestPlot` is a convenient approach to generate our take on forest plots and
+is part of a [group of GAMBLR.viz functions](../reference/index.html#prettyplots).
+If you want to compare the frequency of mutations in a set of genes (or across all genes),
+all you need is a MAF and some basic sample metadata. The metadata need only contain a row for 
+each sample identifiers in the MAF (`Tumor_Sample_Barcode`) and another column containing the
+labels for how you want the samples stratified.
 This tutorial will demonstate the example of the inputs and showcase the main
 features of this function.
 
@@ -134,7 +135,7 @@ fp <- prettyForestPlot(
     comparison_column = comparison_column,
     comparison_values = comparison_vals,
     max_q = max_q,
-    base_size = 7
+    base_size = 9
 )
 ```
 
@@ -156,7 +157,7 @@ fp <- prettyForestPlot(
     comparison_values = comparison_vals,
     max_q = max_q,
     min_mutations = nmut,
-    base_size = 7
+    base_size = 9
 )
 fp$arranged
 
@@ -186,7 +187,7 @@ fp <- prettyForestPlot(
     comparison_column = comparison_column,
     comparison_values = comparison_values,
     max_q = max_q,
-    base_size = 7
+    base_size = 9
 )
 
 fp$arranged

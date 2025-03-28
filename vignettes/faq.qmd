@@ -1,5 +1,5 @@
 ---
-title: "Frequently Asked Qestions"
+title: "Frequently Asked Questions"
 vignette: >
   %\VignetteIndexEntry{quarto vignettes}
   %\VignetteEngine{quarto::html}
