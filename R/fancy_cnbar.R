@@ -30,15 +30,16 @@
 #'
 #' @return A plot as a ggplot object (grob).
 #'
-#' @import ggplot2 dplyr GAMBLR.helpers
+#' @import ggplot2 dplyr GAMBLR.helpers stringr
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #'
 #' #Return a plot for one sample, with default parameters.
 #' fancy_cnbar(this_sample_id = "DOHH-2")
-#'
+#' }
 fancy_cnbar = function(this_sample_id,
                        seg_data,
                        seg_path = NULL,

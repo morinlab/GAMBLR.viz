@@ -33,12 +33,14 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' \dontrun{
+#' 
+#' library(GAMBLR.open)
 #'
 #' #plot ssm
 #' fancy_v_chrcount(this_sample_id = "DOHH-2",
 #'                  y_interval = 10)
-#'
+#'}
 fancy_v_chrcount = function(this_sample_id,
                             maf_data,
                             maf_path = NULL,

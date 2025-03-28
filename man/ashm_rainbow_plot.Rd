@@ -54,9 +54,10 @@ library(GAMBLR.data)
 
 #basic usage
 this_region = "chr6:90975034-91066134"
-this_metadata = get_gambl_metadata()
-
-ashm_rainbow_plot(metadata = this_metadata,
+metadata = get_gambl_metadata()
+metadata = check_and_clean_metadata(metadata,
+           duplicate_action ="keep_first")
+ashm_rainbow_plot(metadata = metadata,
                   region = this_region)
 }
 

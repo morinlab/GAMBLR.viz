@@ -61,9 +61,10 @@ Sometimes it can also be useful to see how a subset of samples compares to anoth
 lastly, the plot can also be configured with custom plot title and axis labels (`plot_title` and `y_axis_lab`). For more information, see examples and parameter descriptions.
 }
 \examples{
+\dontrun{
 #load packages
 library(dplyr)
-library(GAMBLR.data)
+library(GAMBLR.open)
 
 #get sample IDs for available genome samples
 genome_collated = collate_results(seq_type_filter = "genome") \%>\%
@@ -75,5 +76,5 @@ my_samples = get_gambl_metadata() \%>\%
   dplyr::filter(pathology == "BL") \%>\% pull(sample_id)
 
 fancy_qc_plot(these_sample_ids = my_samples, plot_data = "AverageBaseQuality")
-
+}
 }

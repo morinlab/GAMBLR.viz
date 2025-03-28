@@ -1,0 +1,358 @@
+---
+title: "Easy forest plots"
+vignette: >
+  %\VignetteIndexEntry{quarto vignettes}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+warning: false
+message: false
+execute:
+    cache: true
+fig.width: 8
+fig.height: 6
+fig.align: "center"
+---
+
+This tutorial introduces one of the ways GAMBLR.viz facilitates exploration of
+mutation incidence differences between groups of samples. Forest plots are a popular
+approach to summarize the result of a set univariate tests or a multivariate model.
+`prettyForestPlot` is a convenient approach to generate our take on forest plots and
+is part of a [group of GAMBLR.viz functions](../reference/index.html#prettyplots).
+If you want to compare the frequency of mutations in a set of genes (or across all genes),
+all you need is a MAF and some basic sample metadata. The metadata need only contain a row for 
+each sample identifiers in the MAF (`Tumor_Sample_Barcode`) and another column containing the
+labels for how you want the samples stratified.
+This tutorial will demonstate the example of the inputs and showcase the main
+features of this function.
+
+## Prepare setup
+
+We will first import the necessary packages:
+
+```{r load_packages}
+# Load packages
+library(GAMBLR.open)
+library(tibble)
+library(dplyr)
+```
+
+Next, we will get some data to display. The metadata is expected to be a data
+frame with one required column: `sample_id` and another column that will contain
+sample annotations according to the comparison group. In this example, we will
+use as example the data set and variant calls from the
+[study](https://doi.org/10.1182/blood.2022016534) that identified
+genetic subgroup of Burkitt lymphoma (BL).
+
+```{r get_metadata}
+metadata <- get_gambl_metadata() %>%
+    filter(study == "BL_Thomas") 
+```
+
+Next, with the help of GAMBLR.open and GAMBLR.data, we will obtain the coding
+mutations that will be used in the plotting.
+Many of the `get_` family of functions return a data frame with mutations annotated
+in the familiar MAF format.
+
+```{r get_maf}
+
+maf <- get_coding_ssm(
+    these_samples_metadata = metadata,
+    tool_name = "publication",
+    projection = "hg38",
+    include_silent = FALSE
+)
+
+# What does it look like?
+dim(maf)
+
+head(maf) %>%
+    select(
+        Tumor_Sample_Barcode,
+        Hugo_Symbol,
+        Variant_Classification
+    )
+```
+
+For the purpose of this tutorial, we will focus on a small subset of genes known
+to be significantly mutated in BL.
+
+```{r goi}
+#genes <- lymphoma_genes_bl_v_latest$Gene
+genes <- GAMBLR.data::lymphoma_genes %>%
+    filter(BL_Tier == 1) %>%
+    pull(Gene)
+head(genes)
+```
+
+Now we have our metadata and mutations we want to explore, so we are ready to
+start visualizing the data.
+
+## The default forest plot
+
+The forest plot is ready to be called with the default parameters after just
+providing the metadata and data frame with mutations in standard maf format.
+Here is an example of the output with all default parameters:
+
+```{r default}
+comparison_column <- "EBV_status_inf" # character of column name comparison
+comparison_vals <- c("EBV-positive","EBV-negative")
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf,
+    genes = genes,
+    comparison_column = comparison_column,
+    comparison_values = comparison_vals
+) 
+```
+
+The output of the function is a list containing the following objects:
+- `fisher`: a data frame with detailed statistics of the Fisher's test for each
+gene
+- `mutmat`: a binary matrix used for the Fisher's test
+- `forest`: a ggplot2 object with the forest plot of the ORs from the Fisher's
+test for each gene
+- `bar`: a ggplot2 object wiht mutation frequencies for each Gene
+- `arranged`: a display item where both the forest and bar plots are nicely
+arranged side-by-side
+
+```{r}
+names(fp)
+```
+
+## Report only significant differences
+
+By default, all of the genes of interest are reported in the output. After the
+Fisher's test is performed, the `prettyForestPlot` also calculates FDR and we
+can use it to only report significant differences by providing a significance
+cutoff with the parameter `max_q`:
+
+```{r fdr}
+max_q <- 0.1 # only those qith Q value <= 0.1 will be reported
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf,
+    genes = genes,
+    comparison_column = comparison_column,
+    comparison_values = comparison_vals,
+    max_q = max_q,
+    base_size = 9
+)
+```
+
+We now can take a look at what genes are passing the significance cutoff:
+```{r fdr_plot}
+fp$arranged 
+```
+
+`r nmut=10`
+
+If we don't provide a set of candidate genes, the Fisher's exact test is applied to every gene mutated in at least one sample, which is incredibly ambitious. Because `prettyForestPlot` automatically corrests for multiple testing, this can limit how many significant associations you end up with. Here, we raised the minimum to `r nmut` mutations and excluded the candidate gene restriction. As you can see, this can lead to additional differences being detected. 
+
+```{r all_genes}
+
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf,
+    comparison_column = comparison_column,
+    comparison_values = comparison_vals,
+    max_q = max_q,
+    min_mutations = nmut,
+    base_size = 9
+)
+fp$arranged
+
+num_genes = nrow(fp$fisher)
+```
+
+A total of `r num_genes` remained significant after correcting for multiple tests.
+
+
+## Comparing categories with more than two groups
+
+As the `prettyForestPlot` construcst the 2x2 contingency tables to run Fisher's
+test to find significant differences, it can only operate on comparing 2 groups
+between themselves - but what if you have more than that and want to see the
+difference between some of them?
+To handle this scenario, we can take advantage of the `comparison_values`
+parameter, which will be used to subset the metadata to only requested groups
+and only perform testing and plotting on this subset. Let's see it in action:
+
+```{r comp_groups}
+comparison_column <- "genetic_subgroup" # change the comparison column
+comparison_values <- c("IC-BL", "Q53-BL")
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf,
+    genes = genes,
+    comparison_column = comparison_column,
+    comparison_values = comparison_values,
+    max_q = max_q,
+    base_size = 9
+)
+
+fp$arranged
+```
+
+This plot is exactly reproducing the Supplemmental Figure 12D from the
+[Thomas et al](https://doi.org/10.1182/blood.2022016534) study!
+
+## Separating genes with hotspots
+
+We can additionally separate hotspots from the other mutations and compare those
+separately. First, we need to annotate the maf data, for which we will use the
+`annotate_hotspots` from GAMBLR family. This function will add a new column to
+the maf named `hot_spot` indicating whether or not the specific mutation is in
+the hotspot region.
+
+```{r annotate_maf}
+# Annotate hotspots
+maf <- annotate_hotspots(maf)
+
+# What are the hotspots?
+maf %>%
+    filter(hot_spot) %>%
+    select(Hugo_Symbol, hot_spot) %>%
+    table()
+```
+::: {.callout-note}
+The GAMBLR.data version of the `annotate_hotspots` only handles very specific
+genes and does not have functionality to annotate all hotspots.
+:::
+
+Oh no! Looks like there is no hotspots in this maf data. This does not make
+sense, so what happened? Aha, the hotspot annotation in GAMBLR.data works only
+on the data in grch37 projection. But our maf is in hg38, so what should we do?
+One way is to lift the maf data to another projection using the UCSC's liftOver,
+and GAMBLR family has exactly the function that serves this purpose:
+
+```{r lift_maf}
+maf_grch37 <- liftover(
+    maf,
+    mode = "maf",
+    target_build = "grch37"
+) %>%
+mutate(Chromosome = gsub("chr", "", Chromosome)) %>%
+select(-hot_spot) # since it is empty we can just drop it
+
+```
+
+Can we annotate the hotspots now?
+
+```{r}
+maf_grch37 <- annotate_hotspots(maf_grch37)
+
+# What are the hotspots?
+maf_grch37 %>%
+    filter(hot_spot) %>%
+    select(Hugo_Symbol, hot_spot) %>%
+    table()
+```
+
+Indeed, the hotspots are properly annotated once we have maf in correct
+projection. Now, we can simply toggle the `separate_hotspots` parameter to
+perform separate comparisons within hotspots:
+
+```{r comp_hotspots}
+comparison_column <- "EBV_status_inf"
+fp <- prettyForestPlot(
+    metadata = metadata,
+    maf = maf_grch37,
+    genes = genes,
+    comparison_column = comparison_column,
+    comparison_values = comparison_vals,
+    max_q = max_q,
+    separate_hotspots = TRUE
+)
+
+fp$arranged
+```
+
+## Using binary matrix as input
+
+Sometimes it might be useful to have different input format instead of maf - for example, you already have
+a one-hot encoded matrix of feature status (i.e. a binary matrix). We can run `prettyForestPlot` using this 
+as input in lieu of the MAF. This also means we can apply it to more than just simple somatic mutation profiles.
+
+First, let's construct the binary matrix. We will supplement our maf with the
+non-coding mutations to look at the aSHM regions in addition to coding
+mutations, and this will already give us the data in correct projection:
+```{r bin_mat}
+maf <- get_ssm_by_samples(
+    these_samples_metadata = metadata
+)
+maf$Variant_Classification %>% table
+```
+
+Now we convert this maf into binary matrix:
+```{r cod_mat}
+# Generate binary matrix
+coding_matrix <- get_coding_ssm_status(
+    these_samples_metadata = metadata,
+    maf_data = maf,
+    gene_symbols = genes,
+    include_hotspots = TRUE,
+    review_hotspots = TRUE
+)
+
+```
+
+Next, supplement this with the matrix of non-coding mutation across aSHM regions
+
+```{r ashm_mat}
+
+# We'll use the aSHM regions defined in GAMBLR.data
+# Let our helper function massage it into a consistent format
+regions_bed = create_bed_data(somatic_hypermutation_locations_GRCh37_v0.2,
+                              fix_names="concat",
+                              concat_cols=c("gene","region"),
+                              sep="-")
+
+# Generate matrix of mutations per each site
+ashm_matrix <- get_ashm_count_matrix(
+    regions_bed = regions_bed,
+    these_samples_metadata = metadata
+)
+
+# Binarize matrix using arbitrary 3 muts/region cutoff
+ashm_matrix[ashm_matrix <= 3] = 0
+ashm_matrix[ashm_matrix > 3] = 1
+ashm_matrix <- ashm_matrix %>%
+    rownames_to_column("sample_id")
+```
+
+
+We can now combine both coding and non-coding features into single matrix:
+```{r mat}
+feature_matrix <- left_join(
+    coding_matrix,
+    ashm_matrix
+)
+
+# Drop any fearures absent across at least 10 samples to clean any noise
+feature_matrix <- feature_matrix %>%
+    select_if(is.numeric) %>%
+    select(where(~ sum(. > 0, na.rm = TRUE) >= 10)) %>%
+    bind_cols(
+        feature_matrix %>% select(sample_id),
+        .
+    )
+```
+
+Now we can provide the binary matrix to the `prettyForestPlot` and regenerate
+the Supplemmental Figure 12C from the
+[Thomas et al](https://doi.org/10.1182/blood.2022016534) study!
+
+```{r comp_mat}
+comparison_column <- "genetic_subgroup"
+comparison_values <- c("DGG-BL", "Q53-BL")
+fp <- prettyForestPlot(
+    metadata = metadata,
+    mutmat = feature_matrix,
+    genes = genes,
+    comparison_column = comparison_column,
+    comparison_values = comparison_values,
+    max_q = max_q
+)
+
+fp$arranged
+```

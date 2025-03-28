@@ -14,17 +14,30 @@
 #' 
 #'
 #' @return Nothing
-#' @import GAMBLR.helpers
+#' @import GAMBLR.helpers circlize
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' library(GAMBLR.open)
+#' meta = get_gambl_metadata()
+#' meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
+#' print("pretty_CN_heatmap") 
 #' 
+#' all_segments = get_cn_segments(these_samples_metadata = meta)
+#' all_states_binned = segmented_data_to_cn_matrix(
+#'                                  seg_data = all_segments,
+#'                                  strategy="auto_split",
+#'                                  n_bins_split=500,
+#'                                  these_samples_metadata = meta)
+#' labelTheseGenes = c("REL","TP53")
 #' CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-#'                            these_samples_metadata = dlbcl_genome_meta,
-#'                            return_data = T,
+#'                            these_samples_metadata = meta,
+#'                            return_data = TRUE,
 #'                            labelTheseGenes = labelTheseGenes)
 #' 
 #' circular_CN_plot(CN_out)
+#' }
 #' 
 circular_CN_plot = function(pretty_CN_heatmap_output,
                             ideogram=TRUE,
@@ -305,20 +318,35 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #' @param pretty_CN_heatmap_output The output from running the pretty_CN_heatmap function
 #'
 #' @return List of data frames
+#' @import circlize
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' library(GAMBLR.open)
+#' meta = get_gambl_metadata()
+#' meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
 #' 
+#' all_segments = get_cn_segments(these_samples_metadata = meta)
+#' 
+#' all_states_binned = segmented_data_to_cn_matrix(
+#'                                  seg_data = all_segments,
+#'                                  strategy="auto_split",
+#'                                  n_bins_split=500,
+#'                                  these_samples_metadata = meta)
+#' labelTheseGenes = c("REL","TP53")
 #' cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-#'     scale_by_sample = T,
-#'     these_samples_metadata = all_genome_meta,
+#'     scale_by_sample = TRUE,
+#'     these_samples_metadata = meta,
 #'     metadataColumns = c("pathology","seq_type"),
-#'     return_data = T)
+#'     return_data = TRUE)
 #'     
 #' aneuploidies = categorize_CN_events(cn_out)
 #' 
+#' select(aneuploidies,1:5) %>% head()
 #' 
-#' 
+#' }
+#' @keywords internal
 categorize_CN_events = function(pretty_CN_heatmap_output){
   CN_mat = pretty_CN_heatmap_output$data
   labels = pretty_CN_heatmap_output$labels
@@ -337,7 +365,8 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
     mutate(start=as.integer(start),end=as.integer(end)) %>%
     mutate(arm=NA)
   chrom_arm_ranges = list()
-  arm_df = expand.grid(chromosome=chroms_u,arm=c("p","q")) %>% mutate(name=paste0(chromosome,arm)) %>%
+  arm_df = expand.grid(chromosome=chroms_u,arm=c("p","q")) %>% 
+    mutate(name=paste0(chromosome,arm)) %>%
     column_to_rownames("name") %>%
     mutate(start=0,end=0) 
   for(chrom in chroms_u){
@@ -439,8 +468,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
           #print(paste("gain q",chrom,sample,p_mean,q_mean,event))
         }
       }
-      #if(!is.na(event)){
-        events = c(events,event)
+      events = c(events,event)
       if(is.na(event)){
         p_event = 0
         q_event = 0
@@ -452,7 +480,6 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
           q_events = c(q_events,q_event)
       }
        
-      #}
       
     }
     chrom_events[[chrom]] = events
@@ -477,6 +504,8 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
       #gain 
       new_name = paste0(arm,"_GAIN")
       arm_events_simplified[,i]=ifelse(arm_events_simplified[,i]>0,1,0)
+    }else{
+      stop(paste("arm_events_simplified[,i]:",arm_events_simplified[,i]))
     }
     colnames(arm_events_simplified)[i] = new_name
     

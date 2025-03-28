@@ -48,7 +48,8 @@ with `gene`. If so, the function will internally retrieve the region for the spe
 Sample IDs are specified along the y-axis and the genomic position is visualized along the x-axis.
 }
 \examples{
-library(GAMBLR.data)
+\dontrun{
+library(GAMBLR.open)
 
 #get metadata
 this_metadata = get_gambl_metadata()
@@ -62,5 +63,5 @@ focal_cn_plot(these_samples_metadata = this_metadata,
               region = myc_region,
               type = "loss",
               crop_distance = 100000000)
-
+}
 }

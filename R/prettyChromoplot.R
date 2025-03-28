@@ -23,21 +23,26 @@
 #' @param verbose
 #' @return plot
 #'
-#' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers
+#' @import dplyr ggplot2 ggrepel readr GAMBLR.helpers GAMBLR.utils
 #' @export
 #'
 #' @examples
 #' 
+#' suppressMessages(library(GAMBLR.open))
 #' 
 #' # Bundled output from a GISTIC run using grch37 results
 #' gistic_scores = system.file("extdata",
 #'   "scores.gistic",
 #'   package="GAMBLR.viz")
 #' 
+#' suppressMessages(
+#'   suppressWarnings({
 #' # Automatic labeling of gene sets for a given pathology
 #' prettyChromoplot(scores_path = gistic_scores,
 #'                  default_gene_set = "FL",
 #'                  genome_build = "grch37")
+#' 
+#'}))
 #' 
 #' ## Specifying your own gene list for labeling
 #' genes = c(
@@ -48,20 +53,23 @@
 #'   "TNFAIP3","TP53","CDK14","RELN","ETS1",
 #'   "MDM1","MIR17HG","CD58","HNRNPD"
 #'   )
-#' gene_bed = select(grch37_gene_coordinates,-1) %>%
+#' gene_bed = dplyr::select(GAMBLR.data::grch37_gene_coordinates,-1) %>%
 #' #remove ensembl ID column
 #'   dplyr::filter(hugo_symbol %in% genes) %>% 
 #' #keep genes of interest
-#'   mutate(length = end - start,mid = start + length/2) %>%
-#'   mutate(start = mid,end=start+1) %>%
+#'   dplyr::mutate(length = end - start,mid = start + length/2) %>%
+#'   dplyr::mutate(start = mid,end=start+1) %>%
 #'   unique() %>%
 #' #convert to bed_data format
-#'   create_bed_data(genome_build = "grch37")
+#'  GAMBLR.utils::create_bed_data(genome_build = "grch37")
 #' 
-
+#' suppressMessages(
+#'   suppressWarnings({
 #' 
 #' prettyChromoplot(scores_path = gistic_scores,
 #'                  labels_bed = gene_bed)
+#' 
+#'}))
 #' #NOTE: genome build is inferred from gene_bed
 #' \dontrun{
 #'  # GISTIC run using hg38 data
@@ -71,7 +79,7 @@
 #'                    adjust_amps = 0.5,
 #'                    adjust_dels = 0.8,
 #'                    genome_build="hg38",
-#'                    hide_neutral = T)
+#'                    hide_neutral = TRUE)
 #' }
 prettyChromoplot <- function(scores_path,
                              scores_df,
@@ -131,9 +139,9 @@ prettyChromoplot <- function(scores_path,
     }
     if(default_gene_set=="oncogenes"){
       if (genome_build == "grch37") {
-        genes_to_label <- create_bed_data(GAMBLR.data::grch37_oncogene)
+        genes_to_label <- GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_oncogene)
       } else {
-        genes_to_label <- create_bed_data(GAMBLR.data::hg38_oncogene)
+        genes_to_label <- GAMBLR.utils::create_bed_data(GAMBLR.data::hg38_oncogene)
       }
     }else if(default_gene_set %in% c("DLBCL","FL","BL","MCL")){
       genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
@@ -151,7 +159,7 @@ prettyChromoplot <- function(scores_path,
         dplyr::select(-ensembl_gene_id,-gene_name) %>%
         group_by(hugo_symbol) %>%
         slice_head(n=1) %>%
-        create_bed_data(genome_build=genome_build)
+        GAMBLR.utils::create_bed_data(genome_build=genome_build)
     }
   } else {
     if (!"bed_data" %in% class(labels_bed)) {
@@ -167,10 +175,10 @@ prettyChromoplot <- function(scores_path,
   # if no file is provided, annotate with oncogenes in GAMBLR package
   if (genome_build == "grch37") {
     chromord <- c(1:22) %>% as.character()
-    cytobands <- cytobands_grch37
+    cytobands <- GAMBLR.data::cytobands_grch37
   } else {
     chromord <- paste0("chr", c(1:22))
-    cytobands <- cytobands_hg38
+    cytobands <- GAMBLR.data::cytobands_hg38
     if (!any(grepl("chr", scores$Chromosome))) {
       if (verbose) {
         print("adding chr prefix")

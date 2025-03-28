@@ -8,6 +8,7 @@ pretty_CN_heatmap(
   cn_state_matrix,
   scale_by_sample = FALSE,
   these_samples_metadata,
+  keep_sample_order = FALSE,
   metadataColumns = c("pathology"),
   expressionColumns,
   genome_build = "grch37",
@@ -20,6 +21,7 @@ pretty_CN_heatmap(
   keep_these_bins,
   hide_annotations,
   sortByBins,
+  sortByGenes,
   splitByBinState,
   sortByPGA = FALSE,
   sortByMetadataColumns,
@@ -41,12 +43,19 @@ pretty_CN_heatmap(
   legend_position = "bottom",
   legend_row = 2,
   legend_col = 3,
+  metadataBarFontsize = 5,
+  metadataBarHeight = 1.5,
   boxplot_orientation = "vertical",
   return_data = FALSE,
   drop_bin_if_sd_below = 0,
   flip = FALSE,
   max_CN_allowed = 6,
-  verbose = FALSE
+  verbose = FALSE,
+  rotate = FALSE,
+  width = 15,
+  height = 6,
+  cluster_samples,
+  cluster_regions
 )
 }
 \arguments{
@@ -55,6 +64,8 @@ pretty_CN_heatmap(
 \item{scale_by_sample}{Set to TRUE to scale CN values within each sample_id}
 
 \item{these_samples_metadata}{The output of get_gambl_metadata}
+
+\item{keep_sample_order}{FALSE. Set to TRUE to ensure samples are in the same order as in the metadata}
 
 \item{metadataColumns}{One or more columns from the metadata you want to display beside the heatmap}
 
@@ -125,6 +136,12 @@ pretty_CN_heatmap(
 \item{flip}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
 
 \item{verbose}{Control verbosity of the console output. Default is FALSE.}
+
+\item{width}{Set the width of the heatmap. Default is 10.}
+
+\item{cluster_samples}{More intuitive alias for cluster_rows, especially when combining with rotate = TRUE}
+
+\item{cluster_regions}{More intuitive alias for cluster_columns}
 }
 \value{
 list (when return_data = TRUE)
@@ -135,6 +152,7 @@ Pretty Copy Number Heatmap
 \examples{
 
 suppressMessages(library(dplyr))
+suppressMessages(library(GAMBLR.open))
 #get some metadata for subsetting the data to just one pathology (DLBCL)
 dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) \%>\%
                     filter(pathology=="DLBCL",
@@ -145,11 +163,11 @@ meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
                                       duplicate_action = "keep_first")
 
 # Create the copy number matrix using the helper functions
-all_segments = get_cn_segments()
+all_segments = get_cn_segments(these = meta_clean)
 dlbcl_cn_binned = segmented_data_to_cn_matrix(
                                   seg_data = all_segments,
                                   strategy="auto_split",
-                                  n_bins_split=2500,
+                                  n_bins_split=1300,
                                   these_samples_metadata = meta_clean)
 
 # Generate a basic genome-wide CN heatmap
@@ -163,20 +181,20 @@ pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
   these_samples_metadata = meta_clean,
   hide_annotations = "chromosomes",
   keep_these_chromosomes = c("9","17"),
-  cluster_rows=F,
+  cluster_rows=FALSE,
   labelTheseGenes = c("CDKN2A","TP53"))
 
 \dontrun{
  # get gene expression data
  gene_exp_all = get_gene_expression(all_genes=T,
                                     lazy_join=T,
-                                     arbitrarily_pick = T,
+                                     arbitrarily_pick = TRUE,
                                      HGNC=T,format="wide")
 
  genome_meta_exp = left_join(get_gambl_metadata() \%>\%
-    filter(seq_type=="genome") \%>\%
-    select(sample_id,pathology,lymphgen),
-    select(gene_exp_all,-sample_id),
+    dplyr::filter(seq_type=="genome") \%>\%
+    dplyr::select(sample_id,pathology,lymphgen),
+    dplyr::select(gene_exp_all,-sample_id),
     by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
 }

@@ -70,10 +70,12 @@ To do so, set `add_qc_metric` to TRUE. A collection of parameters for customizin
 e.g `plot_title`, `y_interval`, `hide_legend`, and `plot_subtitle`.
 }
 \examples{
-library(GAMBLR.data)
+\dontrun{
+
+library(GAMBLR.open)
 
 #plot ssm
 fancy_v_chrcount(this_sample_id = "DOHH-2",
                  y_interval = 10)
-
+}
 }

@@ -59,6 +59,7 @@ mean values for all plotted metrics and corrected coverage. To enable these feat
 }
 \examples{
 #load packages
+\dontrun{
 library(dplyr)
 library(GAMBLR.data)
 
@@ -72,5 +73,5 @@ my_samples = get_gambl_metadata() \%>\%
   dplyr::filter(pathology == "BL") \%>\% pull(sample_id)
 
 fancy_alignment_plot(these_sample_ids = my_samples)
-
+}
 }

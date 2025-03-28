@@ -11,7 +11,8 @@
 #' @import dplyr
 #'
 #' @examples
-#' library(GAMBLR.data)
+#'
+#' library(GAMBLR.open)
 #' 
 #' #get metadata
 #' all_meta = suppressMessages(get_gambl_metadata() %>%
@@ -27,6 +28,7 @@
 #' )
 #'
 #' @export
+#' @keywords internal
 map_metadata_to_colours = function(metadataColumns,
                                    these_samples_metadata,
                                    column_alias = list(),
