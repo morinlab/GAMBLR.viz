@@ -9,10 +9,7 @@ format:
     embed-resources: true
 ---
 
-## Who it's for
-
-If you don't have the time or patience to master the nuances of ComplexHeatmap,
-this package might be right for you. 
+*If you find MAFtools insufficient for your needs but don't have the time or patience to master the nuances of ComplexHeatmap, GAMBLR.viz might be right for you.*
 
 ## What it does
 

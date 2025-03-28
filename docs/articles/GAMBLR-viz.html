@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Frequently Asked Qestions • GAMBLR.viz</title>
+<title>GAMBLR.viz • GAMBLR.viz</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="faq_files/libs/quarto-html/popper.min.js"></script><script src="faq_files/libs/quarto-html/tippy.umd.min.js"></script><link href="faq_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="faq_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Frequently Asked Qestions">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="GAMBLR-viz_files/libs/quarto-html/popper.min.js"></script><script src="GAMBLR-viz_files/libs/quarto-html/tippy.umd.min.js"></script><link href="GAMBLR-viz_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="GAMBLR-viz_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="GAMBLR.viz">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -31,8 +31,8 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="../articles/GAMBLR-viz.html">Get started</a></li>
-<li class="active nav-item dropdown">
+<li class="active nav-item"><a class="nav-link" href="../articles/GAMBLR-viz.html">Get started</a></li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><hr class="dropdown-divider"></li>
@@ -66,7 +66,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Frequently Asked Qestions</h1>
+      <h1>GAMBLR.viz</h1>
 
 
 
@@ -80,27 +80,70 @@
 
 
 
-    <p>This section will cover most of the questions you may have about GAMBLR.viz. If there is something that is not covered, please feel free to reach out to us via GitHub by reporting an <a href="https://github.com/morinlab/GAMBLR.viz/issues/new" class="external-link">issue</a> and we will be happy to add it to this page.</p>
-<section class="level3"><h3 id="section"></h3>
-<div class="d-grid gap-2">
-<a class="btn btn-lg btn-primary" data-bs-toggle="collapse" href="#General" role="button" aria-expanded="false" aria-controls="General">General questions</a>
+    <p><em>If you find MAFtools insufficient for your needs but don’t have the time or patience to master the nuances of ComplexHeatmap, GAMBLR.viz might be right for you.</em></p>
+<section class="level2"><h2 id="what-it-does">What it does<a class="anchor" aria-label="anchor" href="#what-it-does"></a>
+</h2>
+<p>The over-arching goal of GAMBLR.viz is to facilitate exploratory data analysis in cancer genomics studies by reducing the barrier to generating eye-pleasing representations of standard data types. This package was inspired by similar resources such as MAFtools. For our work, we found the available tools were insufficient for our needs. In particular, the visualizations produced by GAMBLR.viz cater to some of the unique genetic features of B-cell lymphomas. For example, mutation patterns in non-coding regions due to aberrant somatic hypermutation. We also provide convenient resources such as colour palettes that allow data and metadata in your figures to have consistent aesthetics.</p>
+</section><section class="level2"><h2 id="gamblr-family">GAMBLR family<a class="anchor" aria-label="anchor" href="#gamblr-family"></a>
+</h2>
+<p>GAMBLR.viz is part of a larger family of R tools for the analysis of lymphoma genomic data (<em>the GAMBLRverse</em>, if you will). GAMBLR began as a toolkit for analysts participating in the <strong>G</strong>enomic <strong>A</strong>nalysis of <strong>M</strong>ature <strong>B</strong>-cell <strong>L</strong>ymphomas project, led by the <a href="https://morinlab.github.io/" class="external-link">Morin Lab</a> at BC Cancer and Simon Fraser University.</p>
+<p>GAMBLR.viz intends to provide straightfoward ways to mine cancer genomic results while leveraging the conveneince features afforded by other members of the GAMBLR family. A user can analyze and explore B-cell lymphoma genomics data relying entirely on GAMBLR.viz and the rest of the GAMBLR packages. We continue to develop more visualization tools, as well as improve their functionality.</p>
+<pre><code>  /$$$$$$     /$$$$$$    /$$      /$$   /$$$$$$$    /$$        .:::::::
+ /$$__  $$   /$$__  $$  | $$$    /$$$  | $$__  $$  | $$        .::    .::
+| $$  \__/  | $$  \ $$  | $$$$  /$$$$  | $$  \ $$  | $$        .::    .::
+| $$ /$$$$  | $$$$$$$$  | $$ $$/$$ $$  | $$$$$$$   | $$   &lt;-   .: .::
+| $$|_  $$  | $$__  $$  | $$  $$$| $$  | $$__  $$  | $$        .::  .::
+| $$  \ $$  | $$  | $$  | $$\  $ | $$  | $$  \ $$  | $$        .::    .::
+|  $$$$$$/  | $$  | $$  | $$ \/  | $$  | $$$$$$$/  | $$$$$$$$  .::      .::
+ \______/   |__/  |__/  |__/     |__/  |_______/   |________/
+ ~GENOMIC~~~~~~~~~~~~~OF~~~~~~~~~~~~~~~~~B-CELL~~~~~~~~~~~~~~~~~~IN~~~~~~
+ ~~~~~~~~~~~~ANALYSIS~~~~~~MATURE~~~~~~~~~~~~~~~~~~~LYMPHOMAS~~~~~~~~~~R~ </code></pre>
+</section><section class="level2"><h2 id="local-experience">Local experience<a class="anchor" aria-label="anchor" href="#local-experience"></a>
+</h2>
+<p>The functions provided with GAMBLR.viz, including all dependencies, are immediately available upon package installation and do not require internet connection or ssh access to GSC resources. It can run anywhere that R is available without restrictions and limitations.</p>
+</section><section class="level2"><h2 id="use-cases">Use cases<a class="anchor" aria-label="anchor" href="#use-cases"></a>
+</h2>
+<p>You can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from initial data exploration to preparation of manuscript-ready figures.</p>
+<p>GAMBLR.viz helps with:</p>
+<ul>
+<li>generate manuscript-ready plots in a simple and reproducible manner.</li>
+<li>one-stop shop to generate high-level or region-specific visualizations for genomic data analysis.</li>
+<li>implement consistent coloring scheme and pallettes for different types of annotations.</li>
+<li>overcome learning curve using individual packages commonly implemented in the data visualization field.</li>
+</ul></section><section class="level2"><h2 id="gallery">Gallery<a class="anchor" aria-label="anchor" href="#gallery"></a>
+</h2>
+<section class="level3"><h3 id="tutorials">Tutorials<a class="anchor" aria-label="anchor" href="#tutorials"></a>
+</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="../articles/oncoplot_files/figure-html/goi_groups-1.png"></p>
+<figcaption>Details in <a href="oncoplot.html">this guide</a></figcaption></figure>
 </div>
-</section><div id="General" class="collapse multi-collapse">
-<section class="level2"><h2 id="where-can-i-get-example-data-that-works-with-this-package">Where can I get example data that works with this package?<a class="anchor" aria-label="anchor" href="#where-can-i-get-example-data-that-works-with-this-package"></a>
-</h2>
-<p>The example data of all types is available with one of GAMBLR.viz dependencies (<a href="https://github.com/morinlab/GAMBLR.data" class="external-link">GAMBLR.data</a>). Every function demonstrates how to get this data in it’s example, or is already setup to automatically retreive it for you with minimal information (e.g. sample_id).</p>
-</section><section class="level2"><h2 id="can-i-use-my-own-colors-and-not-the-ones-the-package-offers">Can I use my own colors and not the ones the package offers?<a class="anchor" aria-label="anchor" href="#can-i-use-my-own-colors-and-not-the-ones-the-package-offers"></a>
-</h2>
-<p>Absolutely! Most functions will accept argument <code>custom_colours</code> where list of color mappings can be used to specify your own pallette.</p>
-</section><section class="level2"><h2 id="can-i-use-my-own-data-we-generated-in-our-lab">Can I use my own data we generated in our lab?<a class="anchor" aria-label="anchor" href="#can-i-use-my-own-data-we-generated-in-our-lab"></a>
-</h2>
-<p>Absolutely! Most functions will accept metadata and data frame with mutations as input, so you can provide any outside data as long as the formatting is consistent with the example data.</p>
-</section>
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="../articles/recap_figures_files/figure-html/ashm_plot-1.png"></p>
+<figcaption>Details in <a href="recap_figures.html">this guide</a></figcaption></figure>
 </div>
-
-
-
-<script id="quarto-html-after-body" type="application/javascript">
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="forestplot_files/figure-html/all_genes-1.png"></p>
+<figcaption>Details in <a href="forestplot.html">this guide</a></figcaption></figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="CopyNumberHeatmap_files/figure-html/dlbcl_heatmap-1.png"></p>
+<figcaption>Details in <a href="CopyNumberHeatmap.html">this guide</a></figcaption></figure>
+</div>
+</section><section class="level3"><h3 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
+</h3>
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="../reference/mutation_hotspot_logo-1.png"></p>
+<figcaption>Details in <a href="mutation_hotspot_logo.html"><code>mutation_hotspot_logo</code></a></figcaption></figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure><p><img src="../reference/prettyCoOncoplot-1.png"></p>
+<figcaption>Details in <a href="prettyCoOncoplot.html"><code>prettyCoOncoplot</code></a></figcaption></figure>
+</div>
+</section></section><section class="level2"><h2 id="community">Community<a class="anchor" aria-label="anchor" href="#community"></a>
+</h2>
+<p>Community discussions primarily happen through issue submission on <a href="https://github.com/morinlab/GAMBLR.viz/issues" class="external-link">GitHub</a>.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
     const mode = bsSheetEl.getAttribute("data-mode");

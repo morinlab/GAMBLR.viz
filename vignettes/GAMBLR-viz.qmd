@@ -9,10 +9,7 @@ format:
     embed-resources: true
 ---
 
-## Who it's for
-
-If you don't have the time or patience to master the nuances of ComplexHeatmap,
-this package might be right for you. 
+*If you find MAFtools insufficient for your needs but don't have the time or patience to master the nuances of ComplexHeatmap, GAMBLR.viz might be right for you.*
 
 ## What it does
 
@@ -82,27 +79,27 @@ data visualization field.
 
 ### Tutorials
 
-![Details in [this guide](articles/oncoplot.html)
-](oncoplot_files/figure-html/goi_groups-1.png)
+![Details in [this guide](oncoplot.html)
+](../articles/oncoplot_files/figure-html/goi_groups-1.png)
 
 
-![Details in [this guide](articles/recap_figures.html)
-](recap_figures_files/figure-html/ashm_plot-1.png)
+![Details in [this guide](recap_figures.html)
+](../articles/recap_figures_files/figure-html/ashm_plot-1.png)
 
 
-![Details in [this guide](articles/forestplot.html)](forestplot_files/figure-html/all_genes-1.png)
+![Details in [this guide](forestplot.html)](forestplot_files/figure-html/all_genes-1.png)
 
 
 
-![Details in [this guide](articles/CopyNumberHeatmap.html)](CopyNumberHeatmap_files/figure-html/dlbcl_heatmap-1.png)
+![Details in [this guide](CopyNumberHeatmap.html)](CopyNumberHeatmap_files/figure-html/dlbcl_heatmap-1.png)
 
 ### Functions
 
-![Details in [`mutation_hotspot_logo`](reference/mutation_hotspot_logo.html)](reference/mutation_hotspot_logo-1.png)
+![Details in [`mutation_hotspot_logo`](mutation_hotspot_logo.html)](../reference/mutation_hotspot_logo-1.png)
 
 
 
-![Details in [`prettyCoOncoplot`](reference/prettyCoOncoplot.html)](reference/prettyCoOncoplot-1.png)
+![Details in [`prettyCoOncoplot`](prettyCoOncoplot.html)](../reference/prettyCoOncoplot-1.png)
 
 ## Community
 
