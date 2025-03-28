@@ -18,7 +18,8 @@ prettyForestPlot(
   comparison_name = FALSE,
   custom_colours = FALSE,
   custom_labels = FALSE,
-  max_q = 1
+  max_q = 1,
+  base_size = 10
 )
 }
 \arguments{

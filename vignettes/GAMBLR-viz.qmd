@@ -52,13 +52,6 @@ more visualization tools, as well as improve their functionality.
  ~~~~~~~~~~~~ANALYSIS~~~~~~MATURE~~~~~~~~~~~~~~~~~~~LYMPHOMAS~~~~~~~~~~R~ 
 ```
 
-## Local experience
-
-The functions provided with GAMBLR.viz, including all dependencies, are
-immediately available upon package installation and do not require internet
-connection or ssh access to GSC resources. It can run anywhere that R is
-available without restrictions and limitations.
-
 ## Use cases
 
 You can use GAMBLR.viz at any step of your lymphoma data analysis workflow, from
@@ -66,11 +59,11 @@ initial data exploration to preparation of manuscript-ready figures.
 
 GAMBLR.viz helps with:
 
-* generate manuscript-ready plots in a simple and reproducible manner.
+* generate publication-ready plots in a simple and reproducible manner.
 * one-stop shop to generate high-level or region-specific visualizations for
 genomic data analysis.
-* implement consistent coloring scheme and pallettes for different types of
-annotations.
+* apply consistent coloring schemes and pallettes for different types of
+data and metadata.
 * overcome learning curve using individual packages commonly implemented in the
 data visualization field.
 
@@ -95,11 +88,12 @@ data visualization field.
 
 ### Functions
 
-![Details in [`mutation_hotspot_logo`](mutation_hotspot_logo.html)](../reference/mutation_hotspot_logo-1.png)
+![Details in [`mutation_hotspot_logo`](../reference/mutation_hotspot_logo.html)](../reference/mutation_hotspot_logo-1.png)
 
 
+![Details in [`prettyCoOncoplot`](../reference/prettyCoOncoplot.html)](../reference/prettyCoOncoplot-1.png)
 
-![Details in [`prettyCoOncoplot`](prettyCoOncoplot.html)](../reference/prettyCoOncoplot-1.png)
+![Details in [`prettyStackedOncoplot`](../reference/prettyStackedOncoplot.html)](../reference/prettyStackedOncoplot-1.png)
 
 ## Community
 

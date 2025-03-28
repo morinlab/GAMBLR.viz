@@ -17,15 +17,14 @@ for a set of genes between two groups."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/GAMBLR-viz.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Introduction</h6></li>
-    <li><a class="dropdown-item" href="../articles/why.html">GAMBLR.viz</a></li>
-    <li><a class="dropdown-item" href="../articles/install.html"></a></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Installation</h6></li>
+    <li><a class="dropdown-item" href="../articles/install.html">Installation</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/recap_figures.html">Reproducing figures from GAMBL papers</a></li>
     <li><a class="dropdown-item" href="../articles/forestplot.html">Easy forest plots</a></li>
     <li><a class="dropdown-item" href="../articles/CopyNumberHeatmap.html">Visualizing copy number data as heatmaps</a></li>
@@ -36,6 +35,7 @@ for a set of genes between two groups."></head><body>
     <li><h6 class="dropdown-header" data-toc-skip>Help</h6></li>
     <li><a class="dropdown-item" href="../articles/faq.html">Frequently Asked Qestions</a></li>
   </ul></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -72,7 +72,8 @@ for a set of genes between two groups.</p>
 <span>  comparison_name <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  custom_colours <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  custom_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  max_q <span class="op">=</span> <span class="fl">1</span></span>
+<span>  max_q <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  base_size <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -182,6 +183,21 @@ inside the function documentation or the vignettes.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">GAMBLR.open</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Welcome GAMBLer! Attaching open GAMBLR packages</span> ────────── GAMBLR.open <span style="color: #0000BB;">1</span>.<span style="color: #0000BB;">1</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> <span style="color: #BBBB00;">GAMBLR.data   </span> <span style="color: #0000BB;">1</span>.<span style="color: #0000BB;">3</span>     <span style="color: #00BB00;">✔</span> <span style="color: #BBBB00;">GAMBLR.predict</span> <span style="color: #0000BB;">1</span>.<span style="color: #0000BB;">1</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> <span style="color: #BBBB00;">GAMBLR.helpers</span> <span style="color: #0000BB;">1</span>.<span style="color: #0000BB;">3</span>     <span style="color: #00BB00;">✔</span> <span style="color: #BBBB00;">GAMBLR.utils  </span> <span style="color: #0000BB;">1</span>.<span style="color: #0000BB;">3</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   /$$$$$$     /$$$$$$    /$$      /$$   /$$$$$$$    /$$        .:::::::     </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  /$$__  $$   /$$__  $$  | $$$    /$$$  | $$__  $$  | $$        .::    .::   </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> | $$  \__/  | $$  \ $$  | $$$$  /$$$$  | $$  \ $$  | $$        .::    .::   </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> | $$ /$$$$  | $$$$$$$$  | $$ $$/$$ $$  | $$$$$$$   | $$        .: .::       </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> | $$|_  $$  | $$__  $$  | $$  $$$| $$  | $$__  $$  | $$        .::  .::     </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> | $$  \ $$  | $$  | $$  | $$\  $ | $$  | $$  \ $$  | $$        .::    .::   </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> |  $$$$$$/  | $$  | $$  | $$ \/  | $$  | $$$$$$$/  | $$$$$$$$  .::      .:: </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  \______/   |__/  |__/  |__/     |__/  |_______/   |________/ </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ~GENOMIC~~~~~~~~~~~~~OF~~~~~~~~~~~~~~~~~B-CELL~~~~~~~~~~~~~~~~~~IN~~~~~~ </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ~~~~~~~~~~~~ANALYSIS~~~~~~MATURE~~~~~~~~~~~~~~~~~~~LYMPHOMAS~~~~~~~~~~R~ </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span><span class="op">{</span></span></span>
 <span class="r-in"><span></span></span>

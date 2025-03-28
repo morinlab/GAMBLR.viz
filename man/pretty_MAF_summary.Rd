@@ -6,9 +6,12 @@
 \usage{
 pretty_MAF_summary(
   maf_data,
+  these_samples_metadata,
   base_size = 4,
   top_n = 10,
   point_size = 0.5,
+  one_per_sample = FALSE,
+  gene_sizes,
   returnEverything = FALSE
 )
 }

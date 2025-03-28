@@ -146,9 +146,11 @@
 #'
 #' suppressMessages(
 #'   suppressWarnings({
-#'simple_ashm_mat = 
+#' 
+#'simple_ashm_mat <-
 #'  get_ashm_count_matrix(some_regions,
 #'                        these_samples_metadata = dlbcl_genome_meta)
+#'
 #'
 #'
 #'prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
