@@ -6,8 +6,12 @@
 #' @param cn_state_matrix The output of get_cn_states
 #' @param scale_by_sample Set to TRUE to scale CN values within each sample_id
 #' @param these_samples_metadata The output of get_gambl_metadata
-#' @param keep_sample_order FALSE. Set to TRUE to ensure samples are in the same order as in the metadata
-#' @param metadataColumns One or more columns from the metadata you want to display beside the heatmap
+#' @param keep_sample_order FALSE. Set to TRUE to ensure samples are in the same
+#' order as in the metadata
+#' @param metadataColumns One or more columns from the metadata you want to
+#' display beside the heatmap
+#' @param numericMetadataColumns One or more columns from the metadata that
+#' should be considered numeric
 #' @param expressionColumns Optional: One or more columns from the metadata that include gene expression values you want shown
 #' @param geneBoxPlot Optional: Specify the Hugo symbol of a single gene to embed box plots adjacent to the heatmap. Expression data for this gene must be present in the metadata in a column of the same name.
 #' @param show_column_names Set to TRUE to display the sample_id of every sample shown in the heatmap
@@ -42,7 +46,7 @@
 #' @param left_annotation_name_side Which side to put the name of the metadata annotations (top or bottom)
 #' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded
 #' @param return_data Specify TRUE to get some of the internal data back including the heatmap object
-#' @param flip Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.
+#' @param rotate Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.
 #' @param width Set the width of the heatmap. Default is 10.
 #' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
@@ -117,6 +121,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              these_samples_metadata,
                              keep_sample_order = FALSE,
                              metadataColumns = c("pathology"),
+                             numericMetadataColumns,
                              expressionColumns,
                              genome_build = "grch37",
                              cluster_columns=FALSE,
@@ -363,8 +368,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
     
 
   }
+  not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
 
-  colours = map_metadata_to_colours(metadataColumns = metadataColumns,
+  colours = map_metadata_to_colours(metadataColumns = not_numeric_cols,
                                     these_samples_metadata = these_samples_metadata,
                                     verbose=verbose)
   if(!missing(expressionColumns)){
