@@ -10,6 +10,7 @@ pretty_CN_heatmap(
   these_samples_metadata,
   keep_sample_order = FALSE,
   metadataColumns = c("pathology"),
+  numericMetadataColumns,
   expressionColumns,
   genome_build = "grch37",
   cluster_columns = FALSE,
@@ -65,9 +66,14 @@ pretty_CN_heatmap(
 
 \item{these_samples_metadata}{The output of get_gambl_metadata}
 
-\item{keep_sample_order}{FALSE. Set to TRUE to ensure samples are in the same order as in the metadata}
+\item{keep_sample_order}{FALSE. Set to TRUE to ensure samples are in the same
+order as in the metadata}
 
-\item{metadataColumns}{One or more columns from the metadata you want to display beside the heatmap}
+\item{metadataColumns}{One or more columns from the metadata you want to
+display beside the heatmap}
+
+\item{numericMetadataColumns}{One or more columns from the metadata that
+should be considered numeric}
 
 \item{expressionColumns}{Optional: One or more columns from the metadata that include gene expression values you want shown}
 
@@ -133,9 +139,9 @@ pretty_CN_heatmap(
 
 \item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
 
-\item{flip}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
-
 \item{verbose}{Control verbosity of the console output. Default is FALSE.}
+
+\item{rotate}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
 
 \item{width}{Set the width of the heatmap. Default is 10.}
 
