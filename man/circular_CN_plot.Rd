@@ -48,12 +48,25 @@ Nothing
 Circular overview of copy number data across a cohort
 }
 \examples{
+\dontrun{
+library(GAMBLR.open)
+meta = get_gambl_metadata()
+meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
+print("pretty_CN_heatmap") 
 
+all_segments = get_cn_segments(these_samples_metadata = meta)
+all_states_binned = segmented_data_to_cn_matrix(
+                                 seg_data = all_segments,
+                                 strategy="auto_split",
+                                 n_bins_split=500,
+                                 these_samples_metadata = meta)
+labelTheseGenes = c("REL","TP53")
 CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-                           these_samples_metadata = dlbcl_genome_meta,
-                           return_data = T,
+                           these_samples_metadata = meta,
+                           return_data = TRUE,
                            labelTheseGenes = labelTheseGenes)
 
 circular_CN_plot(CN_out)
+}
 
 }

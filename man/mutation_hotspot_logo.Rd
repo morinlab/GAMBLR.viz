@@ -33,41 +33,53 @@ Generates a summary of the frequency of SSMs in a small
 region around a mutation hot spot using a "sequence logo"-style stacked plot
 }
 \examples{
-g_meta = suppressMessages(get_gambl_metadata()) \%>\% 
-  dplyr::filter(seq_type=="genome")
+\dontrun{
+library(GAMBLR.open)
+g_meta <- suppressMessages(get_gambl_metadata()) \%>\%
+  dplyr::filter(seq_type == "genome")
 # CXCR4 non-coding hotspot
-muts = get_ssm_by_regions(regions_list = "2:136875000-136875097",
-                                streamlined = F,
-                                these_samples_metadata = g_meta
-                                    )
+muts <- get_ssm_by_regions(
+  regions_list = "2:136875000-136875097",
+  streamlined = FALSE,
+  projection = "grch37",
+  these_samples_metadata = g_meta
+)
 
 
-mutation_hotspot_logo(maf_df=muts,
-                      hotspot_position=136875037,
-                      include_AA = T,
-                      pad_length = 51,
-                      annotate_motif=T,
-                      base_size = 2,
-                      prepend_plot_label = "CXCR4")
-                      
-                      
-cap_meta = suppressMessages(get_gambl_metadata()) \%>\% 
-  dplyr::filter(seq_type=="capture")
-  
-#ID3 hotspot
-muts = get_ssm_by_regions(regions_list = "1:23885706-23885798",
-                                streamlined = F,
-                                this_seq_type = "capture",
-                                these_samples_metadata = cap_meta
-                                    )
+mutation_hotspot_logo(
+  maf_df = muts,
+  hotspot_position = 136875037,
+  include_AA = TRUE,
+  pad_length = 51,
+  annotate_motif = TRUE,
+  base_size = 2,
+  prepend_plot_label = "CXCR4"
+)
 
 
-mutation_hotspot_logo(maf_df=muts,
-                              hotspot_position=23885750,
-                              include_AA = T,aa_size = 3,
-                              pad_length = 42,
-                              annotate_motif=T,
-                              base_size = 3,
-                              prepend_plot_label = "ID3",text_size = 8)
+cap_meta <- suppressMessages(get_gambl_metadata()) \%>\%
+  dplyr::filter(seq_type == "capture")
 
+# ID3 hotspot
+muts <- get_ssm_by_regions(
+  regions_list = "1:23885706-23885798",
+  streamlined = FALSE,
+  projection = "grch37",
+  this_seq_type = "capture",
+  these_samples_metadata = cap_meta
+)
+
+
+mutation_hotspot_logo(
+  maf_df = muts,
+  hotspot_position = 23885750,
+  include_AA = TRUE,
+  aa_size = 3,
+  pad_length = 42,
+  annotate_motif = TRUE,
+  base_size = 3,
+  prepend_plot_label = "ID3",
+  text_size = 8
+)
+}
 }

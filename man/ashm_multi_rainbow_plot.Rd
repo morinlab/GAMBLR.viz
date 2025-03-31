@@ -12,7 +12,7 @@ ashm_multi_rainbow_plot(
   classification_column = "lymphgen",
   maf_data,
   projection = "grch37",
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{
@@ -44,23 +44,28 @@ Note that for this function to work, the column names must be exactly this.
 The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
 In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
-This function will call [GAMBLR::get_ssm_by_region] if `maf_data` is not called. For more info, refer to the parameter descriptions of this function.
+This function will try to obtain mutations internally if `maf_data` is not given.
+For more info, refer to the parameter descriptions of this function.
 }
 \examples{
 
-
+suppressMessages(library(GAMBLR.open))
 #get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 
-mm=these_samples_metadata = get_gambl_metadata() \%>\% 
+metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) \%>\% 
           dplyr::filter(pathology=="DLBCL",
                  seq_type=="genome") \%>\% 
+          check_and_clean_metadata(.,duplicate_action="keep_first") \%>\%
           dplyr::arrange(lymphgen)
-regions_bed = create_bed_data(grch37_ashm_regions,
+regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
                               fix_names = "concat",
                               concat_cols = c("gene","region"))
 regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
-ashm_multi_rainbow_plot(regions_bed,mm,custom_colours = lymphgen_colours)
+ashm_multi_rainbow_plot(regions_bed,
+                        metadata,
+                        custom_colours = lymphgen_colours,
+                        verbose = TRUE)
 
 #build plot
 \dontrun{

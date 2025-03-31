@@ -6,18 +6,21 @@
 \usage{
 prettyOncoplot(
   maf_df,
-  cnv_df,
+  gene_cnv_df,
+  binned_cnv_df,
   genes,
   include_noncoding = NULL,
   keepGeneOrder = FALSE,
   keepSampleOrder = FALSE,
   highlightHotspots = FALSE,
   these_samples_metadata,
+  genes_CN_thresh,
   metadataColumns,
   numericMetadataColumns,
   expressionColumns = c(),
   numericMetadataMax,
   sortByColumns,
+  sortByGenes,
   arrange_descending = FALSE,
   removeNonMutated = FALSE,
   minMutationPercent = 0,
@@ -45,6 +48,7 @@ prettyOncoplot(
   legend_col = 3,
   metadataBarHeight = 1.5,
   metadataBarFontsize = 5,
+  metadataSide = "bottom",
   legendFontSize = 10,
   fontSizeGene = 6,
   annotation_row = 2,
@@ -52,8 +56,6 @@ prettyOncoplot(
   verbose = FALSE,
   cluster_rows = FALSE,
   cluster_cols = FALSE,
-  cluster_numeric_rows = TRUE,
-  cluster_numeric_cols = FALSE,
   clustering_distance_rows = "binary",
   clustering_distance_cols = "binary",
   split_rows_kmeans,
@@ -62,76 +64,135 @@ prettyOncoplot(
   simplify_annotation = FALSE,
   simplify_bg_colour = NA,
   stacked = FALSE,
-  numeric_heatmap_type = "aSHM",
-  numeric_heatmap_location = "top",
   return_inputs = FALSE,
-  use_raster = NULL
+  gap = 0,
+  use_raster = NULL,
+  plot_width = NULL,
+  plot_height = NULL,
+  show_any_legend = TRUE,
+  pct_side = "left",
+  pctFontSize = 6,
+  row_names_side = "right",
+  show_pct = TRUE,
+  hide_annotation_name = FALSE,
+  cnv_df
 )
 }
 \arguments{
-\item{maf_df}{A maf as data frame containing the mutations you want to plot.}
+\item{maf_df}{A maf as data frame containing the mutations you
+want to plot.}
 
-\item{cnv_df}{An optional data frame of CN status for genes you want included (rows = sample_id, columns = Hugo_Symbol)}
+\item{gene_cnv_df}{An optional data frame of CN status for
+genes you want included (rows = sample_id,
+columns = Hugo_Symbol)
+See [GAMBLR.results::get_cnv_and_ssm_status] for more information.}
 
-\item{genes}{An optional vector of genes to restrict your plot to.}
+\item{binned_cnv_df}{An optional data frame with the genome-wide CN
+status of your samples in genomic bins
+see [GAMBLR.utils::segmented_data_to_cn_matrix] for more information.}
 
-\item{include_noncoding}{List of non-coding regions to be included, default is NULL. Specify like this: include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")}
+\item{genes}{An optional vector of genes to restrict
+your plot to.}
 
-\item{keepGeneOrder}{Set to TRUE if you want to preserve the gene order specified.}
+\item{include_noncoding}{List of non-coding regions to
+be included, default is NULL. Specify like this:
+include_noncoding=list("NFKBIZ" = c("3'UTR"), "HNRNPH1" = "Splice_Region")}
 
-\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order specified. The default value is FALSE and respects all of the specified ordering.}
+\item{keepGeneOrder}{Set to TRUE if you want to preserve
+the gene order specified.}
 
-\item{highlightHotspots}{Set to TRUE to highlight hot spots. Default is FALSE.}
+\item{keepSampleOrder}{Set to TRUE if you want to preserve the sample order
+specified. The default value is FALSE and respects all of the specified
+ordering.}
 
-\item{these_samples_metadata}{Data frame containing metadata for your samples.}
+\item{highlightHotspots}{Set to TRUE to highlight hot spots.
+Default is FALSE.}
 
-\item{metadataColumns}{A vector containing the categorical column names you want to plot below.}
+\item{these_samples_metadata}{Data frame containing metadata for your
+samples.}
 
-\item{numericMetadataColumns}{A vector containing the numeric columns you want to plot below.}
+\item{genes_CN_thresh}{A named vector specifying the genes whose copy
+number status should be incorporated.
+The names must be the gene symbols and the values should be integers that
+indicate the maximum or minimum CN states to consider for that gene.
+For example:
+'REL'=4 would show CN 4 or higher; 'TP53'=1 would show
+heterozygous and homozygous deletions
+'BCL2'=3 would show single-copy gains or higher}
 
-\item{expressionColumns}{Optional variable for retreiving expression values for a specific gene(s).}
+\item{metadataColumns}{A vector containing the categorical
+column names you want to plot below.}
 
-\item{numericMetadataMax}{A numeric vector of cutoffs to apply to numeric columns above.}
+\item{numericMetadataColumns}{A vector containing the numeric columns you
+want to plot below.}
 
-\item{sortByColumns}{A vector containing the column names you want to sort columns (patients) on.}
+\item{expressionColumns}{Optional variable for retreiving expression
+values for a specific gene(s).}
 
-\item{arrange_descending}{A Boolean parameter. Set to TRUE to sort metadata in descending fashion. Default is FALSE.}
+\item{numericMetadataMax}{A numeric vector of cutoffs to apply to
+numeric columns above.}
+
+\item{sortByColumns}{A vector containing the column names you want
+to sort columns (patients) on.}
+
+\item{arrange_descending}{A Boolean parameter. Set to TRUE to sort
+metadata in descending fashion. Default is FALSE.}
 
 \item{removeNonMutated}{Set to TRUE to drop unmutated cases.}
 
-\item{minMutationPercent}{Only genes mutated in more than minMutationPercent \% patients will be included.}
+\item{minMutationPercent}{Only genes mutated in more than
+minMutationPercent \% patients will be included.}
 
 \item{mutAlpha}{Optional alpha to apply to mutation colours.}
 
-\item{recycleOncomatrix}{Set to TRUE most of the time to reuse the oncomatrix saved by maftools.}
+\item{recycleOncomatrix}{Set to TRUE most of the time to
+reuse the oncomatrix saved by maftools.}
 
-\item{splitColumnName}{Optional argument to indicate which metadata column to split on.}
+\item{splitColumnName}{Optional argument to indicate which metadata
+column to split on.}
 
-\item{splitGeneGroups}{Split genes into groups for better seperation (between different gene-groups) in prettyOncoplot.}
+\item{splitGeneGroups}{Split genes into groups for better seperation
+(between different gene-groups) in prettyOncoplot.}
 
-\item{showTumorSampleBarcode}{Optional argument for showing tumor barcode. Default is FALSE.}
+\item{showTumorSampleBarcode}{Optional argument for showing tumor
+barcode. Default is FALSE.}
 
-\item{groupNames}{optional vector of group names to be displayed above heatmap. Should be the same length as the number of groups that will be shown. Default is NULL (no labels).}
+\item{groupNames}{optional vector of group names to be displayed
+above heatmap. Should be the same length as the number of groups
+that will be shown. Default is NULL (no labels).}
 
-\item{hide_annotations}{Hide annotations for specifc ashms. argument takes a list with annotations.}
+\item{hide_annotations}{Hide annotations for specifc ashms. argument
+takes a list with annotations.}
 
-\item{hide_annotations_tracks}{When hide_annotations is supplied with a list of columns, this parameter can optionally also not display those columns as the annotation track. Accepts TRUE and FALSE (default).}
+\item{hide_annotations_tracks}{When hide_annotations is supplied
+with a list of columns, this parameter can optionally also not display
+those columns as the annotation track. Accepts TRUE and FALSE (default).}
 
-\item{annotate_specific_genes}{Optional argument, specifying whether the features should be labelled according to their significance in one of the pathologies. Default is FALSE (no annotation).}
+\item{annotate_specific_genes}{Optional argument, specifying whether
+the features should be labelled according to their significance in
+one of the pathologies. Default is FALSE (no annotation).}
 
-\item{this_forest_object}{If annotate_specific_genes is specified, this arguments takes the output of GAMBLR::prettyForestPlot directly to determine the annotations.}
+\item{this_forest_object}{If annotate_specific_genes is specified,
+this arguments takes the output of GAMBLR::prettyForestPlot directly
+to determine the annotations.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+\item{custom_colours}{Provide named vector (or named list of vectors)
+containing custom annotation colours if you do not want to use
+standardized pallette.}
 
-\item{hideTopBarplot}{Optional argument for removing top bar plot. Default value is TRUE.}
+\item{hideTopBarplot}{Optional argument for removing top bar plot.
+Default value is TRUE.}
 
-\item{tally_all_mutations}{Optional argument. Set to TRUE to tally all mutations. Default is FALSE.}
+\item{tally_all_mutations}{Optional argument. Set to TRUE to tally
+all mutations. Default is FALSE.}
 
 \item{tally_all_mutations_max}{Optional argument. Default is 1000.}
 
-\item{hideSideBarplot}{Optional argument for removing side bar plot. Default value is FALSE.}
+\item{hideSideBarplot}{Optional argument for removing side bar plot.
+Default value is FALSE.}
 
-\item{box_col}{Colour of boxes for outlining mutations (can be problematic with larger oncoprints).}
+\item{box_col}{Colour of boxes for outlining mutations (can be
+problematic with larger oncoprints).}
 
 \item{annoAlpha}{Optional alpha to apply to annotation colours.}
 
@@ -145,9 +206,11 @@ prettyOncoplot(
 
 \item{legend_col}{Fiddle with these to widen or narrow your legend.}
 
-\item{metadataBarHeight}{Optional argument to adjust the height of bar with annotations. The default is 1.5.}
+\item{metadataBarHeight}{Optional argument to adjust the height of
+bar with annotations. The default is 1.5.}
 
-\item{metadataBarFontsize}{Optional argument to control for the font size of metadata annotations. The default is 5.}
+\item{metadataBarFontsize}{Optional argument to control for the
+font size of metadata annotations. The default is 5.}
 
 \item{legendFontSize}{Font size for legend, default is 10.}
 
@@ -159,131 +222,256 @@ prettyOncoplot(
 
 \item{verbose}{Set to TRUE to enable verbose mode (debugging messages.}
 
-\item{cluster_rows}{Force clustering of genes with correlated mutation patterns}
+\item{cluster_rows}{Force clustering of genes with correlated
+mutation patterns}
 
-\item{cluster_cols}{Force clustering of patients with correlated mutation patterns}
+\item{cluster_cols}{Force clustering of patients with correlated
+mutation patterns}
 
-\item{cluster_numeric_rows}{also cluster the rows of numeric data (when making a 'stacked' plot)}
+\item{clustering_distance_rows}{Distance metric used for clustering
+when cluster_rows = TRUE}
 
-\item{cluster_numeric_cols}{replace cluster_cols behavior by using the numeric data matrix (when making a 'stacked' plot)}
-
-\item{clustering_distance_rows}{Distance metric used for clustering when cluster_rows = TRUE}
-
-\item{clustering_distance_cols}{Distance metric used for clustering when cluster_cols = TRUE}
+\item{clustering_distance_cols}{Distance metric used for clustering
+when cluster_cols = TRUE}
 
 \item{split_rows_kmeans}{K value for k-means clustering on rows}
 
 \item{split_columns_kmeans}{K value for k-means clustering on columns}
 
-\item{dry_run}{Set to TRUE to more efficiently view the clustering result while debugging cluster_rows/clustering_distance_rows}
+\item{dry_run}{Set to TRUE to more efficiently view the clustering
+result while debugging cluster_rows/clustering_distance_rows}
 
-\item{simplify_annotation}{Collapse/group the variant effect categories to only 3 options. This is a much faster option for when many patients/genes are included.}
+\item{simplify_annotation}{Collapse/group the variant effect categories
+to only 3 options. This is a much faster option for when many
+patients/genes are included.}
 
-\item{simplify_bg_colour}{When simplify_annotation is called, adjust the color of the background by passign a value to this argument. Default is NA.}
+\item{simplify_bg_colour}{When simplify_annotation is called, adjust
+the color of the background by passign a value to this argument.
+Default is NA.}
 
-\item{stacked}{Create a dual heatmap with the second (lower) portion for the numeric metadata provided (e.g. aSHM)}
+\item{stacked}{Deprecated. See [GAMBLR.viz::prettyStackedOncoplot]
+for this functionality.}
 
-\item{numeric_heatmap_type}{Which type of numeric heatmap to draw? Accepts either "aSHM" (default) or "CNV".}
+\item{return_inputs}{Optional flag to return the plot and various
+other internal objects such as the underlying mutation matrix.}
 
-\item{numeric_heatmap_location}{Where to draw the numeric heatmap. Can be "top" (default) or "bottom".}
-
-\item{return_inputs}{Optional flag to return the mutation matrix generated by the function}
+\item{gap}{Size of gap between columns represented as a proportion
+of the full width of the column. Default 0 (no gap).}
 
 \item{use_raster}{Whether to rasterize image}
+
+\item{show_pct}{TRUE by default. Set to FALSE to hide percentage.}
+
+\item{hide_annotation_name}{Default: FALSE}
+
+\item{cluster_numeric_rows}{Deprecated.
+See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
+
+\item{cluster_numeric_cols}{Deprecated.
+See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
+
+\item{numeric_heatmap_type}{Deprecated.
+See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
+
+\item{numeric_heatmap_location}{Deprecated.
+See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
 }
 \value{
 By default, nothing unless return_inputs is specified,
-in which case it returns a logical matrix indicating the mutation status of each gene and
-patient shown in the heatmap.
+in which case it returns a named list that contains different
+things depending on how the function was run
+At the very least, it will contain the Heatmap object a logical
+matrix indicating the mutation status of each gene and
+patient shown in the output.
 }
 \description{
-Create a highly customizable oncoplot using complexHeatmap functionality.
+Create a highly customizable oncoplot.
 }
 \details{
-Make an oncoplot that is pretty using ComplexHeatmap. The metadata is expected to follow the structure and column naming used in GAMBL.
-If you provide your own non-GAMBL samples and metadata, you must include at least the following columns with these names.
-The first one should match the Tumor_Sample_Barcode in the MAF object or onco_matrix you provide.
+Generatss an oncoplot (a.k.a. oncoprint) that is pretty
+using ComplexHeatmap. The metadata is expected to follow the structure
+and column naming used in GAMBL.
+If you provide your own non-GAMBL samples and metadata,
+you must include at least the following columns with these names.
+The first one should match the Tumor_Sample_Barcode in the MAF
+object or onco_matrix you provide.
 sample_id, pathology
 }
 \examples{
-#load packages
-library(grid)
-library(GAMBLR.data)
-library(dplyr)
 
-# Using GAMBLR.data
-maf_metadata <- get_gambl_metadata(seq_type_filter = "genome") \%>\%
-    dplyr::filter(pathology \%in\% c("FL", "DLBCL"), cohort == "FL_Dreval")
+suppressMessages(
+  suppressWarnings({
+# load packages
+library(grid)
+library(dplyr)
+library(GAMBLR.open)
+
+# Using GAMBLR.open
+maf_metadata <- GAMBLR.open::get_gambl_metadata(
+                               seq_type_filter = "genome") \%>\%
+  dplyr::filter(pathology \%in\% c("FL", "DLBCL"),
+                study == "FL_Dreval")
 
 
 maf_data <- get_coding_ssm(
-    these_samples_metadata = maf_metadata
+  these_samples_metadata = maf_metadata
 )
+}))
 
-# or using GAMBLR.results (note: cohort names differ!)
-maf_metadata <- get_gambl_metadata() \%>\%
-  dplyr::filter(pathology \%in\% c("FL", "DLBCL"),
-   seq_type != "mrna", #mrna samples will cause duplicate row names later if not dropped
-   cohort != "FL_Crouch")
+# define some genes of interest
+fl_genes <- GAMBLR.data::lymphoma_genes \%>\%
+  dplyr::filter(FL_Tier == 1) \%>\%
+  pull(Gene)
 
-maf_data <- get_all_coding_ssm(
-    these_samples_metadata = maf_metadata
+dlbcl_genes <- GAMBLR.data::lymphoma_genes \%>\%
+  dplyr::filter(DLBCL_Tier == 1, !Gene \%in\% fl_genes) \%>\%
+  pull(Gene)
+
+genes <- c(fl_genes, dlbcl_genes)
+
+# For splitting into gene sets
+split_genes <- c(rep("FL", length(fl_genes)),
+                 rep("DLBCL", length(dlbcl_genes)))
+names(split_genes) <- genes
+
+suppressMessages(
+  suppressWarnings({
+prettyOncoplot(
+  maf_df = maf_data, genes = genes,
+  these_samples_metadata = maf_metadata,
+  splitGeneGroups = split_genes,
+  minMutationPercent = 5
 )
+}))
 
-fl_genes = c("RRAGC", "CREBBP", "VMA21", "ATP6V1B2")
+# Was that too slow for you? Enable the simplify_annotation
+# parameter for a quicker result.
 
-dlbcl_genes = c("EZH2", "KMT2D", "MEF2B", "CD79B", "MYD88", "TP53")
-
-genes = c(fl_genes, dlbcl_genes)
-
-#For splitting into gene sets
-split_genes = c(rep("FL",length(fl_genes)),rep("DLBCL",length(dlbcl_genes)))
-names(split_genes)=genes
-
-prettyOncoplot(maf_df=maf_data,genes=genes,
-   these_samples_metadata = maf_metadata,splitGeneGroups = split_genes)
-
-#Use a helper function to get the CN status for some genes to include in the oncoPlot
-
-
-gene_regions = data.frame(gene_id=c("REL","CDKN2A",
-  "MIR17HG","TP53","ATM","FAS","SMARCA4","B2M","TNFRSF14",
-  "TMEM30A","TNFAIP3"),
-  cn_thresh = c(4,1,4,1,1,1,1,1,1,1,1))
-
-gene_cnv = get_cnv_and_ssm_status(only_cnv="all",
-  these_samples_metadata = get_gambl_metadata(),
-  genes_and_cn_threshs = gene_regions) \%>\%
-  filter(!is.na(REL))
-  # filter is needed because the helper function returns all-NA rows for some samples
-
- prettyOncoplot(maf_df=all_coding,genes=c("CREBBP","EZH2","MYD88",
-     "TCF3","BCL2","BCL7A","MEF2B","POU2F2","POU2AF1","ID3","MYC",
-     "RRAGC","TCL1A","KMT2D","PIM1","CD79B","TMSB4X","TMEM30A","TNFAIP3"),
-     these_samples_metadata = maf_metadata,
-     cluster_rows = T,
-     metadataColumns = c("pathology","genetic_subgroup","seq_type","ffpe_or_frozen"),
-     cluster_cols = F,
-     simplify_annotation=T,
-     cnv_df=gene_cnv,sortByColumns = c("pathology","genetic_subgroup"))
-
-gene_groups = c(rep("FL", length(fl_genes)), rep("DLBCL", length(dlbcl_genes)))
-names(gene_groups) = genes
+suppressMessages(
+  suppressWarnings({
 
 prettyOncoplot(
-    maf_df = maf_data,
-    genes = genes,
-    these_samples_metadata = maf_metadata \%>\%
-        arrange(patient_id),
-    splitGeneGroups = gene_groups,
-    keepGeneOrder = TRUE,
-    splitColumnName = "pathology",
-    metadataBarHeight = 5,
-    metadataBarFontsize = 8,
-    legend_row = 2,
-    fontSizeGene = 11,
-    metadataColumns = c("pathology", "lymphgen", "sex"),
-    sortByColumns = c("pathology", "lymphgen", "sex")
+  maf_df = maf_data, genes = genes,
+  these_samples_metadata = maf_metadata,
+  splitGeneGroups = split_genes,
+  minMutationPercent = 5,
+  simplify_annotation = TRUE
 )
 
+}))
+
+# Want to include copy number? You have two options.
+# Option 1:
+# Incorporate CN status of specific genes into your oncoplot
+# along with mutations.
+# There are two ways to go about this.
+# The original way involves using the helper function get_cnv_and_ssm_status
+
+gene_regions <- data.frame(
+  gene_id = c(
+    "REL", "CDKN2A",
+    "MIR17HG", "TP53", "ATM", "FAS", "SMARCA4", "B2M", "TNFRSF14",
+    "TMEM30A", "TNFAIP3", "BCL2"
+  ),
+  cn_thresh = c(4, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 3)
+)
+
+# this data frame specifies the threshold and directionality for
+# each gene's copy number state to display on the oncoplot.
+# Amplifications will be shown for REL and MIR17HG, gains
+# for BCL2, deletions for the rest
+print(gene_regions)
+
+suppressMessages(
+  suppressWarnings({
+
+gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
+  only_cnv = "all",
+  these_samples_metadata = get_gambl_metadata(),
+  genes_and_cn_threshs = gene_regions
+)
+
+
+
+
+prettyOncoplot(
+  maf_df = maf_data, genes = c(
+    "CREBBP", "EZH2", "MYD88",
+    "TCF3", "BCL2", "BCL7A",
+    "MEF2B", "POU2F2", "POU2AF1",
+    "ID3", "MYC",
+    "RRAGC", "TCL1A", "KMT2D",
+    "PIM1", "CD79B", "TMSB4X",
+    "TMEM30A", "TNFAIP3"
+  ),
+  these_samples_metadata = maf_metadata,
+  cluster_rows = TRUE,
+  metadataColumns = c(
+    "pathology",
+    "lymphgen",
+    "seq_type",
+    "ffpe_or_frozen"
+  ),
+  cluster_cols = FALSE,
+  simplify_annotation = TRUE,
+  cnv_df = gene_cnv,
+  sortByColumns = c("pathology", "lymphgen")
+)
+}))
+
+
+# Option 2:
+# The second way to incorporate copy number relies
+# instead on a binned copy number matrix
+# If you already have one on hand, this is clearly the preferred approach!
+# First let's make one with the help of segmented_data_to_cn_matrix
+\dontrun{
+all_segments <- get_cn_segments(these_samples_metadata = maf_metadata)
+all_states_binned <- segmented_data_to_cn_matrix(
+  seg_data = all_segments,
+  strategy = "auto_split",
+  n_bins_split = 1000,
+  fill_missing_with = "avg_ploidy",
+  adjust_for_ploidy = TRUE,
+  these_samples_metadata = maf_metadata
+)
+
+
+# Note: adjust_for_ploidy = TRUE ensures the relative
+# CN status is used for high-ploidy cases
+
+# as before, we need to specify which genes we want
+# CN events shown for and what direction (gain or loss)
+# This is done a bit more easily with the genes_CN_thresh option.
+
+CN_thresh <- c(
+  "REL" = 4,
+  "CDKN2A" = 1,
+  "MIR17HG" = 4,
+  "TP53" = 1,
+  "TNFRSF14" = 1,
+  "TNFAIP3" = 1
+)
+
+
+prettyOncoplot(
+  maf_df = maf_data,
+  binned_cnv_df = all_states_binned,
+  genes_CN_thresh = CN_thresh,
+  genes = head(genes, 25),
+  these_samples_metadata = maf_metadata,
+  cluster_rows = TRUE,
+  metadataColumns = c(
+    "pathology",
+    "genetic_subgroup",
+    "seq_type",
+    "ffpe_or_frozen"
+  ),
+  cluster_cols = FALSE,
+  simplify_annotation = TRUE,
+  sortByColumns = c("pathology", "genetic_subgroup"),
+  minMutationPercent = 0
+)
+
+}
 }

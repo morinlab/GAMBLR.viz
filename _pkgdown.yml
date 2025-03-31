@@ -1,0 +1,66 @@
+url: https://morinlab.github.io/GAMBLR.viz/
+template:
+  bootstrap: 5
+  theme:
+    light: [flatly, theme-light.scss]
+    dark: [darkly, theme-dark.scss]
+
+navbar:
+  structure:
+    left:  [intro, articles, reference]
+    right: [search, github, lightswitch]
+
+articles:
+- title: Quick Start
+  navbar: Installation
+  contents:
+    - install
+- title: Guides
+  navbar: Guides
+  contents:
+    - recap_figures
+    - forestplot
+    - CopyNumberHeatmap
+    - data_q
+    - oncoplot
+    - recap_figures
+    - getting_started
+- title: Resources
+  navbar: Help
+  contents:
+    - faq
+
+reference:
+  - title: prettyPlots
+    contents:
+      - starts_with("pretty")
+    examples: false
+  - title: fancyPlots
+    contents:
+      - starts_with("fancy")
+    examples: false
+  - title: Other
+    contents:
+      - ashm_rainbow_plot
+      - ashm_multi_rainbow_plot
+      - circular_CN_plot
+      - copy_number_vaf_plot
+      - focal_cn_plot
+      - mutation_hotspot_logo
+      - plot_MutationTimeR
+      - plot_sample_circos
+      - splendidHeatmap
+    examples: false
+
+figures:
+  dev: ragg::agg_png
+  dpi: 96
+  dev.args: []
+  fig.ext: png
+  fig.width: 9
+  fig.height: ~
+  fig.retina: 2
+  fig.asp: 0.9
+  bg: NA
+  other.parameters: []
+

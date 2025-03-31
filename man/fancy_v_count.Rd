@@ -76,9 +76,10 @@ to control what variants are to be counted with `variant_select`. Default is del
 the variant types specified in this parameter must match with whatever is present in the corresponding `variant_type_col`.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #count all variants for one sample (default parameters)
 fancy_v_count(this_sample_id = "DOHH-2")
-
+}
 }

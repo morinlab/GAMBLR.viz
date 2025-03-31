@@ -1,0 +1,41 @@
+---
+title: "Frequently Asked Questions"
+vignette: >
+  %\VignetteIndexEntry{quarto vignettes}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+echo: false
+---
+
+This section will cover most of the questions you may have about GAMBLR.viz. If
+there is something that is not covered, please feel free to reach out to us via
+GitHub by reporting an [issue](https://github.com/morinlab/GAMBLR.viz/issues/new)
+and we will be happy to add it to this page.
+
+###
+
+
+<div class="d-grid gap-2"><a class="btn btn-lg btn-primary" data-bs-toggle="collapse" href="#General" role="button" aria-expanded="false" aria-controls="General">General questions</a></div>
+
+::: {#General .collapse .multi-collapse}
+
+## Where can I get example data that works with this package?
+
+The example data of all types is available with one of GAMBLR.viz dependencies
+([GAMBLR.data](https://github.com/morinlab/GAMBLR.data)). Every function
+demonstrates how to get this data in it's example, or is already setup to
+automatically retreive it for you with minimal information (e.g. sample_id).
+
+
+## Can I use my own colors and not the ones the package offers?
+
+Absolutely! Most functions will accept argument `custom_colours` where list
+of color mappings can be used to specify your own pallette.
+
+## Can I use my own data we generated in our lab?
+
+Absolutely! Most functions will accept metadata and data frame with mutations
+as input, so you can provide any outside data as long as the formatting is
+consistent with the example data.
+
+:::

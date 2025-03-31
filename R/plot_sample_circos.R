@@ -30,7 +30,8 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' \dontrun{
+#' library(GAMBLR.open)
 #'
 #' plot_sample_circos(this_sample_id = "02-13135T",
 #'                    legend_metadata_columns = c("pathology",
@@ -45,7 +46,7 @@
 #'                                   "chr8",
 #'                                   "chr14",
 #'                                   "chr18"))
-#'
+#'}
 plot_sample_circos = function(this_sample_id,
                               sv_df,
                               cnv_df,

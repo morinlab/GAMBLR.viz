@@ -71,7 +71,8 @@ Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with t
 Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
 }
 \examples{
-library(GAMBLR.data)
+\dontrun{
+library(GAMBLR.open)
 
 plot_sample_circos(this_sample_id = "02-13135T",
                    legend_metadata_columns = c("pathology",
@@ -86,5 +87,5 @@ plot_sample_circos(this_sample_id = "02-13135T",
                                   "chr8",
                                   "chr14",
                                   "chr18"))
-
+}
 }
