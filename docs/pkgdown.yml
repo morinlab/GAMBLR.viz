@@ -1,0 +1,17 @@
+pandoc: '3.2'
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  CopyNumberHeatmap: CopyNumberHeatmap.html
+  data_q: data_q.html
+  faq: faq.html
+  forestplot: forestplot.html
+  GAMBLR-viz: GAMBLR-viz.html
+  getting_started: getting_started.html
+  install: install.html
+  oncoplot: oncoplot.html
+  recap_figures: recap_figures.html
+last_built: 2025-04-01T21:26Z
+urls:
+  reference: https://morinlab.github.io/GAMBLR.viz/reference
+  article: https://morinlab.github.io/GAMBLR.viz/articles
