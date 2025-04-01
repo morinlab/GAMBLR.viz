@@ -368,8 +368,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     
 
   }
-  not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
-
+  if(!missing(numericMetadataColumns)){
+  	not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
+  }else{
+	not_numeric_cols = metadataColumns
+  }
   colours = map_metadata_to_colours(metadataColumns = not_numeric_cols,
                                     these_samples_metadata = these_samples_metadata,
                                     verbose=verbose)
