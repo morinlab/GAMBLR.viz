@@ -4,5 +4,4 @@
 .RData
 .Ruserdata
 misc/*
-docs/*
 vignettes/*_cache/*
