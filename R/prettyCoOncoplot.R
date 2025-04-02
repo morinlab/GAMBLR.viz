@@ -117,55 +117,87 @@ prettyCoOncoplot = function(maf,
     # Discard any arguments not supported by prettyOncoplot
     oncoplot_args = oncoplot_args[names(oncoplot_args) %in% intersect(names(oncoplot_args),
                                                                       formalArgs(prettyOncoplot))]
+    # Ignore genes argument for the right oncoplot so it matches the left side
+    message(
+        "Setting up the order of genes to match between the two oncoplots..."
+    )
+    oncoplot_args_rerun <- oncoplot_args[
+        !names(oncoplot_args) %in% c(
+            "genes", "keepGeneOrder", "minMutationPercent"
+        )
+    ]
+
     # Build oncoplot No1
-    op1 = grid.grabExpr(
-        do.call(
-            prettyOncoplot,
-            c(
-                list(
-                    maf_df = ssm1,
-                    these_samples_metadata = meta1
-                ),
-                oncoplot_args
-            )
-        ),
-        width = 10,
-        height = 17
+    op1 <- do.call(
+        prettyOncoplot,
+        c(
+            list(
+                maf_df = ssm1,
+                these_samples_metadata = meta1,
+                return_inputs = TRUE
+            ),
+            oncoplot_args
+        )
+    )
+
+    suppressMessages(
+    suppressWarnings({
+    op1 <- do.call(
+        prettyOncoplot,
+        c(
+            list(
+                maf_df = ssm1,
+                these_samples_metadata = meta1,
+                genes = op1$gene_order,
+                keepGeneOrder = TRUE,
+                minMutationPercent = 0,
+                return_inputs = TRUE,
+                groupNames = ifelse(missing(label1), "", label1)
+            ),
+            oncoplot_args_rerun
+        )
     )
     # if user provided annotation label, place it as a name for oncoplot No1
-    if (!missing(label1)) {
-      op1 = annotate_figure(op1,
-                            top = text_grob(label1,
-                                            face = "bold",
-                                            size = 20))
-    }
+    # if (!missing(label1)) {
+    #   op1 = annotate_figure(op1,
+    #                         top = text_grob(label1,
+    #                                         face = "bold",
+    #                                         size = 20))
+    # }
     # Build oncoplot No2
-    op2 = grid.grabExpr(
-        do.call(
-            prettyOncoplot,
-            c(
-                list(
-                    maf_df = ssm2,
-                    these_samples_metadata = meta2
-                ),
-                oncoplot_args
-            )
-        ),
-        width = 10,
-        height = 17
+    op2 <- do.call(
+        prettyOncoplot,
+        c(
+            list(
+                maf_df = ssm2,
+                these_samples_metadata = meta2,
+                genes = op1$gene_order,
+                keepGeneOrder = TRUE,
+                minMutationPercent = 0,
+                return_inputs = TRUE,
+                groupNames = ifelse(missing(label2), "", label2)
+            ),
+            oncoplot_args_rerun
+        )
     )
+
     # if user provided annotation label, place it as a name for oncoplot No2
-    if (!missing(label2)) {
-      op2 = annotate_figure(op2,
-                            top = text_grob(label2,
-                                            face = "bold",
-                                            size = 20))
-    }
+    # if (!missing(label2)) {
+    #   op2 = annotate_figure(op2,
+    #                         top = text_grob(label2,
+    #                                         face = "bold",
+    #                                         size = 20))
+    # }
     # arrange 2 oncoplots together side by side
-    p = ggarrange(op1,
-                  op2,
-                  ncol = 2,
-                  nrow = 1)
+            ht_list <- op1$Heatmap + op2$Heatmap
+            p <- draw(
+                ht_list,
+                merge_legends = TRUE,
+                heatmap_legend_side = "bottom",
+                annotation_legend_side = "bottom"
+            )
+        })
+    )
 
     return(p)
   }
