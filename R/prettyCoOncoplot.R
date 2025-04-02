@@ -1,28 +1,50 @@
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR.viz::prettyOncoplot] side-by-side.
+#' @description `prettyCoOncoplot` returns figure of two
+#' [GAMBLR.viz::prettyOncoplot] side-by-side.
 #'
-#' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
-#' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-#' recognized by [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling this function.
-#' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
-#' font size, top annotation etc). If the provided argument is not recognized by [GAMBLR.viz::prettyOncoplot],
-#' it will be discarded. If you want a specific order of oncoplots on the left and right, please
-#' ensure the argument `comparison_column` is a factor with first level being the group
-#' you want to be plotted on the left side. For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the future
-#' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
+#' @details This function will generate a graphic displaying 2 oncoplots
+#' side-by-side. Optionally user can annotate each oncoplot with it's own title
+#' that will be displayed at the top. All the arguments recognized by
+#' [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling
+#' this function. For both oncoplots the same specified parameters will be
+#' applied (e.g. genes to display, split columns, font size, top annotation
+#' etc). When the provided argument is not recognized by
+#' [GAMBLR.viz::prettyOncoplot], it will be ignored. 
+#' The order of the oncoplots is defined (left-to-right) by either the order of
+#' the factors in the `comparison_column` when it's a factor, the order of
+#' appearance of the values in the `comparison_column`, or by the order of
+#' elements in the `comparison_values` when the comparison column contains more
+#' than 2 levels. The left oncoplot will dictate the order of genes to be
+#' displayed on the right oncoplot. If you want a specific order of oncoplots on
+#' the left and right, please ensure the argument `comparison_column` is a
+#' factor with first level being the group you want to be plotted on the left
+#' side.
+#' For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the
+#' future are expected to be out-of-the-box compatible with this function and
+#' would not need code modifications in this function.
 #'
-#' @param maf Required argument. A data frame containing the mutations you want to plot on both oncoplots.
-#' @param metadata Required argument. A data.frame with metadata for both oncoplots.
-#' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param comparison_column Required: the name of the metadata column containing the comparison values.
-#' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
-#' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
-#' @param ... `prettyOncoplot` arguments, see that function for more info on avaialble parameters.
+#' @param maf Required argument. A data frame containing the mutations you want
+#'      to plot on both oncoplots.
+#' @param metadata Required argument. A data.frame with metadata for both
+#'      oncoplots.
+#' @param comparison_values Optional: If the comparison column contains more
+#'      than two values or is not a factor, specify a character vector of length
+#'      two in the order you would like the factor levels to be set, reference
+#'      group first.
+#' @param comparison_column Required: the name of the metadata column containing
+#'      the comparison values.
+#' @param label1 Optional argument. Label to be shown as a title for the
+#'      oncoplot #1 displayed on the left. Does not need to match the comparison
+#'      values and can contain any string annotation.
+#' @param label2 Optional argument. Label to be shown as a title for the
+#'      oncoplot #2 displayed on the right. Does not need to match the comparison
+#'      values and can contain any string annotation.
+#' @param ... `prettyOncoplot` arguments, see that function for more info on
+#'      avaialble parameters.
 #'
-#' @return A ggplot object with 2 oncoplots side-by-side.
+#' @return A complexheatmap object with 2 oncoplots side-by-side.
 #'
-#' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import ComplexHeatmap dplyr
 #' @export
 #'
