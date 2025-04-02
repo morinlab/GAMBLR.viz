@@ -1641,7 +1641,10 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     hide_annotation_name = hide_annotation_name
   )
   if (return_inputs) {
-    returned[["all_hit"]] <- all_hit
+    if(simplify_annotation){
+      returned[["all_hit"]] <- all_hit
+    }
+    
     return(returned)
   }
 }
@@ -1790,6 +1793,12 @@ make_prettyoncoplot <- function(
   ch_ord <- ch@column_order
   names(ch_ord) <- rownames(metadata_df)
   if (return_inputs) {
+    if(is.null(gene_order)){
+      #get gene order from Heatmap object
+      to_return = list("gene_order" = ch@row_names_param$labels[ch@row_order])
+    }else{
+      to_return = list("gene_order" = gene_order)
+    }
     if (plot_type == "simplify") {
       any_mut <- mat_input$Missense
       any_mut[] <- 0
@@ -1802,15 +1811,19 @@ make_prettyoncoplot <- function(
       }
       mut_status <- as.data.frame(t(any_mut))
       metadata_df <- bind_cols(metadata_df, mut_status)
-      return(list(
-        Heatmap = ch, mut_mat = mat_input, mut_status = mut_status,
-        metadata = metadata_df, sample_order = ch_ord
-      ))
+      return(c(to_return,
+              list(
+                Heatmap = ch, mut_mat = mat_input, mut_status = mut_status,
+                metadata = metadata_df, sample_order = ch_ord
+              )
+            ))
     }
-    return(list(
-      Heatmap = ch, mut_mat = mat_input, metadata = metadata_df,
-      sample_order = ch_ord
-    ))
+    return(c(to_return,
+            list(
+              Heatmap = ch, mut_mat = mat_input, metadata = metadata_df,
+              sample_order = ch_ord
+            )
+          ))
   }
   suppressMessages(draw(ch,
        heatmap_legend_side = legend_position,

@@ -53,7 +53,8 @@ meta <- get_gambl_metadata() \%>\%
   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 meta <- meta \%>\%
     dplyr::filter(
-        pathology \%in\% c("DLBCL", "FL")
+        pathology \%in\% c("DLBCL", "FL"),
+        seq_type == "genome"
     )
 ssm <- get_coding_ssm(
     these_samples_metadata = meta
@@ -79,8 +80,8 @@ prettyCoOncoplot(
     fontSizeGene = 12,
     metadataBarFontsize = 10,
     legend_row = 2,
-    label1 = "FL",
-    label2 = "DLBCL",
+    label1 = "DLBCL",
+    label2 = "FL",
     simplify_annotation =TRUE,
     minMutationPercent = 5
 )
