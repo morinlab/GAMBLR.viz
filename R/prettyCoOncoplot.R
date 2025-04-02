@@ -29,24 +29,21 @@
 #' @examples
 #' library(GAMBLR.open)
 #' #get data for plotting
-#' meta <- get_gambl_metadata() %>%
-#'   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
+#' meta <- get_gambl_metadata()
 #' meta <- meta %>%
 #'     dplyr::filter(
+#'         study == "FL_Dreval",
 #'         pathology %in% c("DLBCL", "FL")
 #'     )
 #' ssm <- get_coding_ssm(
 #'     these_samples_metadata = meta
 #' )
 #'
-#' suppressMessages(
-#'   suppressWarnings({
 #' #build plot
 #' prettyCoOncoplot(
 #'     maf = ssm,
 #'     metadata = meta,
 #'     comparison_column = "pathology",
-#'     comparison_values = c("DLBCL","FL"),
 #'     genes=dplyr::filter(lymphoma_genes,
 #'                         FL_Tier==1 | DLBCL_Tier==1) %>% 
 #'                         dplyr::pull(Gene),
@@ -59,13 +56,12 @@
 #'     fontSizeGene = 12,
 #'     metadataBarFontsize = 10,
 #'     legend_row = 2,
-#'     label1 = "FL",
-#'     label2 = "DLBCL",
+#'     label1 = "DLBCL",
+#'     label2 = "FL",
 #'     simplify_annotation =TRUE,
 #'     minMutationPercent = 5
 #' )
-#' 
-#'}))
+#'
 prettyCoOncoplot = function(maf,
                             metadata,
                             comparison_column,
