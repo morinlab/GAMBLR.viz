@@ -1,52 +1,71 @@
 #' @title Side-by-side Oncoplots
 #'
-#' @description `prettyCoOncoplot` returns ggplot-compatible figure of 2 [GAMBLR.viz::prettyOncoplot] side-by-side.
+#' @description `prettyCoOncoplot` returns figure of two
+#' [GAMBLR.viz::prettyOncoplot] side-by-side.
 #'
-#' @details This function will generate a graphic displaying 2 oncoplots side-by-side. Optionally user can
-#' annotate each oncoplot with it's own title that will be displayed at the top. All the arguments
-#' recognized by [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling this function.
-#' For both oncoplots the same specified parameters will be applied (e.g. genes to display, split columns,
-#' font size, top annotation etc). If the provided argument is not recognized by [GAMBLR.viz::prettyOncoplot],
-#' it will be discarded. If you want a specific order of oncoplots on the left and right, please
-#' ensure the argument `comparison_column` is a factor with first level being the group
-#' you want to be plotted on the left side. For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the future
-#' are expected to be out-of-the-box compatible with this function nd would not need code modifications.
+#' @details This function will generate a graphic displaying 2 oncoplots
+#' side-by-side. Optionally user can annotate each oncoplot with it's own title
+#' that will be displayed at the top. All the arguments recognized by
+#' [GAMBLR.viz::prettyOncoplot] are supported and can be specified when calling
+#' this function. For both oncoplots the same specified parameters will be
+#' applied (e.g. genes to display, split columns, font size, top annotation
+#' etc). When the provided argument is not recognized by
+#' [GAMBLR.viz::prettyOncoplot], it will be ignored. 
+#' The order of the oncoplots is defined (left-to-right) by either the order of
+#' the factors in the `comparison_column` when it's a factor, the order of
+#' appearance of the values in the `comparison_column`, or by the order of
+#' elements in the `comparison_values` when the comparison column contains more
+#' than 2 levels. The left oncoplot will dictate the order of genes to be
+#' displayed on the right oncoplot. If you want a specific order of oncoplots on
+#' the left and right, please ensure the argument `comparison_column` is a
+#' factor with first level being the group you want to be plotted on the left
+#' side.
+#' For developers: new arguments added to [GAMBLR.viz::prettyOncoplot] in the
+#' future are expected to be out-of-the-box compatible with this function and
+#' would not need code modifications in this function.
 #'
-#' @param maf Required argument. A data frame containing the mutations you want to plot on both oncoplots.
-#' @param metadata Required argument. A data.frame with metadata for both oncoplots.
-#' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
-#' @param comparison_column Required: the name of the metadata column containing the comparison values.
-#' @param label1 Optional argument. Label to be shown as a title for the oncoplot #1.
-#' @param label2 Optional argument. Label to be shown as a title for the oncoplot #2.
-#' @param ... `prettyOncoplot` arguments, see that function for more info on avaialble parameters.
+#' @param maf Required argument. A data frame containing the mutations you want
+#'      to plot on both oncoplots.
+#' @param metadata Required argument. A data.frame with metadata for both
+#'      oncoplots.
+#' @param comparison_values Optional: If the comparison column contains more
+#'      than two values or is not a factor, specify a character vector of length
+#'      two in the order you would like the factor levels to be set, reference
+#'      group first.
+#' @param comparison_column Required: the name of the metadata column containing
+#'      the comparison values.
+#' @param label1 Optional argument. Label to be shown as a title for the
+#'      oncoplot #1 displayed on the left. Does not need to match the comparison
+#'      values and can contain any string annotation.
+#' @param label2 Optional argument. Label to be shown as a title for the
+#'      oncoplot #2 displayed on the right. Does not need to match the comparison
+#'      values and can contain any string annotation.
+#' @param ... `prettyOncoplot` arguments, see that function for more info on
+#'      avaialble parameters.
 #'
-#' @return A ggplot object with 2 oncoplots side-by-side.
+#' @return A complexheatmap object with 2 oncoplots side-by-side.
 #'
-#' @rawNamespace import(ggpubr, except = "get_legend")
 #' @import ComplexHeatmap dplyr
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.open)
 #' #get data for plotting
-#' meta <- get_gambl_metadata() %>%
-#'   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
+#' meta <- get_gambl_metadata()
 #' meta <- meta %>%
 #'     dplyr::filter(
+#'         study == "FL_Dreval",
 #'         pathology %in% c("DLBCL", "FL")
 #'     )
 #' ssm <- get_coding_ssm(
 #'     these_samples_metadata = meta
 #' )
 #'
-#' suppressMessages(
-#'   suppressWarnings({
 #' #build plot
 #' prettyCoOncoplot(
 #'     maf = ssm,
 #'     metadata = meta,
 #'     comparison_column = "pathology",
-#'     comparison_values = c("DLBCL","FL"),
 #'     genes=dplyr::filter(lymphoma_genes,
 #'                         FL_Tier==1 | DLBCL_Tier==1) %>% 
 #'                         dplyr::pull(Gene),
@@ -59,13 +78,12 @@
 #'     fontSizeGene = 12,
 #'     metadataBarFontsize = 10,
 #'     legend_row = 2,
-#'     label1 = "FL",
-#'     label2 = "DLBCL",
+#'     label1 = "DLBCL",
+#'     label2 = "FL",
 #'     simplify_annotation =TRUE,
 #'     minMutationPercent = 5
 #' )
-#' 
-#'}))
+#'
 prettyCoOncoplot = function(maf,
                             metadata,
                             comparison_column,
@@ -117,55 +135,74 @@ prettyCoOncoplot = function(maf,
     # Discard any arguments not supported by prettyOncoplot
     oncoplot_args = oncoplot_args[names(oncoplot_args) %in% intersect(names(oncoplot_args),
                                                                       formalArgs(prettyOncoplot))]
-    # Build oncoplot No1
-    op1 = grid.grabExpr(
-        do.call(
-            prettyOncoplot,
-            c(
-                list(
-                    maf_df = ssm1,
-                    these_samples_metadata = meta1
-                ),
-                oncoplot_args
-            )
-        ),
-        width = 10,
-        height = 17
+    # Ignore genes argument for the right oncoplot so it matches the left side
+    message(
+        "Setting up the order of genes to match between the two oncoplots..."
     )
-    # if user provided annotation label, place it as a name for oncoplot No1
-    if (!missing(label1)) {
-      op1 = annotate_figure(op1,
-                            top = text_grob(label1,
-                                            face = "bold",
-                                            size = 20))
-    }
-    # Build oncoplot No2
-    op2 = grid.grabExpr(
-        do.call(
-            prettyOncoplot,
-            c(
-                list(
-                    maf_df = ssm2,
-                    these_samples_metadata = meta2
-                ),
-                oncoplot_args
-            )
-        ),
-        width = 10,
-        height = 17
+    oncoplot_args_rerun <- oncoplot_args[
+        !names(oncoplot_args) %in% c(
+            "genes", "keepGeneOrder", "minMutationPercent"
+        )
+    ]
+
+    op1 <- do.call(
+        prettyOncoplot,
+        c(
+            list(
+                maf_df = ssm1,
+                these_samples_metadata = meta1,
+                return_inputs = TRUE
+            ),
+            oncoplot_args
+        )
     )
-    # if user provided annotation label, place it as a name for oncoplot No2
-    if (!missing(label2)) {
-      op2 = annotate_figure(op2,
-                            top = text_grob(label2,
-                                            face = "bold",
-                                            size = 20))
-    }
-    # arrange 2 oncoplots together side by side
-    p = ggarrange(op1,
-                  op2,
-                  ncol = 2,
-                  nrow = 1)
+
+    suppressMessages(
+        suppressWarnings({
+            # Build oncoplot No1
+            op1 <- do.call(
+                prettyOncoplot,
+                c(
+                    list(
+                        maf_df = ssm1,
+                        these_samples_metadata = meta1,
+                        genes = op1$gene_order,
+                        keepGeneOrder = TRUE,
+                        minMutationPercent = 0,
+                        return_inputs = TRUE,
+                        groupNames = ifelse(missing(label1), "", label1)
+                    ),
+                    oncoplot_args_rerun
+                )
+            )
+
+            # Build oncoplot No2
+            op2 <- do.call(
+                prettyOncoplot,
+                c(
+                    list(
+                        maf_df = ssm2,
+                        these_samples_metadata = meta2,
+                        genes = op1$gene_order,
+                        keepGeneOrder = TRUE,
+                        minMutationPercent = 0,
+                        return_inputs = TRUE,
+                        groupNames = ifelse(missing(label2), "", label2)
+                    ),
+                    oncoplot_args_rerun
+                )
+            )
+
+            # arrange 2 oncoplots together side by side
+            ht_list <- op1$Heatmap + op2$Heatmap
+            p <- draw(
+                ht_list,
+                merge_legends = TRUE,
+                heatmap_legend_side = "bottom",
+                annotation_legend_side = "bottom"
+            )
+        })
+    )
 
     return(p)
   }
