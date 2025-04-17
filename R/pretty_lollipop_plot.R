@@ -236,7 +236,7 @@ pretty_lollipop_plot <- function(
             unique() %>% print()
           maxAA = dplyr::filter(gene_counts, AA %in% labelPos) %>%
             select(AA,label,mutation_count) %>% pull(AA) %>% max()
-          gene_counts = mutate(gene_counts,label=gsub("p.","",label))
+          gene_counts = mutate(gene_counts,label=gsub("p\\.","",label))
           plot = plot + geom_text_repel(data = dplyr::filter(gene_counts, AA %in% labelPos) %>%
                                           select(AA,label,mutation_count) %>%
                                           unique(),

@@ -170,7 +170,7 @@
 #'
 prettyStackedOncoplot <- function(these_samples_metadata,
                                   maf_data,
-                                  metadataColumns = "pathology",
+                                  metadataColumns = c("pathology","lymphgen"),
                                   sortByMetadataColumns,
                                   seg_data,
                                   sortByPGA = FALSE,
@@ -178,22 +178,29 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                                   ashm_matrix,
                                   regions_bed,
                                   genes,
+                                  second_oncoplot_genes,
                                   sortByGenes,
                                   genes_CN_thresh,
-                                  secondPlotType = "pretty_CN_heatmap", #also allowed: prettyMutationDensity
+                                  secondPlotType = "pretty_CN_heatmap", #also allowed: prettyMutationDensity, prettyOncoplot
                                   oncoplot_location = "top",
                                   cluster_samples = FALSE,
                                   secondPlotArgs,
                                   oncoplotArgs,
                                   returnEverything = FALSE,
-                                  plot_width = 15,
+                                  plot_width = NULL,
                                   oncoplotHeight = 6,
                                   secondPlotHeight = 6,
                                   verbose = FALSE,
                                   row_names_side = "right",
-                                  pctFontSize = 0) {
+                                  pctFontSize = 0,
+                                  heatmap_legend_side = "bottom") {
   #### Required for both top and bottom scenarios ####
   plot_flavour = NULL
+    if (missing(maf_data)) {
+    stop("maf_data must be provided")
+  } else {
+    maf_samples <- unique(maf_data$Tumor_Sample_Barcode)
+  }
   if(grepl("CN",secondPlotType)){
     plot_flavour = "CN"
     # get sample_id that actually have CN data
@@ -211,12 +218,11 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       print("ashm_matrix will be generated for you To avoid this, provide ashm_matrix next time")
       stop()
     }
+  }else if(secondPlotType=="prettyOncoplot"){
+    plot_flavour = "oncoplot"
+    other_samples = maf_samples
   }
-  if (missing(maf_data)) {
-    stop("maf_data must be provided")
-  } else {
-    maf_samples <- unique(maf_data$Tumor_Sample_Barcode)
-  }
+
 
   other_samples <- dplyr::filter(
       these_samples_metadata,
@@ -248,7 +254,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
   ### Oncoplot on TOP scenario ###
   if (oncoplot_location == "top") {
-    if(!missing(sortByGenes) | !missing(genes_CN_thresh)){
+    if(!missing(sortByGenes) || !missing(genes_CN_thresh)){
       if(!missing(genes_CN_thresh)){
         if(verbose){
           print("getting CN status for sorting")
@@ -330,7 +336,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     if(verbose){
       print("making oncoplot")  
     }
-    
+
     oncoplot_args <- list(
       hideSideBarplot = TRUE,
       maf_df = maf_data,
@@ -403,9 +409,16 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       print(head(samples_order))
       print("reordering samples based on prettyOncoplot Heatmap")
     }
+ 
+ 
+    these_samples_metadata = dplyr::filter(these_samples_metadata,sample_id %in% samples_order)
+    
     metadata_df <- column_to_rownames(these_samples_metadata, "sample_id")
+    
+
     metadata_df <- metadata_df[order(match(rownames(metadata_df), 
                                samples_order)), , drop = FALSE]
+   
     if(verbose){
       print(dim(metadata_df))
       print(length(samples_order))
@@ -443,6 +456,22 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         backgroundColour = "white",
         returnEverything = TRUE
       )
+    }else if (plot_flavour == "oncoplot"){
+      second_plot_args <- list(
+        
+        metadataColumns = metadataColumns,
+        plot_width = plot_width,
+        genes = second_oncoplot_genes,
+        keepSampleOrder = TRUE,
+        removeNonMutated = FALSE,
+        plot_height = secondPlotHeight,
+        simplify_annotation = TRUE,
+        return_inputs = TRUE
+      )
+
+      second_plot_args[["maf_df"]] = maf_data
+      second_plot_args[["these_samples_metadata"]] = these_samples_metadata
+
     }
     if (!missing(secondPlotArgs)) {
       second_plot_args <- lapply(
@@ -469,17 +498,31 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     if(plot_flavour=="CN"){
       second_plot_args[['sortByGenes']] = NULL
     }
-    
+ 
     pcn <- do.call(secondPlotType, second_plot_args)
-    second_heatmap <- pcn$heatmap_object
+    if(plot_flavour=="oncoplot"){
+      second_heatmap = pcn$Heatmap
+    }else{
+      second_heatmap <- pcn$heatmap_object
+    }
+    
     ht_list <- onco_heatmap %v% second_heatmap
     if(!returnEverything){
-      draw(ht_list, heatmap_legend_side = "bottom", merge_legend = TRUE)
-      return()
-    }
-    return(list(heatmap_list = ht_list, 
+      if(!is.null(plot_width)){
+        pw = unit(plot_width, "cm")
+      }else{
+        pw = NULL
+      }
+      draw(ht_list,
+          heatmap_legend_side = heatmap_legend_side,
+          merge_legend = TRUE,
+          width=pw)
+    }else{
+      return(list(heatmap_list = ht_list, 
                 oncoplot = onco_heatmap,
                 second_plot = second_heatmap))
+    }
+
   } else { 
     ### Oncoplot on BOTTOM scenario ###
     # the other heatmap will specify the sample order
@@ -522,8 +565,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         if(!missing(sortByGenes)){
           sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
         }
-        print(paste(sort_cn_name))
-        print(colnames(cn_state_mat))
+
         these_samples_metadata = left_join(these_samples_metadata,
                                             cn_state_mat)
 
@@ -722,7 +764,11 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
     ht_list <- second_heatmap %v% onco_heatmap
     if(!returnEverything){
-      draw(ht_list, heatmap_legend_side = "bottom", merge_legend = TRUE)
+
+      draw(ht_list,
+           heatmap_legend_side = "bottom",
+           merge_legend = TRUE,
+           width = pw )
     }
     
   }
