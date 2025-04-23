@@ -19,7 +19,7 @@
 #' @param maf A maf data frame. Minimum required columns are Hugo_Symbol
 #' and Tumor_Sample_Barcode.
 #' @param mutmat Optional argument for binary mutation matrix. If not
-#' supplied, function will generate this matrix from the file used in 
+#' supplied, function will generate this matrix from the file used in
 #' argument "maf".
 #' @param metadata Metadata for the comparisons. Minimum required
 #' columns are Tumor_Sample_Barcode and the column assigning each case
@@ -65,7 +65,7 @@
 #' library(GAMBLR.open)
 #' suppressWarnings(
 #'   suppressMessages({
-#' 
+#'
 #' metadata = get_gambl_metadata()
 #' this_meta = dplyr::filter(metadata, pairing_status == "matched")
 #' this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL")) %>%
@@ -85,7 +85,7 @@
 #'                  separate_hotspots = FALSE,
 #'                  comparison_name = "FL vs DLBCL")
 #' plots$arranged
-#' 
+#'
 #' }))
 prettyForestPlot = function(maf,
                             mutmat,
@@ -197,6 +197,12 @@ prettyForestPlot = function(maf,
     dplyr::mutate(q.value = p.adjust(p.value, "BH")) %>%
     dplyr::select(-c(test, method, alternative)) %>%
     dplyr::filter(q.value <= max_q)
+
+  if(nrow(fish_test) < 1){
+    stop(
+        "There are no differences between the comparison groups that pass the max_q value!"
+    )
+  }
 
   flatten_table <- function(Row){
 
