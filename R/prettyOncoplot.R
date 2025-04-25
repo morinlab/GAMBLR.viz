@@ -142,7 +142,19 @@
 #' See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.
 #' @param numeric_heatmap_location Deprecated.
 #' See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.
-#'
+#' @param cnv_df Deprecated. See gene_cnv_df. 
+#' @param summarizeByColumns Optional vector of metadata column
+#' names that will be summarized on the left as stacked bar plots.
+#' @param longest_label Optional character vector specifying the
+#' longest gene name. This is only needed when you are vertically
+#' combining multiple prettyOncoplots after you create them
+#' @param right_anno_column *Experimental*. Specify one metadata
+#' column name that will replace the default bar plot. The incidence
+#' of mutations in patients will be shown as a grouped bar chart
+#' with a bar for each different value of right_anno_column e.g. "pathology"
+#' @param coloured_genes Specify any genes whose labels you
+#' want to be coloured red instead of the default black.
+#' 
 #' @return By default, nothing unless return_inputs is specified,
 #' in which case it returns a named list that contains different
 #' things depending on how the function was run
@@ -392,7 +404,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            split_columns_kmeans,
                            dry_run = FALSE,
                            simplify_annotation = FALSE,
-                           simplify_bg_colour = NA,
+                           simplify_bg_colour = "transparent",
                            stacked = FALSE,
                            return_inputs = FALSE,
                            gap = 0,
@@ -409,7 +421,14 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            summarizeByColumns,
                            longest_label,
                            right_anno_column,
-                           coloured_genes) {
+                           hide_left_annotations = FALSE,
+                           coloured_genes,
+                           annotation_name_side = "bottom",
+                           axis_font_size = 5,
+                           right_anno_width = 2) {
+  all_args <- mget(names(formals()),             # the formal names
+                   sys.frame(sys.nframe()),      # the current call frame
+                   inherits = FALSE)             # don’t look up the stack
   if (stacked) {
     stop("stacked functionality has migrated to prettyStackedOncoplot!")
   }
@@ -974,7 +993,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       splice_df[trunc_df == TRUE] <- FALSE
     }
   
-    if(!is.na(simplify_bg_colour) || simplify_bg_colour == "pathology"){
+    if(simplify_bg_colour == "pathology"){
       #background colour is based on metadata
       bg_df = matrix(nrow=nrow(snv_df),ncol=ncol(snv_df))
       rownames(bg_df) = rownames(snv_df)
@@ -1305,6 +1324,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     } else {
       metadata_df <- arrange(metadata_df, across(sortByColumns))
     }
+    if(verbose){
+      print("done sorting samples")
+    }
     patients_kept <- rownames(metadata_df)
   }
   if (verbose) {
@@ -1438,7 +1460,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     snv_df <- snv_df[genes_kept, patients_kept]
     splice_df <- splice_df[genes_kept, patients_kept]
     if (verbose) {
-      print("HERE")
+      print("Simplify Annotations")
     }
 
     any_hit <- trunc_df
@@ -1464,12 +1486,24 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     } else if (keepSampleOrder) {
       patients_kept <- colnames(any_hit)
     } else if (!missing(sortByColumns)) {
-      metadata_df <- metadata_df[patients_kept, ]
+      if(verbose){
+        print("sorting samples again")
+        print("n patients:")
+        print(length(patients_kept))
+        print("size of metadata:")
+        print(dim(metadata_df))
+        print(table(patients_kept %in% rownames(metadata_df)))
+
+      }
+      #metadata_df <- metadata_df[patients_kept, ]
       metadata_df <- metadata_df[order(match(
         rownames(metadata_df),
         patients_kept
-      )), ]
+      )), , drop = FALSE]
       col_order <- patients_kept
+      if (verbose) {
+        print("done!")
+      }
     } else {
       if (verbose) {
         print(dim(any_hit))
@@ -1507,11 +1541,22 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       }
     }
     col_order <- patients_kept
+    if(verbose){
+        print("sorting samples yet again")
+        print("n patients:")
+        print(length(patients_kept))
+        print("size of metadata:")
+        print(head(metadata_df))
+        print(dim(metadata_df))
+        print(table(patients_kept %in% rownames(metadata_df)))
+
+    }
     metadata_df <- metadata_df[order(match(
       rownames(metadata_df),
       patients_kept
     )), , drop = FALSE]
     if (verbose) {
+      
       print(paste("proceeding with these genes:"))
       print(genes_kept)
       print(head(metadata_df))
@@ -1725,13 +1770,17 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     summarizeByColumns = summarizeByColumns,
     longest_label = longest_label,
     right_anno_column = right_anno_column,
-    coloured_genes = coloured_genes
+    hide_left_annotations = hide_left_annotations,
+    coloured_genes = coloured_genes,
+    annotation_name_side = annotation_name_side,
+    axis_font_size = axis_font_size,
+    right_anno_width = right_anno_width
   )
   if (return_inputs) {
     if (simplify_annotation) {
       returned[["all_hit"]] <- all_hit
     }
-
+    returned[["args"]] = all_args
     return(returned)
   }
 }
@@ -1778,7 +1827,11 @@ make_prettyoncoplot <- function(
     summarizeByColumns,
     longest_label,
     right_anno_column,
-    coloured_genes) {
+    hide_left_annotations,
+    coloured_genes,
+    annotation_name_side,
+    axis_font_size,
+    right_anno_width) {
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
@@ -1845,11 +1898,17 @@ make_prettyoncoplot <- function(
   gene_label_colour = setNames(rep("black",length(row_labels)),row_labels)
   if(!missing(coloured_genes)){
     gene_label_colour[coloured_genes] = "red"
+    oncoprint_args[['row_names_gp']] =  gpar(fontsize = fontSizeGene, col = gene_label_colour)
+  }else{
+    oncoprint_args[['row_names_gp']] =  gpar(fontsize = fontSizeGene)
   }
-  
 
-  #print(gene_label_colour)
-  oncoprint_args[['row_names_gp']] =  gpar(fontsize = fontSizeGene, col = gene_label_colour)
+  if(verbose){
+    print(gene_label_colour)
+  }
+
+  
+  
   oncoprint_args[["show_pct"]] <- show_pct
   if (!is.null(pw)) {
     oncoprint_args[["width"]] <- unit(pw, "cm")
@@ -2028,9 +2087,18 @@ make_prettyoncoplot <- function(
             beside=TRUE,
             gp = gpar(fill = anno_args$colours,
             
-            col = anno_args$colours)),
-          width = unit(3, "cm"),
-          annotation_name_gp = gpar(fontsize = 0),
+            col = anno_args$colours),
+            axis_param = list(
+              #direction = "reverse",
+              labels_rot = 0,
+              side = "top",
+              gp = gpar(fontsize = axis_font_size)
+            )),
+          width = unit(right_anno_width, "cm"),
+          #annotation_name_gp = gpar(fontsize = 0),
+          annotation_name_rot = 0,
+          annotation_name_side = annotation_name_side,
+          annotation_name_offset = unit(1,"cm"),
           annotation_label = NULL,
           which="row"
         )
@@ -2047,32 +2115,34 @@ make_prettyoncoplot <- function(
         oncoprint_args[['col']] = c(oncoprint_args[['col']],
                                     anno_args_list[[new_anno]]$colours)
       }
-
-      barplot_annos <- setNames(lapply(seq_along(anno_args_list), function(i) {
-        anno_args <- anno_args_list[[i]]
-        row_anno_barplot(
-          anno_args$df[gg, ], # ensure 'gg' is defined appropriately
-          gp = gpar(fill = anno_args$colours, col = anno_args$colours),
-          bar_width = 0.5,
-          border = FALSE,
-          width = unit(2, "cm"),
-          axis_param = list(
-            direction = "reverse",
-            labels_rot = 0,
-            gp = gpar(fontsize = 4)
+      if(!hide_left_annotations){
+        barplot_annos <- setNames(lapply(seq_along(anno_args_list), function(i) {
+          anno_args <- anno_args_list[[i]]
+          row_anno_barplot(
+            anno_args$df[gg, ], # ensure 'gg' is defined appropriately
+            gp = gpar(fill = anno_args$colours, col = anno_args$colours),
+            bar_width = 0.5,
+            border = FALSE,
+            #width = unit(2, "cm"),
+            width = unit(right_anno_width, "cm"),
+            axis_param = list(
+              direction = "reverse",
+              labels_rot = 0,
+              #side = "top",
+              gp = gpar(fontsize = 4)
+            )
           )
-        )
-      }), paste0("anno", seq_along(anno_args_list)))
-        left_anno <- do.call(HeatmapAnnotation, c(
-          barplot_annos,
-          list(
-            which = "row",
-            gap = unit(0.2, "cm"),
-            show_annotation_name = FALSE
-          )
-        ))
-      oncoprint_args[["left_annotation"]] <- left_anno
-
+        }), paste0("anno", seq_along(anno_args_list)))
+          left_anno <- do.call(HeatmapAnnotation, c(
+            barplot_annos,
+            list(
+              which = "row",
+              gap = unit(0.2, "cm"),
+              show_annotation_name = FALSE
+            )
+          ))
+        oncoprint_args[["left_annotation"]] <- left_anno
+      }
     }
   }
 
