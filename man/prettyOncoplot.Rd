@@ -62,7 +62,7 @@ prettyOncoplot(
   split_columns_kmeans,
   dry_run = FALSE,
   simplify_annotation = FALSE,
-  simplify_bg_colour = NA,
+  simplify_bg_colour = "transparent",
   stacked = FALSE,
   return_inputs = FALSE,
   gap = 0,
@@ -75,7 +75,19 @@ prettyOncoplot(
   row_names_side = "right",
   show_pct = TRUE,
   hide_annotation_name = FALSE,
-  cnv_df
+  cnv_df,
+  summarizeByColumns,
+  longest_label,
+  right_anno_column,
+  hide_left_annotations = FALSE,
+  hide_right_annotations = FALSE,
+  coloured_genes,
+  genesForClustering,
+  annotation_name_side = "bottom",
+  annotation_name_fontsize = 1,
+  axis_font_size = 5,
+  right_anno_width = 2,
+  hide_gene_names = FALSE
 )
 }
 \arguments{
@@ -264,6 +276,36 @@ of the full width of the column. Default 0 (no gap).}
 
 \item{hide_annotation_name}{Default: FALSE}
 
+\item{cnv_df}{Deprecated. See gene_cnv_df.}
+
+\item{summarizeByColumns}{Optional vector of metadata column
+names that will be summarized on the left as stacked bar plots.}
+
+\item{longest_label}{Optional character vector specifying the
+longest gene name. This is only needed when you are vertically
+combining multiple prettyOncoplots after you create them}
+
+\item{right_anno_column}{*Experimental*. Specify one metadata
+column name that will replace the default bar plot. The incidence
+of mutations in patients will be shown as a grouped bar chart
+with a bar for each different value of right_anno_column e.g. "pathology"}
+
+\item{hide_right_annotations}{Set to TRUE to hide the right
+annotations.}
+
+\item{coloured_genes}{Specify any genes whose labels you
+want to be coloured red instead of the default black.}
+
+\item{genesForClustering}{Optionally specify a subset of genes
+to use for clustering (only useful if cluster_cols is TRUE).}
+
+\item{annotation_name_fontsize}{Font size for the annotation names.}
+
+\item{right_anno_width}{Width of the right annotation column.
+(optional)}
+
+\item{hide_gene_names}{Set to TRUE to hide gene names.}
+
 \item{cluster_numeric_rows}{Deprecated.
 See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}
 
@@ -298,25 +340,29 @@ object or onco_matrix you provide.
 sample_id, pathology
 }
 \examples{
-
+cat("running examples for prettyOncoplot\n")
 suppressMessages(
   suppressWarnings({
-# load packages
-library(grid)
-library(dplyr)
-library(GAMBLR.open)
+    # load packages
+    library(grid)
+    library(dplyr)
+    library(GAMBLR.open)
 
-# Using GAMBLR.open
-maf_metadata <- GAMBLR.open::get_gambl_metadata(
-                               seq_type_filter = "genome") \%>\%
-  dplyr::filter(pathology \%in\% c("FL", "DLBCL"),
-                study == "FL_Dreval")
+    # Using GAMBLR.open
+    maf_metadata <- GAMBLR.open::get_gambl_metadata(
+      seq_type_filter = "genome"
+    ) \%>\%
+      dplyr::filter(
+        pathology \%in\% c("FL", "DLBCL"),
+        study == "FL_Dreval"
+      )
 
 
-maf_data <- get_coding_ssm(
-  these_samples_metadata = maf_metadata
+    maf_data <- get_coding_ssm(
+      these_samples_metadata = maf_metadata
+    )
+  })
 )
-}))
 
 # define some genes of interest
 fl_genes <- GAMBLR.data::lymphoma_genes \%>\%
@@ -330,35 +376,37 @@ dlbcl_genes <- GAMBLR.data::lymphoma_genes \%>\%
 genes <- c(fl_genes, dlbcl_genes)
 
 # For splitting into gene sets
-split_genes <- c(rep("FL", length(fl_genes)),
-                 rep("DLBCL", length(dlbcl_genes)))
+split_genes <- c(
+  rep("FL", length(fl_genes)),
+  rep("DLBCL", length(dlbcl_genes))
+)
 names(split_genes) <- genes
 
 suppressMessages(
   suppressWarnings({
-prettyOncoplot(
-  maf_df = maf_data, genes = genes,
-  these_samples_metadata = maf_metadata,
-  splitGeneGroups = split_genes,
-  minMutationPercent = 5
+    prettyOncoplot(
+      maf_df = maf_data, genes = genes,
+      these_samples_metadata = maf_metadata,
+      splitGeneGroups = split_genes,
+      minMutationPercent = 5
+    )
+  })
 )
-}))
 
 # Was that too slow for you? Enable the simplify_annotation
 # parameter for a quicker result.
 
 suppressMessages(
   suppressWarnings({
-
-prettyOncoplot(
-  maf_df = maf_data, genes = genes,
-  these_samples_metadata = maf_metadata,
-  splitGeneGroups = split_genes,
-  minMutationPercent = 5,
-  simplify_annotation = TRUE
+    prettyOncoplot(
+      maf_df = maf_data, genes = genes,
+      these_samples_metadata = maf_metadata,
+      splitGeneGroups = split_genes,
+      minMutationPercent = 5,
+      simplify_annotation = TRUE
+    )
+  })
 )
-
-}))
 
 # Want to include copy number? You have two options.
 # Option 1:
@@ -384,40 +432,40 @@ print(gene_regions)
 
 suppressMessages(
   suppressWarnings({
+    gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
+      only_cnv = "all",
+      these_samples_metadata = get_gambl_metadata(),
+      genes_and_cn_threshs = gene_regions
+    )
 
-gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
-  only_cnv = "all",
-  these_samples_metadata = get_gambl_metadata(),
-  genes_and_cn_threshs = gene_regions
+
+
+
+    prettyOncoplot(
+      maf_df = maf_data, genes = c(
+        "CREBBP", "EZH2", "MYD88",
+        "TCF3", "BCL2", "BCL7A",
+        "MEF2B", "POU2F2", "POU2AF1",
+        "ID3", "MYC",
+        "RRAGC", "TCL1A", "KMT2D",
+        "PIM1", "CD79B", "TMSB4X",
+        "TMEM30A", "TNFAIP3"
+      ),
+      these_samples_metadata = maf_metadata,
+      cluster_rows = TRUE,
+      metadataColumns = c(
+        "pathology",
+        "lymphgen",
+        "seq_type",
+        "ffpe_or_frozen"
+      ),
+      cluster_cols = FALSE,
+      simplify_annotation = TRUE,
+      cnv_df = gene_cnv,
+      sortByColumns = c("pathology", "lymphgen")
+    )
+  })
 )
-
-
-
-
-prettyOncoplot(
-  maf_df = maf_data, genes = c(
-    "CREBBP", "EZH2", "MYD88",
-    "TCF3", "BCL2", "BCL7A",
-    "MEF2B", "POU2F2", "POU2AF1",
-    "ID3", "MYC",
-    "RRAGC", "TCL1A", "KMT2D",
-    "PIM1", "CD79B", "TMSB4X",
-    "TMEM30A", "TNFAIP3"
-  ),
-  these_samples_metadata = maf_metadata,
-  cluster_rows = TRUE,
-  metadataColumns = c(
-    "pathology",
-    "lymphgen",
-    "seq_type",
-    "ffpe_or_frozen"
-  ),
-  cluster_cols = FALSE,
-  simplify_annotation = TRUE,
-  cnv_df = gene_cnv,
-  sortByColumns = c("pathology", "lymphgen")
-)
-}))
 
 
 # Option 2:
@@ -472,6 +520,5 @@ prettyOncoplot(
   sortByColumns = c("pathology", "genetic_subgroup"),
   minMutationPercent = 0
 )
-
 }
 }

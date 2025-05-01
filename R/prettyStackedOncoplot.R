@@ -29,7 +29,7 @@
 #' @export
 #'
 #' @examples
-#' 
+#' cat("Running example for function: prettyStackedOncoplot\n")
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
@@ -343,7 +343,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       these_samples_metadata = these_samples_metadata,
       keepSampleOrder = FALSE,
       cluster_cols = cluster_samples,
-      plot_width = plot_width,
+      #plot_width = plot_width,
       simplify_annotation = TRUE,
       return_inputs = TRUE,
       row_names_side = row_names_side,
@@ -357,7 +357,9 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       oncoplot_args[["genes"]] <- genes
     }
     oncoplot_args[["plot_height"]] = oncoplotHeight
-    oncoplot_args[["plot_width"]] = plot_width
+    if(!is.null(plot_width)){
+      oncoplot_args[["plot_width"]] = plot_width
+    }
     if (plot_flavour=="CN") {
       oncoplot_args[['gene_cnv_df']] = cnv_df
     }
@@ -700,7 +702,9 @@ prettyStackedOncoplot <- function(these_samples_metadata,
       )
 
     }
-
+    if(verbose){
+      print(second_plot_args)
+    }
     pcn <- do.call(secondPlotType, second_plot_args)
     second_heatmap <- pcn$heatmap_object
     samples_order <- second_heatmap@column_names_param$labels
@@ -764,7 +768,9 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
     ht_list <- second_heatmap %v% onco_heatmap
     if(!returnEverything){
-
+      if(is.null(plot_width)){
+        pw = NULL
+      }
       draw(ht_list,
            heatmap_legend_side = "bottom",
            merge_legend = TRUE,

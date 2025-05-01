@@ -31,6 +31,7 @@
 #' @export
 #'
 #' @examples
+#' cat("Running example for function: prettyGeneCloud\n")
 #' #get all coding SSM directly from GAMBLR.data
 #' maf = GAMBLR.data::sample_data$grch37$maf
 #'

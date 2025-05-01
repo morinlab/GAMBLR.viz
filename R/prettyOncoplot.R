@@ -154,7 +154,14 @@
 #' with a bar for each different value of right_anno_column e.g. "pathology"
 #' @param coloured_genes Specify any genes whose labels you
 #' want to be coloured red instead of the default black.
-#' 
+#' @param hide_right_annotations Set to TRUE to hide the right
+#' annotations.
+#' @param genesForClustering Optionally specify a subset of genes
+#' to use for clustering (only useful if cluster_cols is TRUE).
+#' @param annotation_name_fontsize Font size for the annotation names.
+#' @param right_anno_width Width of the right annotation column.
+#' (optional)
+#' @param hide_gene_names Set to TRUE to hide gene names.
 #' @return By default, nothing unless return_inputs is specified,
 #' in which case it returns a named list that contains different
 #' things depending on how the function was run
@@ -166,7 +173,7 @@
 #' @export
 #'
 #' @examples
-#'
+#' cat("running examples for prettyOncoplot\n")
 #' suppressMessages(
 #'   suppressWarnings({
 #'     # load packages
@@ -422,10 +429,14 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            longest_label,
                            right_anno_column,
                            hide_left_annotations = FALSE,
+                           hide_right_annotations = FALSE,
                            coloured_genes,
+                           genesForClustering,
                            annotation_name_side = "bottom",
+                           annotation_name_fontsize = 1,
                            axis_font_size = 5,
-                           right_anno_width = 2) {
+                           right_anno_width = 2,
+                           hide_gene_names = FALSE) {
   all_args <- mget(names(formals()),             # the formal names
                    sys.frame(sys.nframe()),      # the current call frame
                    inherits = FALSE)             # don’t look up the stack
@@ -1620,6 +1631,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           clustering_distance_rows
         ))
       }
+
       h_obj <- pheatmap(any_hit,
         clustering_distance_rows = clustering_distance_rows,
         cluster_rows = TRUE, cluster_cols = FALSE, fontsize_row = 6,
@@ -1630,14 +1642,27 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       }
     } else if (!cluster_rows) {
       message("clustering mutation columns but not rows")
-      h_obj <- pheatmap(any_hit,
+    
+      if(!missing(genesForClustering)){
+        genesForClustering = intersect(genesForClustering,rownames(any_hit))
+        hits_for_clustering = any_hit[genesForClustering,]
+      }else{
+        hits_for_clustering = any_hit
+      }
+      h_obj <- pheatmap(hits_for_clustering,
         clustering_distance_cols = clustering_distance_cols,
         cluster_cols = TRUE, cluster_rows = FALSE, fontsize_row = 6,
         show_colnames = showTumorSampleBarcode, use_raster = use_raster
       )
     } else {
       message("clustering mutation rows and columns")
-      h_obj <- pheatmap(any_hit,
+      if(!missing(genesForClustering)){
+        genesForClustering = intersect(genesForClustering,rownames(any_hit))
+        hits_for_clustering = any_hit[genesForClustering,]
+      }else{
+        hits_for_clustering = any_hit
+      }
+      h_obj <- pheatmap(hits_for_clustering,
         clustering_distance_rows = clustering_distance_rows,
         clustering_distance_cols = clustering_distance_cols,
         fontsize_row = 6, show_colnames = showTumorSampleBarcode,
@@ -1767,14 +1792,18 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     show_any_legend = show_any_legend,
     metadataSide = metadataSide,
     hide_annotation_name = hide_annotation_name,
+    hide_gene_names = hide_gene_names,
     summarizeByColumns = summarizeByColumns,
     longest_label = longest_label,
     right_anno_column = right_anno_column,
     hide_left_annotations = hide_left_annotations,
+    hide_right_annotations = hide_right_annotations,
     coloured_genes = coloured_genes,
     annotation_name_side = annotation_name_side,
     axis_font_size = axis_font_size,
-    right_anno_width = right_anno_width
+    right_anno_width = right_anno_width,
+    genesForClustering = genesForClustering,
+    annotation_name_fontsize = annotation_name_fontsize
   )
   if (return_inputs) {
     if (simplify_annotation) {
@@ -1824,14 +1853,18 @@ make_prettyoncoplot <- function(
     show_pct,
     metadataSide, # nolint: object_name_linter.
     hide_annotation_name,
+    hide_gene_names,
     summarizeByColumns,
     longest_label,
     right_anno_column,
     hide_left_annotations,
+    hide_right_annotations,
     coloured_genes,
     annotation_name_side,
     axis_font_size,
-    right_anno_width) {
+    right_anno_width,
+    genesForClustering,
+    annotation_name_fontsize) {
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
@@ -1873,6 +1906,10 @@ make_prettyoncoplot <- function(
     return(x)
   }
   colours <- lapply(colours, modify_na_elements)
+  if(hide_right_annotations){
+    right_annotation = NULL
+  }
+  show_row_names = !hide_gene_names
   oncoprint_args <- list(
     mat = mat_input,
     alter_fun = alter_fun,
@@ -1883,6 +1920,7 @@ make_prettyoncoplot <- function(
     column_order = col_order,
     column_labels = NULL,
     show_column_names = showTumorSampleBarcode,
+    show_row_names = show_row_names,
     column_title = column_title,
     row_title = NULL,
     show_heatmap_legend = show_any_legend,
@@ -2086,16 +2124,16 @@ make_prettyoncoplot <- function(
           Incidence = anno_barplot(percentages,
             beside=TRUE,
             gp = gpar(fill = anno_args$colours,
-            
             col = anno_args$colours),
             axis_param = list(
-              #direction = "reverse",
               labels_rot = 0,
               side = "top",
               gp = gpar(fontsize = axis_font_size)
             )),
           width = unit(right_anno_width, "cm"),
           #annotation_name_gp = gpar(fontsize = 0),
+          
+          annotation_name_gp = gpar(fontsize = annotation_name_fontsize),
           annotation_name_rot = 0,
           annotation_name_side = annotation_name_side,
           annotation_name_offset = unit(1,"cm"),

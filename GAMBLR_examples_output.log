@@ -1,0 +1,1539 @@
+[1] "=== STARTED AT 2025-05-01 15:56:04.784611 ==="
+── Running 35 example files ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+
+> ### Name: ashm_multi_rainbow_plot
+> ### Title: ASHM Multi-panel Rainbow Plot
+> ### Aliases: ashm_multi_rainbow_plot
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: ashm_multi_rainbow_plot\n") 
+Running example for function: ashm_multi_rainbow_plot
+
+> suppressMessages(library(GAMBLR.open))
+
+> #get lymphgen colours
+> lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
+
+> metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) %>% 
++           dplyr::filter(pathology=="DLBCL",
++                  seq_type=="genome") %>% 
++           check_and_clean_metadata(.,duplicate_action="keep_first") %>%
++           dplyr::arrange(lymphgen)
+
+> regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
++                               fix_names = "concat",
++                               concat_cols = c("gene","region"))
+
+> regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
+
+> ashm_multi_rainbow_plot(regions_bed,
++                         metadata,
++                         custom_colours = lymphgen_colours,
++                         verbose = TRUE)
+[1] "ashm_multi_rainbow_plot"
+[1] "regions_bed provided"
+genomic_data Object
+Genome Build: grch37 
+Showing first 10 rows:
+  chrom     start       end             name       region regulatory_comment
+1     3 187458526 187464632          BCL6TSS          TSS               <NA>
+2     3 187615533 187625659 BCL6Intergenic-1 Intergenic-1               <NA>
+3     3 187625659 187638101 BCL6Intergenic-2 Intergenic-2               <NA>
+4     3 187657518 187665996 BCL6Intergenic-3 Intergenic-3               <NA>
+5     3 187675741 187690717 BCL6Intergenic-4 Intergenic-4               <NA>
+6     3 187690717 187705000 BCL6Intergenic-5 Intergenic-5               <NA>
+[1] "get_ssm_by_regions"
+genomic_data Object
+Genome Build: grch37 
+Showing first 10 rows:
+      start sample_id      region_name
+1 187620119  OCI-Ly10 BCL6Intergenic-1
+2 187622610  SU-DHL-4 BCL6Intergenic-1
+3 187615657  FL1003T2 BCL6Intergenic-1
+4 187616207  SP116648 BCL6Intergenic-1
+5 187616296  SP116659 BCL6Intergenic-1
+6 187616515 96-31596T BCL6Intergenic-1
+# A tibble: 6 × 8
+  age_group bam_available cohort            compression COO_consensus DHITsig_consensus EBV_status_inf ffpe_or_frozen
+  <chr>     <lgl>         <chr>             <chr>       <chr>         <chr>             <chr>          <chr>         
+1 Other     TRUE          DLBCL_LSARP_Trios bam         UNCLASS       DHITsigNeg        <NA>           FFPE          
+2 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           DHITsig-IND       <NA>           FFPE          
+3 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           DHITsigNeg        <NA>           FFPE          
+4 Other     TRUE          DLBCL_LSARP_Trios cram        UNCLASS       DHITsigNeg        <NA>           FFPE          
+5 Other     TRUE          <NA>              bam         UNCLASS       DHITsigPos        <NA>           frozen        
+6 Other     TRUE          DLBCL_Gascoyne    bam         UNCLASS       DHITsigPos        <NA>           frozen        
+genomic_data Object
+Genome Build: 
+Showing first 10 rows:
+      start sample_id      region_name age_group bam_available             cohort compression COO_consensus DHITsig_consensus EBV_status_inf
+1 187620119  OCI-Ly10 BCL6Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           ABC        DHITsigNeg   EBV-negative
+2 187622610  SU-DHL-4 BCL6Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           GCB        DHITsigPos   EBV-negative
+3 187615657  FL1003T2 BCL6Intergenic-1     Other          TRUE          FL_Kridel        cram           GCB        DHITsigPos           <NA>
+4 187616207  SP116648 BCL6Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+5 187616296  SP116659 BCL6Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+6 187616515 96-31596T BCL6Intergenic-1     Other          TRUE DLBCL_GenomeCanada         bam       UNCLASS        DHITsigNeg           <NA>
+[1] "plotting"
+[1] "done"
+
+> #build plot
+> ## Not run: 
+> ##D ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
+> ##D                                                "MYC-TSS",
+> ##D                                                "SGK1-TSS",
+> ##D                                                "IGL"),
+> ##D                         custom_colours = lymphgen_colours,
+> ##D                         this_seq_type = "genome")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: ashm_rainbow_plot
+> ### Title: ASHM Rainbow Plot
+> ### Aliases: ashm_rainbow_plot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #basic usage
+> ##D this_region = "chr6:90975034-91066134"
+> ##D metadata = get_gambl_metadata()
+> ##D metadata = check_and_clean_metadata(metadata,
+> ##D            duplicate_action ="keep_first")
+> ##D ashm_rainbow_plot(metadata = metadata,
+> ##D                   region = this_region)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: categorize_CN_events
+> ### Title: Categorize arm-level and chromosomal CNV events
+> ### Aliases: categorize_CN_events
+> ### Keywords: internal
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D meta = get_gambl_metadata()
+> ##D meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
+> ##D 
+> ##D all_segments = get_cn_segments(these_samples_metadata = meta)
+> ##D 
+> ##D all_states_binned = segmented_data_to_cn_matrix(
+> ##D                                  seg_data = all_segments,
+> ##D                                  strategy="auto_split",
+> ##D                                  n_bins_split=500,
+> ##D                                  these_samples_metadata = meta)
+> ##D labelTheseGenes = c("REL","TP53")
+> ##D cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+> ##D     scale_by_sample = TRUE,
+> ##D     these_samples_metadata = meta,
+> ##D     metadataColumns = c("pathology","seq_type"),
+> ##D     return_data = TRUE)
+> ##D     
+> ##D aneuploidies = categorize_CN_events(cn_out)
+> ##D 
+> ##D select(aneuploidies,1:5) %>% head()
+> ##D 
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: circular_CN_plot
+> ### Title: Circular overview of copy number data across a cohort
+> ### Aliases: circular_CN_plot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D meta = get_gambl_metadata()
+> ##D meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
+> ##D print("pretty_CN_heatmap") 
+> ##D 
+> ##D all_segments = get_cn_segments(these_samples_metadata = meta)
+> ##D all_states_binned = segmented_data_to_cn_matrix(
+> ##D                                  seg_data = all_segments,
+> ##D                                  strategy="auto_split",
+> ##D                                  n_bins_split=500,
+> ##D                                  these_samples_metadata = meta)
+> ##D labelTheseGenes = c("REL","TP53")
+> ##D CN_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+> ##D                            these_samples_metadata = meta,
+> ##D                            return_data = TRUE,
+> ##D                            labelTheseGenes = labelTheseGenes)
+> ##D 
+> ##D circular_CN_plot(CN_out)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: comp_report
+> ### Title: sample-level SV/SSM/CN reports in PDF
+> ### Aliases: comp_report
+> ### Keywords: internal
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # create a PDF report for one sample, as well as exporting all 
+> ##D # individual plots.
+> ##D comp_report(this_sample_id = "HTMCP-01-06-00422-01A-01D",
+> ##D             out = "./",
+> ##D             export_individual_plots = TRUE)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: copy_number_vaf_plot
+> ### Title: CN VAF Plot
+> ### Aliases: copy_number_vaf_plot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D #build plot
+> ##D copy_number_vaf_plot(this_sample_id = "DOHH-2")
+> ##D 
+> ##D #coding only
+> ##D copy_number_vaf_plot(this_sample_id = "DOHH-2",
+> ##D                      coding_only = TRUE)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: fancy_alignment_plot
+> ### Title: Plot Alignment Metrics
+> ### Aliases: fancy_alignment_plot
+> 
+> ### ** Examples
+> 
+> #load packages
+> ## Not run: 
+> ##D library(dplyr)
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #get sample IDs for available genome samples
+> ##D genome_collated = collate_results(seq_type_filter = "genome") %>%
+> ##D   pull(sample_id)
+> ##D 
+> ##D #subset the collated samples on BL samples
+> ##D my_samples = get_gambl_metadata() %>%
+> ##D   dplyr::filter(sample_id %in% genome_collated) %>%
+> ##D   dplyr::filter(pathology == "BL") %>% pull(sample_id)
+> ##D 
+> ##D fancy_alignment_plot(these_sample_ids = my_samples)
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_cnbar
+> ### Title: Copy Number states barplot
+> ### Aliases: fancy_cnbar
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #Return a plot for one sample, with default parameters.
+> ##D fancy_cnbar(this_sample_id = "DOHH-2")
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_ideogram
+> ### Title: genome-wide ideogram annotated with SSM and CN information
+> ### Aliases: fancy_ideogram
+> 
+> ### ** Examples
+> 
+> #build plot
+> ## Not run: 
+> ##D fancy_ideogram(this_sample_id = "DOHH-2",
+> ##D                gene_annotation = "MYC",
+> ##D                plot_title = "Sample-level Ideogram Example",
+> ##D                plot_subtitle = "grch37")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: fancy_qc_plot
+> ### Title: Plot Quality Control Metrics.
+> ### Aliases: fancy_qc_plot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D #load packages
+> ##D library(dplyr)
+> ##D library(GAMBLR.open)
+> ##D 
+> ##D #get sample IDs for available genome samples
+> ##D genome_collated = collate_results(seq_type_filter = "genome") %>%
+> ##D   pull(sample_id)
+> ##D 
+> ##D #subset the collated samples on BL samples
+> ##D my_samples = get_gambl_metadata() %>%
+> ##D   dplyr::filter(sample_id %in% genome_collated) %>%
+> ##D   dplyr::filter(pathology == "BL") %>% pull(sample_id)
+> ##D 
+> ##D fancy_qc_plot(these_sample_ids = my_samples, plot_data = "AverageBaseQuality")
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_snv_chrdistplot
+> ### Title: n SNVs per chromosome plot
+> ### Aliases: fancy_snv_chrdistplot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D 
+> ##D #plot SNVs
+> ##D fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
+> ##D 
+> ##D #plot SNVs and DNPs
+> ##D fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
+> ##D                       include_dnp = TRUE,
+> ##D                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_sv_sizedens
+> ### Title: Structural Variants Size Plot.
+> ### Aliases: fancy_sv_sizedens
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #build plot sith default parameters
+> ##D fancy_sv_sizedens(this_sample_id = "SP116715")
+> ##D 
+> ##D #restrict plot to only chromosome 1 and 2
+> ##D fancy_sv_sizedens(this_sample_id = "SP116715",
+> ##D                   size_cutoff = 0,
+> ##D                   chr_select = c("chr1", "chr2"))
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: fancy_v_chrcount
+> ### Title: n variants per chromosome plot.
+> ### Aliases: fancy_v_chrcount
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D 
+> ##D library(GAMBLR.open)
+> ##D 
+> ##D #plot ssm
+> ##D fancy_v_chrcount(this_sample_id = "DOHH-2",
+> ##D                  y_interval = 10)
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_v_count
+> ### Title: Total n variants count plot.
+> ### Aliases: fancy_v_count
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #count all variants for one sample (default parameters)
+> ##D fancy_v_count(this_sample_id = "DOHH-2")
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: fancy_v_sizedis
+> ### Title: Variant size distribution plot
+> ### Aliases: fancy_v_sizedis
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.data)
+> ##D 
+> ##D #plot SSM size distributions:
+> ##D fancy_v_sizedis(this_sample_id = "DOHH-2")
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: focal_cn_plot
+> ### Title: Copy Number Segments Plot
+> ### Aliases: focal_cn_plot
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D 
+> ##D #get metadata
+> ##D this_metadata = get_gambl_metadata()
+> ##D 
+> ##D #get myc region
+> ##D myc_region = GAMBLR.utils::gene_to_region(gene_symbol = "MYC",
+> ##D                                           return_as = "region")
+> ##D 
+> ##D #build plot
+> ##D focal_cn_plot(these_samples_metadata = this_metadata,
+> ##D               region = myc_region,
+> ##D               type = "loss",
+> ##D               crop_distance = 100000000)
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: map_metadata_to_colours
+> ### Title: Assign a colour palette to metadata columns automatically and
+> ###   consistently.
+> ### Aliases: map_metadata_to_colours
+> ### Keywords: internal
+> 
+> ### ** Examples
+> 
+> cat("running examples for map_metadata_to_colours\n")
+running examples for map_metadata_to_colours
+
+> library(GAMBLR.open)
+
+> #get metadata
+> all_meta = suppressMessages(get_gambl_metadata() %>%
++   dplyr::filter(pathology %in% c("FL","DLBCL")))
+
+> #get colours
+> all_cols = map_metadata_to_colours(
++      metadataColumns = c(
++          "lymphgen",
++          "pathology"),
++      these_samples_metadata = all_meta,
++      column_alias = list("nothing" = "FL")
++ )
+
+> ### Name: mutation_hotspot_logo
+> ### Title: Represent mutation hot spots as a sequence logo
+> ### Aliases: mutation_hotspot_logo
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D g_meta <- suppressMessages(get_gambl_metadata()) %>%
+> ##D   dplyr::filter(seq_type == "genome")
+> ##D # CXCR4 non-coding hotspot
+> ##D muts <- get_ssm_by_regions(
+> ##D   regions_list = "2:136875000-136875097",
+> ##D   streamlined = FALSE,
+> ##D   projection = "grch37",
+> ##D   these_samples_metadata = g_meta
+> ##D )
+> ##D 
+> ##D 
+> ##D mutation_hotspot_logo(
+> ##D   maf_df = muts,
+> ##D   hotspot_position = 136875037,
+> ##D   include_AA = TRUE,
+> ##D   pad_length = 51,
+> ##D   annotate_motif = TRUE,
+> ##D   base_size = 2,
+> ##D   prepend_plot_label = "CXCR4"
+> ##D )
+> ##D 
+> ##D 
+> ##D cap_meta <- suppressMessages(get_gambl_metadata()) %>%
+> ##D   dplyr::filter(seq_type == "capture")
+> ##D 
+> ##D # ID3 hotspot
+> ##D muts <- get_ssm_by_regions(
+> ##D   regions_list = "1:23885706-23885798",
+> ##D   streamlined = FALSE,
+> ##D   projection = "grch37",
+> ##D   this_seq_type = "capture",
+> ##D   these_samples_metadata = cap_meta
+> ##D )
+> ##D 
+> ##D 
+> ##D mutation_hotspot_logo(
+> ##D   maf_df = muts,
+> ##D   hotspot_position = 23885750,
+> ##D   include_AA = TRUE,
+> ##D   aa_size = 3,
+> ##D   pad_length = 42,
+> ##D   annotate_motif = TRUE,
+> ##D   base_size = 3,
+> ##D   prepend_plot_label = "ID3",
+> ##D   text_size = 8
+> ##D )
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: plot_MutationTimeR
+> ### Title: Plot MutationTimeR Results
+> ### Aliases: plot_MutationTimeR
+> 
+> ### ** Examples
+> 
+> 
+> ## Not run: 
+> ##D my_meta = suppressMessages(get_gambl_metadata()) %>%
+> ##D   dplyr::filter(sample_id=="01-20985T",
+> ##D                seq_type=="genome")
+> ##D timed = GAMBLR.results::get_timed_mutations(my_meta,"hg38")
+> ##D 
+> ##D all_plots = plot_MutationTimeR(my_meta,timed$CNA,timed$SSM)
+> ##D 
+> ##D all_plots$full
+> ##D 
+> ##D all_plots$minimal
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: plot_sample_circos
+> ### Title: Sample-level Circos Plot
+> ### Aliases: plot_sample_circos
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D library(GAMBLR.open)
+> ##D 
+> ##D plot_sample_circos(this_sample_id = "02-13135T",
+> ##D                    legend_metadata_columns = c("pathology",
+> ##D                                                "lymphgen",
+> ##D                                                "COO_consensus",
+> ##D                                                "DHITsig_consensus"),
+> ##D                    legend_metadata_names = c("pathology",
+> ##D                                              "LymphGen",
+> ##D                                              "COO",
+> ##D                                              "DHITsig"),
+> ##D                    chrom_list = c("chr3",
+> ##D                                   "chr8",
+> ##D                                   "chr14",
+> ##D                                   "chr18"))
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: pretty_circular_mutation_frequency_heatmap
+> ### Title: pretty_circular_mutation_frequency_heatmap
+> ### Aliases: pretty_circular_mutation_frequency_heatmap
+> 
+> ### ** Examples
+> 
+> cat("running examples for pretty_circular_mutation_frequency_heatmap\n")
+running examples for pretty_circular_mutation_frequency_heatmap
+
+> library(dplyr)
+
+> library(GAMBLR.open)
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ metadata <- get_gambl_metadata() %>%
++    dplyr::filter(!seq_type == "mrna") %>%
++    dplyr::filter(pathology %in% names(get_gambl_colours("pathology"))) %>%
++    check_and_clean_metadata(.,duplicate_action="keep_first")
++ 
++ all_coding <- get_coding_ssm(these_samples_metadata = metadata)
++ 
++ genes <- lymphoma_genes %>%
++     dplyr::filter(DLBCL|FL|BL) %>%
++     dplyr::pull(Gene) %>%
++     unique %>%
++     sort
++ 
++ oncoplot_output <- prettyOncoplot(
++     all_coding,
++     genes = genes,
++     minMutationPercent = 2,
++     these_samples_metadata = metadata,
++     simplify_annotation = TRUE,
++     return_inputs = TRUE
++ )
++ 
++ # Basic plot
++ pretty_circular_mutation_frequency_heatmap(
++     prettyOncoplot_output = oncoplot_output,
++     keep_these_pathologies = c(
++         "FL", "DLBCL", "PMBCL", "BL", "HGBL"
++     )
++ )
++ })) 
+
+> suppressMessages(
++   suppressWarnings({
++ # Add sv layer
++ all_sv <- get_manta_sv(these_samples_metadata = metadata)
++ annotated_sv <- annotate_sv(all_sv) %>%
++     dplyr::filter(gene %in% genes, !is.na(partner)) %>%
++     dplyr::select(sample_id = tumour_sample_id, gene)
++ 
++ # This is to replicate the output format of collate_sv
++ sv_collated <- annotated_sv %>%
++     dplyr::mutate(
++         gene = paste("manta", gene, "sv", sep = "_"),
++         mutated = "POS"
++     ) %>%
++     dplyr::distinct() %>%
++     tidyr::pivot_wider(
++         names_from = gene,
++         values_from = mutated
++     ) %>%
++     replace(is.na(.), "NEG")
++ 
++ # Plot SSM + SVs
++ pretty_circular_mutation_frequency_heatmap(
++     collated_results = list(sv_collated),
++     prettyOncoplot_output = oncoplot_output,
++     these_samples_metadata = metadata
++ )
++ })) 
+
+> suppressMessages(
++   suppressWarnings({
++ regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
++                               fix_names = "concat",
++                               concat_cols =c("gene","region"),
++                               sep="-")
++ # Add aSHM data
++ ashm_freq <- get_ashm_count_matrix(
++     these_samples_metadata = metadata,
++     regions_bed = regions_bed,
++     this_seq_type = "genome",
++     projection = "grch37"
++ )
++ 
++ ashm_freq_collated <- mutate(ashm_freq,across(,~ifelse(.x>0,1,0)))
++ 
++ ashm_freq_collated <- ashm_freq_collated[,colSums(ashm_freq_collated) >130]
++ ashm_freq_collated <- tibble::rownames_to_column(ashm_freq_collated,
++                                                  "sample_id")
++ 
++ # Comprehensive plot with SSM + SV + aSHM and some non-default arguments
++ pretty_circular_mutation_frequency_heatmap(
++     collated_results = list(sv_collated, ashm_freq_collated),
++     prettyOncoplot_output = oncoplot_output,
++     these_samples_metadata = metadata,
++     keep_these_pathologies = c("DLBCL", "FL", "BL"),
++     split_by_type = TRUE,
++     colour_labels = TRUE,
++     label_cex = 0.4,
++     rownames_cex = 0.4,
++     include_legend = TRUE
++ )
++ 
++ }))
+
+> ### Name: pretty_CN_heatmap
+> ### Title: Pretty Copy Number Heatmap
+> ### Aliases: pretty_CN_heatmap
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: pretty_CN_heatmap\n")
+Running example for function: pretty_CN_heatmap
+
+> suppressMessages(library(dplyr))
+
+> suppressMessages(library(GAMBLR.open))
+
+> #get some metadata for subsetting the data to just one pathology (DLBCL)
+> dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) %>%
++                     filter(pathology=="DLBCL",
++                     seq_type=="genome")
+
+> #remove any duplicate sample_id/seq_type combinations
+> meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
++                                       duplicate_action = "keep_first")
+
+> # Create the copy number matrix using the helper functions
+> all_segments = get_cn_segments(these = meta_clean)
+
+> dlbcl_cn_binned = segmented_data_to_cn_matrix(
++                                   seg_data = all_segments,
++                                   strategy="auto_split",
++                                   n_bins_split=1300,
++                                   these_samples_metadata = meta_clean)
+
+> # Generate a basic genome-wide CN heatmap
+> pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
++                   these_samples_metadata = meta_clean,
++                   hide_annotations = "chromosome")
+
+> # Disable row (sample) clustering and restrict to a few chromosomes
+> # and highlight some genes of interest
+> pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
++   these_samples_metadata = meta_clean,
++   hide_annotations = "chromosomes",
++   keep_these_chromosomes = c("9","17"),
++   cluster_rows=FALSE,
++   labelTheseGenes = c("CDKN2A","TP53"))
+
+> ## Not run: 
+> ##D  # get gene expression data
+> ##D  gene_exp_all = get_gene_expression(all_genes=T,
+> ##D                                     lazy_join=T,
+> ##D                                      arbitrarily_pick = TRUE,
+> ##D                                      HGNC=T,format="wide")
+> ##D 
+> ##D  genome_meta_exp = left_join(get_gambl_metadata() %>%
+> ##D     dplyr::filter(seq_type=="genome") %>%
+> ##D     dplyr::select(sample_id,pathology,lymphgen),
+> ##D     dplyr::select(gene_exp_all,-sample_id),
+> ##D     by=c("sample_id"="genome_sample_id")) %>%
+> ##D      filter(!is.na(MYC))
+> ## End(Not run)
+> # Include gene expression data and embed a box plot showing the expression of one gene across different CN states
+> 
+> ## Not run: 
+> ##D  pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+> ##D    these_samples_metadata = filter(genome_meta_exp,pathology=="DLBCL"),
+> ##D    hide_annotations = "chromosomes",
+> ##D    cluster_rows=F,
+> ##D    geneBoxPlot = "TP53",
+> ##D    boxplot_orientation="horizontal",bin_label_fontsize = 9,bin_label_nudge = 19
+> ##D  )
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> 
+
+> ### Name: pretty_lollipop_plot
+> ### Title: Pretty Lollipop Plot.
+> ### Aliases: pretty_lollipop_plot
+> 
+> ### ** Examples
+> 
+> library(GAMBLR.open)
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ #get meta data (BL_Thomas)
++ metadata <- suppressMessages(get_gambl_metadata()) %>%
++     filter(seq_type == "genome") %>%
++     check_and_clean_metadata(.,duplicate_action="keep_first")
++ 
++ maf_df <- get_coding_ssm(
++     these_samples_metadata = metadata
++ )
++ 
++ #construct pretty_lollipop_plot.
++ lollipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
++ print(lollipop_result)
++ }))
+
+> ### Name: pretty_MAF_summary
+> ### Title: Pretty MAF summary
+> ### Aliases: pretty_MAF_summary
+> 
+> ### ** Examples
+> 
+> suppressMessages(library(GAMBLR.open))
+
+> cat("running examples for pretty_MAF_summary\n")
+running examples for pretty_MAF_summary
+
+> FL_meta <- GAMBLR.open::get_gambl_metadata() %>%
++     dplyr::filter(pathology == "FL") %>%
++     check_and_clean_metadata(.,duplicate_action="keep_first")
+
+> FL_coding <- GAMBLR.open::get_coding_ssm(these_samples_metadata = FL_meta)
+
+> pretty_MAF_summary(FL_coding)
+
+> pretty_MAF_summary(FL_coding, top_n = 22, base_size = 6)
+
+> ### Name: pretty_mutual_exclusivity
+> ### Title: Pretty mutual exclusivity plot
+> ### Aliases: pretty_mutual_exclusivity
+> 
+> ### ** Examples
+> 
+> cat("running examples from pretty_mutual_exclusivity\n")
+running examples from pretty_mutual_exclusivity
+
+> suppressMessages(library(GAMBLR.open))
+
+> suppressMessages(library(ComplexHeatmap))
+
+> bl_fl_dlbcl_meta = get_gambl_metadata() %>%
++   dplyr::filter(pathology %in% c("DLBCL","FL","BL"), seq_type != "mrna") %>%
++   check_and_clean_metadata(.,duplicate_action="keep_first")
+
+> dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL") %>%
++              check_and_clean_metadata(.,duplicate_action="keep_first")
+
+> all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
+
+> ## Not run: 
+> ##D lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+> ##D lg_feats = lymphgens$feature_annotation
+> ##D lg_genes = unique(lg_feats$Feature)
+> ##D 
+> ##D pretty_mutual_exclusivity(
+> ##D    maf_data = all_coding,
+> ##D    genes = lg_genes,
+> ##D    these = dlbcl_meta,
+> ##D    size_factor =  0.007,
+> ##D    engine = "ComplexHeatmap",
+> ##D    font_size = 6,
+> ##D    use_alpha = FALSE,
+> ##D    clustering_distance = "binary",
+> ##D    include_hotspots = TRUE)
+> ## End(Not run)
+> 
+> fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes,
++   FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier ==1) %>%
++   pull(Gene)
+
+> # because the first steps of this are slow we can
+> # store the output matrix as a shortcut for subsequent runs
+> 
+> suppressWarnings(
++   suppressMessages({
++ outs = pretty_mutual_exclusivity(
++   maf_data = all_coding,
++   genes = fl_bl_dlbcl_genes,
++   these = bl_fl_dlbcl_meta,
++   engine = "ComplexHeatmap",
++   font_size = 5,
++   use_alpha = TRUE,
++   clustering_distance = "binary",
++   include_hotspots = FALSE,
++   return_data = TRUE
++ )
++ draw(outs$plot)
++ 
++ }))
+
+> suppressWarnings(
++   suppressMessages({
++ 
++ pretty_mutual_exclusivity(
++   mut_mat=outs$mut_mat,
++   corr_mat = outs$corr_mat,
++   p_mat = outs$p_mat,
++   maf_data = all_coding,
++   genes = fl_bl_dlbcl_genes,
++   these = bl_fl_dlbcl_meta,
++   engine = "ComplexHeatmap",
++   font_size = 5,
++   use_alpha = TRUE,
++   size_factor = 0.004,
++   clustering_distance = "euclidean",
++   include_hotspots = FALSE
++ )
++ 
++ }))
+
+> suppressWarnings(
++   suppressMessages({
++ 
++ pretty_mutual_exclusivity(
++   p_mat = outs$p_mat,
++   maf_data = all_coding,
++   genes = fl_bl_dlbcl_genes,
++   these = dlbcl_meta,
++   engine = "ComplexHeatmap",
++   font_size = 5,
++   use_alpha = TRUE,
++   size_factor = 0.004,
++   clustering_distance = "euclidean",
++   legend_direction = "vertical",
++   include_hotspots = FALSE)
++ 
++ }))
+
+> ### Name: prettyChromoplot
+> ### Title: Chromosome Plot
+> ### Aliases: prettyChromoplot
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyChromoplot\n")
+Running example for function: prettyChromoplot
+
+> suppressMessages(library(GAMBLR.open))
+
+> # Bundled output from a GISTIC run using grch37 results
+> gistic_scores = system.file("extdata",
++   "scores.gistic",
++   package="GAMBLR.viz")
+
+> suppressMessages(
++   suppressWarnings({
++ # Automatic labeling of gene sets for a given pathology
++ prettyChromoplot(scores_path = gistic_scores,
++                  default_gene_set = "FL",
++                  genome_build = "grch37")
++ 
++ }))
+[1mindexing[0m [34mscores.gistic[0m [==================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================] [32m316.08GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+> ## Specifying your own gene list for labeling
+> genes = c(
++   "MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M",
++   "RB1","TCL1A","CD70","TOX","PRAME","CD38",
++   "BCL2","KLHL14","TCF4","REL","BCL6",
++   "SMARCA4","CDKN2A","RHOA","HIST1H1C",
++   "TNFAIP3","TP53","CDK14","RELN","ETS1",
++   "MDM1","MIR17HG","CD58","HNRNPD"
++   )
+
+> gene_bed = dplyr::select(GAMBLR.data::grch37_gene_coordinates,-1) %>%
++ #remove ensembl ID column
++   dplyr::filter(hugo_symbol %in% genes) %>% 
++ #keep genes of interest
++   dplyr::mutate(length = end - start,mid = start + length/2) %>%
++   dplyr::mutate(start = mid,end=start+1) %>%
++   unique() %>%
++ #convert to bed_data format
++  GAMBLR.utils::create_bed_data(genome_build = "grch37")
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ prettyChromoplot(scores_path = gistic_scores,
++                  labels_bed = gene_bed)
++ 
++ }))
+[1mindexing[0m [34mscores.gistic[0m [==================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================] [32m328.73GB/s[0m, eta: [36m 0s[0m                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+> #NOTE: genome build is inferred from gene_bed
+> ## Not run: 
+> ##D  # GISTIC run using hg38 data
+> ##D prettyChromoplot(scores_path=gistic_scores,
+> ##D                    cutoff = 0.9,
+> ##D                    label_size=2,
+> ##D                    adjust_amps = 0.5,
+> ##D                    adjust_dels = 0.8,
+> ##D                    genome_build="hg38",
+> ##D                    hide_neutral = TRUE)
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: prettyCoOncoplot
+> ### Title: Side-by-side Oncoplots
+> ### Aliases: prettyCoOncoplot
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyCoOncoplot\n")
+Running example for function: prettyCoOncoplot
+
+> library(GAMBLR.open)
+
+> #get data for plotting
+> meta <- get_gambl_metadata()
+
+> meta <- meta %>%
++     dplyr::filter(
++         study == "FL_Dreval",
++         pathology %in% c("DLBCL", "FL")
++     )
+
+> ssm <- get_coding_ssm(
++     these_samples_metadata = meta
++ )
+
+> #build plot
+> prettyCoOncoplot(
++     maf = ssm,
++     metadata = meta,
++     comparison_column = "pathology",
++     genes=dplyr::filter(lymphoma_genes,
++                         FL_Tier==1 | DLBCL_Tier==1) %>% 
++                         dplyr::pull(Gene),
++     metadataColumns = c(
++         "pathology",
++         "lymphgen",
++         "pairing_status"
++     ),
++     metadataBarHeight = 10,
++     fontSizeGene = 12,
++     metadataBarFontsize = 10,
++     legend_row = 2,
++     label1 = "DLBCL",
++     label2 = "FL",
++     simplify_annotation =TRUE,
++     minMutationPercent = 5
++ )
+
+> ### Name: prettyForestPlot
+> ### Title: Forest Plot.
+> ### Aliases: prettyForestPlot
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyForestPlot\n")
+Running example for function: prettyForestPlot
+
+> library(GAMBLR.open)
+
+> suppressWarnings(
++   suppressMessages({
++ 
++ metadata = get_gambl_metadata()
++ this_meta = dplyr::filter(metadata, pairing_status == "matched")
++ this_meta = dplyr::filter(this_meta, pathology %in% c("FL", "DLBCL")) %>%
++             check_and_clean_metadata(.,duplicate_action="keep_first")
++ 
++ maf = get_coding_ssm(these_samples_metadata = this_meta)
++ 
++ plots = prettyForestPlot(maf = maf,
++                  metadata = this_meta,
++                  genes = c("ATP6V1B2",
++                            "EZH2",
++                            "TNFRSF14",
++                            "RRAGC"),
++                  comparison_column = "pathology",
++                  comparison_values = c("DLBCL",
++                                        "FL"),
++                  separate_hotspots = FALSE,
++                  comparison_name = "FL vs DLBCL")
++ plots$arranged
++ 
++ }))
+
+> ### Name: prettyGeneCloud
+> ### Title: Gene Cloud Plot
+> ### Aliases: prettyGeneCloud
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyGeneCloud\n")
+Running example for function: prettyGeneCloud
+
+> #get all coding SSM directly from GAMBLR.data
+> maf = GAMBLR.data::sample_data$grch37$maf
+
+> #build wordcloud
+> prettyGeneCloud(maf_df = maf,
++                 wordcloud_version = 2,
++                 zoomout=0.3)
+
+> ### Name: prettyMutationDensity
+> ### Title: Pretty mutation density heatmap
+> ### Aliases: prettyMutationDensity
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyMutationDensity\n")
+Running example for function: prettyMutationDensity
+
+> library(GAMBLR.open)
+
+> # get meta data
+> my_meta <- get_gambl_metadata() %>%
++   dplyr::filter(pathology %in% c("FL","DLBCL"), seq_type != "mrna") %>%
++   check_and_clean_metadata(duplicate_action = "keep_first")
+
+> # get ashm regions of a set of genes.
+> my_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
++   fix_names = "concat",
++   concat_cols = c("gene","region"),sep = "-")
+
+> # create heatmap of mutation counts for the specified regions
+> meta_columns <- c("pathology",
++                   "lymphgen",
++                   "COO_consensus", 
++                   "DHITsig_consensus")
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ prettyMutationDensity(
++    regions_bed = my_regions,
++    these_samples_metadata = my_meta,
++    metadataColumns = meta_columns,
++    orientation="sample_columns",
++    sortByMetadataColumns = meta_columns,
++    projection = "grch37",
++    backgroundColour = "transparent",
++    show_legend = FALSE,
++    region_fontsize = 3)
++ 
++ }))
+
+> ### Name: prettyOncoplot
+> ### Title: PrettyOncoplot
+> ### Aliases: prettyOncoplot
+> 
+> ### ** Examples
+> 
+> cat("running examples for prettyOncoplot\n")
+running examples for prettyOncoplot
+
+> suppressMessages(
++   suppressWarnings({
++     # load packages
++     library(grid)
++     library(dplyr)
++     library(GAMBLR.open)
++ 
++     # Using GAMBLR.open
++     maf_metadata <- GAMBLR.open::get_gambl_metadata(
++       seq_type_filter = "genome"
++     ) %>%
++       dplyr::filter(
++         pathology %in% c("FL", "DLBCL"),
++         study == "FL_Dreval"
++       )
++ 
++ 
++     maf_data <- get_coding_ssm(
++       these_samples_metadata = maf_metadata
++     )
++   })
++ )
+
+> # define some genes of interest
+> fl_genes <- GAMBLR.data::lymphoma_genes %>%
++   dplyr::filter(FL_Tier == 1) %>%
++   pull(Gene)
+
+> dlbcl_genes <- GAMBLR.data::lymphoma_genes %>%
++   dplyr::filter(DLBCL_Tier == 1, !Gene %in% fl_genes) %>%
++   pull(Gene)
+
+> genes <- c(fl_genes, dlbcl_genes)
+
+> # For splitting into gene sets
+> split_genes <- c(
++   rep("FL", length(fl_genes)),
++   rep("DLBCL", length(dlbcl_genes))
++ )
+
+> names(split_genes) <- genes
+
+> suppressMessages(
++   suppressWarnings({
++     prettyOncoplot(
++       maf_df = maf_data, genes = genes,
++       these_samples_metadata = maf_metadata,
++       splitGeneGroups = split_genes,
++       minMutationPercent = 5
++     )
++   })
++ )
+
+> # Was that too slow for you? Enable the simplify_annotation
+> # parameter for a quicker result.
+> 
+> suppressMessages(
++   suppressWarnings({
++     prettyOncoplot(
++       maf_df = maf_data, genes = genes,
++       these_samples_metadata = maf_metadata,
++       splitGeneGroups = split_genes,
++       minMutationPercent = 5,
++       simplify_annotation = TRUE
++     )
++   })
++ )
+
+> # Want to include copy number? You have two options.
+> # Option 1:
+> # Incorporate CN status of specific genes into your oncoplot
+> # along with mutations.
+> # There are two ways to go about this.
+> # The original way involves using the helper function get_cnv_and_ssm_status
+> 
+> gene_regions <- data.frame(
++   gene_id = c(
++     "REL", "CDKN2A",
++     "MIR17HG", "TP53", "ATM", "FAS", "SMARCA4", "B2M", "TNFRSF14",
++     "TMEM30A", "TNFAIP3", "BCL2"
++   ),
++   cn_thresh = c(4, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 3)
++ )
+
+> # this data frame specifies the threshold and directionality for
+> # each gene's copy number state to display on the oncoplot.
+> # Amplifications will be shown for REL and MIR17HG, gains
+> # for BCL2, deletions for the rest
+> print(gene_regions)
+    gene_id cn_thresh
+1       REL         4
+2    CDKN2A         1
+3   MIR17HG         4
+4      TP53         1
+5       ATM         1
+6       FAS         1
+7   SMARCA4         1
+8       B2M         1
+9  TNFRSF14         1
+10  TMEM30A         1
+11  TNFAIP3         1
+12     BCL2         3
+
+> suppressMessages(
++   suppressWarnings({
++     gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
++       only_cnv = "all",
++       these_samples_metadata = get_gambl_metadata(),
++       genes_and_cn_threshs = gene_regions
++     )
++ 
++ 
++ 
++ 
++     prettyOncoplot(
++       maf_df = maf_data, genes = c(
++         "CREBBP", "EZH2", "MYD88",
++         "TCF3", "BCL2", "BCL7A",
++         "MEF2B", "POU2F2", "POU2AF1",
++         "ID3", "MYC",
++         "RRAGC", "TCL1A", "KMT2D",
++         "PIM1", "CD79B", "TMSB4X",
++         "TMEM30A", "TNFAIP3"
++       ),
++       these_samples_metadata = maf_metadata,
++       cluster_rows = TRUE,
++       metadataColumns = c(
++         "pathology",
++         "lymphgen",
++         "seq_type",
++         "ffpe_or_frozen"
++       ),
++       cluster_cols = FALSE,
++       simplify_annotation = TRUE,
++       cnv_df = gene_cnv,
++       sortByColumns = c("pathology", "lymphgen")
++     )
++   })
++ )
+
+> # Option 2:
+> # The second way to incorporate copy number relies
+> # instead on a binned copy number matrix
+> # If you already have one on hand, this is clearly the preferred approach!
+> # First let's make one with the help of segmented_data_to_cn_matrix
+> ## Not run: 
+> ##D all_segments <- get_cn_segments(these_samples_metadata = maf_metadata)
+> ##D all_states_binned <- segmented_data_to_cn_matrix(
+> ##D   seg_data = all_segments,
+> ##D   strategy = "auto_split",
+> ##D   n_bins_split = 1000,
+> ##D   fill_missing_with = "avg_ploidy",
+> ##D   adjust_for_ploidy = TRUE,
+> ##D   these_samples_metadata = maf_metadata
+> ##D )
+> ##D 
+> ##D 
+> ##D # Note: adjust_for_ploidy = TRUE ensures the relative
+> ##D # CN status is used for high-ploidy cases
+> ##D 
+> ##D # as before, we need to specify which genes we want
+> ##D # CN events shown for and what direction (gain or loss)
+> ##D # This is done a bit more easily with the genes_CN_thresh option.
+> ##D 
+> ##D CN_thresh <- c(
+> ##D   "REL" = 4,
+> ##D   "CDKN2A" = 1,
+> ##D   "MIR17HG" = 4,
+> ##D   "TP53" = 1,
+> ##D   "TNFRSF14" = 1,
+> ##D   "TNFAIP3" = 1
+> ##D )
+> ##D 
+> ##D 
+> ##D prettyOncoplot(
+> ##D   maf_df = maf_data,
+> ##D   binned_cnv_df = all_states_binned,
+> ##D   genes_CN_thresh = CN_thresh,
+> ##D   genes = head(genes, 25),
+> ##D   these_samples_metadata = maf_metadata,
+> ##D   cluster_rows = TRUE,
+> ##D   metadataColumns = c(
+> ##D     "pathology",
+> ##D     "genetic_subgroup",
+> ##D     "seq_type",
+> ##D     "ffpe_or_frozen"
+> ##D   ),
+> ##D   cluster_cols = FALSE,
+> ##D   simplify_annotation = TRUE,
+> ##D   sortByColumns = c("pathology", "genetic_subgroup"),
+> ##D   minMutationPercent = 0
+> ##D )
+> ## End(Not run)
+> 
+> 
+> 
+
+> ### Name: prettyRainfallPlot
+> ### Title: Rainfall Plot
+> ### Aliases: prettyRainfallPlot
+> 
+> ### ** Examples
+> 
+> cat("running examples for prettyRainfallPlot\n")
+running examples for prettyRainfallPlot
+
+> suppressMessages(library(GAMBLR.open))
+
+> maf = GAMBLR.data::sample_data$grch37$maf
+
+> prettyRainfallPlot(this_sample_id = "14-35026",
++                    this_maf = maf,
++                    label_sv = FALSE,
++                    chromosome = "3")
+
+> ## Not run: 
+> ##D # This mode will annotate and label SVs
+> ##D prettyRainfallPlot(
+> ##D      this_sample_id = "DOHH-2",
+> ##D      this_seq_type = "genome",
+> ##D      zoom_in_region = "8:125252796-135253201",
+> ##D      label_sv = TRUE
+> ##D )
+> ##D 
+> ##D # Will not annotate SVs (use raw bedpe) but still label them
+> ##D prettyRainfallPlot(
+> ##D      this_sample_id = "DOHH-2",
+> ##D      this_seq_type = "genome",
+> ##D      zoom_in_region = "8:125252796-135253201",
+> ##D      label_sv = TRUE,
+> ##D      annotate_sv = FALSE
+> ##D )
+> ##D 
+> ##D # Will use user-specified SV data
+> ##D sv <- get_manta_sv(
+> ##D     these_sample_ids = "DOHH-2"
+> ##D )
+> ##D 
+> ##D prettyRainfallPlot(
+> ##D      this_sample_id = "DOHH-2",
+> ##D      this_seq_type = "genome",
+> ##D      zoom_in_region = "8:125252796-135253201",
+> ##D      sv_data = sv,
+> ##D      label_sv = TRUE
+> ##D )
+> ## End(Not run)
+> 
+> 
+> 
+> 
+
+> ### Name: prettyStackedOncoplot
+> ### Title: Pretty stacked oncoplot
+> ### Aliases: prettyStackedOncoplot
+> 
+> ### ** Examples
+> 
+> cat("Running example for function: prettyStackedOncoplot\n")
+Running example for function: prettyStackedOncoplot
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ library(GAMBLR.open)
++ 
++ # Prepare some metadata
++  dlbcl_genome_meta = get_gambl_metadata() %>% 
++   dplyr::filter(pathology=="DLBCL",
++                 seq_type=="genome") %>%
++   check_and_clean_metadata(.,duplicate_action="keep_first")
++ 
++ # Get CN segments for these samples
++ dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
++ 
++ # Prepare CN matrix
++ cn_mat = segmented_data_to_cn_matrix(dlbcl_seg,
++                                      these = dlbcl_genome_meta,
++                                      adjust_for_ploidy = TRUE)
++ 
++ dlbcl_maf = get_all_coding_ssm(dlbcl_genome_meta)
++ 
++ }))
+
+> genes=c("KMT2D","BCL2","CREBBP","EZH2","MYD88","CD79B","TP53",
++         "PIM1","CARD11","SGK1","SOCS1",'TET2',"SPEN",
++         "ETV6","CD83","B2M","S1PR2","GNA13","BTG1",
++         "BTG2","DDX3X","KLHL6","HIST1H1E","TBL1XR1","SMARCA4")
+
+> # we will only sort on the mutation status of these
+> # genes and in this order
+> sortGenes = c("TP53","KMT2D","BCL2","EZH2","MYD88","CD79B")
+
+>  CN_thresh = c("REL"=4,
++               "CDKN2A"=1,
++               "MIR17HG"=4,
++               "TP53"=1,
++               "TNFRSF14"=1,
++               "TNFAIP3"=1)
+
+> # oncoplot on top with column order dicted by the mutation status
+> # of sortGenes (in the order of the genes appearance in that vector)
+> 
+> suppressMessages(
++   suppressWarnings({
++ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,  
++                         maf_data = dlbcl_maf,
++                         metadataColumns = c("pathology","lymphgen"),
++                         sortByMetadataColumns = c("pathology","lymphgen"),
++                         cn_state_matrix = cn_mat,
++                         genes_CN_thresh = CN_thresh,
++                         genes = genes,
++                         sortByGenes = sortGenes)
++ 
++ }))
+
+> # oncoplot on top. Clustering of mutations is used to order the columns.
+> suppressMessages(
++   suppressWarnings({
++ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,  
++                       maf_data = dlbcl_maf,
++                       metadataColumns = c("pathology","lymphgen"),
++                       cluster_samples = TRUE,
++                       cn_state_matrix = cn_mat,
++                       genes_CN_thresh = CN_thresh,
++                       genes = genes)
++ 
++ }))
+
+> # make a list of arguments for the second (here, the upper) plot
+> CN_args = list("keep_these_chromosomes"=c("2"),
++               "scale_by_sample" = TRUE)
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
++                      maf_data = dlbcl_maf,
++                      sortByGenes = "REL",
++                      metadataColumns = c("pathology","lymphgen"),
++                      oncoplot_location = "bottom",
++                      secondPlotArgs = CN_args,
++                      cn_state_matrix = cn_mat,
++                      genes_CN_thresh = CN_thresh,
++                      genes = genes,
++                      oncoplotHeight = 8,
++                      secondPlotHeight=3)
++ 
++ }))
+
+> # make a list of arguments for the second (here, the upper) plot
+> CN_args = list(
++               "scale_by_sample" = TRUE,
++               "hide_these_chromosomes" = "X")
+
+> # Specifying sortByGenes automatically ensures those genes
+> # are sorted by their CN status then mutation status when
+> # oncoplot_location is "bottom".
+> # The order in the upper plot restricts the order of the lower plot.
+> 
+> suppressMessages(
++   suppressWarnings({
++ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
++                      maf_data = dlbcl_maf,
++                      sortByGenes = "TP53",
++                      metadataColumns = c("pathology","lymphgen"),
++                      oncoplot_location = "bottom",
++                      secondPlotArgs = CN_args,
++                      cn_state_matrix = cn_mat,
++                      genes_CN_thresh = CN_thresh,
++                      genes = genes,
++                      secondPlotHeight=9)
++ }))
+
+> some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
++                               fix_names = "concat",
++                               concat_cols = c("gene","region"),sep="-")
+
+> suppressMessages(
++   suppressWarnings({
++ 
++ simple_ashm_mat <-
++  get_ashm_count_matrix(some_regions,
++                        these_samples_metadata = dlbcl_genome_meta)
++ 
++ 
++ 
++ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
++                      maf_data = dlbcl_maf,
++                      regions_bed= some_regions,
++                      metadataColumns = c("pathology","lymphgen"),
++                      oncoplot_location = "bottom",
++                      ashm_matrix = simple_ashm_mat,
++                     secondPlotType = "prettyMutationDensity",
++                      secondPlotArgs = list("merge_genes"=TRUE,
++                                            region_fontsize=3),
++                      genes = genes,
++                     cluster_samples = TRUE,
++                     secondPlotHeight = 9)
++ 
++ }))
+
+> ### Name: splendidHeatmap
+> ### Title: Heatmap
+> ### Aliases: splendidHeatmap
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D splendidHeatmap(this_matrix = data,
+> ##D                 importance_values = rf$importance[,c(1:3)],
+> ##D                 these_samples_metadata = MASTER.METADATA,
+> ##D                 splitColumnName = "pathology",
+> ##D                 metadataColumns = c("cohort",
+> ##D                                     "pathology",
+> ##D                                     "sex",
+> ##D                                     ".",
+> ##D                                     "COO_consensus",
+> ##D                                     "DHITsig_consensus",
+> ##D                                     "seq_type"),
+> ##D                 numericMetadataColumns = ".",
+> ##D                 numericMetadataMax = 0.7,
+> ##D                 custom_colours = custom_colours)
+> ## End(Not run)
+> 
+> 
+> 
+> 

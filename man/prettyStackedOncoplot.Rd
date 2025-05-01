@@ -7,7 +7,7 @@
 prettyStackedOncoplot(
   these_samples_metadata,
   maf_data,
-  metadataColumns = "pathology",
+  metadataColumns = c("pathology", "lymphgen"),
   sortByMetadataColumns,
   seg_data,
   sortByPGA = FALSE,
@@ -15,6 +15,7 @@ prettyStackedOncoplot(
   ashm_matrix,
   regions_bed,
   genes,
+  second_oncoplot_genes,
   sortByGenes,
   genes_CN_thresh,
   secondPlotType = "pretty_CN_heatmap",
@@ -23,12 +24,13 @@ prettyStackedOncoplot(
   secondPlotArgs,
   oncoplotArgs,
   returnEverything = FALSE,
-  plot_width = 15,
+  plot_width = NULL,
   oncoplotHeight = 6,
   secondPlotHeight = 6,
   verbose = FALSE,
   row_names_side = "right",
-  pctFontSize = 0
+  pctFontSize = 0,
+  heatmap_legend_side = "bottom"
 )
 }
 \arguments{
@@ -52,7 +54,7 @@ the only option tested with this function.}
 Pretty stacked oncoplot
 }
 \examples{
-
+cat("Running example for function: prettyStackedOncoplot\n")
 suppressMessages(
   suppressWarnings({
 

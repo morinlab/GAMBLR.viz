@@ -35,7 +35,7 @@ pretty_mutual_exclusivity(
   annotate_by_pathology = TRUE,
   show_heatmap_legend = TRUE,
   cut_k,
-  width = 10
+  width
 )
 }
 \arguments{
@@ -55,6 +55,7 @@ pretty_mutual_exclusivity(
 Pretty mutual exclusivity plot
 }
 \examples{
+cat("running examples from pretty_mutual_exclusivity\n")
 suppressMessages(library(GAMBLR.open))
 suppressMessages(library(ComplexHeatmap))
 

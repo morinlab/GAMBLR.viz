@@ -57,6 +57,7 @@ Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `oth
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }
 \examples{
+cat("Running example for function: prettyGeneCloud\n")
 #get all coding SSM directly from GAMBLR.data
 maf = GAMBLR.data::sample_data$grch37$maf
 

@@ -48,7 +48,7 @@ This function will try to obtain mutations internally if `maf_data` is not given
 For more info, refer to the parameter descriptions of this function.
 }
 \examples{
-
+cat("Running example for function: ashm_multi_rainbow_plot\n") 
 suppressMessages(library(GAMBLR.open))
 #get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")

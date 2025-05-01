@@ -54,6 +54,7 @@
 #' @export
 #'
 #' @examples
+#' cat("Running example for function: prettyMutationDensity\n")
 #' 
 #' library(GAMBLR.open)
 #' # get meta data
@@ -138,8 +139,8 @@ prettyMutationDensity <- function(regions_list = NULL,
                                   returnEverything = FALSE,
                                   from_indexed_flatfile = TRUE,
                                   mode = "slms-3",
-                                  width,
-                                  height,
+                                  width = NULL,
+                                  height = NULL,
                                   hide_annotation_name = FALSE,
                                   use_raster = FALSE) {
 
@@ -501,10 +502,10 @@ if(any(is.nan(matrix_show))){
       show_heatmap_legend =show_legend,
       use_raster = use_raster
     )
-    if(!missing(width)){
+    if(!is.null(width)){
       hargs[["width"]]=unit(width, "cm")
     }
-    if(!missing(height)){
+    if(!is.null(height)){
       hargs[["height"]]=unit(height, "cm")
     }
     ht = do.call("Heatmap",hargs)
@@ -563,10 +564,10 @@ if(any(is.nan(matrix_show))){
     if(!missing(split_samples_kmeans)){
       hargs[["column_km"]] = split_samples_kmeans
     }
-    if(!missing(width)){
+    if(!is.null(width)){
       hargs[["width"]]=unit(width, "cm")
     }
-    if(!missing(height)){
+    if(!is.null(height)){
       hargs[["height"]]=unit(height, "cm")
     }
     if(split_regions){

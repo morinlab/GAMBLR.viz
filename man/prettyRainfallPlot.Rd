@@ -69,7 +69,7 @@ Create a sample-level rainfall plot visualizing single nucleotide
      substitutions mutations for selected chromosomes.
 }
 \examples{
-
+cat("running examples for prettyRainfallPlot\n")
 suppressMessages(library(GAMBLR.open))
 maf = GAMBLR.data::sample_data$grch37$maf
 prettyRainfallPlot(this_sample_id = "14-35026",

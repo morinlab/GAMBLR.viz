@@ -98,6 +98,7 @@ For extended examples on how to use this function, refer to the example
 inside the function documentation or the vignettes.
 }
 \examples{
+cat("Running example for function: prettyForestPlot\n")
 library(GAMBLR.open)
 suppressWarnings(
   suppressMessages({
