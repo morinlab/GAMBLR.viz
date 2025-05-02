@@ -41,6 +41,7 @@ and are consistent with other GAMBLR.viz plots such as prettyOncoplot.
 }
 \examples{
 suppressMessages(library(GAMBLR.open))
+cat("running examples for pretty_MAF_summary\n")
 FL_meta <- GAMBLR.open::get_gambl_metadata() \%>\%
     dplyr::filter(pathology == "FL") \%>\%
     check_and_clean_metadata(.,duplicate_action="keep_first")

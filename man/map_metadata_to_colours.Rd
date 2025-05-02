@@ -30,7 +30,7 @@ A named list
 Assign a colour palette to metadata columns automatically and consistently.
 }
 \examples{
-
+cat("running examples for map_metadata_to_colours\n")
 library(GAMBLR.open)
 
 #get metadata

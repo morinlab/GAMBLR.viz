@@ -62,7 +62,7 @@ The only required parameter for this function is `scores`, which is the path to 
 Other parameters are all optional. For a detailed explanation of how to use these, refer to the parameter descriptions.
 }
 \examples{
-
+cat("Running example for function: prettyChromoplot\n")
 suppressMessages(library(GAMBLR.open))
 
 # Bundled output from a GISTIC run using grch37 results

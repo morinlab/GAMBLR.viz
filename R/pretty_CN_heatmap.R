@@ -55,7 +55,7 @@
 #' @export
 #'
 #' @examples
-#'
+#' cat("Running example for function: pretty_CN_heatmap\n")
 #' suppressMessages(library(dplyr))
 #' suppressMessages(library(GAMBLR.open))
 #' #get some metadata for subsetting the data to just one pathology (DLBCL)
@@ -734,7 +734,17 @@ pretty_CN_heatmap = function(cn_state_matrix,
       )
     }else{
       if(rotate){
+        if(!is.null(width)){
+          w = unit(width, "cm")
+        }else{
+          w = NULL
+        }
 
+        if(!is.null(height)){
+          h = unit(height, "cm")
+        }else{
+          h = NULL
+        }
         ho = Heatmap(t(cn_state_matrix),
                    name="CN",
                    column_title=" ",
@@ -747,9 +757,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    #top_annotation = average_anno,
                    #left_annotation=left_anno,
                    #row_split=splits,
-                   
-                   width = unit(width, "cm"),
-                   height = unit(height, "cm"),
+                   width = w,
+                   height = h,
                    right_annotation = cumulative_anno,
                    #column_split  = column_chromosome,
                    heatmap_legend_param = heatmap_legend_param)

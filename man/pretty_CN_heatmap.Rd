@@ -156,7 +156,7 @@ list (when return_data = TRUE)
 Pretty Copy Number Heatmap
 }
 \examples{
-
+cat("Running example for function: pretty_CN_heatmap\n")
 suppressMessages(library(dplyr))
 suppressMessages(library(GAMBLR.open))
 #get some metadata for subsetting the data to just one pathology (DLBCL)

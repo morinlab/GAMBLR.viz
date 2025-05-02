@@ -29,6 +29,7 @@
 #' @export
 #'
 #' @examples
+#' cat("running examples from pretty_mutual_exclusivity\n")
 #' suppressMessages(library(GAMBLR.open))
 #' suppressMessages(library(ComplexHeatmap))
 #'
@@ -148,7 +149,7 @@ pretty_mutual_exclusivity <- function(maf_data,
                                       annotate_by_pathology = TRUE,
                                       show_heatmap_legend = TRUE,
                                       cut_k,
-                                      width = 10) {
+                                      width) {
   if(verbose){
     print("STARTING")
   }
@@ -403,12 +404,16 @@ pretty_mutual_exclusivity <- function(maf_data,
         bottom_annotation = cann,
         right_annotation = rann,
         row_names_gp = gpar(fontsize = font_size),
-        column_names_gp = gpar(fontsize = font_size)
+        column_names_gp = gpar(fontsize = font_size),
+        show_heatmap_legend = show_heatmap_legend
       )
       if(!missing(cut_k)){
         heatmap_args["row_km"] = cut_k
       }
-      heatmap_args[["width"]] = unit(width,"cm")
+      if(!missing(width)){
+        heatmap_args[["width"]] = unit(width,"cm")
+      }
+      
       heatmap_args[['heatmap_legend_param']] = list(direction=legend_direction)
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
@@ -479,7 +484,10 @@ pretty_mutual_exclusivity <- function(maf_data,
       if(!missing(cut_k)){
         heatmap_args["row_km"] = cut_k
       }
-      heatmap_args[["width"]] = unit(width,"cm")
+      if(!missing(width)){
+        heatmap_args[["width"]] = unit(width,"cm")
+      }
+      
       if (!missing(split)) {
         heatmap_args[["row_split"]] <- split
         heatmap_args[["column_split"]] <- split

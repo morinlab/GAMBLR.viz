@@ -87,7 +87,7 @@ Nothing or a list of data frames (when return_data = TRUE)
 pretty_circular_mutation_frequency_heatmap
 }
 \examples{
-
+cat("running examples for pretty_circular_mutation_frequency_heatmap\n")
 library(dplyr)
 library(GAMBLR.open)
 suppressMessages(

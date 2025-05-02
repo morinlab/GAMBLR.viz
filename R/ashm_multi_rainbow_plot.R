@@ -25,7 +25,7 @@
 #' @export
 #'
 #' @examples
-#' 
+#' cat("Running example for function: ashm_multi_rainbow_plot\n") 
 #' suppressMessages(library(GAMBLR.open))
 #' #get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")

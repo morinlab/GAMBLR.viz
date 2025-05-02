@@ -27,9 +27,10 @@
 #'
 #' @return Nothing or a list of data frames (when return_data = TRUE)
 #' @export
+#' @import circlize
 #'
 #' @examples
-#'
+#' cat("running examples for pretty_circular_mutation_frequency_heatmap\n")
 #' library(dplyr)
 #' library(GAMBLR.open)
 #' suppressMessages(

@@ -62,6 +62,7 @@
 #' @export
 #'
 #' @examples
+#' cat("Running example for function: prettyForestPlot\n")
 #' library(GAMBLR.open)
 #' suppressWarnings(
 #'   suppressMessages({

@@ -56,8 +56,8 @@ prettyMutationDensity(
   returnEverything = FALSE,
   from_indexed_flatfile = TRUE,
   mode = "slms-3",
-  width,
-  height,
+  width = NULL,
+  height = NULL,
   hide_annotation_name = FALSE,
   use_raster = FALSE
 )
@@ -158,6 +158,7 @@ This function takes a metadata table with `these_samples_metadata` parameter and
 to retrieve mutation counts for sliding windows across one or more regions and generate a heatmap. May optionally provide any combination of a maf data frame, existing metadata, or a regions data frame or named vector.
 }
 \examples{
+cat("Running example for function: prettyMutationDensity\n")
 
 library(GAMBLR.open)
 # get meta data

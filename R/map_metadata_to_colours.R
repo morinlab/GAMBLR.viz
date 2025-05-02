@@ -11,7 +11,7 @@
 #' @import dplyr
 #'
 #' @examples
-#'
+#' cat("running examples for map_metadata_to_colours\n")
 #' library(GAMBLR.open)
 #' 
 #' #get metadata
