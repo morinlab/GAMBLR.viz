@@ -1954,12 +1954,7 @@ make_prettyoncoplot <- function(
   if (!is.null(ph)) {
     oncoprint_args[["height"]] <- unit(ph, "cm")
   }
-  #tell oncoprint how much space will be needed for gene names
-  if(missing(longest_label)){
-    oncoprint_args[["all_row_labels"]] = rownames(mat_input)
-  }else{
-    oncoprint_args[["all_row_labels"]] = longest_label
-  }
+
   colanno <- ComplexHeatmap::HeatmapAnnotation(
     df = metadata_df,
     show_legend = show_legend,
@@ -1976,6 +1971,13 @@ make_prettyoncoplot <- function(
     )
   )
   if (plot_type == "simplify") {
+      #tell oncoprint how much space will be needed for gene names
+    if(missing(longest_label)){
+      oncoprint_args[["all_row_labels"]] = rownames(mat_input)
+    }else{
+      oncoprint_args[["all_row_labels"]] = longest_label
+    }
+
     any_mut <- mat_input$Missense
     any_mut[] <- 0
     any_mut[mat_input$Missense] <- 1
