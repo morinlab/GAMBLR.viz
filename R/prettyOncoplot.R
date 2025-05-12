@@ -913,25 +913,62 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     path_cols = get_gambl_colours("pathology")
     dilution = 40
     width_adj <- 1 - gap
-    alter_fun = list(
-      background = function(x, y, w, h) grid.rect(x, y, w, h,
-                                                  gp = gpar(fill = simplify_bg_colour,col=NA)),
-      
-      Missense = function(x, y, w, h){ grid.rect(x, y, w*0.9, h*0.9,
-                                                 gp = gpar(fill = col["Missense"], col = NA))},
-      Truncating = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9,
-                                                   gp = gpar(fill = col["Truncating"], col = NA))},
-      Splice_Site = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9,
-                                                    gp = gpar(fill = col["Splice_Site"], col = NA))},
-      
-      CNV = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.5,
-                                            gp = gpar(fill = col["CNV"], col = NA))},
-      HotSpot = function(x, y, w, h) {grid.rect(x, y, w*0.9, h*0.9,
-                                                gp = gpar(fill = col["Missense"], col = NA));
-        grid.rect(x, y, w*0.9, h*0.3,
-                  gp = gpar(fill = col["HotSpot"], col = NA));}
-      
-      , col = col)
+    alter_fun <- list(
+      background = function(x, y, w, h) {
+        grid.rect(x,
+                  y, w, h,
+                  gp = gpar(fill = NA, col = NA)
+        )
+      },
+      DLBCL = function(x, y, w, h) {
+        grid.rect(x,
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["DLBCL"],dilution), col = NA)
+        )
+      },
+      BL = function(x, y, w, h) {
+        grid.rect(x,
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["BL"],dilution), col = NA)
+        )
+      },
+      FL = function(x, y, w, h) {
+        grid.rect(x,
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["FL"],dilution), col = NA)
+        )
+      },
+      Missense = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(
+          fill = col["Missense"],
+          col = NA
+        ))
+      }, Truncating = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(
+          fill = col["Truncating"],
+          col = NA
+        ))
+      }, Splice_Site = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(
+          fill = col["Splice_Site"],
+          col = NA
+        ))
+      }, CNV = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.6, gp = gpar(
+          fill = col["CNV"],
+          col = NA
+        ))
+      }, HotSpot = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(
+          fill = col["Missense"],
+          col = NA
+        ))
+        grid.rect(x, y, w * width_adj, h * 0.5, gp = gpar(
+          fill = col["HotSpot"],
+          col = NA
+        ))
+      }, col = col
+    )
     
     snv_df <- summarize_mutation_by_class(mutation_set = c(
       "Missense_Mutation",
@@ -1587,12 +1624,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       col_order <- patients_kept
     }
 
-    mat_input = mat[intersect(genes, genes_kept),patients_kept]
+    mat_input = mat[intersect(genes, genes_kept),patients_kept, drop=FALSE]
     
     if(!missing(gene_cnv_df)){
       cn_df = cn_df[genes_kept,patients_kept]
-      index = match(rownames(mat), rownames(cn_df))
-      cn_df = cn_df[index, ]
+      #index = match(rownames(mat), rownames(cn_df))
+      #cn_df = cn_df[index, ]
       mat_input[which(cn_df=="TRUE", arr.ind = T)] = "CNV"
     }
     any_hit <- mat_input
@@ -1877,7 +1914,6 @@ make_prettyoncoplot <- function(
       labels_gp = gpar(fontsize = legendFontSize)
     )
   }
-  print(plot_type)
   
   modify_na_elements <- function(x) {
     if (is.character(x)) {
