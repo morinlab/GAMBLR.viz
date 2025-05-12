@@ -477,7 +477,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         cn_thresh = genes_CN_thresh
       )
       # this will not work for users of GAMBLR.open until this function is added
-      cnv_df <- get_cnv_and_ssm_status(
+      gene_cnv_df <- get_cnv_and_ssm_status(
         genes_and_cn_threshs = cn_thresh,
         cn_matrix = binned_cnv_df,
         these_samples_metadata = these_samples_metadata,
@@ -753,15 +753,15 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(gene_cnv_df)) {
     if (verbose) {
       print("BEFORE:")
-      print(dim(cnv_df))
+      print(dim(gene_cnv_df))
     }
-    cnv_df <- gene_cnv_df[rownames(gene_cnv_df) %in% patients, ,
+    gene_cnv_df <- gene_cnv_df[rownames(gene_cnv_df) %in% patients, ,
       drop = FALSE
     ]
     if (verbose) {
       print("AFTER")
-      print(dim(cnv_df))
-      print(colSums(cnv_df))
+      print(dim(gene_cnv_df))
+      print(colSums(gene_cnv_df))
     }
   }
   ##### The part below will be handling the metadata and colors
@@ -785,12 +785,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   }
   patients_kept <- patients[which(patients %in% colnames(mat))]
   genes_kept <- genes[which(genes %in% rownames(mat))]
-  if (!missing(cnv_df)) {
+  if (!missing(gene_cnv_df)) {
     # ensure any genes in this input are added to genes_kept
-    cnv_genes <- colnames(cnv_df)
-    cnv_patients <- rownames(cnv_df)[which(rownames(cnv_df) %in%
+    cnv_genes <- colnames(gene_cnv_df)
+    cnv_patients <- rownames(gene_cnv_df)[which(rownames(gene_cnv_df) %in%
       these_samples_metadata$sample_id)]
-    cnv_df <- cnv_df[cnv_patients, , drop = FALSE]
+    gene_cnv_df <- gene_cnv_df[cnv_patients, , drop = FALSE]
     extra_cnv_genes <- cnv_genes[!cnv_genes %in% genes_kept]
     extra_cnv_patients <- cnv_patients[!cnv_patients %in%
       patients_kept]
@@ -809,7 +809,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(minMutationPercent) && minMutationPercent > 0) {
     if (recycleOncomatrix) {
       stop(paste(
-        "mintMutationPercent not available with custom oncomatrix.",
+        "minMutationPercent not available with custom oncomatrix.",
         "Feel free to implement this if you need it"
       ))
     }
@@ -829,7 +829,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   mat <- mat[, patients_kept, drop = FALSE]
   mat <- mat[which(rownames(mat) %in% genes_kept), , drop = FALSE]
 
-  if (!missing(cnv_df)) {
+  if (!missing(gene_cnv_df)) {
     genes_kept <- c(extra_cnv_genes, genes_kept)
     patients_kept <- c(patients_kept, extra_cnv_patients)
     # add missing genes from CNV data
@@ -916,26 +916,26 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     alter_fun <- list(
       background = function(x, y, w, h) {
         grid.rect(x,
-          y, w, h,
-          gp = gpar(fill = NA, col = NA)
+                  y, w, h,
+                  gp = gpar(fill = NA, col = NA)
         )
       },
       DLBCL = function(x, y, w, h) {
         grid.rect(x,
-          y, w, h,
-          gp = gpar(fill = paste0(path_cols["DLBCL"],dilution), col = NA)
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["DLBCL"],dilution), col = NA)
         )
       },
       BL = function(x, y, w, h) {
         grid.rect(x,
-          y, w, h,
-          gp = gpar(fill = paste0(path_cols["BL"],dilution), col = NA)
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["BL"],dilution), col = NA)
         )
       },
       FL = function(x, y, w, h) {
         grid.rect(x,
-          y, w, h,
-          gp = gpar(fill = paste0(path_cols["FL"],dilution), col = NA)
+                  y, w, h,
+                  gp = gpar(fill = paste0(path_cols["FL"],dilution), col = NA)
         )
       },
       Missense = function(x, y, w, h) {
@@ -969,6 +969,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         ))
       }, col = col
     )
+    
     snv_df <- summarize_mutation_by_class(mutation_set = c(
       "Missense_Mutation",
       "In_Frame_Del", "In_Frame_Ins", "Translation_Start_Site"
@@ -1018,57 +1019,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       #print(table(bg_df["EZH2",]))
       #stop()
     }
-    if (!missing(cnv_df)) {
-      transposed_cnv_df <- t(cnv_df)
-      cn_df <- matrix(
-        nrow = nrow(transposed_cnv_df),
-        ncol = ncol(transposed_cnv_df)
-      )
-      rownames(cn_df) <- colnames(cnv_df)
-      colnames(cn_df) <- rownames(cnv_df)
-      cn_df[] <- FALSE
-      cn_df[transposed_cnv_df == 1] <- TRUE
-      missing_snv_genes <- rownames(mat)[which(!rownames(mat) %in%
-        rownames(cn_df))]
-      if (verbose) {
-        print("MISSING CNVs:")
-        print(missing_snv_genes)
-        print("====")
-      }
-      mat1 <- matrix(nrow = length(missing_snv_genes), ncol = ncol(cn_df))
-      colnames(mat1) <- colnames(cn_df)
-      rownames(mat1) <- missing_snv_genes
-      mat1[] <- FALSE
-      cn_df <- rbind(cn_df, mat1)
-      cn_df <- as.data.frame(cn_df)
-      missing_snv_patients <- colnames(mat)[which(!colnames(mat) %in%
-        colnames(cn_df))]
-      for (pat in missing_snv_patients) {
-        cn_df[missing_snv_genes, pat] <- FALSE
-      }
-      cn_df <- cn_df[rownames(mat), patients_kept]
-      # check for NAs
-      na_cols <- names(which(is.na(colSums(cn_df))))
-      if (verbose) {
-        print("NA COLS:")
-        print(na_cols)
-      }
-      cn_df[, na_cols] <- FALSE
-    }
-    if (!missing(cnv_df)) {
-      # Disabled. Unsure why these were ever here.
-      # cn_df[splice_df == TRUE] = FALSE
-      # cn_df[trunc_df == TRUE] = FALSE
-      if (highlightHotspots) {
-        cn_df[hotspot_df == TRUE] <- FALSE
-      }
-      # cn_df[snv_df==TRUE] = FALSE
-      if (verbose) {
-        print("ROWNAMES cn_df:")
-        print(rownames(cn_df))
-        print(table(unlist(cn_df[1, ])))
-      }
-    }
+   
   } else { # end simplifyAnnotation
     alter_fun <- list(background = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
@@ -1146,7 +1097,61 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
         gp = gpar(fill = col["Silent"], col = box_col)
       )
+    },CNV = function(x, y, w, h) {
+      grid.rect(x, y, w - unit(spacing, "pt"), (height_scaling / 5) *
+                  h, gp = gpar(fill = "purple", col = box_col))
     })
+  }
+  if (!missing(gene_cnv_df)) {
+    transposed_cnv_df <- t(gene_cnv_df)
+    cn_df <- matrix(
+      nrow = nrow(transposed_cnv_df),
+      ncol = ncol(transposed_cnv_df)
+    )
+    rownames(cn_df) <- colnames(gene_cnv_df)
+    colnames(cn_df) <- rownames(gene_cnv_df)
+    cn_df[] <- FALSE
+    cn_df[transposed_cnv_df == 1] <- TRUE
+    missing_snv_genes <- rownames(mat)[which(!rownames(mat) %in%
+                                               rownames(cn_df))]
+    if (verbose) {
+      print("MISSING CNVs:")
+      print(missing_snv_genes)
+      print("====")
+    }
+    mat1 <- matrix(nrow = length(missing_snv_genes), ncol = ncol(cn_df))
+    colnames(mat1) <- colnames(cn_df)
+    rownames(mat1) <- missing_snv_genes
+    mat1[] <- FALSE
+    cn_df <- rbind(cn_df, mat1)
+    cn_df <- as.data.frame(cn_df)
+    missing_snv_patients <- colnames(mat)[which(!colnames(mat) %in%
+                                                  colnames(cn_df))]
+    for (pat in missing_snv_patients) {
+      cn_df[missing_snv_genes, pat] <- FALSE
+    }
+    cn_df <- cn_df[rownames(mat), patients_kept]
+    # check for NAs
+    na_cols <- names(which(is.na(colSums(cn_df))))
+    if (verbose) {
+      print("NA COLS:")
+      print(na_cols)
+    }
+    cn_df[, na_cols] <- FALSE
+  }
+  if (!missing(gene_cnv_df)) {
+    # Disabled. Unsure why these were ever here.
+    # cn_df[splice_df == TRUE] = FALSE
+    # cn_df[trunc_df == TRUE] = FALSE
+    if (highlightHotspots) {
+      cn_df[hotspot_df == TRUE] <- FALSE
+    }
+    # cn_df[snv_df==TRUE] = FALSE
+    if (verbose) {
+      print("ROWNAMES cn_df:")
+      print(rownames(cn_df))
+      print(table(unlist(cn_df[1, ])))
+    }
   }
   if (highlightHotspots) {
     # Annotate hotspots if necessary
@@ -1463,10 +1468,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       patients_kept
     )), , drop = FALSE]
   }
-  if (simplify_annotation) {
-    if (!missing(cnv_df)) {
-      cn_df <- cn_df[genes_kept, patients_kept]
-    }
+  
+  if (!missing(gene_cnv_df)) { 
+    cn_df <- cn_df[genes_kept, patients_kept]
+  }
+  
+   if (simplify_annotation) {
     trunc_df <- trunc_df[genes_kept, patients_kept]
     snv_df <- snv_df[genes_kept, patients_kept]
     splice_df <- splice_df[genes_kept, patients_kept]
@@ -1482,7 +1489,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     all_hit[snv_df == TRUE] <- "Missense"
     any_hit[splice_df == TRUE] <- TRUE
     all_hit[splice_df == TRUE] <- "Splice"
-    if (!missing(cnv_df)) {
+    if (!missing(gene_cnv_df)) {
       any_hit[cn_df == TRUE] <- TRUE
     }
     if (highlightHotspots) {
@@ -1535,7 +1542,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     }
     if (removeNonMutated) {
       patients_kept <- names(which(colSums(any_hit) > 0))
-      if (!missing(cnv_df)) {
+      if (!missing(gene_cnv_df)) {
         cn_df <- cn_df[genes_kept, patients_kept]
       }
       if (verbose) {
@@ -1582,7 +1589,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       genes_kept,
       patients_kept
     ]))
-    if (!missing(cnv_df)) {
+    if (!missing(gene_cnv_df)) {
       mat_list[["CNV"]] <- as.matrix(cn_df[genes_kept, patients_kept])
     }
     if (highlightHotspots) {
@@ -1616,12 +1623,21 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     } else {
       col_order <- patients_kept
     }
-    mat_input <- mat[intersect(genes, genes_kept), patients_kept, drop = FALSE]
+
+    mat_input = mat[intersect(genes, genes_kept),patients_kept, drop=FALSE]
     
+    if(!missing(gene_cnv_df)){
+      cn_df = cn_df[genes_kept,patients_kept]
+      #index = match(rownames(mat), rownames(cn_df))
+      #cn_df = cn_df[index, ]
+      mat_input[which(cn_df=="TRUE", arr.ind = T)] = "CNV"
+    }
     any_hit <- mat_input
     any_hit[] <- 0
     any_hit[mat_input != ""] <- 1
   }
+  
+  
   if (cluster_rows || cluster_cols) {
     if (!cluster_cols) {
       message("clustering mutation rows but not columns")
@@ -1759,7 +1775,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     top_annotation = top_annotation,
     right_annotation = right_annotation,
     plot_type = plot_type,
-    cnv_df = cnv_df,
+    cn_df = cn_df,
     col = col,
     annotation_row = annotation_row,
     annotation_col = annotation_col,
@@ -1823,7 +1839,7 @@ make_prettyoncoplot <- function(
     clustering_distance_cols,
     splitColumnName, # nolint: object_name_linter.
     column_split, row_split, alter_fun, top_annotation, right_annotation,
-    plot_type = "original", cnv_df,
+    plot_type = "original", cn_df,
     heat_mat, col, annotation_row, annotation_col, legend_direction,
     legendFontSize, # nolint: object_name_linter.
     fontSizeGene, # nolint: object_name_linter.
@@ -1868,7 +1884,7 @@ make_prettyoncoplot <- function(
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
-    if (!missing(cnv_df)) {
+    if (!missing(gene_cnv_df)) {
       at <- c(at, "CNV")
     }
     heatmap_legend_param <- list(
@@ -1885,19 +1901,20 @@ make_prettyoncoplot <- function(
         "3'UTR", "Nonsense_Mutation", "Splice_Site", "Splice_Region",
         "Nonstop_Mutation", "Translation_Start_Site", "In_Frame_Ins",
         "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del",
-        "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"
+        "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot", "CNV"
       ),
       labels = c(
         "RNA", "3'UTR", "Nonsense Mutation", "Splice Site",
         "Splice Region", "Nonstop Mutation", "Translation Start Site",
         "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion",
         "Frame Shift Deletion", "Multi Hit", "Missense Mutation",
-        "HotSpot", "Silent"
+        "HotSpot", "Silent","CNV"
       ), nrow = annotation_row,
       ncol = annotation_col, legend_direction = legend_direction,
       labels_gp = gpar(fontsize = legendFontSize)
     )
   }
+  
   modify_na_elements <- function(x) {
     if (is.character(x)) {
       x[is.na(names(x))] <- "white"
@@ -2210,6 +2227,7 @@ make_prettyoncoplot <- function(
   } else {
     oncoprint_args[["column_split"]] <- column_split
   }
+
   ch <- do.call("oncoPrint", oncoprint_args)
   ch_ord <- ch@column_order
   names(ch_ord) <- rownames(metadata_df)
