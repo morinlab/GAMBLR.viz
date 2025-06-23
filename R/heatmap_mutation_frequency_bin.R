@@ -315,6 +315,7 @@ if(scale_values){
       forced <- ifelse(x == min(bin_vals), "#FFFFFF00", res)
       return(forced)
     }
+    attr(bin_col_fun, "breaks") = bin_vals
   } else {
     # Use the user-specified background colour as the first color.
     # Note: if bg_color is "transparent", this branch won't execute.
