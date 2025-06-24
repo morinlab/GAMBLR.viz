@@ -6,27 +6,29 @@
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param annoAlpha Optional alpha to apply to annotation colours.
 #'
-#' @return Either a vector or list of colours.
+#' @return A named list
 #'
 #' @import dplyr
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' cat("running examples for map_metadata_to_colours\n")
+#' library(GAMBLR.open)
 #' 
 #' #get metadata
-#' all_meta = get_gambl_metadata()
+#' all_meta = suppressMessages(get_gambl_metadata() %>%
+#'   dplyr::filter(pathology %in% c("FL","DLBCL")))
 #'
 #' #get colours
 #' all_cols = map_metadata_to_colours(
 #'      metadataColumns = c(
 #'          "lymphgen",
-#'          "pathology",
-#'          "genetic_subgroup"),
+#'          "pathology"),
 #'      these_samples_metadata = all_meta,
 #'      column_alias = list("nothing" = "FL")
 #' )
 #'
 #' @export
+#' @keywords internal
 map_metadata_to_colours = function(metadataColumns,
                                    these_samples_metadata,
                                    column_alias = list(),

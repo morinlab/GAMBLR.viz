@@ -66,9 +66,13 @@ include_silent to TRUE.
 }
 \examples{
 library(GAMBLR.open)
+suppressMessages(
+  suppressWarnings({
+
 #get meta data (BL_Thomas)
-metadata <- get_gambl_metadata() \%>\%
-    dplyr::filter(cohort == "BL_Thomas")
+metadata <- suppressMessages(get_gambl_metadata()) \%>\%
+    filter(seq_type == "genome") \%>\%
+    check_and_clean_metadata(.,duplicate_action="keep_first")
 
 maf_df <- get_coding_ssm(
     these_samples_metadata = metadata

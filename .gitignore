@@ -1,4 +1,8 @@
+.DS_Store
 .Rproj.user
+config.yml
 .Rhistory
 .RData
 .Ruserdata
+misc/*
+vignettes/*_cache/*

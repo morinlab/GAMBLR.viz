@@ -10,21 +10,40 @@ prettyGeneCloud(
   other_genes,
   these_genes_colour = "#B2DF8A",
   other_genes_colour = "#bc42f5",
-  colour_index
+  colour_index,
+  return_genes = FALSE,
+  wordcloud_version = 2,
+  zoomout = 1,
+  fontFamily = "Arial"
 )
 }
 \arguments{
-\item{maf_df}{A MAF-format data frame containing the mutations you want to summarize in a gene word cloud}
+\item{maf_df}{A MAF-format data frame containing the mutations you want to summarize
+in a gene word cloud}
 
-\item{these_genes}{An optional vector of gene symbols (defaults to all lymphoma genes)}
+\item{these_genes}{An optional vector of gene symbols (defaults to all lymphoma
+genes)}
 
-\item{other_genes}{An optional second vector of gene symbols to include in your cloud in a second colour}
+\item{other_genes}{An optional second vector of gene symbols to include in your
+cloud in a second colour}
 
-\item{these_genes_colour}{Specify the hex code of a colour to use for the first set of genes}
+\item{these_genes_colour}{Specify the hex code of a colour to use for the first
+set of genes}
 
-\item{other_genes_colour}{Specify another hex code of a colour to use for the second set of genes}
+\item{other_genes_colour}{Specify another hex code of a colour to use for the
+second set of genes}
 
-\item{colour_index}{Optional named character vector with a name for each gene in these_genes and a colour as the value}
+\item{colour_index}{Optional named character vector with a name for each gene
+in these_genes and a colour as the value}
+
+\item{return_genes}{Optionally request a vector of the genes in the plot. 
+Default is FALSE.}
+
+\item{wordcloud_version}{Specify whether you want to use the original
+wordcloud package or wordcloud2 (1 or 2)}
+
+\item{zoomout}{Increase or decrease to fit more or less of the words
+into view. Only works when wordcloud_version is 2. Default 1}
 }
 \value{
 data frame with counts for each gene
@@ -38,15 +57,14 @@ Optional parameters are `these_genes`, `other_genes`, `these_genes_colour`, `oth
 If no genes are supplied when calling the function, this function will default to all lymphoma genes.
 }
 \examples{
-#get all coding SSM
+cat("Running example for function: prettyGeneCloud\n")
+#get all coding SSM directly from GAMBLR.data
 maf = GAMBLR.data::sample_data$grch37$maf
 
-#get gene symbols from MAF
-maf_genes = dplyr::filter(maf, Hugo_Symbol != "Unknown")
-maf_genes_chr1 = dplyr::filter(maf_genes, Chromosome == "1")
-my_genes = maf_genes_chr1$Hugo_Symbol
 
 #build wordcloud
-prettyGeneCloud(maf_df = maf, these_genes = my_genes)
+prettyGeneCloud(maf_df = maf,
+                wordcloud_version = 2,
+                zoomout=0.3)
 
 }

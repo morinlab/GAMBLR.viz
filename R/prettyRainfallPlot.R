@@ -27,7 +27,7 @@
 #'      function to obtain mutations from a region (i.e. if you haven't provided
 #'      a MAF or single sample_id)
 #' @param plot_title Specify the title for the returned plot, default is
-#'      "my_plot".
+#'      the provided sample_id
 #' @param annotate_sv Optionally annotate intrachromosomal SVs to label the gene
 #'      and partner information on the plot. Default is TRUE (perform
 #'      annotation).
@@ -38,7 +38,16 @@
 #' @export
 #'
 #' @examples
-#' # Will annotate and label SVs
+#' cat("running examples for prettyRainfallPlot\n")
+#' suppressMessages(library(GAMBLR.open))
+#' maf = GAMBLR.data::sample_data$grch37$maf
+#' prettyRainfallPlot(this_sample_id = "14-35026",
+#'                    this_maf = maf,
+#'                    label_sv = FALSE,
+#'                    chromosome = "3")
+#'
+#' \dontrun{
+#' # This mode will annotate and label SVs
 #' prettyRainfallPlot(
 #'      this_sample_id = "DOHH-2",
 #'      this_seq_type = "genome",
@@ -67,6 +76,7 @@
 #'      sv_data = sv,
 #'      label_sv = TRUE
 #' )
+#' }
 #'
 prettyRainfallPlot = function(
     this_sample_id = NULL,
@@ -79,10 +89,16 @@ prettyRainfallPlot = function(
     zoom_in_region,
     this_seq_type,
     label_sv = FALSE,
-    plot_title = "my_plot",
+    plot_title,
     annotate_sv = TRUE
 ){
-
+    if(missing(plot_title)){
+        if(!missing(this_sample_id)){
+            plot_title = this_sample_id
+        }else{
+            plot_title = ""
+        }
+    }
     if(is.null(this_sample_id)){
         warning(
             "No sample_id was provided. Using all mutations in the MAF within your region!"
@@ -120,7 +136,7 @@ prettyRainfallPlot = function(
 
     if (label_ashm_genes) {
         if (projection == "grch37") {
-        ashm_regions <- grch37_ashm_regions %>%
+        ashm_regions <- GAMBLR.data::grch37_ashm_regions %>%
             dplyr::rename(
                 "start" = "hg19_start",
                 "end" = "hg19_end",
@@ -212,7 +228,7 @@ prettyRainfallPlot = function(
             this_sample_id <- "all samples"
         }else{
             message(
-                "Using the suppplied MAF df to obrain ser of SSM for the specified sample ..."
+                "Subsetting MAF to the specified sample ..."
             )
 
             these_ssm <- this_maf %>%
@@ -426,7 +442,7 @@ prettyRainfallPlot = function(
             )
 
         # are there any SVs on this chromosome/region?
-        if (nrow(sv_to_label) > 0) {
+        if (label_sv && nrow(sv_to_label) > 0) {
         sv_to_label <- sv_to_label %>%
             tidyr::pivot_longer(
                 cols = c("start1", "end1", "start2", "end2"),
@@ -460,7 +476,7 @@ prettyRainfallPlot = function(
 
         # when we are plotting region and not whole chromosome,
         # ensure SV is within that region
-        if (!missing(zoom_in_region) & label_sv) {
+        if (!missing(zoom_in_region) && label_sv) {
             sv_to_label <- dplyr::filter(
                 sv_to_label,
                 (
@@ -470,18 +486,19 @@ prettyRainfallPlot = function(
             )
             # When we did filtering to start/end for a region,
             # are there any SV to plot?
-            if (nrow(sv_to_label) == 0) {
+            if (label_sv && nrow(sv_to_label) == 0) {
                 message(
                     "Warning: after subsetting to a regions you requested to plot, there are no SV features to overlap on the final graph."
                 )
                 label_sv <- FALSE
             }
         }
-
-        sv_to_label <- sv_to_label %>%
+        if (label_sv){
+            sv_to_label <- sv_to_label %>%
             dplyr::mutate(
                 Chromosome_f = factor(Chromosome)
             )
+        }
     }
 
 
@@ -492,6 +509,10 @@ prettyRainfallPlot = function(
                 y = IMD
             )
         ) +
+        geom_point(
+        inherit.aes = TRUE,
+        aes(color = Substitution)
+        ) + 
         scale_color_manual(
             values = GAMBLR.helpers::get_gambl_colours("rainfall")
         ) +
@@ -555,7 +576,7 @@ prettyRainfallPlot = function(
         )
     }
 
-    if(annotate_sv) {
+    if(label_sv && annotate_sv) {
         max_val <- max(rainfall_points$IMD)
         p <- p +
         geom_text(
@@ -569,12 +590,5 @@ prettyRainfallPlot = function(
             show.legend = FALSE
         )
     }
-
-    p <- p +
-    geom_point(
-        inherit.aes = TRUE,
-        aes(color = Substitution)
-    )
-
     return(p)
 }

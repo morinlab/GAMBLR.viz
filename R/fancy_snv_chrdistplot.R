@@ -30,8 +30,9 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
-#'
+#' \dontrun{
+#' library(GAMBLR.open)
+#' 
 #' #plot SNVs
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2")
 #'
@@ -39,7 +40,7 @@
 #' fancy_snv_chrdistplot(this_sample_id = "DOHH-2",
 #'                       include_dnp = TRUE,
 #'                       plot_subtitle = "SNV + DNP Distribution Per Chromosome")
-#'
+#'}
 fancy_snv_chrdistplot = function(this_sample_id,
                                  maf_data,
                                  maf_path = NULL,

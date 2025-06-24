@@ -8,8 +8,11 @@ pretty_CN_heatmap(
   cn_state_matrix,
   scale_by_sample = FALSE,
   these_samples_metadata,
+  keep_sample_order = FALSE,
   metadataColumns = c("pathology"),
+  numericMetadataColumns,
   expressionColumns,
+  genome_build = "grch37",
   cluster_columns = FALSE,
   cluster_rows = TRUE,
   show_row_names = FALSE,
@@ -19,10 +22,13 @@ pretty_CN_heatmap(
   keep_these_bins,
   hide_annotations,
   sortByBins,
+  sortByGenes,
   splitByBinState,
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
+  labelTheseCytobands,
+  highlightTheseRegions,
   bin_label_fontsize = 5,
   bin_label_nudge = 1.03,
   bin_label_rotation = 45,
@@ -38,11 +44,19 @@ pretty_CN_heatmap(
   legend_position = "bottom",
   legend_row = 2,
   legend_col = 3,
+  metadataBarFontsize = 5,
+  metadataBarHeight = 1.5,
   boxplot_orientation = "vertical",
   return_data = FALSE,
   drop_bin_if_sd_below = 0,
   flip = FALSE,
-  verbose = FALSE
+  max_CN_allowed = 6,
+  verbose = FALSE,
+  rotate = FALSE,
+  width = 15,
+  height = 6,
+  cluster_samples,
+  cluster_regions
 )
 }
 \arguments{
@@ -52,7 +66,14 @@ pretty_CN_heatmap(
 
 \item{these_samples_metadata}{The output of get_gambl_metadata}
 
-\item{metadataColumns}{One or more columns from the metadata you want to display beside the heatmap}
+\item{keep_sample_order}{FALSE. Set to TRUE to ensure samples are in the same
+order as in the metadata}
+
+\item{metadataColumns}{One or more columns from the metadata you want to
+display beside the heatmap}
+
+\item{numericMetadataColumns}{One or more columns from the metadata that
+should be considered numeric}
 
 \item{expressionColumns}{Optional: One or more columns from the metadata that include gene expression values you want shown}
 
@@ -118,9 +139,15 @@ pretty_CN_heatmap(
 
 \item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
 
-\item{flip}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
-
 \item{verbose}{Control verbosity of the console output. Default is FALSE.}
+
+\item{rotate}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
+
+\item{width}{Set the width of the heatmap. Default is 10.}
+
+\item{cluster_samples}{More intuitive alias for cluster_rows, especially when combining with rotate = TRUE}
+
+\item{cluster_regions}{More intuitive alias for cluster_columns}
 }
 \value{
 list (when return_data = TRUE)
@@ -129,57 +156,65 @@ list (when return_data = TRUE)
 Pretty Copy Number Heatmap
 }
 \examples{
-
-
+cat("Running example for function: pretty_CN_heatmap\n")
+suppressMessages(library(dplyr))
+suppressMessages(library(GAMBLR.open))
 #get some metadata for subsetting the data to just one pathology (DLBCL)
-dlbcl_genome_meta = get_gambl_metadata() \%>\%
+dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) \%>\%
                     filter(pathology=="DLBCL",
                     seq_type=="genome")
 
+#remove any duplicate sample_id/seq_type combinations
+meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
+                                      duplicate_action = "keep_first")
+
 # Create the copy number matrix using the helper functions
-all_segments = get_cn_segments()
+all_segments = get_cn_segments(these = meta_clean)
 dlbcl_cn_binned = segmented_data_to_cn_matrix(
                                   seg_data = all_segments,
                                   strategy="auto_split",
-                                  n_bins_split=2500,
-                                  missing_data_as_diploid = T,
-                                  these_samples_metadata = dlbcl_genome_meta)
+                                  n_bins_split=1300,
+                                  these_samples_metadata = meta_clean)
 
 # Generate a basic genome-wide CN heatmap
 pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
-                  these_samples_metadata = dlbcl_genome_meta,
+                  these_samples_metadata = meta_clean,
                   hide_annotations = "chromosome")
 
 # Disable row (sample) clustering and restrict to a few chromosomes
 # and highlight some genes of interest
-pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-  these_samples_metadata = dlbcl_genome_meta,
+pretty_CN_heatmap(cn_state_matrix=dlbcl_cn_binned,
+  these_samples_metadata = meta_clean,
   hide_annotations = "chromosomes",
-  keep_these_chromosomes = c("chr9","chr17"),
-  cluster_rows=F,
+  keep_these_chromosomes = c("9","17"),
+  cluster_rows=FALSE,
   labelTheseGenes = c("CDKN2A","TP53"))
 
+\dontrun{
+ # get gene expression data
+ gene_exp_all = get_gene_expression(all_genes=T,
+                                    lazy_join=T,
+                                     arbitrarily_pick = TRUE,
+                                     HGNC=T,format="wide")
 
-# get gene expression data
-gene_exp_all = get_gene_expression(all_genes=T,lazy_join=T,arbitrarily_pick = T,HGNC=T,format="wide")
-
-genome_meta_exp = left_join(get_gambl_metadata() \%>\%
-    filter(seq_type=="genome") \%>\%
-    select(sample_id,pathology,lymphgen),
-    select(gene_exp_all,-sample_id),
+ genome_meta_exp = left_join(get_gambl_metadata() \%>\%
+    dplyr::filter(seq_type=="genome") \%>\%
+    dplyr::select(sample_id,pathology,lymphgen),
+    dplyr::select(gene_exp_all,-sample_id),
     by=c("sample_id"="genome_sample_id")) \%>\%
      filter(!is.na(MYC))
-
+}
 # Include gene expression data and embed a box plot showing the expression of one gene across different CN states
 
-
-pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-  these_samples_metadata = filter(genome_meta_exp,pathology=="DLBCL"),
-  hide_annotations = "chromosomes",
-  cluster_rows=F,
-  geneBoxPlot = "TP53",
-  boxplot_orientation="horizontal",bin_label_fontsize = 9,bin_label_nudge = 19
-)
+\dontrun{
+ pretty_CN_heatmap(cn_state_matrix=all_states_binned,
+   these_samples_metadata = filter(genome_meta_exp,pathology=="DLBCL"),
+   hide_annotations = "chromosomes",
+   cluster_rows=F,
+   geneBoxPlot = "TP53",
+   boxplot_orientation="horizontal",bin_label_fontsize = 9,bin_label_nudge = 19
+ )
+}
 
 
 }

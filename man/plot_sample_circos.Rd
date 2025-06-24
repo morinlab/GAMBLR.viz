@@ -14,13 +14,14 @@ plot_sample_circos(
   legend_metadata_columns,
   legend_metadata_names = c(),
   include_cnv = TRUE,
-  this_projection = "grch37",
+  genome_build,
   this_seq_type = "genome",
   chrom_list,
   label_genes,
   auto_label_sv = FALSE,
-  auto_colour_links = FALSE,
-  hide_legend = FALSE
+  link_colour_column = NULL,
+  hide_legend = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -42,7 +43,7 @@ plot_sample_circos(
 
 \item{include_cnv}{Default TRUE. (does not do anything yet).}
 
-\item{this_projection}{The selected projection, default is grch37 and it's the only supported peojection.}
+\item{genome_build}{genome_build to use (this is usually inferred automatically from your data)}
 
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
@@ -52,9 +53,11 @@ plot_sample_circos(
 
 \item{auto_label_sv}{Default is FALSE}
 
-\item{auto_colour_links}{Whether to apply authomatic coloring of the links. Default is FALSE.}
+\item{link_colour_column}{Which column from sv_df to use for link colouring (default: NULL)}
 
 \item{hide_legend}{Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata}
+
+\item{verbose}{Set to TRUE for a chattier experience}
 }
 \value{
 Nothing
@@ -68,7 +71,8 @@ Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with t
 Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
 }
 \examples{
-library(GAMBLR.data)
+\dontrun{
+library(GAMBLR.open)
 
 plot_sample_circos(this_sample_id = "02-13135T",
                    legend_metadata_columns = c("pathology",
@@ -83,5 +87,5 @@ plot_sample_circos(this_sample_id = "02-13135T",
                                   "chr8",
                                   "chr14",
                                   "chr18"))
-
+}
 }

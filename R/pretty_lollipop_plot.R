@@ -4,14 +4,17 @@
 #'
 #' @details Retrieve maf data of a specific sample or a set of samples. A gene of interest
 #' can then be visualized with the given maf data. Silent mutations can be visualized setting
-#' include_silent to TRUE. 
+#' include_silent to TRUE.
 #'
 #' @param maf_df A data frame containing the mutation data.
 #' @param these_samples_metadata Required argument. A data.frame with metadata.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest
-#' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE. 
+#' @param by_allele Set to FALSE to consider all mutations at the same codon as equivalent.
+#' When FALSE, and combined with labelPos, the labels will only indicate the amino acid number. Default is TRUE.
+#' @param labelPos Specify which AA positions to label in the plot (default is no labels).
+#' @param include_silent Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.
 #' @param label_threshold Threshold for labels to appear on plot. Default set to 5.
 #' @param plotarg Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.
 #' @param mirrorarg Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.
@@ -21,7 +24,7 @@
 #' @param Sample1 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' @param Sample2 A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.
 #' @param font Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.
-#' 
+#'
 #' @return A lollipop plot.
 #'
 #' @import dplyr ggplot2 GAMBLR.data
@@ -29,11 +32,14 @@
 #'
 #' @examples
 #' library(GAMBLR.open)
-
-#' #get meta data (BL_Thomas)
-#' metadata <- get_gambl_metadata() %>%
-#'     dplyr::filter(cohort == "BL_Thomas")
+#' suppressMessages(
+#'   suppressWarnings({
 #' 
+#' #get meta data (BL_Thomas)
+#' metadata <- suppressMessages(get_gambl_metadata()) %>%
+#'     filter(seq_type == "genome") %>%
+#'     check_and_clean_metadata(.,duplicate_action="keep_first")
+#'
 #' maf_df <- get_coding_ssm(
 #'     these_samples_metadata = metadata
 #' )
@@ -60,6 +66,8 @@ pretty_lollipop_plot <- function(
     gene,
     plot_title,
     refseq_id,
+    by_allele = TRUE,
+    max_count = 10,
     include_silent = FALSE,
     label_threshold = 5,
     plotarg = TRUE,
@@ -69,7 +77,12 @@ pretty_lollipop_plot <- function(
     meta2_counter,
     Sample1 = Sample1,
     Sample2 = Sample2,
-    font
+    font_size = 11,
+    show_rate = FALSE,
+    title_size = 8,
+    x_axis_size = 4,
+    domain_label_size = 0,
+    aa_label_size = 3
 ){
     if(missing(gene)){
         stop("Please provide a gene...")
@@ -129,21 +142,21 @@ pretty_lollipop_plot <- function(
     nc_maf_df <- maf_df %>%
         filter(
             Hugo_Symbol == gene
-        ) %>% 
+        ) %>%
         filter(
             Variant_Classification %in% variants 
         )
 
-    # Filter for the specific gene 
-    gene_df <- nc_maf_df %>% 
+    # Filter for the specific gene
+    gene_df <- nc_maf_df %>%
         mutate(
             AA = as.numeric(
                 gsub(
-                    "[^0-9]+", 
-                    "", 
+                    "[^0-9]+",
+                    "",
                     gsub(
-                        "([0-9]+).*", 
-                        "\\1", 
+                        "([0-9]+).*",
+                        "\\1",
                         HGVSp_Short
                     )
                 )
@@ -151,18 +164,26 @@ pretty_lollipop_plot <- function(
         ) %>%
         mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
         arrange(AA)
-
-    repetition_factor <- length(unique(gene_df$RefSeq)) 
-
-    # Count mutations at each position
-    gene_counts <- gene_df %>% 
+    if(by_allele){
+      gene_counts <- gene_df %>%
         group_by(
-            AA, 
-            Start_Position, 
-            End_Position, 
-            Variant_Classification, 
-            Reference_Allele, 
-            Tumor_Seq_Allele2
+          HGVSp_Short,
+          AA,
+          Variant_Classification
+        ) %>%
+        arrange(AA) %>%
+        summarise(mutation_count = n()) %>%
+        ungroup()
+      gene_counts = mutate(gene_counts,label=HGVSp_Short,size=ifelse(mutation_count>max_count,max_count,mutation_count))
+    }else{
+      gene_counts <- gene_df %>%
+        group_by(
+          AA,
+          Start_Position,
+          End_Position,
+          Variant_Classification,
+          Reference_Allele,
+          Tumor_Seq_Allele2
         ) %>%
         arrange(AA) %>%
         mutate(mutation_count = n()/repetition_factor) 
@@ -187,7 +208,7 @@ pretty_lollipop_plot <- function(
 
     # protein_domains a bundled object with GAMBLR.data
     protein_domain_subset <- subset(
-        protein_domains, 
+        protein_domains,
         HGNC == gene
     )
 
@@ -229,9 +250,9 @@ pretty_lollipop_plot <- function(
     domain_data$text.position <- (domain_data$start.points + domain_data$end.points) / 2
 
     # Determine the x-axis range
-    x_max <- max(max(domain_data$end.points), 
+    x_max <- max(max(domain_data$end.points),
         max(
-            gene_counts$AA, 
+            gene_counts$AA,
             na.rm = TRUE
         )
     )

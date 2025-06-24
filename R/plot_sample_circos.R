@@ -12,7 +12,7 @@
 #' @param ssm_df This parameter does not do anything yet. Maybe it was meant to be implemented.
 #' @param include_sv Default TRUE. (does not do anything yet).
 #' @param include_cnv Default TRUE. (does not do anything yet).
-#' @param this_projection The selected projection, default is grch37 and it's the only supported peojection.
+#' @param genome_build genome_build to use (this is usually inferred automatically from your data)
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param include_ssm Defaul FALSE. (does not do anything yet).
 #' @param legend_metadata_columns Column names from metadata
@@ -20,8 +20,9 @@
 #' @param chrom_list List of chromosomes to be plotted. If not stated, chr1-22+X will be used.
 #' @param label_genes Gene labels (df, list or what type?)
 #' @param auto_label_sv Default is FALSE
-#' @param auto_colour_links Whether to apply authomatic coloring of the links. Default is FALSE.
+#' @param link_colour_column Which column from sv_df to use for link colouring (default: NULL)
 #' @param hide_legend Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata
+#' @param verbose Set to TRUE for a chattier experience
 #'
 #' @return Nothing
 #'
@@ -29,7 +30,8 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' \dontrun{
+#' library(GAMBLR.open)
 #'
 #' plot_sample_circos(this_sample_id = "02-13135T",
 #'                    legend_metadata_columns = c("pathology",
@@ -44,7 +46,7 @@
 #'                                   "chr8",
 #'                                   "chr14",
 #'                                   "chr18"))
-#'
+#'}
 plot_sample_circos = function(this_sample_id,
                               sv_df,
                               cnv_df,
@@ -54,19 +56,23 @@ plot_sample_circos = function(this_sample_id,
                               legend_metadata_columns,
                               legend_metadata_names = c(),
                               include_cnv = TRUE,
-                              this_projection = "grch37",
+                              genome_build,
                               this_seq_type = "genome",
                               chrom_list,
                               label_genes,
                               auto_label_sv = FALSE,
-                              auto_colour_links = FALSE,
-                              hide_legend = FALSE){
+                              link_colour_column = NULL,
+                              hide_legend = FALSE,
+                              verbose = FALSE){
 
 
 
   add_cnv = function(cnv_df){
     bed = data.frame(cnv_df[,c("chrom", "start", "end", "log.ratio")])
     colnames(bed) = c("chr", "start", "end", "value1")
+    if(!any(grepl("chr",bed$chr))){
+      bed = mutate(bed,chr = paste0("chr",chr))
+    }
     col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
     circos.genomicTrackPlotRegion(bed, stack = TRUE, panel.fun = function(region, value, ...) {
       circos.genomicRect(region, value, col = col_fun(value), border = NA, posTransform = NULL, ...)
@@ -74,18 +80,28 @@ plot_sample_circos = function(this_sample_id,
       cell.xlim = get.cell.meta.data("cell.xlim")
     }, bg.border = NA)
   }
+  genomic_data = list()
   if(include_cnv & missing(cnv_df)){
     cnv_df = get_sample_cn_segments(
       these_sample_ids = this_sample_id,
       with_chr_prefix = TRUE,
       this_seq_type = this_seq_type
     )
+    genomic_data[["CN"]] = cnv_df
   }
   if(missing(chrom_list)){
 
   #should we add chr list for males as well? Sex could then also be added as a paramter for the function were the appropiate chr list is called if not stated?
    chrom_list = paste0("chr", c(1:22,"X"))
   }
+  if(!missing(sv_df)){
+    genomic_data[["SV"]] = sv_df
+  }
+  this_projection = check_get_projection(genomic_data,genome_build)
+  if(verbose){
+    print(paste("USING:",this_projection))
+  }
+
   if(!missing(label_genes)){
     if(this_projection=="grch37"){
       gene_bed = GAMBLR.data::grch37_gene_coordinates %>%
@@ -109,14 +125,14 @@ plot_sample_circos = function(this_sample_id,
     }
   }
 
-
+  print(paste("PROJECTION:",this_projection))
   #add chr prefixes if grch37 is selcted (expected by circlize)
   if(this_projection == "grch37"){
     sv_df = sv_df %>%
       dplyr::mutate(CHROM_A = paste0("chr", CHROM_A)) %>%
       dplyr::mutate(CHROM_B = paste0("chr", CHROM_B))
   }
-
+  print(chrom_list)
   sv_df = sv_df %>%
     dplyr::filter(CHROM_A %in% chrom_list) %>%
     dplyr::filter(CHROM_B %in% chrom_list)
@@ -178,11 +194,25 @@ plot_sample_circos = function(this_sample_id,
     add_cnv(cnv_df)
   }
 
-  if(auto_colour_links){
+  if(is.null(link_colour_column)){
+    circos.genomicLink(bed1, bed2, col = "#bdbdc1")
+  } else if(link_colour_column == "CHROM_B"){
     bed2 = decorate_bed(bed2,colour_by="chrom",colour_mapping = get_gambl_colours("chromosome"))
     circos.genomicLink(bed1, bed2, col = bed2$color)
+  }else if(link_colour_column == "CHROM_A"){
+    bed1 = decorate_bed(bed1,colour_by="chrom",colour_mapping = get_gambl_colours("chromosome"))
+    circos.genomicLink(bed1, bed2, col = bed1$color)
   }else{
-    circos.genomicLink(bed1, bed2, col = "#bdbdc1")
+    #assume values in link_colour_column are already colours
+    if(!link_colour_column %in% colnames(sv_df)){
+      stop(paste(link_colour_column,"is not an existing column in your sv data frame"))
+    }
+    if(verbose){
+      print(paste("colour values:"))
+      print(unique(sv_df[,link_colour_column]))
+      print(head(sv_df))
+    }
+    circos.genomicLink(bed1, bed2, col = sv_df[,link_colour_column])
   }
 
   if(!missing(label_genes)){

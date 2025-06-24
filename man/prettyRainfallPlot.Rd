@@ -15,7 +15,7 @@ prettyRainfallPlot(
   zoom_in_region,
   this_seq_type,
   label_sv = FALSE,
-  plot_title = "my_plot",
+  plot_title,
   annotate_sv = TRUE
 )
 }
@@ -51,7 +51,7 @@ a MAF or single sample_id)}
 green line on rainfall plot.}
 
 \item{plot_title}{Specify the title for the returned plot, default is
-"my_plot".}
+the provided sample_id}
 
 \item{annotate_sv}{Optionally annotate intrachromosomal SVs to label the gene
 and partner information on the plot. Default is TRUE (perform
@@ -69,7 +69,16 @@ Create a sample-level rainfall plot visualizing single nucleotide
      substitutions mutations for selected chromosomes.
 }
 \examples{
-# Will annotate and label SVs
+cat("running examples for prettyRainfallPlot\n")
+suppressMessages(library(GAMBLR.open))
+maf = GAMBLR.data::sample_data$grch37$maf
+prettyRainfallPlot(this_sample_id = "14-35026",
+                   this_maf = maf,
+                   label_sv = FALSE,
+                   chromosome = "3")
+
+\dontrun{
+# This mode will annotate and label SVs
 prettyRainfallPlot(
      this_sample_id = "DOHH-2",
      this_seq_type = "genome",
@@ -98,5 +107,6 @@ prettyRainfallPlot(
      sv_data = sv,
      label_sv = TRUE
 )
+}
 
 }
