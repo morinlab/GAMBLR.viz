@@ -23,7 +23,8 @@ pretty_lollipop_plot(
   title_size = 14,
   x_axis_size = 10,
   domain_label_size = 4,
-  aa_label_size = 3
+  aa_label_size = 3,
+  point_alpha = 1
 )
 }
 \arguments{
@@ -63,6 +64,8 @@ When FALSE, and combined with labelPos, the labels will only indicate the amino 
 \item{domain_label_size}{Font size for the protein domain labels. Default is 4.}
 
 \item{aa_label_size}{Font size for the amino acid labels. Default is 3.}
+
+\item{point_alpha}{Alpha to apply to the lollipop points. Default is 1 (no transparency).}
 }
 \value{
 A list of plot and data objects.

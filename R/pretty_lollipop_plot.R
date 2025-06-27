@@ -25,6 +25,7 @@
 #' @param x_axis_size Font size for the x-axis labels. Default is 10.
 #' @param domain_label_size Font size for the protein domain labels. Default is 4.
 #' @param aa_label_size Font size for the amino acid labels. Default is 3.
+#' @param point_alpha Alpha to apply to the lollipop points. Default is 1 (no transparency).
 #'
 #' @return A list of plot and data objects.
 #'
@@ -81,7 +82,8 @@ pretty_lollipop_plot <- function(
     title_size = 14,
     x_axis_size = 10,
     domain_label_size = 4,
-    aa_label_size = 3
+    aa_label_size = 3, 
+    point_alpha = 1
 ){
     ##### Input checks #####
     if(missing(gene)){
@@ -293,7 +295,9 @@ pretty_lollipop_plot <- function(
         font = font, 
         mirror = mirror, 
         aa_label_size = aa_label_size,
-        title_size = title_size
+        title_size = title_size, 
+        max_count = max_count, 
+        point_alpha = point_alpha
     )
     
     if(show_rate){
@@ -433,9 +437,11 @@ draw_mutation_plot <- function(
     protein_length, 
     font = "sans", 
     colours_manual, 
-    mirror = FALSE, 
+    mirror = FALSE,
+    max_count, 
     title_size,
-    aa_label_size
+    aa_label_size, 
+    point_alpha
     ){
     
     nudge_factor <- ifelse(mirror, -0.5, 0.5)
@@ -456,7 +462,8 @@ draw_mutation_plot <- function(
                 y = mutation_count, 
                 color = Variant_Classification, 
                 size = size
-                )
+                ), 
+            alpha = point_alpha
         ) +
         ggrepel::geom_text_repel(data = gene_counts, aes(
                 x = AA, 
@@ -488,12 +495,13 @@ draw_mutation_plot <- function(
         )  +
         xlim(1, protein_length) +
         scale_size_continuous(
+            limits = c(1, max_count),
             breaks = seq(
-                floor(min(gene_counts$size)), 
-                ceiling(max(gene_counts$size)),
-                by = ifelse(max(gene_counts$size) <= 5, 1, round(max(gene_counts$size) / 5))
+                1, 
+                max_count,
+                by = round(max_count / 5)
             ), 
-            range = c(3, 8),
+            range = c(1, 8),
             guide = "none"  
         )  +
         ggpubr::theme_pubr() +
