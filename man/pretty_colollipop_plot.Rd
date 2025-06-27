@@ -10,11 +10,16 @@ pretty_colollipop_plot(
   comparison_column,
   comparison_values,
   gene,
-  label_threshold,
+  include_silent = FALSE,
+  label_threshold = 5,
   plot_title,
   refseq_id,
-  forestarg = TRUE,
-  font = 11,
+  forestarg = FALSE,
+  compare_distributions = FALSE,
+  show_rate = FALSE,
+  font = "sans",
+  domain_label_size = 3,
+  x_axis_size = 10,
   ...
 )
 }
@@ -29,17 +34,15 @@ pretty_colollipop_plot(
 
 \item{gene}{The gene symbol to plot.}
 
-\item{label_threshold}{Threshold for labels to appear on plot.}
+\item{label_threshold}{Threshold for labels to appear on plot. Default 5.}
 
-\item{plot_title}{Optional, the title of the plot. Default is gene.}
+\item{plot_title}{Optional, the title of the plot. Default is `{gene}: {comparison_values[1]} vs. {comparison_values[2]}`.}
 
 \item{refseq_id}{Insert a specific NM_xxx value of interest.}
 
 \item{forestarg}{Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.}
 
-\item{font}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
-
-\item{...}{`pretty_lollipop_plot` arguments, see that function for more info on avaialble parameters.}
+\item{...}{`pretty_lollipop_plot` arguments, see that function for more info on available parameters.}
 }
 \value{
 A mirrored lollipop plot.
@@ -57,14 +60,14 @@ library(GAMBLR.open)
 
 #get meta data (DLBCL_Hilton)
 meta = GAMBLR.open::get_gambl_metadata()
-metadata = dplyr::filter(meta, cohort \%in\% "DLBCL_Hilton")
+metadata = dplyr::filter(meta, cohort \%in\% "DLBCL_GenomeCanada")
 maf_df = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = metadata
 )
 pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
                                                         these_samples_metadata = metadata,
-                                                        comparison_column = "sex",
-                                                        comparison_values = c("M", "F"),
+                                                        comparison_column = "COO_consensus",
+                                                        comparison_values = c("ABC", "GCB"),
                                                         gene = "IGLL5",
                                                         label_threshold = 2)
 }

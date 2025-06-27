@@ -9,17 +9,21 @@ pretty_lollipop_plot(
   these_samples_metadata,
   gene,
   plot_title,
-  refseq_id,
+  refseq_id = NULL,
+  by_allele = TRUE,
+  max_count = 10,
   include_silent = FALSE,
   label_threshold = 5,
-  plotarg = TRUE,
-  mirrorarg = FALSE,
-  combined_gene_counts,
-  meta1_counter,
-  meta2_counter,
-  Sample1 = Sample1,
-  Sample2 = Sample2,
-  font
+  labelPos = NULL,
+  labelHGVSp = NULL,
+  mirror = FALSE,
+  font_size = 11,
+  font = "sans",
+  show_rate = FALSE,
+  title_size = 14,
+  x_axis_size = 10,
+  domain_label_size = 4,
+  aa_label_size = 3
 )
 }
 \arguments{
@@ -33,28 +37,35 @@ pretty_lollipop_plot(
 
 \item{refseq_id}{Insert a specific NM_xxx value of interest}
 
+\item{by_allele}{Set to FALSE to consider all mutations at the same codon as equivalent.
+When FALSE, and combined with labelPos, the labels will only indicate the amino acid number. Default is TRUE.}
+
+\item{max_count}{Sets the mutation count for the largest lollipop size. Default is 10.}
+
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 
-\item{label_threshold}{Threshold for labels to appear on plot. Default set to 5.}
+\item{label_threshold}{Minimum mutation recurrence for labels to appear on plot. Superseded by either labelPos or labelHGVSp. Default set to 5.}
 
-\item{plotarg}{Logical parameter indicating whether to plot the lollipopplot or return the data in data frame format. Default is TRUE.}
+\item{labelPos}{A vector of amino acid positions that should be labeled on the plot (i.e. c("28", "315")). If unset, label_threshold is used to determine which positions to label.}
 
-\item{mirrorarg}{Logical paramter for when mirroring lollipop data in prety_co_lollipop plot. Default is FALSE.}
+\item{labelHGVSp}{A character vector of values from HGVSp_Short (i.e. c("p.G28D", "p.E315K")) that will be labeled on the plot.}
 
-\item{combined_gene_counts}{A dataframe containing data for a mirrored lollipop analysis.}
+\item{font_size}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
 
-\item{meta1_counter}{A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.}
+\item{font}{Customizable font for all plotting elements. Default is "sans" which uses the system default font. Use `systemfonts::match_fonts(font)` to confirm if your requested font is available.}
 
-\item{meta2_counter}{A dataframe for calculating Somatic Mutation Rate in `pretty_lollipop_plot`.}
+\item{show_rate}{Boolean parameter indicating whether to show the somatic mutation rate in the plot title. Default is FALSE.,}
 
-\item{Sample1}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
+\item{title_size}{Font size for the plot title. Default is 14.}
 
-\item{Sample2}{A label for displaying Somatic Mutation Rate in `pretty_lollipop_plot`.}
+\item{x_axis_size}{Font size for the x-axis labels. Default is 10.}
 
-\item{font}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
+\item{domain_label_size}{Font size for the protein domain labels. Default is 4.}
+
+\item{aa_label_size}{Font size for the amino acid labels. Default is 3.}
 }
 \value{
-A lollipop plot.
+A list of plot and data objects.
 }
 \description{
 Generates a visually appealing lollipop plot.
@@ -70,7 +81,7 @@ suppressMessages(
   suppressWarnings({
 
 #get meta data (BL_Thomas)
-metadata <- suppressMessages(get_gambl_metadata()) \%>\%
+metadata <- get_gambl_metadata() \%>\%
     filter(seq_type == "genome") \%>\%
     check_and_clean_metadata(.,duplicate_action="keep_first")
 
@@ -81,6 +92,7 @@ maf_df <- get_coding_ssm(
 #construct pretty_lollipop_plot.
 lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
 print(lolipop_result)
+}))
 
 \dontrun{
  # Or, with GAMBLR.results:
