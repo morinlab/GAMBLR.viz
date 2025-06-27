@@ -26,6 +26,7 @@
 #' @param domain_label_size Font size for the protein domain labels. Default is 4.
 #' @param aa_label_size Font size for the amino acid labels. Default is 3.
 #' @param point_alpha Alpha to apply to the lollipop points. Default is 1 (no transparency).
+#' @param point_size_range Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8). 
 #'
 #' @return A list of plot and data objects.
 #'
@@ -83,7 +84,8 @@ pretty_lollipop_plot <- function(
     x_axis_size = 10,
     domain_label_size = 4,
     aa_label_size = 3, 
-    point_alpha = 1
+    point_alpha = 1, 
+    point_size_range = c(2, 8)
 ){
     ##### Input checks #####
     if(missing(gene)){
@@ -297,6 +299,7 @@ pretty_lollipop_plot <- function(
         aa_label_size = aa_label_size,
         title_size = title_size, 
         max_count = max_count, 
+        point_size_range = point_size_range,
         point_alpha = point_alpha
     )
     
@@ -439,6 +442,7 @@ draw_mutation_plot <- function(
     colours_manual, 
     mirror = FALSE,
     max_count, 
+    point_size_range,
     title_size,
     aa_label_size, 
     point_alpha
@@ -501,7 +505,7 @@ draw_mutation_plot <- function(
                 max_count,
                 by = round(max_count / 5)
             ), 
-            range = c(1, 8),
+            range = point_size_range,
             guide = "none"  
         )  +
         ggpubr::theme_pubr() +
