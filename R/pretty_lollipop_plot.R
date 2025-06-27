@@ -143,16 +143,19 @@ pretty_lollipop_plot <- function(
     # Verify that all variants belong to a single gene model
     if(length(unique(maf_df$aa.length)) > 1){
         maf_df %>% 
-            select(
+            count(
                 Hugo_Symbol, 
                 Transcript_ID,
                 RefSeq, 
                 aa.length
             ) %>% 
-            distinct() %>% 
             print()
-        stop("The provided maf_df has more than one gene model for the specified gene. 
-            Check the Transcript_ID and Protein_position columns to ensure one consistent gene model was used. ")
+        warning("The provided maf_df has more than one gene model for the specified gene. 
+            Selecting the RefSeqID that appears more frequently. ")
+        maf_df %>% 
+            group_by(RefSeq) %>% 
+            filter(n() == max(n())) %>% 
+            ungroup()
     }
 
     ##### Load the protein domain table for the current gene #####
@@ -164,7 +167,10 @@ pretty_lollipop_plot <- function(
             filter(HGNC == gene) %>% 
             filter(refseq.ID == refseq_id)
         if(length(unique(protein_domain_subset$refseq.ID)) == 0){
-            stop(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
+            warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
+            protein_domain_subset <- data.frame(
+                
+            )
         }
     } else {
         # Infer refseq_id to use from the maf_df
@@ -183,8 +189,14 @@ pretty_lollipop_plot <- function(
         message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
         Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot."))
     } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
-       print(protein_domain_subset)
-       stop("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
+       warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
+       protein_domain_subset <- data.frame(
+            HGNC = gene,
+            Start  = -1,
+            End = -1,
+            Label = "",
+            aa.length = as.numeric(unique(maf_df$aa.length))
+        )
     }
 
     ##### Count mutations according to user specified options #####
@@ -421,7 +433,15 @@ draw_domain_plot <- function(
                 size = domain_label_size, 
                 family = font
             ) +
-            scale_fill_manual(values = domain_palette) +
+            scale_fill_manual(values = domain_palette) + 
+            scale_x_continuous(
+                breaks = seq(
+                    0,
+                    x_max,
+                    by = 5*round(x_max/25) # Breaks in multiples of 5
+                ), 
+                limits = c(0, x_max)
+            ) +
             theme_void() +
             theme(
                 axis.text.x = element_text(
@@ -429,8 +449,7 @@ draw_domain_plot <- function(
                     vjust = rel(0.5)
                     ), 
                 text = element_text(family = font)
-            ) + 
-            xlim(x_min, x_max)
+            ) 
     return(domain_plot)
 }
 
