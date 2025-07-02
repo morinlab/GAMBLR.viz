@@ -319,24 +319,30 @@ pretty_colollipop_plot <- function(
             colollipop_plot, 
             ggpubr::ggarrange(
                 forest_plot$forest + 
-                    theme(
-                        text = element_text(family = font), 
-                        axis.text = element_text(family = font), 
-                        axis.title.y = element_blank()
+                    ggtitle(
+                        paste0("Fisher's Exact Test P=", signif(forest_plot$fisher$p.value, 2))
                         ) + 
-                    ggtitle(paste0("Fisher's Exact Test P=", signif(forest_plot$fisher$p.value, 2))),        
+                    theme(
+                        text = element_text(family = font, face = "plain"), 
+                        axis.text = element_text(family = font, face = "plain"), 
+                        axis.title.x = element_text(family = font, face = "plain"), 
+                        plot.title = element_text(family = font, face = "plain"),
+                        axis.title.y = element_blank()
+                        ) ,        
                 forest_plot$bar + 
                     theme(
-                        text = element_text(family = font), 
-                        axis.text = element_text(family = font)
+                        text = element_text(family = font, face = "plain"), 
+                        axis.text = element_text(family = font, face = "plain"), 
+                        axis.title.x = element_text(family = font, face = "plain")
                         ), 
                 widths = c(1, 0.6),
                 common.legend = TRUE,
                 legend = "bottom",
-                align = "h"),          
+                align = "hv"),          
             ncol = 1, 
             nrow = 2,
-            heights = c(3, 1)     
+            heights = c(3, 1), 
+            align = "v"     
         )
 
     
