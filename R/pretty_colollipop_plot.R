@@ -243,7 +243,7 @@ pretty_colollipop_plot <- function(
             x_axis_size = x_axis_size,
             font = font
             )
-        plot_subtitle <- paste("KS-test p-value", signif(gene_p_value, digits = 2))
+        plot_subtitle <- paste0("KS Test P=", signif(gene_p_value, digits = 2))
     } else{
         domain_plot <- lp1$domain_plot
         domain_data <- lp1$domain_data
