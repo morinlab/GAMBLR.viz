@@ -316,14 +316,15 @@ pretty_colollipop_plot <- function(
 
     # arrange colollipop plot and forest plot together one over the other
         combine_lollipop_forest <- ggpubr::ggarrange(
-            colollipop_plot,              
+            colollipop_plot, 
             ggpubr::ggarrange(
                 forest_plot$forest + 
                     theme(
                         text = element_text(family = font), 
                         axis.text = element_text(family = font), 
                         axis.title.y = element_blank()
-                        ),        
+                        ) + 
+                    ggtitle(paste0("Fisher's Exact Test P=", signif(forest_plot$fisher$p.value, 2))),        
                 forest_plot$bar + 
                     theme(
                         text = element_text(family = font), 
@@ -331,6 +332,7 @@ pretty_colollipop_plot <- function(
                         ), 
                 widths = c(1, 0.6),
                 common.legend = TRUE,
+                legend = "bottom",
                 align = "h"),          
             ncol = 1, 
             nrow = 2,
