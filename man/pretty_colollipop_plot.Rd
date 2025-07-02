@@ -64,10 +64,17 @@ metadata = dplyr::filter(meta, cohort \%in\% "DLBCL_GenomeCanada")
 maf_df = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = metadata
 )
-pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df,
-                                                        these_samples_metadata = metadata,
-                                                        comparison_column = "COO_consensus",
-                                                        comparison_values = c("ABC", "GCB"),
-                                                        gene = "IGLL5",
-                                                        label_threshold = 2)
+pretty_colollipop_plot_result <- pretty_colollipop_plot(
+ maf_df = maf_df,
+ these_samples_metadata = metadata,
+ comparison_column = "COO_consensus",
+ comparison_values = c("ABC", "GCB"),
+ gene = "PIM1",
+ label_threshold = 2, 
+ forestarg = TRUE, 
+ show_rate = TRUE, 
+ compare_distributions = TRUE
+)
+
+pretty_colollipop_plot_result$plot
 }
