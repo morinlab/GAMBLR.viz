@@ -219,8 +219,7 @@ pretty_colollipop_plot <- function(
             }
         }
         
-        domain_data <- domain_data %>% 
-        
+        domain_data <- domain_data %>%         
             mutate(
                 p_value = case_when(
                     p.value < 0.001 ~ "***",
@@ -239,6 +238,7 @@ pretty_colollipop_plot <- function(
         plot_subtitle <- paste("KS-test p-value", signif(gene_p_value, digits = 2))
     } else{
         domain_plot <- lp1$domain_plot
+        domain_data <- lp1$domain_data
         plot_subtitle = ""
     }
     
