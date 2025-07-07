@@ -169,7 +169,7 @@ pretty_lollipop_plot <- function(
             ) %>% 
             print()
         warning("The provided maf_df has more than one gene model for the specified gene. 
-            Selecting the RefSeqID that appears more frequently. ")
+            Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
         maf_df %>% 
             group_by(RefSeq) %>% 
             filter(n() == max(n())) %>% 
@@ -205,7 +205,7 @@ pretty_lollipop_plot <- function(
         protein_domain_subset <- protein_domain_subset %>%
             filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
         message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
-        Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot."))
+        Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
     } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
        warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
        protein_domain_subset <- data.frame(
@@ -219,6 +219,9 @@ pretty_lollipop_plot <- function(
 
     ##### Count mutations according to user specified options #####
     gene_df <- maf_df %>%
+        filter(
+            RefSeq == unique(protein_domain_subset$refseq.ID)
+        ) %>%
         mutate(
             AA = as.numeric(
                 gsub(
