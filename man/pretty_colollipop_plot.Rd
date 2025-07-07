@@ -42,6 +42,8 @@ pretty_colollipop_plot(
 
 \item{forestarg}{Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.}
 
+\item{compare_distributions}{Logical parameter indicating whether to compare the distribution of variants along the length of the gene and its domains between the groups. Default is FALSE.}
+
 \item{...}{`pretty_lollipop_plot` arguments, see that function for more info on available parameters.}
 }
 \value{

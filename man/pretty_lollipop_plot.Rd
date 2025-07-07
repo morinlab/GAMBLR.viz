@@ -86,30 +86,48 @@ library(GAMBLR.open)
 suppressMessages(
   suppressWarnings({
 
-#get meta data (BL_Thomas)
-metadata <- get_gambl_metadata() \%>\%
-    filter(seq_type == "genome") \%>\%
-    check_and_clean_metadata(.,duplicate_action="keep_first")
+# Get meta data (BL)
+# Using GAMBLR.open:  
+metadata <- GAMBLR.open::get_gambl_metadata() \%>\% 
+    filter(
+        seq_type == "genome", 
+        cohort \%in\% c("BL_Pediatric", "BL_Adult"),
+    ) 
 
-maf_df <- get_coding_ssm(
-    these_samples_metadata = metadata
+maf_df <- GAMBLR.open::get_all_coding_ssm(
+        these_samples_metadata = metadata 
 )
 
-#construct pretty_lollipop_plot.
-lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
-print(lolipop_result)
+# Construct pretty_lollipop_plot.
+lollipop_result <- pretty_lollipop_plot(
+    maf_df, 
+    these_samples_metadata = metadata, 
+    gene = "DDX3X", 
+    point_size_range = c(5, 15), 
+    point_alpha = 0.8,
+    label_threshold = 3
+    )
+lollipop_result$plot
 }))
 
 \dontrun{
  # Or, with GAMBLR.results:
  library(GAMBLR.results)
- metadata <- get_gambl_metadata() \%>\%
-    dplyr::filter(pathology == "BL")
+ metadata <- GAMBLR.results::get_gambl_metadata() \%>\%
+    dplyr::filter(cohort \%in\% c("BL_Pediatric", "BL_Adult"))
 
-maf_df <- get_all_coding_ssm(
-    these_samples_metadata = metadata
+maf_df <- GAMBLR.results::get_all_coding_ssm(
+    these_samples_metadata = metadata, 
+    basic_columns = FALSE
 )
-lolipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, "DDX3X")
-lolipop_result
+lollipop_result <- pretty_lollipop_plot(
+    maf_df, 
+    these_samples_metadata = metadata, 
+    gene = "DDX3X", 
+    point_size_range = c(5, 15), 
+    point_alpha = 0.8,
+    label_threshold = 3
+    )
+lolipop_result$plot
 }
 }
