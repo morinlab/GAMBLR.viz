@@ -10,6 +10,7 @@
 #' @param these_samples_metadata Required argument. A data.frame with metadata for the CoLollipop Plot.
 #' @param comparison_column Required: the name of the metadata column containing the comparison values.
 #' @param comparison_values Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.
+#' @param compare_distributions Logical parameter indicating whether to compare the distribution of variants along the length of the gene and its domains between the groups. Default is FALSE. 
 #' @param gene The gene symbol to plot.
 #' @param label_threshold Threshold for labels to appear on plot. Default 5. 
 #' @param plot_title Optional, the title of the plot. Default is `{gene}: {comparison_values[1]} vs. {comparison_values[2]}`.
@@ -203,7 +204,7 @@ pretty_colollipop_plot <- function(
         domain_list <- list()
         domain_data <- lp1$domain_data
         domain_data$p.value <- NA
-
+        # Within each domain, use the KS test to determine if the distribution of variants is different
         for (i in 1:nrow(domain_data)) {
             domain_name <- domain_data$text.label[i]
             min_val <- domain_data$start.points[i]
@@ -219,6 +220,7 @@ pretty_colollipop_plot <- function(
             if(length(domain_subset1$AA) == 0 | length(domain_subset2$AA) == 0) {
                 message("Skipping domain ", domain_name, " as it does not have data for both subgroups")
             }else{
+                # Compare the distribution of variants along the length of the domains between the groups
                 domain_ks_test <- suppressWarnings(ks.test(
                         rep(domain_subset1$AA, domain_subset1$mutation_count),
                         rep(domain_subset2$AA, domain_subset2$mutation_count) 
