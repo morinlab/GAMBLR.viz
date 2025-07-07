@@ -114,10 +114,10 @@ pretty_lollipop_plot <- function(
         plot_title = gene
     }
     
-    if (!"RefSeq" %in% colnames(maf_df)) {
-        stop("Error: The provided maf_df is missing the 'RefSeq' column. 
+    if (!"RefSeq" %in% colnames(maf_df) & !"Protein_position" %in% colnames(maf_df)) {
+        stop("Error: The provided maf_df is missing the 'RefSeq' and/or 'Protein_position' column. 
               Ensure that get_ssm_by_samples() is run with basic_columns = FALSE, 
-              or that you have updated GAMBLR.data to the latest version. .")
+              or that you have updated GAMBLR.data to the latest version.")
     }
     
     if(!is.null(labelPos) & !is.null(labelHGVSp)){
