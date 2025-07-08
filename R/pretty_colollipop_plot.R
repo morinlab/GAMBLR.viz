@@ -45,6 +45,29 @@
 #' )
 #' 
 #' pretty_colollipop_plot_result$plot
+#' 
+#' # Load all the metadata available and restrict to FL and DLBCL
+#' meta = GAMBLR.open::get_gambl_metadata()
+#' metadata = dplyr::filter(meta,pathology %in% c("FL","DLBCL"))
+#'
+#' #Load mutations for all genome and capture samples in the metadata
+#' maf_df = GAMBLR.open::get_all_coding_ssm(
+#'    these_samples_metadata = metadata
+#' )
+#' # Compare the mutation profile and pattern for CREBBP in FL and DLBCL
+#' pretty_colollipop_plot_result <- pretty_colollipop_plot(
+#'   maf_df = maf_df,
+#'    these_samples_metadata = metadata,
+#'    comparison_column = "pathology",
+#'    comparison_values = c("FL", "DLBCL"),
+#'    gene = "CREBBP",
+#'    label_threshold = 2, 
+#'    forestarg = TRUE, 
+#'    show_rate = TRUE, 
+#'    compare_distributions = TRUE
+#')
+#'
+#'pretty_colollipop_plot_result$plot
 
 pretty_colollipop_plot <- function(
     maf_df,
