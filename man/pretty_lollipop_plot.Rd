@@ -23,6 +23,7 @@ pretty_lollipop_plot(
   title_size = 14,
   x_axis_size = 10,
   domain_label_size = 4,
+  domain_label_orientation = "auto",
   aa_label_size = 3,
   point_alpha = 1,
   point_size_range = c(2, 8)
@@ -63,6 +64,8 @@ When FALSE, and combined with labelPos, the labels will only indicate the amino 
 \item{x_axis_size}{Font size for the x-axis labels. Default is 10.}
 
 \item{domain_label_size}{Font size for the protein domain labels. Default is 4.}
+
+\item{domain_label_orientation}{Manually override the orientation of the protein domain labels with "horizontal" or "vertical". Default is "auto", inferred from the size of the smallest domain relative to the protein length.}
 
 \item{aa_label_size}{Font size for the amino acid labels. Default is 3.}
 

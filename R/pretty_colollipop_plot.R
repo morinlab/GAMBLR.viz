@@ -60,8 +60,6 @@ pretty_colollipop_plot <- function(
     compare_distributions = FALSE,
     show_rate = FALSE,
     font = "sans",
-    domain_label_size = 3,
-    x_axis_size = 10,
     ...
 ) {
 
@@ -145,6 +143,18 @@ pretty_colollipop_plot <- function(
 
     # Arguments to pass into pretty_lollipop_plot
     lollipopplot_args <- list(...)
+    # Arguments to pass into domain_plot
+    domain_matched <-  names(lollipopplot_args)[names(lollipopplot_args) %in% c(
+            "domain_label_size", 
+            "domain_label_orientation",
+            "x_axis_size"
+        )]
+    if(length(domain_matched) > 0){
+        domainplot_args <- lollipopplot_args[domain_matched]
+    } else{
+        domainplot_args <- list()
+    }
+    
 
     # Get gene_counts data for the first plot (without generating the plot)
     lp1 <- do.call(pretty_lollipop_plot, c(
@@ -239,12 +249,14 @@ pretty_colollipop_plot <- function(
                 )
             )
 
-        domain_plot <- draw_domain_plot(
-            domain_data, 
-            domain_label_size = domain_label_size,
-            x_axis_size = x_axis_size,
+        domain_plot <- do.call(draw_domain_plot, c(
+        list(
+            domain_data = domain_data,
             font = font
-            )
+        ), 
+        domainplot_args
+    ))
+        
         plot_subtitle <- paste0("KS Test P=", signif(gene_p_value, digits = 2))
     } else{
         domain_plot <- lp1$domain_plot
@@ -296,9 +308,10 @@ pretty_colollipop_plot <- function(
     outputs <- list(
         plot = colollipop_plot,
         combined_gene_counts = combined_gene_counts, 
-        lollipop1 = lp1, 
-        lollipop2 = lp2, 
-        domain_data = domain_data
+        lollipop1 = lp1$mutation_plot, 
+        lollipop2 = lp2$mutation_plot, 
+        domain_data = domain_data, 
+        domain_plot= domain_plot
     )
 
     if (forestarg == TRUE) {

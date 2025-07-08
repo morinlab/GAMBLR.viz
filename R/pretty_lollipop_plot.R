@@ -24,6 +24,7 @@
 #' @param title_size Font size for the plot title. Default is 14.
 #' @param x_axis_size Font size for the x-axis labels. Default is 10.
 #' @param domain_label_size Font size for the protein domain labels. Default is 4.
+#' @param domain_label_orientation Manually override the orientation of the protein domain labels with "horizontal" or "vertical". Default is "auto", inferred from the size of the smallest domain relative to the protein length. 
 #' @param aa_label_size Font size for the amino acid labels. Default is 3.
 #' @param point_alpha Alpha to apply to the lollipop points. Default is 1 (no transparency).
 #' @param point_size_range Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8). 
@@ -101,6 +102,7 @@ pretty_lollipop_plot <- function(
     title_size = 14,
     x_axis_size = 10,
     domain_label_size = 4,
+    domain_label_orientation = "auto", 
     aa_label_size = 3, 
     point_alpha = 1, 
     point_size_range = c(2, 8)
@@ -318,6 +320,7 @@ pretty_lollipop_plot <- function(
         domain_data, 
         font = font, 
         domain_label_size = domain_label_size,
+        domain_label_orientation = domain_label_orientation, 
         x_axis_size = x_axis_size
         )
 
@@ -381,15 +384,25 @@ draw_domain_plot <- function(
     domain_data, 
     font = "sans", 
     x_axis_size = 10, 
-    domain_label_size = 4
+    domain_label_size = 4, 
+    domain_label_orientation = "auto"
     ){
     domain_palette <- unname(get_gambl_colours("domains"))[1:length(unique(domain_data$text.label))]
     
     # Determine angle of domain labels based on width of domains relative to protein
-    angle = ifelse(
-        min((domain_data$End - domain_data$Start)/domain_data$aa.length) >= 0.2,
-        0, 90
-    )
+    if(domain_label_orientation == "auto"){
+        angle = ifelse(
+            min((domain_data$End - domain_data$Start)/domain_data$aa.length) >= 0.1,
+            0, 90
+        )
+    } else if(domain_label_orientation == "horizontal"){
+        angle = 0
+    } else if(domain_label_orientation == "vertical"){
+        angle = 90
+    } else {
+        stop("Invalid domain_label_orientation. Use 'auto', 'horizontal', or 'vertical'.")
+    }
+    
     
     # Add the p-value to the text label if it exists in the provided domain_data
     if("p_value" %in% colnames(domain_data)){
@@ -554,9 +567,9 @@ draw_mutation_plot <- function(
                 hjust = 0.5, 
                 size = title_size
                 ),
-            axis.text.x = element_blank(),
-            axis.line.x = element_blank(),
-            axis.ticks.x = element_blank(),
+            # axis.text.x = element_blank(),
+            # axis.line.x = element_blank(),
+            # axis.ticks.x = element_blank(),
             axis.title.x = element_blank(),
             text = element_text(family = font), 
             legend.position = "right"

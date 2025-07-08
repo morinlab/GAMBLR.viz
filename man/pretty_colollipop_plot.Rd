@@ -18,8 +18,6 @@ pretty_colollipop_plot(
   compare_distributions = FALSE,
   show_rate = FALSE,
   font = "sans",
-  domain_label_size = 3,
-  x_axis_size = 10,
   ...
 )
 }
