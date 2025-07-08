@@ -6,35 +6,75 @@
 \usage{
 pretty_lollipop_plot(
   maf_df,
-  gene = NULL,
+  these_samples_metadata,
+  gene,
   plot_title,
+  refseq_id = NULL,
   by_allele = TRUE,
   max_count = 10,
   include_silent = FALSE,
+  label_threshold = 5,
   labelPos = NULL,
+  labelHGVSp = NULL,
+  mirror = FALSE,
+  font_size = 11,
+  font = "sans",
   show_rate = FALSE,
-  title_size = 8,
-  x_axis_size = 4,
-  domain_label_size = 0,
-  aa_label_size = 3
+  title_size = 14,
+  x_axis_size = 10,
+  domain_label_size = 4,
+  domain_label_orientation = "auto",
+  aa_label_size = 3,
+  point_alpha = 1,
+  point_size_range = c(2, 8)
 )
 }
 \arguments{
 \item{maf_df}{A data frame containing the mutation data.}
 
+\item{these_samples_metadata}{Required argument. A data.frame with metadata.}
+
 \item{gene}{The gene symbol to plot.}
 
 \item{plot_title}{Optional, the title of the plot. Default is gene.}
 
+\item{refseq_id}{Insert a specific NM_xxx value of interest}
+
 \item{by_allele}{Set to FALSE to consider all mutations at the same codon as equivalent.
 When FALSE, and combined with labelPos, the labels will only indicate the amino acid number. Default is TRUE.}
 
+\item{max_count}{Sets the mutation count for the largest lollipop size. Default is 10.}
+
 \item{include_silent}{Logical parameter indicating whether to include silent mutations into coding mutations. Default is FALSE.}
 
-\item{labelPos}{Specify which AA positions to label in the plot (default is no labels).}
+\item{label_threshold}{Minimum mutation recurrence for labels to appear on plot. Superseded by either labelPos or labelHGVSp. Default set to 5.}
+
+\item{labelPos}{A vector of amino acid positions that should be labeled on the plot (i.e. c("28", "315")). If unset, label_threshold is used to determine which positions to label.}
+
+\item{labelHGVSp}{A character vector of values from HGVSp_Short (i.e. c("p.G28D", "p.E315K")) that will be labeled on the plot.}
+
+\item{font_size}{Customizable font size for the CoLollipop plot somatic mutation rate and comparison labels. Default is 11pt font.}
+
+\item{font}{Customizable font for all plotting elements. Default is "sans" which uses the system default font. Use `systemfonts::match_fonts(font)` to confirm if your requested font is available.}
+
+\item{show_rate}{Boolean parameter indicating whether to show the somatic mutation rate in the plot title. Default is FALSE.,}
+
+\item{title_size}{Font size for the plot title. Default is 14.}
+
+\item{x_axis_size}{Font size for the x-axis labels. Default is 10.}
+
+\item{domain_label_size}{Font size for the protein domain labels. Default is 4.}
+
+\item{domain_label_orientation}{Manually override the orientation of the protein domain labels with "horizontal" or "vertical". Default is "auto", inferred from the size of the smallest domain relative to the protein length.}
+
+\item{aa_label_size}{Font size for the amino acid labels. Default is 3.}
+
+\item{point_alpha}{Alpha to apply to the lollipop points. Default is 1 (no transparency).}
+
+\item{point_size_range}{Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8).}
 }
 \value{
-A lollipop plot.
+A list of plot and data objects.
 }
 \description{
 Generates a visually appealing lollipop plot.
@@ -49,18 +89,48 @@ library(GAMBLR.open)
 suppressMessages(
   suppressWarnings({
 
-#get meta data (BL_Thomas)
-metadata <- suppressMessages(get_gambl_metadata()) \%>\%
-    filter(seq_type == "genome") \%>\%
-    check_and_clean_metadata(.,duplicate_action="keep_first")
+# Get meta data (BL)
+# Using GAMBLR.open:  
+metadata <- GAMBLR.open::get_gambl_metadata() \%>\% 
+    filter(
+        seq_type == "genome", 
+        cohort \%in\% c("BL_Pediatric", "BL_Adult"),
+    ) 
 
-maf_df <- get_coding_ssm(
-    these_samples_metadata = metadata
+maf_df <- GAMBLR.open::get_all_coding_ssm(
+        these_samples_metadata = metadata 
 )
 
-#construct pretty_lollipop_plot.
-lollipop_result <- pretty_lollipop_plot(maf_df, "DDX3X")
-print(lollipop_result)
+# Construct pretty_lollipop_plot.
+lollipop_result <- pretty_lollipop_plot(
+    maf_df, 
+    these_samples_metadata = metadata, 
+    gene = "DDX3X", 
+    point_size_range = c(5, 15), 
+    point_alpha = 0.8,
+    label_threshold = 3
+    )
+lollipop_result$plot
 }))
 
+\dontrun{
+ # Or, with GAMBLR.results:
+ library(GAMBLR.results)
+ metadata <- GAMBLR.results::get_gambl_metadata() \%>\%
+    dplyr::filter(cohort \%in\% c("BL_Pediatric", "BL_Adult"))
+
+maf_df <- GAMBLR.results::get_all_coding_ssm(
+    these_samples_metadata = metadata, 
+    basic_columns = FALSE
+)
+lollipop_result <- pretty_lollipop_plot(
+    maf_df, 
+    these_samples_metadata = metadata, 
+    gene = "DDX3X", 
+    point_size_range = c(5, 15), 
+    point_alpha = 0.8,
+    label_threshold = 3
+    )
+lolipop_result$plot
+}
 }
