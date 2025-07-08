@@ -335,7 +335,7 @@ pretty_colollipop_plot <- function(
             ggpubr::ggarrange(
                 forest_plot$forest + 
                     ggtitle(
-                        paste0("Fisher's Exact Test P=", signif(forest_plot$fisher$p.value, 2))
+                        paste0("Fisher's Exact Test P=", signif(forest_plot$fisher$p.value, 2), ", OR=", signif(forest_plot$fisher$estimate, 2) )
                         ) + 
                     theme(
                         text = element_text(family = font, face = "plain"), 
