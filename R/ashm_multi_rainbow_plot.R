@@ -2,22 +2,27 @@
 #'
 #' @description Generates a colourful multi-panel overview of hypermutation in regions of interest across many samples.
 #'
-#' @details The input for this function is a bed-file with the following columns; chr, start, end, name.
+#' @details Creates a rainbow plot for mutations within regions given in avdata frame in BED format with the following columns; chr, start, end, name.
 #' Note that for this function to work, the column names must be exactly this.
-#' The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
-#' It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
-#' In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
+#' The user can also to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
+#' Mutations are coloured by `classification_column`, and certain classifications can be excluded with the parameter `exclude_classifications`.
+#' Samples will be plotted in the order they are arranged in `these_samples_metadata`. Otherwise they will be plotted by `classification_column` order.
 #' This function will try to obtain mutations internally if `maf_data` is not given.
 #' For more info, refer to the parameter descriptions of this function.
 #'
-#' @param regions_bed Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.
-#' @param these_samples_metadata A metadata file already subsetted and arranged on the order you want the samples vertically displayed.
-#' @param this_seq_type the seqtype you want results back for if `maf_data` is not provided.
+#' @param regions_bed A data frame in BED format with chromosome coordinates, must contain columns chr, start, end, name (with these exact names) with maximum 10 regions to plot. Not required if specifying `regions_to_display`. with values from the `GAMBLR.data` ashm regions for the given projection, I.e values in `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.
+#' @param these_samples_metadata A optional metadata file already subsetted and arranged on the order you want the samples vertically displayed.
+#' @param maf_data An optional MAF-data data frame. If not provided, this function will call `get_ssm_by_regions`, using the regions supplied into `regions_bed` and `these_samples_metadata` if provided. Ensure your maf genome build matches the `projection` parameter.
+#' @param regions_to_display Optional vector of regions in the format "gene-region" that match values of the gene and region columns in the `GAMBLR.data` ashm regions for the given projection, I.e gene and region columns of `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.
+#' @param this_seq_type The seq type you want results back for if `maf_data` is not provided. Default: genome.
+#' @param classification_column The name of the metadata column to use for colouring samples. 
+#'  Default: lymphgen.
+#' @param exclude_classifications Optional argument for excluding specific classifications within
+#'  the `classification_column` values.
+#' @param sortByColumns A vector containing the column names you want to sort samples on. If `these_samples_metadata` is not provided, the default is to sort by pathology then `classification_column`.
+#' @param projection Plot variants projected to this reference, one of grch37 (default) or hg38. Bonus regions are only available in grch37.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
-#' @param classification_column Optional. Override default column for assigning the labels used for colouring in the figure.
-#' @param maf_data An already loaded maf. If not provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`. Ensure your maf matches the genome projection.
-#' @param projection Provide genome build; default is grch37. Bonus regions are only available in grch37.
-#' @param verbose Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.
+#' @param verbose  Set to TRUE to maximize the output to console. Default is FALSE.
 #'
 #' @return Nothing
 #'
@@ -27,7 +32,7 @@
 #' @examples
 #' cat("Running example for function: ashm_multi_rainbow_plot\n") 
 #' suppressMessages(library(GAMBLR.open))
-#' #get lymphgen colours
+#' # Get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 #' 
 #' metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) %>% 
@@ -35,12 +40,13 @@
 #'                  seq_type=="genome") %>% 
 #'           check_and_clean_metadata(.,duplicate_action="keep_first") %>%
 #'           dplyr::arrange(lymphgen)
-#' regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
+#' regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
 #'                               fix_names = "concat",
-#'                               concat_cols = c("gene","region"))
+#'                               concat_cols = c("gene","region"),
+#'                               sep="-")
 #' regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
-#' ashm_multi_rainbow_plot(regions_bed,
-#'                         metadata,
+#' ashm_multi_rainbow_plot(regions_bed = regions_bed,
+#'                         these_samples_metadata = metadata,
 #'                         custom_colours = lymphgen_colours,
 #'                         verbose = TRUE)
 #' 
@@ -50,17 +56,21 @@
 #'                                                "MYC-TSS",
 #'                                                "SGK1-TSS",
 #'                                                "IGL"),
+#'                         these_samples_metadata = metadata,
 #'                         custom_colours = lymphgen_colours,
 #'                         this_seq_type = "genome")
 #' }
 #'
 ashm_multi_rainbow_plot = function(regions_bed,
                                    these_samples_metadata,
+                                   maf_data = NULL,
+                                   regions_to_display = NULL,
                                    this_seq_type="genome",
-                                   custom_colours,
                                    classification_column = "lymphgen",
-                                   maf_data,
+                                   exclude_classifications,
+                                   sortByColumns = "pathology",
                                    projection = "grch37",
+                                   custom_colours,
                                    verbose = FALSE) {
   
   if(verbose){
@@ -68,75 +78,97 @@ ashm_multi_rainbow_plot = function(regions_bed,
   }
   if(missing(these_samples_metadata)){
     if(verbose) {
-      print("finding metadata")
+      print("these_samples_metadata was not provided. Using all of get_gambl_metadata().")
     }
     metadata = get_gambl_metadata() %>% 
       dplyr::filter(seq_type %in% this_seq_type)
-    meta_arranged = arrange(metadata, pathology, lymphgen)
+    
+    sorting_columns = unique(c(sortByColumns, classification_column))
+    if(!all(sorting_columns %in% colnames(metadata))){
+      stop("classification_column or sortByColumns do not exist in the metadata")
+    }else{
+      meta_arranged = metadata %>% 
+        dplyr::arrange(pick(sorting_columns))
+    }
   }else{
     metadata = these_samples_metadata  %>% 
       dplyr::filter(seq_type %in% this_seq_type)
     meta_arranged = metadata #assume the user already arranged it the way they wanted
   }
 
-  
+  if(!missing(exclude_classifications)){ 
+    meta_arranged = meta_arranged %>%
+      dplyr::filter(!get(classification_column) %in% exclude_classifications)
+  }
+
   if(!missing(regions_bed)) {
     print("regions_bed provided")
     if(nrow(regions_bed)>10){
       stop("reduce the regions to display to at most 10")
     }
-  } else {
-    if (projection == "grch37") {
-      regions_bed = GAMBLR.utils::create_bed_data()(GAMBLR.data::grch37_ashm_regions,
-       fix_names="concat",
-       concat_cols=c("gene","region"),
-       sep="-"
-      )
-    } else if (projection == "hg38") {
+  }else{
+    if(projection == "grch37") {
       regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
        fix_names="concat",
        concat_cols=c("gene","region"),
        sep="-"
       )
-    } else {
-      stop(
-        "Please specify one of grch37 or hg38 projections"
+      if(!is.null(regions_to_display)){
+        regions_bed <- regions_bed %>%
+          dplyr::filter(name %in% regions_to_display)
+        if(nrow(regions_bed) == 0){
+        stop("regions_to_display do not appear in GAMBLR.data::grch37_ashm_regions")
+        }
+      }else{
+        # subset to the first 10 rows
+        regions_bed <- head(regions_bed, 10)
+      }
+    }else if(projection == "hg38") {
+      regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
+       fix_names="concat",
+       concat_cols=c("gene","region"),
+       sep="-"
       )
+      if(!is.null(regions_to_display)){
+        regions_bed <- regions_bed %>%
+          dplyr::filter(name %in% regions_to_display)
+        if(nrow(regions_bed) == 0){
+        stop("regions_to_display do not appear in GAMBLR.data::grch37_ashm_regions")
+        }
+      }else{
+        # subset to the first 10 rows
+        regions_bed <- head(regions_bed, 10)
+      }
+    }else{
+      stop("Please specify one of grch37 or hg38 projections")
     }
   }
   if(verbose){
     print(regions_bed)
   }
 
-  
-  
-  if(nrow(regions_bed) == 0){
-    stop("Region to display doesn't have coordinates in supplied bed or GAMBLR.data::somatic_hypermutation_locations_{genome_build}_v_latest."
-    )
-  }
-  regions_bed = mutate(regions_bed,
-    region_name=paste0(chrom,":",start,"-",end))
+  regions_bed = mutate(regions_bed, 
+                       region_name=paste0(chrom,":",start,"-",end))
   regions = pull(regions_bed, region_name)
   names = pull(regions_bed, name)
   
-  
   if(missing(maf_data)){
-    print("get_ssm_by_regions")
+    print("No maf_data provided, using get_ssm_by_regions")
     region_mafs = get_ssm_by_regions(
       regions_bed=regions_bed,
       these_samples_metadata = metadata,
       projection = projection,
-      use_name_column = T
-    ) 
-    #%>% strip_genomic_classes() 
+      use_name_column = T,
+      streamlined = T
+    )
   }else{
     region_mafs = get_ssm_by_regions(maf_data=maf_data,
       regions_bed=regions_bed,
       these_samples_metadata = metadata,
       projection = projection,
       use_name_column = T,
-      this_seq_type = this_seq_type
-    ) %>% strip_genomic_classes()
+      streamlined = T
+    )
   }
 
   if(verbose){
@@ -148,18 +180,19 @@ ashm_multi_rainbow_plot = function(regions_bed,
     )
   }
   
-  
   meta_arranged = meta_arranged %>% mutate_if(is.factor, as.character)
   meta_arranged = meta_arranged %>% mutate(classification = factor(!!sym(classification_column)))
   if(verbose){
     print(head(meta_arranged[,c(1:8)]))
   }
   
-  
-  muts_anno = dplyr::left_join(region_mafs, meta_arranged)
-  muts_first = dplyr::select(muts_anno, start, region_name) %>%
-    group_by(region_name) %>%
-    arrange(start) %>%
+  muts_anno = dplyr::left_join(
+      region_mafs, 
+      meta_arranged)
+  muts_first = muts_anno %>%
+    dplyr::select(start, region_name) %>%
+    dplyr::group_by(region_name) %>%
+    dplyr::arrange(start) %>%
     dplyr::filter(row_number() == 1)
 
   eg = expand_grid(start = pull(muts_first, start),

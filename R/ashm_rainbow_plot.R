@@ -12,8 +12,8 @@
 #'
 #' @param region Genomic region for plotting as a string in the format "chr:start-end".
 #' @param maf_data A optional MAF-data data frame containing mutations within the region of 
-#'  interest for the samples in `these_samples_metadata`. If not supplied, mutations will be retrieved 
-#'  from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs.
+#'  interest for the samples in `these_samples_metadata`. Ensure it's genome build matches the `projection` parameter.If not supplied, mutations will be retrieved 
+#'  from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs. 
 #' @param these_samples_metadata A data frame with at least columns `sample_id` and the corresponding 
 #'  columns given with `classification_column` and `sortByColumns`.
 #' @param classification_column The name of the metadata column to use for colouring samples. 
@@ -38,13 +38,17 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.data)
+#' suppressMessages(library(GAMBLR.open))
 #' 
-#' #basic usage
+#' # Get lymphgen colours
+#' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
+#' 
+#' # Basic usage
 #' this_region = "chr6:90975034-91066134"
-#' metadata = get_gambl_metadata()
+#' this_metadata = get_gambl_metadata()
 #' ashm_rainbow_plot(region = this_region,
-#'                   these_samples_metadata = metadata)
+#'                   these_samples_metadata = metadata, 
+#'                   custom_colours = lymphgen_colours)
 #' }
 #'
 ashm_rainbow_plot = function(region,
