@@ -15,11 +15,13 @@
 #'  interest for the samples in `these_samples_metadata`. If not supplied, mutations will be retrieved 
 #'  from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs.
 #' @param these_samples_metadata A data frame with at least columns `sample_id` and the corresponding 
-#'  column given with `classification_column`.
-#' @param classification_column The name of the metadata column to use for ordering and colouring 
-#'  samples. Default: lymphgen.
+#'  columns given with `classification_column` and `sortByColumns`.
+#' @param classification_column The name of the metadata column to use for colouring samples. 
+#'  Default: lymphgen.
 #' @param exclude_classifications Optional argument for excluding specific classifications within
 #'  the `classification_column` values.
+#' @param sortByColumns A vector containing the column names you want to sort samples on. The default
+#'  is to sort by pathology then `classification_column`.
 #' @param projection Plot variants projected to this reference, one of grch37 (default) or hg38. 
 #'  Must match the projection of `maf_data` MAF data object if provided.
 #' @param drop_unmutated Boolean argument for removing unmutated samples. Default: FALSE.
@@ -50,6 +52,7 @@ ashm_rainbow_plot = function(region,
                              these_samples_metadata,
                              classification_column = "lymphgen",
                              exclude_classifications = NULL,
+                             sortByColumns = "pathology",
                              projection = "grch37",
                              drop_unmutated = FALSE,
                              bed,
@@ -68,6 +71,14 @@ ashm_rainbow_plot = function(region,
   }else{
     #drop unsupported seq_type and samples to exclude
     these_samples_metadata = dplyr::filter(these_samples_metadata, seq_type!="mrna")
+  }
+
+  # check that classification_column and sortByColumn are in the metadata
+  if(!classification_column %in% colnames(these_samples_metadata)){
+    stop("classification_column is not present in these_samples_metadata")
+  }
+  if(!all(sortByColumns %in% colnames(these_samples_metadata))){
+    stop("sortByColumns are not all present in these_samples_metadata")
   }
 
   if(!missing(region)){
@@ -101,22 +112,14 @@ ashm_rainbow_plot = function(region,
     stop("You must supply a single region as a character string")
   }
 
-  if(!missing(exclude_classifications)){
-    if("pathology" %in% colnames(these_samples_metadata)){
-      meta_arranged = these_samples_metadata %>%
-        dplyr::filter(!get(classification_column) %in% exclude_classifications) %>%
-        dplyr::arrange(pathology, get(classification_column))
-    }else{
-      meta_arranged = these_samples_metadata %>%
-        dplyr::filter(!get(classification_column) %in% exclude_classifications) %>%
-        dplyr::arrange(get(classification_column))
-    }
-  }else if("pathology" %in% colnames(these_samples_metadata)){
+  sorting_columns = unique(c(sortByColumns, classification_column))
+  if(!missing(exclude_classifications)){ 
     meta_arranged = these_samples_metadata %>%
-      dplyr::arrange(pathology, get(classification_column))
+      dplyr::filter(!get(classification_column) %in% exclude_classifications) %>%
+      dplyr::arrange(pick(sorting_columns))
   }else{
     meta_arranged = these_samples_metadata %>%
-       dplyr::arrange(get(classification_column))
+       dplyr::arrange(pick(sorting_columns))
   }
 
   # Streamlined = TRUE returns col `sample_id` not `Tumor_Sample_Barcode`
