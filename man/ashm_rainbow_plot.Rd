@@ -5,35 +5,50 @@
 \title{ASHM Rainbow Plot}
 \usage{
 ashm_rainbow_plot(
-  mutations_maf,
-  metadata,
-  exclude_classifications,
-  drop_unmutated = FALSE,
-  classification_column,
-  bed,
   region,
+  maf_data = NULL,
+  these_samples_metadata,
+  classification_column = "lymphgen",
+  exclude_classifications = NULL,
+  sortByColumns = "pathology",
+  projection = "grch37",
+  drop_unmutated = FALSE,
+  bed,
   custom_colours,
   hide_ids = TRUE
 )
 }
 \arguments{
-\item{mutations_maf}{A data frame containing mutations (MAF format) within a region of interest (i.e. use the get_ssm_by_region).}
+\item{region}{Genomic region for plotting as a string in the format "chr:start-end".}
 
-\item{metadata}{should be a data frame with sample_id as a column.}
+\item{maf_data}{A optional MAF-data data frame containing mutations within the region of 
+interest for the samples in `these_samples_metadata`. Ensure it's genome build matches the `projection` parameter.If not supplied, mutations will be retrieved 
+from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs.}
 
-\item{exclude_classifications}{Optional argument for excluding specific classifications from a metadeta file.}
+\item{these_samples_metadata}{A data frame with at least columns `sample_id` and the corresponding 
+columns given with `classification_column` and `sortByColumns`.}
 
-\item{drop_unmutated}{Boolean argument for removing unmutated sample ids in mutated cases.}
+\item{classification_column}{The name of the metadata column to use for colouring samples. 
+Default: lymphgen.}
 
-\item{classification_column}{The name of the metadata column to use for ordering and colouring samples.}
+\item{exclude_classifications}{Optional argument for excluding specific classifications within
+the `classification_column` values.}
 
-\item{bed}{Optional data frame specifying the regions to annotate (required columns: start, end, name).}
+\item{sortByColumns}{A vector containing the column names you want to sort samples on. The default
+is to sort by pathology then `classification_column`.}
 
-\item{region}{Genomic region for plotting in bed format.}
+\item{projection}{Plot variants projected to this reference, one of grch37 (default) or hg38. 
+Must match the projection of `maf_data` MAF data object if provided.}
 
-\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standartized pallette.}
+\item{drop_unmutated}{Boolean argument for removing unmutated samples. Default: FALSE.}
 
-\item{hide_ids}{Boolean argument, if TRUE, ids will be removed.}
+\item{bed}{Optional data frame specifying the regions to annotate. Minimum required column are
+start, end, and name with name being used to label the region.}
+
+\item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation 
+colours if you do not want to use standartized pallette.}
+
+\item{hide_ids}{Boolean argument, if TRUE (default), sample ids will not appear on the plot.}
 }
 \value{
 ggplot2 object
@@ -42,23 +57,27 @@ ggplot2 object
 Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 }
 \details{
-This function creates a rainbow plot for all mutations in a region. Region can either be specified with the `region` parameter,
-or the user can provide a maf that has already been subset to the region(s) of interest with `mutation_maf`.
-As a third alternative, the regions can also be specified as a bed file with `bed`.
-Lastly, this function has a variety of parameters that can be used to further customize the returned plot in many different ways.
-Refer to the parameter descriptions, examples as well as the vignettes for more demonstrations how this function can be called.
+This function creates a rainbow plot for all mutations in a region specified with 
+ the `region` parameter for samples specified in `these_samples_metadata`. If 
+ `these_samples_metadata` is not specified, it will use the samples returned by 
+ `get_gambl_metadata()` of the appropriate seq types. To highlight and annotate specific 
+ regions on the plot, an optional bed file of the regions can be specified with `bed`.
+ An optional MAF-data dataframe with mutations in the `region` can be supplied with
+ `maf_data`.
 }
 \examples{
 \dontrun{
-library(GAMBLR.data)
+suppressMessages(library(GAMBLR.open))
 
-#basic usage
+# Get lymphgen colours
+lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
+
+# Basic usage
 this_region = "chr6:90975034-91066134"
-metadata = get_gambl_metadata()
-metadata = check_and_clean_metadata(metadata,
-           duplicate_action ="keep_first")
-ashm_rainbow_plot(metadata = metadata,
-                  region = this_region)
+this_metadata = get_gambl_metadata()
+ashm_rainbow_plot(region = this_region,
+                  these_samples_metadata = metadata, 
+                  custom_colours = lymphgen_colours)
 }
 
 }

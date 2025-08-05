@@ -30,7 +30,7 @@
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation 
 #'  colours if you do not want to use standartized pallette.
 #' @param hide_ids Boolean argument, if TRUE (default), sample ids will not appear on the plot.
-#' @
+#' 
 #' @return ggplot2 object
 #'
 #' @import dplyr ggplot2
