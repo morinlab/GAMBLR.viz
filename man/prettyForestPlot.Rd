@@ -27,7 +27,7 @@ prettyForestPlot(
 and Tumor_Sample_Barcode.}
 
 \item{mutmat}{Optional argument for binary mutation matrix. If not
-supplied, function will generate this matrix from the file used in 
+supplied, function will generate this matrix from the file used in
 argument "maf".}
 
 \item{metadata}{Metadata for the comparisons. Minimum required
