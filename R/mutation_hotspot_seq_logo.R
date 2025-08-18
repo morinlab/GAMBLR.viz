@@ -194,11 +194,17 @@ mutation_hotspot_logo <- function(maf_df,
     )) %>%
       unname()
   }
+  if(!is.null(fasta_path)){
+    some_mutations <- GAMBLR.utils::annotate_ssm_context(some_mutations,
+                                                         fastaPath = fasta_path,
+                                                         genome_build = genome_build
+    )
+  }else{
+    some_mutations <- GAMBLR.utils::annotate_ssm_context(some_mutations,
+                                                         genome_build = genome_build
+    )
+  }
 
-  some_mutations <- GAMBLR.utils::annotate_ssm_context(some_mutations,
-    fastaPath = fasta_path,
-    genome_build = genome_build
-  )
 
   if (annotate_only) {
     return(list(annotated = some_mutations, region = context))

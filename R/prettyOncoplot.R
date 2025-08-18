@@ -142,7 +142,7 @@
 #' See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.
 #' @param numeric_heatmap_location Deprecated.
 #' See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.
-#' @param cnv_df Deprecated. See gene_cnv_df. 
+#' @param cnv_df Deprecated. See gene_cnv_df.
 #' @param summarizeByColumns Optional vector of metadata column
 #' names that will be summarized on the left as stacked bar plots.
 #' @param longest_label Optional character vector specifying the
@@ -856,8 +856,25 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   height_scaling <- 1
   if (simplify_annotation) {
     # make oncomatrix individually from the MAF
-    summarize_mutation_by_class <- function(mutation_set) {
-      if ("hot_spot" %in% mutation_set) {
+    summarize_mutation_by_class <- function(mutation_set,gene_silent) {
+      if(!missing(gene_silent)){
+        #summarize silent mutations following the per-gene classes
+        snv_maf = data.frame()
+        for(gs in names(gene_silent)){
+          these_snv = filter(maf_df,
+                             Hugo_Symbol == gs,
+                             Variant_Classification %in% gene_silent[[gs]]) %>%
+            select(Tumor_Sample_Barcode,Hugo_Symbol,Variant_Classification) %>%
+            unique() %>%
+            mutate(Mutated = TRUE)
+          if(nrow(these_snv)==0){
+            print(paste("no mutations for",gs))
+            next
+          }
+          snv_maf = bind_rows(snv_maf,these_snv)
+        }
+        
+      } else if ("hot_spot" %in% mutation_set) {
         snv_maf <- filter(maf_df, hot_spot == TRUE) %>%
           filter(Hugo_Symbol %in% rownames(mat)) %>%
           select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
@@ -905,6 +922,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     col["Missense"] <- col["Missense_Mutation"]
     col["Truncating"] <- col["Nonsense_Mutation"]
     col["CNV"] <- "purple"
+    col["Silent"] <- "black"
     col["HotSpot"] <- "magenta"
     # heights <- c(
     #  "Missense", "Truncating", "Splice_Site",
@@ -953,12 +971,19 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           fill = col["Splice_Site"],
           col = NA
         ))
-      }, CNV = function(x, y, w, h) {
+      }, Silent = function(x, y, w, h) {
+        grid.rect(x, y, w * width_adj, h * 0.7, gp = gpar(
+          fill = col["Silent"],
+          col = NA
+        ))
+      },
+      CNV = function(x, y, w, h) {
         grid.rect(x, y, w * width_adj, h * 0.6, gp = gpar(
           fill = col["CNV"],
           col = NA
         ))
-      }, HotSpot = function(x, y, w, h) {
+      },
+      HotSpot = function(x, y, w, h) {
         grid.rect(x, y, w * width_adj, h * 0.9, gp = gpar(
           fill = col["Missense"],
           col = NA
@@ -973,7 +998,13 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "Missense_Mutation",
       "In_Frame_Del", "In_Frame_Ins", "Translation_Start_Site"
     ))
+    if(!missing(include_noncoding)){
 
+      print("summarize noncoding mutation status")
+      silent_df = summarize_mutation_by_class(gene_silent = include_noncoding)
+      print(dim(silent_df))
+      print(head(silent_df[,c(1:10)]))
+    }
 
 
     if (verbose) {
@@ -1003,7 +1034,10 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       snv_df[trunc_df == TRUE | splice_df == TRUE] <- FALSE
       splice_df[trunc_df == TRUE] <- FALSE
     }
-  
+    #if(!missing(include_noncoding)){
+    #  snv_df
+    #}
+
     if(simplify_bg_colour == "pathology"){
       #background colour is based on metadata
       bg_df = matrix(nrow=nrow(snv_df),ncol=ncol(snv_df))
@@ -1470,6 +1504,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     trunc_df <- trunc_df[genes_kept, patients_kept]
     snv_df <- snv_df[genes_kept, patients_kept]
     splice_df <- splice_df[genes_kept, patients_kept]
+    if(!missing(include_noncoding)){
+      silent_df <- silent_df[genes_kept, patients_kept]
+    }
     if (verbose) {
       print("Simplify Annotations")
     }
@@ -1482,8 +1519,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     all_hit[snv_df == TRUE] <- "Missense"
     any_hit[splice_df == TRUE] <- TRUE
     all_hit[splice_df == TRUE] <- "Splice"
+
     if (!missing(cnv_df)) {
       any_hit[cn_df == TRUE] <- TRUE
+    }
+    if (!missing(include_noncoding)) {
+      any_hit[silent_df == TRUE] <- TRUE
     }
     if (highlightHotspots) {
       any_hit[hotspot_df == TRUE] <- TRUE
@@ -1546,6 +1587,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       trunc_df <- trunc_df[genes_kept, patients_kept]
       snv_df <- snv_df[genes_kept, patients_kept]
       splice_df <- splice_df[genes_kept, patients_kept]
+      if(!missing(include_noncoding)){
+        silent_df <- silent_df[genes_kept, patients_kept]
+      }
       metadata_df <- metadata_df[patients_kept, , drop = FALSE]
       if (highlightHotspots) {
         hotspot_df <- hotspot_df[genes_kept, patients_kept]
@@ -1567,7 +1611,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       patients_kept
     )), , drop = FALSE]
     if (verbose) {
-      
+
       print(paste("proceeding with these genes:"))
       print(genes_kept)
       print(head(metadata_df))
@@ -1584,6 +1628,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     ]))
     if (!missing(cnv_df)) {
       mat_list[["CNV"]] <- as.matrix(cn_df[genes_kept, patients_kept])
+    }
+    if(!missing(include_noncoding)){
+      mat_list[["Silent"]] <- as.matrix(silent_df[genes_kept, patients_kept])
     }
     if (highlightHotspots) {
       mat_list[["HotSpot"]] <- as.matrix(hotspot_df[
@@ -1617,7 +1664,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       col_order <- patients_kept
     }
     mat_input <- mat[intersect(genes, genes_kept), patients_kept, drop = FALSE]
-    
+
     any_hit <- mat_input
     any_hit[] <- 0
     any_hit[mat_input != ""] <- 1
@@ -1642,7 +1689,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       }
     } else if (!cluster_rows) {
       message("clustering mutation columns but not rows")
-    
+
       if(!missing(genesForClustering)){
         genesForClustering = intersect(genesForClustering,rownames(any_hit))
         hits_for_clustering = any_hit[genesForClustering,]
@@ -1803,7 +1850,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     axis_font_size = axis_font_size,
     right_anno_width = right_anno_width,
     genesForClustering = genesForClustering,
-    annotation_name_fontsize = annotation_name_fontsize
+    annotation_name_fontsize = annotation_name_fontsize,
+    include_noncoding = include_noncoding
   )
   if (return_inputs) {
     if (simplify_annotation) {
@@ -1864,16 +1912,22 @@ make_prettyoncoplot <- function(
     axis_font_size,
     right_anno_width,
     genesForClustering,
-    annotation_name_fontsize) {
+    annotation_name_fontsize,
+    include_noncoding) {
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
     if (!missing(cnv_df)) {
       at <- c(at, "CNV")
     }
+    if (!missing(include_noncoding)){
+      at <- c(at, "Silent")
+    }
     heatmap_legend_param <- list(
-      title = "Alterations", at = at,
-      labels = at, nrow = annotation_row,
+      title = "Alterations",
+      at = at,
+      labels = at,
+      nrow = annotation_row,
       ncol = annotation_col,
       legend_direction = legend_direction,
       labels_gp = gpar(fontsize = legendFontSize)
@@ -1892,7 +1946,7 @@ make_prettyoncoplot <- function(
         "Splice Region", "Nonstop Mutation", "Translation Start Site",
         "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion",
         "Frame Shift Deletion", "Multi Hit", "Missense Mutation",
-        "HotSpot", "Silent"
+         "Silent", "HotSpot"
       ), nrow = annotation_row,
       ncol = annotation_col, legend_direction = legend_direction,
       labels_gp = gpar(fontsize = legendFontSize)
@@ -1925,13 +1979,13 @@ make_prettyoncoplot <- function(
     row_title = NULL,
     show_heatmap_legend = show_any_legend,
     heatmap_legend_param = heatmap_legend_param,
-    
+
     pct_gp = gpar(fontsize = pctFontSize),
     use_raster = use_raster,
     row_names_side = row_names_side,
     pct_side = pct_side
   )
-  
+
   row_labels = rownames(mat_input[[1]])
   gene_label_colour = setNames(rep("black",length(row_labels)),row_labels)
   if(!missing(coloured_genes)){
@@ -1945,8 +1999,8 @@ make_prettyoncoplot <- function(
     print(gene_label_colour)
   }
 
-  
-  
+
+
   oncoprint_args[["show_pct"]] <- show_pct
   if (!is.null(pw)) {
     oncoprint_args[["width"]] <- unit(pw, "cm")
@@ -2048,7 +2102,7 @@ make_prettyoncoplot <- function(
             #get the total for scaling
             mut_status_sum = left_join(mut_status_sum,totals) %>%
               mutate(proportion = total/n)
-            
+
             mut_status_sum_raw = mut_status_sum %>%
             mutate(percent = 100*proportion)
             #stop("===================")
@@ -2064,9 +2118,9 @@ make_prettyoncoplot <- function(
               if(verbose){
                 print(head(mut_status_sum_raw))
               }
-              
+
             }
-            
+
             mut_status_sum_raw = mut_status_sum_raw %>%
               select(-total:-proportion) %>%
               pivot_wider(.,
@@ -2114,10 +2168,10 @@ make_prettyoncoplot <- function(
             }else{
               return(list(df=mut_status_sum,colours=anno_col))
             }
-            
+
       }
       #get the right annotation
-      
+
       if(!missing(right_anno_column)){
         anno_args = get_side_anno(right_anno_column,right_anno = TRUE)
         #print(head(anno_args$df))
@@ -2134,7 +2188,7 @@ make_prettyoncoplot <- function(
             )),
           width = unit(right_anno_width, "cm"),
           #annotation_name_gp = gpar(fontsize = 0),
-          
+
           annotation_name_gp = gpar(fontsize = annotation_name_fontsize),
           annotation_name_rot = 0,
           annotation_name_side = annotation_name_side,
