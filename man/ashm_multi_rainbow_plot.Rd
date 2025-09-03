@@ -7,30 +7,41 @@
 ashm_multi_rainbow_plot(
   regions_bed,
   these_samples_metadata,
+  maf_data = NULL,
+  regions_to_display = NULL,
   this_seq_type = "genome",
-  custom_colours,
   classification_column = "lymphgen",
-  maf_data,
+  exclude_classifications,
+  sortByColumns = "pathology",
   projection = "grch37",
+  custom_colours,
   verbose = FALSE
 )
 }
 \arguments{
-\item{regions_bed}{Bed file with chromosome coordinates, should contain columns chr, start, end, name (with these exact names). Not required if selecting from many common regions; bonus regions also exist in grch37.}
+\item{regions_bed}{A data frame in BED format with chromosome coordinates, must contain columns chr, start, end, name (with these exact names) with maximum 10 regions to plot. Not required if specifying `regions_to_display`. with values from the `GAMBLR.data` ashm regions for the given projection, I.e values in `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.}
 
-\item{these_samples_metadata}{A metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
+\item{these_samples_metadata}{A optional metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
 
-\item{this_seq_type}{the seqtype you want results back for if `maf_data` is not provided.}
+\item{maf_data}{An optional MAF-data data frame. If not provided, this function will call `get_ssm_by_regions`, using the regions supplied into `regions_bed` and `these_samples_metadata` if provided. Ensure your maf genome build matches the `projection` parameter.}
+
+\item{regions_to_display}{Optional vector of regions in the format "gene-region" that match values of the gene and region columns in the `GAMBLR.data` ashm regions for the given projection, I.e gene and region columns of `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.}
+
+\item{this_seq_type}{The seq type you want results back for if `maf_data` is not provided. Default: genome.}
+
+\item{classification_column}{The name of the metadata column to use for colouring samples. 
+Default: lymphgen.}
+
+\item{exclude_classifications}{Optional argument for excluding specific classifications within
+the `classification_column` values.}
+
+\item{sortByColumns}{A vector containing the column names you want to sort samples on. If `these_samples_metadata` is not provided, the default is to sort by pathology then `classification_column`.}
+
+\item{projection}{Plot variants projected to this reference, one of grch37 (default) or hg38. Bonus regions are only available in grch37.}
 
 \item{custom_colours}{Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.}
 
-\item{classification_column}{Optional. Override default column for assigning the labels used for colouring in the figure.}
-
-\item{maf_data}{An already loaded maf. If not provided, this function will call `get_ssm_by_region`, using the regions supplied into `regions_bed`. Ensure your maf matches the genome projection.}
-
-\item{projection}{Provide genome build; default is grch37. Bonus regions are only available in grch37.}
-
-\item{verbose}{Set to FALSE to prevent printing the full regions bed file to the console. Default is TRUE.}
+\item{verbose}{Set to TRUE to maximize the output to console. Default is FALSE.}
 }
 \value{
 Nothing
@@ -39,18 +50,18 @@ Nothing
 Generates a colourful multi-panel overview of hypermutation in regions of interest across many samples.
 }
 \details{
-The input for this function is a bed-file with the following columns; chr, start, end, name.
+Creates a rainbow plot for mutations within regions given in avdata frame in BED format with the following columns; chr, start, end, name.
 Note that for this function to work, the column names must be exactly this.
-The user also needs to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
-It is also possible to exclude specific classifications from the metadata file. This is achieved with `exclude_classifications`.
-In addition the user can also use the `metadata` parameter to use an already subset and arranged metadata table.
+The user can also to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
+Mutations are coloured by `classification_column`, and certain classifications can be excluded with the parameter `exclude_classifications`.
+Samples will be plotted in the order they are arranged in `these_samples_metadata`. Otherwise they will be plotted by `classification_column` order.
 This function will try to obtain mutations internally if `maf_data` is not given.
 For more info, refer to the parameter descriptions of this function.
 }
 \examples{
 cat("Running example for function: ashm_multi_rainbow_plot\n") 
 suppressMessages(library(GAMBLR.open))
-#get lymphgen colours
+# Get lymphgen colours
 lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 
 metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) \%>\% 
@@ -58,12 +69,13 @@ metadata = suppressMessages(GAMBLR.open::get_gambl_metadata()) \%>\%
                  seq_type=="genome") \%>\% 
           check_and_clean_metadata(.,duplicate_action="keep_first") \%>\%
           dplyr::arrange(lymphgen)
-regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions,
+regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
                               fix_names = "concat",
-                              concat_cols = c("gene","region"))
+                              concat_cols = c("gene","region"),
+                              sep="-")
 regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
-ashm_multi_rainbow_plot(regions_bed,
-                        metadata,
+ashm_multi_rainbow_plot(regions_bed = regions_bed,
+                        these_samples_metadata = metadata,
                         custom_colours = lymphgen_colours,
                         verbose = TRUE)
 
@@ -73,6 +85,7 @@ ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
                                                "MYC-TSS",
                                                "SGK1-TSS",
                                                "IGL"),
+                        these_samples_metadata = metadata,
                         custom_colours = lymphgen_colours,
                         this_seq_type = "genome")
 }
