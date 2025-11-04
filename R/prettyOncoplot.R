@@ -1416,6 +1416,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       intersect(genes, genes_kept),
       patients_kept
     ] %>%
+      as.data.frame() %>%
       rownames_to_column("gene") %>%
       select(gene) %>%
       left_join(this_forest_object$fisher %>%
