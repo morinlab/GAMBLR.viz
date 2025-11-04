@@ -1,5 +1,5 @@
-[1] "=== STARTED AT 2025-09-02 16:06:15 ==="
-── Running 36 example files ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+[1] "=== STARTED AT 2025-11-04 15:49:18 ==="
+── Running 36 example files ──────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
 Running example for function: ashm_multi_rainbow_plot
@@ -180,20 +180,12 @@ Running example for function: pretty_CN_heatmap
 > metadata = dplyr::filter(meta, pathology %in% c("FL", 
 +     "DLBCL"))
 
-> maf_df = GAMBLR.open::get_all_coding_ssm(these_samples_metadata = metadata)
+> maf_df = GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
 
 > pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df, 
 +     these_samples_metadata = metadata, comparison_column = "pathology", 
 +     comparison_values = c("FL", "DLBCL"), gene = "CREBBP", label_threshold = 2, 
 +     forestarg = TRUE, show_rate = TRUE, compare_distributions = TRUE)
-  Hugo_Symbol   Transcript_ID    RefSeq aa.length   n
-1      CREBBP ENST00000262367 NM_004380      2442 152
-2      CREBBP ENST00000262367      <NA>      <NA> 149
-  Hugo_Symbol   Transcript_ID       RefSeq aa.length   n
-1      CREBBP ENST00000262367    NM_004380      2442 367
-2      CREBBP ENST00000262367         <NA>      <NA>  45
-3      CREBBP            <NA> NM_001079846      <NA> 119
-4      CREBBP            <NA>         <NA>      <NA>  27
 
 > pretty_colollipop_plot_result$plot
 
@@ -203,7 +195,7 @@ Running example for function: pretty_CN_heatmap
 +     metadata <- GAMBLR.open::get_gambl_metadata() %>% filter(seq_type == 
 +         "genome", cohort %in% c("BL_Pediatric", "BL_Adult"), 
 +         )
-+     maf_df <- GAMBLR.open::get_all_coding_ssm(these_samples_metadata = metadata)
++     maf_df <- GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
 +     lollipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, 
 +         gene = "DDX3X", point_size_range = c(5, 15), point_alpha = 0.8, 
 +         label_threshold = 3)
@@ -231,6 +223,8 @@ running examples from pretty_mutual_exclusivity
 
 > suppressMessages(library(ComplexHeatmap))
 
+> suppressMessages(library(dplyr))
+
 > bl_fl_dlbcl_meta = get_gambl_metadata() %>% dplyr::filter(pathology %in% 
 +     c("DLBCL", "FL", "BL"), seq_type != "mrna") %>% check_and_clean_metadata(., 
 +     duplicate_action = "keep_first")
@@ -238,7 +232,7 @@ running examples from pretty_mutual_exclusivity
 > dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta, pathology == 
 +     "DLBCL") %>% check_and_clean_metadata(., duplicate_action = "keep_first")
 
-> all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
+> all_coding <- get_coding_ssm(these_samples_metadata = bl_fl_dlbcl_meta)
 
 > fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes, 
 +     FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier == 1) %>% pull(Gene)
@@ -455,7 +449,7 @@ Running example for function: prettyStackedOncoplot
 +     dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
 +     cn_mat = segmented_data_to_cn_matrix(dlbcl_seg, these = dlbcl_genome_meta, 
 +         adjust_for_ploidy = TRUE)
-+     dlbcl_maf = get_all_coding_ssm(dlbcl_genome_meta)
++     dlbcl_maf = get_coding_ssm(these_samples_metadata = dlbcl_genome_meta)
 + }))
 
 > genes = c("KMT2D", "BCL2", "CREBBP", "EZH2", "MYD88", 
@@ -517,4 +511,4 @@ Running example for function: prettyStackedOncoplot
 +             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
 +         secondPlotHeight = 9)
 + }))
-[1] "=== COMPLETED AT 2025-09-02 16:13:52 ==="
+[1] "=== COMPLETED AT 2025-11-04 15:55:46 ==="
