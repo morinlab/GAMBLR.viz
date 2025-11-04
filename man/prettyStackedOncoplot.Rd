@@ -74,7 +74,7 @@ cn_mat = segmented_data_to_cn_matrix(dlbcl_seg,
                                      these = dlbcl_genome_meta,
                                      adjust_for_ploidy = TRUE)
 
-dlbcl_maf = get_coding_ssm(dlbcl_genome_meta)
+dlbcl_maf = get_coding_ssm(these_samples_metadata = dlbcl_genome_meta)
 
 }))
 
