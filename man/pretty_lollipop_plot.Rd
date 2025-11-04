@@ -97,7 +97,7 @@ metadata <- GAMBLR.open::get_gambl_metadata() \%>\%
         cohort \%in\% c("BL_Pediatric", "BL_Adult"),
     ) 
 
-maf_df <- GAMBLR.open::get_all_coding_ssm(
+maf_df <- GAMBLR.open::get_coding_ssm(
         these_samples_metadata = metadata 
 )
 
