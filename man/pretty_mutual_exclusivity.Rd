@@ -58,6 +58,7 @@ Pretty mutual exclusivity plot
 cat("running examples from pretty_mutual_exclusivity\n")
 suppressMessages(library(GAMBLR.open))
 suppressMessages(library(ComplexHeatmap))
+suppressMessages(library(dplyr))
 
 bl_fl_dlbcl_meta = get_gambl_metadata() \%>\%
   dplyr::filter(pathology \%in\% c("DLBCL","FL","BL"), seq_type != "mrna") \%>\%
@@ -65,7 +66,7 @@ bl_fl_dlbcl_meta = get_gambl_metadata() \%>\%
 dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta,pathology=="DLBCL") \%>\%
              check_and_clean_metadata(.,duplicate_action="keep_first")
 
-all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
+all_coding <- get_coding_ssm(these_samples_metadata = bl_fl_dlbcl_meta)
 
 \dontrun{
 lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")

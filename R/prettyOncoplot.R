@@ -86,6 +86,8 @@
 #' @param groupNames optional vector of group names to be displayed
 #' above heatmap. Should be the same length as the number of groups
 #' that will be shown. Default is NULL (no labels).
+#' @param globalTitle optional string of the global oncoplot title. Default is
+#'      NULL (no title).
 #' @param verbose Set to TRUE to enable verbose mode (debugging messages.
 #' @param hide_annotations Hide annotations for specifc ashms. argument
 #' takes a list with annotations.
@@ -379,6 +381,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            splitGeneGroups,
                            showTumorSampleBarcode = FALSE,
                            groupNames,
+                           globalTitle,
                            hide_annotations,
                            hide_annotations_tracks = FALSE,
                            annotate_specific_genes = FALSE,
@@ -1359,6 +1362,11 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   } else {
     column_title <- NULL
   }
+  if (!missing(globalTitle)) {
+    global_title <- globalTitle
+  } else {
+    global_title <- NULL
+  }
   if (keepGeneOrder) {
     gene_order <- intersect(genes, genes_kept)
   } else {
@@ -1774,7 +1782,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     col_fun = col_fun,
     colours = colours,
     row_dend = row_dend,
-    col_dend = col_dend, column_title = column_title,
+    col_dend = col_dend,
+    column_title = column_title,
+    global_title = global_title,
     show_legend = show_legend,
     legend_position = legend_position,
     metadataBarHeight = metadataBarHeight,
@@ -1837,6 +1847,7 @@ make_prettyoncoplot <- function(
     row_dend,
     col_dend,
     column_title,
+    global_title,
     show_legend,
     legend_position,
     metadataBarHeight, # nolint: object_name_linter.
@@ -2243,6 +2254,7 @@ make_prettyoncoplot <- function(
     ))
   }
   suppressMessages(draw(ch,
+    column_title = global_title,
     heatmap_legend_side = legend_position,
     annotation_legend_side = legend_position
   ))
