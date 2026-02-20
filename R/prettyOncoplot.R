@@ -629,6 +629,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           data = 0, nrow = nrow(mat_origin),
           ncol = length(tsbs[!tsbs %in% colnames(mat_origin)])
         )
+        print("632")
         colnames(tsb.include) <- tsbs[!tsbs %in% colnames(mat_origin)] # nolint: object_name_linter.
         rownames(tsb.include) <- rownames(mat_origin) # nolint: object_name_linter.
         mat_origin <- cbind(mat_origin, tsb.include)
@@ -722,7 +723,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       if (verbose) {
         print(head(tsbs))
       }
-    } else if (length(include_noncoding) > 0) {
+    } else if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
+    #if (length(include_noncoding) > 0) {
       if (verbose) {
         print("Will include noncoding mutations, remove unmutated patients")
       }
@@ -777,6 +779,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (missing(genes)) {
     genes <- rownames(mat)
   }
+   
   col <- GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
   patients_dropped <- patients[which(!patients %in% colnames(mat))]
   if (verbose) {
@@ -865,13 +868,16 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                              Hugo_Symbol == gs,
                              Variant_Classification %in% gene_silent[[gs]]) %>%
             select(Tumor_Sample_Barcode,Hugo_Symbol,Variant_Classification) %>%
+            mutate(Variant_Classification = "Silent") %>%
             unique() %>%
             mutate(Mutated = TRUE)
           if(nrow(these_snv)==0){
-            print(paste("no mutations for",gs))
+            #print(paste("no mutations for",gs))
             next
           }
+          #print(gs)
           snv_maf = bind_rows(snv_maf,these_snv)
+          #print("879")
         }
         
       } else if ("hot_spot" %in% mutation_set) {
@@ -896,6 +902,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           "Try reducing minMutationPercent"
         ))
       }
+      #print("904")
       snv_wide <- pivot_wider(snv_maf,
         names_from = "Tumor_Sample_Barcode",
         values_from = "Mutated", values_fill = FALSE
@@ -922,7 +929,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     col["Missense"] <- col["Missense_Mutation"]
     col["Truncating"] <- col["Nonsense_Mutation"]
     col["CNV"] <- "purple"
-    col["Silent"] <- "black"
+    col["Silent"] <- "salmon"
     col["HotSpot"] <- "magenta"
     # heights <- c(
     #  "Missense", "Truncating", "Splice_Site",
@@ -998,12 +1005,11 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "Missense_Mutation",
       "In_Frame_Del", "In_Frame_Ins", "Translation_Start_Site"
     ))
-    if(!missing(include_noncoding)){
-
-      print("summarize noncoding mutation status")
+    #if(!missing(include_noncoding)){
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {  
+      message("summarize noncoding mutation status")
       silent_df = summarize_mutation_by_class(gene_silent = include_noncoding)
-      print(dim(silent_df))
-      print(head(silent_df[,c(1:10)]))
+
     }
 
 
@@ -1504,7 +1510,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     trunc_df <- trunc_df[genes_kept, patients_kept]
     snv_df <- snv_df[genes_kept, patients_kept]
     splice_df <- splice_df[genes_kept, patients_kept]
-    if(!missing(include_noncoding)){
+    #if(!missing(include_noncoding)){
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       silent_df <- silent_df[genes_kept, patients_kept]
     }
     if (verbose) {
@@ -1523,7 +1530,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (!missing(cnv_df)) {
       any_hit[cn_df == TRUE] <- TRUE
     }
-    if (!missing(include_noncoding)) {
+    #if (!missing(include_noncoding)) {
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       any_hit[silent_df == TRUE] <- TRUE
     }
     if (highlightHotspots) {
@@ -1587,7 +1595,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       trunc_df <- trunc_df[genes_kept, patients_kept]
       snv_df <- snv_df[genes_kept, patients_kept]
       splice_df <- splice_df[genes_kept, patients_kept]
-      if(!missing(include_noncoding)){
+      #if(!missing(include_noncoding)){
+      if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
         silent_df <- silent_df[genes_kept, patients_kept]
       }
       metadata_df <- metadata_df[patients_kept, , drop = FALSE]
@@ -1629,7 +1638,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (!missing(cnv_df)) {
       mat_list[["CNV"]] <- as.matrix(cn_df[genes_kept, patients_kept])
     }
-    if(!missing(include_noncoding)){
+    #if(!missing(include_noncoding)){
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       mat_list[["Silent"]] <- as.matrix(silent_df[genes_kept, patients_kept])
     }
     if (highlightHotspots) {
@@ -1917,12 +1927,10 @@ make_prettyoncoplot <- function(
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
-    if (!missing(cnv_df)) {
-      at <- c(at, "CNV")
-    }
-    if (!missing(include_noncoding)){
-      at <- c(at, "Silent")
-    }
+
+    if (!missing(cnv_df)) at <- c(at, "CNV")
+    if ("Silent" %in% names(mat_input)) at <- c(at, "Silent")
+
     heatmap_legend_param <- list(
       title = "Alterations",
       at = at,
