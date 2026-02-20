@@ -132,6 +132,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              hide_these_chromosomes,
                              keep_these_bins,
                              hide_annotations,
+                             hide_cumulative_plot = FALSE,
                              sortByBins,
                              sortByGenes,
                              splitByBinState,
@@ -159,6 +160,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              metadataBarHeight = 1.5,
                              boxplot_orientation="vertical",
                              return_data = FALSE,
+                             rounded = TRUE,
                              drop_bin_if_sd_below=0,
                              flip=FALSE,
                              max_CN_allowed = 6,
@@ -189,7 +191,9 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   if(scale_by_sample){
     cn_state_matrix = cn_state_matrix - rowMeans(cn_state_matrix, na.rm = TRUE) + 2
-    cn_state_matrix = round(cn_state_matrix)
+    if(rounded){
+      cn_state_matrix = round(cn_state_matrix)
+    }
     cn_state_matrix[cn_state_matrix<0]=0
   }
   if(!missing(focus_on_these_bins)){
@@ -709,7 +713,23 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  col=list(chromosome=chrom_col))
 
     }
-        heatmap_legend_param = list(title = "Copy Number",
+    
+    if(hide_cumulative_plot){
+      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+        annotation_legend_param = list(title = "Chromosome",
+                                               nrow=legend_row,
+                                               ncol = legend_col,
+                                               direction=legend_direction,
+                                               by_row=F),
+                                 which = ifelse(rotate,"row","column"),
+                                 show_annotation_name = show_bottom_annotation_name,
+                                 #annotation_name_side = "right",
+                                 annotation_name_gp = gpar(fontsize = metadataBarFontsize),
+                                 show_legend=show_legend,
+                                 col=list(chromosome=chrom_col))
+
+    }
+    heatmap_legend_param = list(title = "Copy Number",
 
                                 by_row=F,
                                 legend_direction = legend_direction)

@@ -4,10 +4,18 @@
 \alias{categorize_CN_events}
 \title{Categorize arm-level and chromosomal CNV events}
 \usage{
-categorize_CN_events(pretty_CN_heatmap_output)
+categorize_CN_events(
+  pretty_CN_heatmap_output,
+  loss_threshold = -0.8,
+  gain_threshold = 0.8
+)
 }
 \arguments{
 \item{pretty_CN_heatmap_output}{The output from running the pretty_CN_heatmap function}
+
+\item{loss_threshold}{Arm-level loss threshold applied to arm means (default: -0.8)}
+
+\item{gain_threshold}{Arm-level gain threshold applied to arm means (default: 0.8)}
 }
 \value{
 List of data frames
