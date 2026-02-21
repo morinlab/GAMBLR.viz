@@ -1,31 +1,45 @@
 #' Pretty mutual exclusivity plot
 #'
-#' @param maf_data
-#' @param mutmat
-#' @param genes
-#' @param these_samples_metadata
-#' @param q_threshold
-#' @param exclude_insignificant_genes
-#' @param engine
-#' @param font_size
-#' @param use_alpha
-#' @param clustering_distance
-#' @param gene_anno_df
-#' @param metadataBarHeight
-#' @param metadataBarFontsize
-#' @param legend_direction
-#' @param size_factor
-#' @param split
-#' @param return_data Default False
-#' @param include_silent Default False
-#' @param include_hotspots Default False
-#' @param review_hotspots Default False
-#' @param bonferroni Default False
-#' @param verbose Default FALSE
+#' @param maf_data MAF-like data frame used by `get_coding_ssm_status`.
+#'   This would usually be obtained with `get_all_coding_ssm`.
+#' @param mut_mat Optional precomputed mutation matrix (samples x genes). If
+#'   provided, the `maf_data`/`genes` are ignored and this is used instead.
+#' @param cn_mat Optional CN matrix to append to `mut_mat` before correlation.
+#' @param corr_mat Optional precomputed correlation matrix (genes x genes).
+#' @param p_mat Optional precomputed p-value matrix aligned to `corr_mat`.
+#' @param min_mutation_percent Minimum percent of samples mutated to keep a gene.
+#' @param genes Gene symbols to include when building the mutation matrix.
+#' @param these_samples_metadata Sample metadata passed to `get_coding_ssm_status`.
+#' @param q_threshold Adjusted p-value threshold used to zero correlations.
+#' @param drop_positive_correlations If TRUE, drop positive correlations before plotting.
+#' @param exclude_insignificant_genes If TRUE, remove genes with no significant correlations.
+#' @param engine Plotting backend: `ggcorrplot` or `ComplexHeatmap`.
+#' @param font_size Font size for row/column labels.
+#' @param use_alpha If TRUE, draw circles with transparency in ComplexHeatmap.
+#' @param clustering_distance Distance metric for hierarchical clustering.
+#' @param gene_anno_df Optional annotation data frame with a `Feature` column.
+#' @param metadataBarHeight Height (mm) of annotation bars in ComplexHeatmap.
+#' @param metadataBarFontsize Font size for annotation labels.
+#' @param legend_direction Legend direction for ComplexHeatmap.
+#' @param size_factor Circle size scaling factor (default: 0.01).
+#' @param split Optional vector or factor to split rows/columns.
+#' @param return_data If TRUE, return plot plus intermediate matrices.
+#' @param include_silent Include silent mutations in mutation matrix.
+#' @param include_hotspots Include hotspot mutations in mutation matrix.
+#' @param review_hotspots If TRUE, require manual hotspot review.
+#' @param bonferroni If TRUE, apply Bonferroni correction.
+#' @param verbose If TRUE, print progress messages.
+#' @param annotate_by_pathology If TRUE, annotate by pathology tiers when
+#'   `gene_anno_df` is missing.
+#' @param show_heatmap_legend If TRUE, show the heatmap legend.
+#' @param cut_k Optional k for row clustering (ComplexHeatmap `row_km`).
+#' @param width Optional heatmap width (cm) for ComplexHeatmap.
 #'
 #' @import ggcorrplot
 #'
-#' @returns
+#' @returns For `engine="ggcorrplot"`, a `ggplot` object (or a list with plot
+#'   and matrices if `return_data=TRUE`). For `engine="ComplexHeatmap"`, a
+#'   `Heatmap` object (or a list with plot and matrices if `return_data=TRUE`).
 #' @export
 #'
 #' @examples
@@ -119,6 +133,44 @@
 #'   include_hotspots = FALSE)
 #'
 #' }))
+#'
+#' \dontrun{
+#' ## Incorporating copy number
+#' 
+#' lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+#'
+#' lg_feats = lymphgens$feature_annotation
+#'
+#' lg_genes = unique(lg_feats$Feature)
+#'
+#' all_segments =get_cn_segments(these_samples_metadata = dlbcl_meta)
+#' 
+#' cn_binned = segmented_data_to_cn_matrix(all_segments,n_bins_split = 500)
+#'
+#' pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+#'                  these_samples_metadata = dlbcl_meta,hide_these_chromosomes = c("X","Y"))
+#'
+#' cn_out = pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+#'                           these_samples_metadata = dlbcl_meta,return_data = T,
+#'                           hide_these_chromosomes = c("X","Y"))
+#'
+#' aneuploidies = categorize_CN_events(cn_out)
+#'
+#' CN_mat = aneuploidies$arm_events_simplified
+#' 
+#' pretty_mutual_exclusivity(
+#'   maf_data = all_coding,
+#'   cn_mat = CN_mat,
+#'   genes = lg_genes,drop_positive_correlations = T,
+#'   these = dlbcl_meta,
+#'   size_factor =  0.007,
+#'   engine = "ComplexHeatmap",
+#'   font_size = 6,
+#'   use_alpha = FALSE,
+#'   clustering_distance = "binary",
+#'   include_hotspots = TRUE)
+#'}
+
 pretty_mutual_exclusivity <- function(maf_data,
                                       mut_mat,
                                       cn_mat,

@@ -39,17 +39,75 @@ pretty_mutual_exclusivity(
 )
 }
 \arguments{
-\item{return_data}{Default False}
+\item{maf_data}{MAF-like data frame used by `get_coding_ssm_status`.
+This would usually be obtained with `get_all_coding_ssm`.}
 
-\item{include_silent}{Default False}
+\item{mut_mat}{Optional precomputed mutation matrix (samples x genes). If
+provided, the `maf_data`/`genes` are ignored and this is used instead.}
 
-\item{include_hotspots}{Default False}
+\item{cn_mat}{Optional CN matrix to append to `mut_mat` before correlation.}
 
-\item{review_hotspots}{Default False}
+\item{corr_mat}{Optional precomputed correlation matrix (genes x genes).}
 
-\item{bonferroni}{Default False}
+\item{p_mat}{Optional precomputed p-value matrix aligned to `corr_mat`.}
 
-\item{verbose}{Default FALSE}
+\item{min_mutation_percent}{Minimum percent of samples mutated to keep a gene.}
+
+\item{genes}{Gene symbols to include when building the mutation matrix.}
+
+\item{these_samples_metadata}{Sample metadata passed to `get_coding_ssm_status`.}
+
+\item{q_threshold}{Adjusted p-value threshold used to zero correlations.}
+
+\item{drop_positive_correlations}{If TRUE, drop positive correlations before plotting.}
+
+\item{exclude_insignificant_genes}{If TRUE, remove genes with no significant correlations.}
+
+\item{engine}{Plotting backend: `ggcorrplot` or `ComplexHeatmap`.}
+
+\item{font_size}{Font size for row/column labels.}
+
+\item{use_alpha}{If TRUE, draw circles with transparency in ComplexHeatmap.}
+
+\item{clustering_distance}{Distance metric for hierarchical clustering.}
+
+\item{gene_anno_df}{Optional annotation data frame with a `Feature` column.}
+
+\item{size_factor}{Circle size scaling factor (default: 0.01).}
+
+\item{split}{Optional vector or factor to split rows/columns.}
+
+\item{return_data}{If TRUE, return plot plus intermediate matrices.}
+
+\item{include_silent}{Include silent mutations in mutation matrix.}
+
+\item{include_hotspots}{Include hotspot mutations in mutation matrix.}
+
+\item{review_hotspots}{If TRUE, require manual hotspot review.}
+
+\item{bonferroni}{If TRUE, apply Bonferroni correction.}
+
+\item{verbose}{If TRUE, print progress messages.}
+
+\item{metadataBarHeight}{Height (mm) of annotation bars in ComplexHeatmap.}
+
+\item{metadataBarFontsize}{Font size for annotation labels.}
+
+\item{legend_direction}{Legend direction for ComplexHeatmap.}
+
+\item{annotate_by_pathology}{If TRUE, annotate by pathology tiers when
+`gene_anno_df` is missing.}
+
+\item{show_heatmap_legend}{If TRUE, show the heatmap legend.}
+
+\item{cut_k}{Optional k for row clustering (ComplexHeatmap `row_km`).}
+
+\item{width}{Optional heatmap width (cm) for ComplexHeatmap.}
+}
+\value{
+For `engine="ggcorrplot"`, a `ggplot` object (or a list with plot
+  and matrices if `return_data=TRUE`). For `engine="ComplexHeatmap"`, a
+  `Heatmap` object (or a list with plot and matrices if `return_data=TRUE`).
 }
 \description{
 Pretty mutual exclusivity plot
@@ -145,4 +203,41 @@ pretty_mutual_exclusivity(
   include_hotspots = FALSE)
 
 }))
+
+\dontrun{
+## Incorporating copy number
+
+lymphgens = get_lymphgen(flavour = "no_cnvs.no_sv.with_A53")
+
+lg_feats = lymphgens$feature_annotation
+
+lg_genes = unique(lg_feats$Feature)
+
+all_segments =get_cn_segments(these_samples_metadata = dlbcl_meta)
+
+cn_binned = segmented_data_to_cn_matrix(all_segments,n_bins_split = 500)
+
+pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+                 these_samples_metadata = dlbcl_meta,hide_these_chromosomes = c("X","Y"))
+
+cn_out = pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+                          these_samples_metadata = dlbcl_meta,return_data = T,
+                          hide_these_chromosomes = c("X","Y"))
+
+aneuploidies = categorize_CN_events(cn_out)
+
+CN_mat = aneuploidies$arm_events_simplified
+
+pretty_mutual_exclusivity(
+  maf_data = all_coding,
+  cn_mat = CN_mat,
+  genes = lg_genes,drop_positive_correlations = T,
+  these = dlbcl_meta,
+  size_factor =  0.007,
+  engine = "ComplexHeatmap",
+  font_size = 6,
+  use_alpha = FALSE,
+  clustering_distance = "binary",
+  include_hotspots = TRUE)
+}
 }

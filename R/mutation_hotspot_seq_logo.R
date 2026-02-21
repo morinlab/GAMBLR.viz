@@ -3,19 +3,26 @@
 #' @description Generates a summary of the frequency of SSMs in a small
 #' region around a mutation hot spot using a "sequence logo"-style stacked plot
 #'
-#' @param maf_df
-#' @param gene_symbol
-#' @param hotspot_position
-#' @param pad_length
-#' @param fasta_path
-#' @param include_reference
-#' @param include_AA
-#' @param group_AA
-#' @param annotate_motif
-#' @param annotate_only
-#' @param return_data
-#' @param base_size
-#' @param aa_size
+#' @param maf_df MAF-like data frame with mutation records.
+#' @param gene_symbol Deprecated/unused.
+#' @param hotspot_position Genomic coordinate at the hotspot center.
+#' @param genome_build Genome build string (e.g., "grch37" or "hg38").
+#' @param pad_length Number of bases to include on each side of the hotspot.
+#' @param fasta_path Optional path to a reference FASTA file.
+#' @param include_reference If TRUE, add a reference base track.
+#' @param include_AA If TRUE, add amino-acid annotation track.
+#' @param group_AA If TRUE, group AA labels (same as include_AA but grouped).
+#' @param annotate_motif If TRUE, color WRCY motifs in the reference track.
+#' @param annotate_only If TRUE, return annotated mutations and reference only.
+#' @param return_data If TRUE, return a list with plot and data.
+#' @param base_size Font size for base letters.
+#' @param aa_size Font size for AA labels.
+#' @param text_size Font size for plot text.
+#' @param prepend_plot_label Optional label prefix for the plot title.
+#' @param include_title If TRUE, show the plot title.
+#' @param real_coordinates If TRUE, label x-axis with genomic coordinates.
+#' @param reverse If TRUE, reverse the sequence context (currently unused).
+#' @param verbose If TRUE, print diagnostic output.
 #' @import ggseqlogo Rsamtools cowplot BSgenome
 #' @import IRanges GenomicRanges
 #' @returns a named list containing a ggplot object and various processed data
