@@ -1,4 +1,5 @@
-[1] "=== STARTED AT 2026-02-20 16:55:07.11808 ==="
+[1] "=== STARTED AT 2026-02-20 17:29:38.891941 ==="
+[1] "=== RUNNING devtools::run_examples() ==="
 ── Running 37 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
@@ -13,37 +14,39 @@ Running example for function: ashm_multi_rainbow_plot
 +     check_and_clean_metadata(., duplicate_action = "keep_first") %>% 
 +     dplyr::arrange(lymphgen)
 
-> regions_bed = GAMBLR.utils::create_bed_data(grch37_ashm_regions, 
-+     fix_names = "concat", concat_cols = c("gene", "region"))
+> regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions, 
++     fix_names = "concat", concat_cols = c("gene", "region"), 
++     sep = "-")
 
 > regions_bed = dplyr::filter(regions_bed, grepl("BCL6", 
 +     name))
 
-> ashm_multi_rainbow_plot(regions_bed, metadata, custom_colours = lymphgen_colours, 
+> ashm_multi_rainbow_plot(regions_bed = regions_bed, 
++     these_samples_metadata = metadata, custom_colours = lymphgen_colours, 
 +     verbose = TRUE)
 [1] "ashm_multi_rainbow_plot"
 [1] "regions_bed provided"
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-  chrom     start       end             name       region regulatory_comment
-1     3 187458526 187464632          BCL6TSS          TSS               <NA>
-2     3 187615533 187625659 BCL6Intergenic-1 Intergenic-1               <NA>
-3     3 187625659 187638101 BCL6Intergenic-2 Intergenic-2               <NA>
-4     3 187657518 187665996 BCL6Intergenic-3 Intergenic-3               <NA>
-5     3 187675741 187690717 BCL6Intergenic-4 Intergenic-4               <NA>
-6     3 187690717 187705000 BCL6Intergenic-5 Intergenic-5               <NA>
-[1] "get_ssm_by_regions"
+  chrom     start       end              name       region regulatory_comment
+1     3 187458526 187464632          BCL6-TSS          TSS               <NA>
+2     3 187615533 187625659 BCL6-Intergenic-1 Intergenic-1               <NA>
+3     3 187625659 187638101 BCL6-Intergenic-2 Intergenic-2               <NA>
+4     3 187657518 187665996 BCL6-Intergenic-3 Intergenic-3               <NA>
+5     3 187675741 187690717 BCL6-Intergenic-4 Intergenic-4               <NA>
+6     3 187690717 187705000 BCL6-Intergenic-5 Intergenic-5               <NA>
+[1] "No maf_data provided, using get_ssm_by_regions"
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-      start sample_id      region_name
-1 187620119  OCI-Ly10 BCL6Intergenic-1
-2 187622610  SU-DHL-4 BCL6Intergenic-1
-3 187615657  FL1003T2 BCL6Intergenic-1
-4 187616207  SP116648 BCL6Intergenic-1
-5 187616296  SP116659 BCL6Intergenic-1
-6 187616515 96-31596T BCL6Intergenic-1
+      start sample_id       region_name
+1 187620119  OCI-Ly10 BCL6-Intergenic-1
+2 187622610  SU-DHL-4 BCL6-Intergenic-1
+3 187615657  FL1003T2 BCL6-Intergenic-1
+4 187616207  SP116648 BCL6-Intergenic-1
+5 187616296  SP116659 BCL6-Intergenic-1
+6 187616515 96-31596T BCL6-Intergenic-1
 # A tibble: 6 × 8
   age_group bam_available cohort            compression COO_consensus DHITsig_consensus EBV_status_inf ffpe_or_frozen
   <chr>     <lgl>         <chr>             <chr>       <chr>         <chr>             <chr>          <chr>         
@@ -56,13 +59,13 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: 
 Showing first 10 rows:
-      start sample_id      region_name age_group bam_available             cohort compression COO_consensus DHITsig_consensus EBV_status_inf
-1 187620119  OCI-Ly10 BCL6Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           ABC        DHITsigNeg   EBV-negative
-2 187622610  SU-DHL-4 BCL6Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           GCB        DHITsigPos   EBV-negative
-3 187615657  FL1003T2 BCL6Intergenic-1     Other          TRUE          FL_Kridel        cram           GCB        DHITsigPos           <NA>
-4 187616207  SP116648 BCL6Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
-5 187616296  SP116659 BCL6Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
-6 187616515 96-31596T BCL6Intergenic-1     Other          TRUE DLBCL_GenomeCanada         bam       UNCLASS        DHITsigNeg           <NA>
+      start sample_id       region_name age_group bam_available             cohort compression COO_consensus DHITsig_consensus EBV_status_inf
+1 187620119  OCI-Ly10 BCL6-Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           ABC        DHITsigNeg   EBV-negative
+2 187622610  SU-DHL-4 BCL6-Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           GCB        DHITsigPos   EBV-negative
+3 187615657  FL1003T2 BCL6-Intergenic-1     Other          TRUE          FL_Kridel        cram           GCB        DHITsigPos           <NA>
+4 187616207  SP116648 BCL6-Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+5 187616296  SP116659 BCL6-Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+6 187616515 96-31596T BCL6-Intergenic-1     Other          TRUE DLBCL_GenomeCanada         bam       UNCLASS        DHITsigNeg           <NA>
 [1] "plotting"
 [1] "done"
 
@@ -178,20 +181,12 @@ Running example for function: pretty_CN_heatmap
 > metadata = dplyr::filter(meta, pathology %in% c("FL", 
 +     "DLBCL"))
 
-> maf_df = GAMBLR.open::get_all_coding_ssm(these_samples_metadata = metadata)
+> maf_df = GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
 
 > pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df, 
 +     these_samples_metadata = metadata, comparison_column = "pathology", 
 +     comparison_values = c("FL", "DLBCL"), gene = "CREBBP", label_threshold = 2, 
 +     forestarg = TRUE, show_rate = TRUE, compare_distributions = TRUE)
-  Hugo_Symbol   Transcript_ID    RefSeq aa.length   n
-1      CREBBP ENST00000262367 NM_004380      2442 152
-2      CREBBP ENST00000262367      <NA>      <NA> 149
-  Hugo_Symbol   Transcript_ID       RefSeq aa.length   n
-1      CREBBP ENST00000262367    NM_004380      2442 367
-2      CREBBP ENST00000262367         <NA>      <NA>  45
-3      CREBBP            <NA> NM_001079846      <NA> 119
-4      CREBBP            <NA>         <NA>      <NA>  27
 
 > pretty_colollipop_plot_result$plot
 
@@ -201,7 +196,7 @@ Running example for function: pretty_CN_heatmap
 +     metadata <- GAMBLR.open::get_gambl_metadata() %>% filter(seq_type == 
 +         "genome", cohort %in% c("BL_Pediatric", "BL_Adult"), 
 +         )
-+     maf_df <- GAMBLR.open::get_all_coding_ssm(these_samples_metadata = metadata)
++     maf_df <- GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
 +     lollipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, 
 +         gene = "DDX3X", point_size_range = c(5, 15), point_alpha = 0.8, 
 +         label_threshold = 3)
@@ -229,6 +224,8 @@ running examples from pretty_mutual_exclusivity
 
 > suppressMessages(library(ComplexHeatmap))
 
+> suppressMessages(library(dplyr))
+
 > bl_fl_dlbcl_meta = get_gambl_metadata() %>% dplyr::filter(pathology %in% 
 +     c("DLBCL", "FL", "BL"), seq_type != "mrna") %>% check_and_clean_metadata(., 
 +     duplicate_action = "keep_first")
@@ -236,7 +233,7 @@ running examples from pretty_mutual_exclusivity
 > dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta, pathology == 
 +     "DLBCL") %>% check_and_clean_metadata(., duplicate_action = "keep_first")
 
-> all_coding <- get_all_coding_ssm(bl_fl_dlbcl_meta)
+> all_coding <- get_coding_ssm(these_samples_metadata = bl_fl_dlbcl_meta)
 
 > fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes, 
 +     FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier == 1) %>% pull(Gene)
@@ -453,7 +450,7 @@ Running example for function: prettyStackedOncoplot
 +     dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
 +     cn_mat = segmented_data_to_cn_matrix(dlbcl_seg, these = dlbcl_genome_meta, 
 +         adjust_for_ploidy = TRUE)
-+     dlbcl_maf = get_all_coding_ssm(dlbcl_genome_meta)
++     dlbcl_maf = get_coding_ssm(these_samples_metadata = dlbcl_genome_meta)
 + }))
 
 > genes = c("KMT2D", "BCL2", "CREBBP", "EZH2", "MYD88", 
@@ -515,4 +512,4 @@ Running example for function: prettyStackedOncoplot
 +             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
 +         secondPlotHeight = 9)
 + }))
-[1] "=== COMPLETED AT 2026-02-20 16:57:36.934385 ==="
+[1] "=== COMPLETED AT 2026-02-20 17:31:35.73622 ==="

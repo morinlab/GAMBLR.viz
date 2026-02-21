@@ -153,7 +153,7 @@ prettyCoOncoplot = function(maf,
     )
     oncoplot_args_rerun <- oncoplot_args[
         !names(oncoplot_args) %in% c(
-            "genes", "keepGeneOrder", "minMutationPercent"
+            "genes", "keepGeneOrder", "minMutationPercent", "groupNames"
         )
     ]
     if(!keepGeneOrder && !missing(genes)){

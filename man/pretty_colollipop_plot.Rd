@@ -83,7 +83,7 @@ meta = GAMBLR.open::get_gambl_metadata()
 metadata = dplyr::filter(meta,pathology \%in\% c("FL","DLBCL"))
 
 #Load mutations for all genome and capture samples in the metadata
-maf_df = GAMBLR.open::get_all_coding_ssm(
+maf_df = GAMBLR.open::get_coding_ssm(
    these_samples_metadata = metadata
 )
 # Compare the mutation profile and pattern for CREBBP in FL and DLBCL

@@ -51,6 +51,8 @@
 #' categories. Must be in the same order as comparison_values.
 #' @param max_q cut off for q values to be filtered in fish test
 #' @param base_size Numeric value to specify font size of the gene labels on the plot. Default is 10.
+#' @param bar_label Optional: Specify label for forest plot. Default label is "\% Mutated".
+#' @param show_legend Set to FALSE to hide legend from final figure. Default is TRUE.
 #'
 #' @return A convenient list containing all the data frames that were
 #' created in making the plot, including the mutation matrix. It also
@@ -102,7 +104,10 @@ prettyForestPlot = function(maf,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
                             max_q = 1,
-                            base_size = 10){
+                            base_size = 10,
+                            bar_label = "% Mutated",
+                            show_legend = TRUE
+                            ){
 
   #If no comparison_values are specified, derive the comparison_values
   # from the specified comparison_column
@@ -275,10 +280,17 @@ prettyForestPlot = function(maf,
 
 
   point_size = 50 / round(length(fish_test$gene))
+  error_width = 0.2
+  geom_col_width = 0.5
   if(point_size < 1){
     point_size = 1
   }
-  font_size <- base_size
+  if(point_size >= 5){
+    point_size = 5
+    error_width = 0.1
+    geom_col_width = 0.3
+  }
+
   font_size <- base_size
   message(paste("FONT:", font_size, "POINT:", point_size, length(fish_test$gene)))
   forest = fish_test %>%
@@ -287,7 +299,7 @@ prettyForestPlot = function(maf,
     geom_point(size = point_size, shape = "square") +
     geom_hline(yintercept = 0, lty = 2) +
     coord_flip() +
-    geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = 0.2)) +
+    geom_errorbar(aes(ymin = log(conf.low), ymax = log(conf.high), width = error_width)) +
     ylab("ln(Odds Ratio)") +
     xlab("Mutated Genes\n") +
     theme_Morons(base_size = base_size) +
@@ -320,6 +332,12 @@ prettyForestPlot = function(maf,
     names(labels) = comparison_values
   }
 
+  if (show_legend == FALSE) {
+    legend_pos = "none"
+  } else {
+    legend_pos = "bottom"
+  }
+
   bar = mutmat %>%
     dplyr::select(-Tumor_Sample_Barcode) %>%
     pivot_longer(
@@ -333,18 +351,18 @@ prettyForestPlot = function(maf,
     dplyr::filter(gene %in% fish_test$gene) %>%
     dplyr::mutate(gene = factor(gene, levels = fish_test$gene)) %>%
     ggplot(aes(x = gene, y = percent_mutated, fill = comparison)) +
-    geom_col(position = "dodge", width = 0.5) +
-    xlab("") + ylab("% Mutated") +
+    geom_col(position = "dodge", width = geom_col_width) +
+    xlab("") + ylab(bar_label) +
     coord_flip() +
     scale_fill_manual(name = comparison_name, values = colours, labels = labels[levels(metadata$comparison)]) +
     theme_Morons(base_size = base_size) +
-    theme(axis.text.y = element_blank(), legend.position = "bottom")
+    theme(axis.text.y = element_blank(), legend.position = legend_pos)
 
   arranged_plot = ggarrange(
     forest,
     bar,
     widths = c(1, 0.6),
-    common.legend = TRUE,
+    common.legend = show_legend,
     align = "h"
   )
 

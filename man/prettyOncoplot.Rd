@@ -30,6 +30,7 @@ prettyOncoplot(
   splitGeneGroups,
   showTumorSampleBarcode = FALSE,
   groupNames,
+  globalTitle,
   hide_annotations,
   hide_annotations_tracks = FALSE,
   annotate_specific_genes = FALSE,
@@ -172,6 +173,9 @@ barcode. Default is FALSE.}
 \item{groupNames}{optional vector of group names to be displayed
 above heatmap. Should be the same length as the number of groups
 that will be shown. Default is NULL (no labels).}
+
+\item{globalTitle}{optional string of the global oncoplot title. Default is
+NULL (no title).}
 
 \item{hide_annotations}{Hide annotations for specifc ashms. argument
 takes a list with annotations.}
