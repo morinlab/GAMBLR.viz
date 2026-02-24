@@ -453,13 +453,15 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if ("maf_data" %in% class(maf_df)) {
     maf_df <- strip_genomic_classes(maf_df)
   }
-  if (any(these_samples_metadata$seq_type %in% c("mrna", "promethION"))) {
-    message("metadata contains rows with incompatible seq_type")
-    message("Dropping these for you.")
-    these_samples_metadata <- dplyr::filter(
-      these_samples_metadata,
-      !seq_type %in% c("mrna", "promethION")
-    )
+  if ("seq_type" %in% colnames(these_samples_metadata)){
+    if (any(these_samples_metadata$seq_type %in% c("mrna", "promethION"))) {
+      message("metadata contains rows with incompatible seq_type")
+      message("Dropping these for you.")
+      these_samples_metadata <- dplyr::filter(
+        these_samples_metadata,
+        !seq_type %in% c("mrna", "promethION")
+      )
+    }
   }
   if (!missing(split_columns_kmeans) && !missing(splitColumnName)) {
     stop("split_columns_kmeans and splitColumnName are incompatible. Use one or the other")
