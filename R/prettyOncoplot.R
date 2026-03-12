@@ -62,6 +62,9 @@
 #' @param mutAlpha Optional alpha to apply to mutation colours.
 #' @param recycleOncomatrix Set to TRUE most of the time to
 #' reuse the oncomatrix saved by maftools.
+#' @param sample_gene_coverage Optional data frame specifying which samples
+#' had insufficient coverage for which genes. Two columns: sample_id Hugo_Symbol
+#' 
 #' @param box_col Colour of boxes for outlining mutations (can be
 #' problematic with larger oncoprints).
 #' @param metadataBarHeight Optional argument to adjust the height of
@@ -126,6 +129,12 @@
 #' patients/genes are included.
 #' @param simplify_bg_colour When simplify_annotation is called, adjust
 #' the color of the background by passign a value to this argument.
+#' Options are: "transparent" (default), "white", or any other color name or hex code.
+#' Overloaded to accept "pathology" or "background". When "background" 
+#' is specified, the background of the oncoplot will be coloured grey
+#' for all gene-sample combinations specified in the gene_sample_coverage data frame. 
+#' This is useful for visually distinguishing gene-sample combinations with 
+#' insufficient coverage from those with sufficient coverage but no mutations.
 #' Default is NA.
 #' @param gap Size of gap between columns represented as a proportion
 #' of the full width of the column. Default 0 (no gap).
@@ -413,6 +422,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            split_rows_kmeans,
                            split_columns_kmeans,
                            dry_run = FALSE,
+                           sample_gene_coverage = NULL,
                            simplify_annotation = FALSE,
                            simplify_bg_colour = "transparent",
                            stacked = FALSE,
@@ -942,6 +952,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     dilution = 40
     width_adj <- 1 - gap
     alter_fun <- list(
+      coverage = function(x, y, w, h) {
+        grid.rect(x, y, w, h, gp = gpar(fill = "grey", col = NA))
+      },
       background = function(x, y, w, h) {
         grid.rect(x,
           y, w, h,
@@ -1043,23 +1056,46 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       snv_df[trunc_df == TRUE | splice_df == TRUE] <- FALSE
       splice_df[trunc_df == TRUE] <- FALSE
     }
-    #if(!missing(include_noncoding)){
-    #  snv_df
-    #}
 
-    if(simplify_bg_colour == "pathology"){
+    #currently only supports pathology
+    if(simplify_bg_colour %in% colnames(these_samples_metadata)){
       #background colour is based on metadata
       bg_df = matrix(nrow=nrow(snv_df),ncol=ncol(snv_df))
       rownames(bg_df) = rownames(snv_df)
       colnames(bg_df) = colnames(snv_df)
-      for(path in unique(these_samples_metadata$pathology)){
-        ids = filter(these_samples_metadata,pathology==path) %>% pull(sample_id)
+      for(vals in unique(these_samples_metadata[[simplify_bg_colour]])){
+        ids = filter(these_samples_metadata, !!sym(simplify_bg_colour) == vals) %>% pull(sample_id)
         ids_in = ids[ids %in% colnames(bg_df)]
-        bg_df[,ids_in] = path
+        bg_df[,ids_in] = vals
       }
-      #print(head(bg_df[c("EZH2","KMT2D","CREBBP","MYD88"),c(1:10)]))
-      #print(table(bg_df["EZH2",]))
-      #stop()
+    }else if(simplify_bg_colour == "coverage"){
+      if(missing(sample_gene_coverage)){
+        stop("When simplify_bg_colour is 'coverage', sample_gene_coverage variable must be provided. This should be a data frame with two columns: sample_id and Hugo_Symbol, where each row indicates a gene/sample combination that should be grey in the background.")
+      }
+      if("tbl_df" %in% class(sample_gene_coverage)){
+        sample_gene_coverage = as.data.frame(sample_gene_coverage)
+      }
+      # background will be grey for all gene/sample combinations indicated in
+      # the separate sample_gene_coverage variable
+      bg_df = matrix(nrow=nrow(snv_df),ncol=ncol(snv_df))
+      rownames(bg_df) = rownames(snv_df)
+      colnames(bg_df) = colnames(snv_df)
+      # populate based on contents of sample_gene_coverage variable
+      # columns are sample_id
+      # rows are Hugo_Symbol
+      # format of sample_gene_coverage is
+      # sample_id Hugo_Symbol
+      # sample1 geneA
+      # sample2 geneB
+      # each row indicates a gene/sample combination that should be grey in the background
+      bg_df[] = FALSE
+      for(i in 1:nrow(sample_gene_coverage)){
+        s = sample_gene_coverage[i,1]
+        g = sample_gene_coverage[i,2]
+        if(s %in% colnames(bg_df) && g %in% rownames(bg_df)){
+          bg_df[g,s] = TRUE 
+        }
+      }       
     }
     if (!missing(cnv_df)) {
       transposed_cnv_df <- t(cnv_df)
@@ -1668,14 +1704,17 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       mat_list[["DLBCL"]] = path_mat
       mat_list[["DLBCL"]][path_mat=="DLBCL"] = TRUE
       mat_list[["DLBCL"]][path_mat!="DLBCL"] = FALSE
-    }
+    }else if(simplify_bg_colour == "coverage"){
+      path_mat <- as.matrix(bg_df[genes_kept,patients_kept])
+      mat_list[["coverage"]] = path_mat
+    } 
     if (verbose) {
       message("done")
     }
     mat_input <- mat_list
   } else { # end simplify
     if (missing(sortByColumns) && keepSampleOrder == FALSE) {
-      if (verbose) {
+      if ("verbose") {
         print("col_order will be NULL")
       }
       col_order <- NULL
@@ -1942,6 +1981,7 @@ make_prettyoncoplot <- function(
 
     if (!missing(cnv_df)) at <- c(at, "CNV")
     if ("Silent" %in% names(mat_input)) at <- c(at, "Silent")
+    if ("coverage" %in% names(mat_input)) at <- c(at, "coverage")
 
     heatmap_legend_param <- list(
       title = "Alterations",
@@ -1984,6 +2024,12 @@ make_prettyoncoplot <- function(
     right_annotation = NULL
   }
   show_row_names = !hide_gene_names
+  if("CNV" %in% names(mat_input) || "coverage" %in% names(mat_input) | "BL" %in% names(mat_input) | "FL" %in% names(mat_input) | "DLBCL" %in% names(mat_input) ){
+    pct_include = setdiff(names(mat_input) ,c("CNV","coverage","BL","FL","DLBCL"))
+  }else{
+    pct_include = NULL
+  }
+
   oncoprint_args <- list(
     mat = mat_input,
     alter_fun = alter_fun,
@@ -1992,6 +2038,7 @@ make_prettyoncoplot <- function(
     col = col,
     row_order = gene_order,
     column_order = col_order,
+    pct_include = pct_include,
     column_labels = NULL,
     show_column_names = showTumorSampleBarcode,
     show_row_names = show_row_names,
