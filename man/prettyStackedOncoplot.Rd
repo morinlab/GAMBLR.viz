@@ -45,10 +45,58 @@ the oncoplot. Required parameter.}
 which columns from these_samples_metadata will be displayed below the
 oncoplot.}
 
+\item{sortByMetadataColumns}{Optional vector specifying which metadata columns to
+sort samples by.}
+
+\item{seg_data}{CNV segment data (only used if `cn_state_matrix` is missing).}
+
+\item{sortByPGA}{If TRUE, sort by PGA.}
+
+\item{cn_state_matrix}{Optional CN state matrix for CN plots/sorting.}
+
+\item{ashm_matrix}{Optional ASHM matrix for `secondPlotType="prettyMutationDensity"`.}
+
+\item{regions_bed}{Optional BED regions for mutation density plot.}
+
+\item{genes}{Genes to include in the oncoplot.}
+
+\item{second_oncoplot_genes}{Optional genes for a second oncoplot when
+`secondPlotType="prettyOncoplot"`.}
+
+\item{sortByGenes}{Genes used to order samples by mutation/CN status.}
+
+\item{genes_CN_thresh}{Named numeric vector of CN thresholds for genes.}
+
 \item{secondPlotType}{Defaults to pretty_CN_heatmap, which is currently
 the only option tested with this function.}
 
-\item{verbose}{Set to TRUE for ultra chatty mode}
+\item{oncoplot_location}{"top" or "bottom" placement of the oncoplot.}
+
+\item{cluster_samples}{If TRUE, cluster samples by mutation status.}
+
+\item{secondPlotArgs}{List of arguments passed to the secondary plot function.}
+
+\item{oncoplotArgs}{List of arguments passed to the oncoplot.}
+
+\item{returnEverything}{If TRUE, return plots and intermediate matrices.}
+
+\item{plot_width}{Optional plot width (cm) for ComplexHeatmap.}
+
+\item{oncoplotHeight}{Height of the oncoplot (cm).}
+
+\item{secondPlotHeight}{Height of the second plot (cm).}
+
+\item{verbose}{Set to TRUE for ultra chatty mode.}
+
+\item{row_names_side}{Side for row names in ComplexHeatmap.}
+
+\item{pctFontSize}{Font size for percent labels.}
+
+\item{heatmap_legend_side}{Side for heatmap legend.}
+}
+\value{
+A `Heatmap` object when `returnEverything=FALSE`, otherwise a list
+  containing plots and intermediate matrices.
 }
 \description{
 Pretty stacked oncoplot

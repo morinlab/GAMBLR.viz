@@ -1,5 +1,6 @@
-[1] "=== STARTED AT 2025-11-04 15:49:18 ==="
-── Running 36 example files ──────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+[1] "=== STARTED AT 2026-02-20 17:29:38.891941 ==="
+[1] "=== RUNNING devtools::run_examples() ==="
+── Running 37 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
 Running example for function: ashm_multi_rainbow_plot
@@ -39,13 +40,13 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-      start sample_id region_name
-1 187461989  FL1015T2    BCL6-TSS
-2 187463885  FL1015T2    BCL6-TSS
-3 187462199  FL1002T2    BCL6-TSS
-4 187462508  FL1002T2    BCL6-TSS
-5 187462612  FL1002T2    BCL6-TSS
-6 187462966  FL1002T2    BCL6-TSS
+      start sample_id       region_name
+1 187620119  OCI-Ly10 BCL6-Intergenic-1
+2 187622610  SU-DHL-4 BCL6-Intergenic-1
+3 187615657  FL1003T2 BCL6-Intergenic-1
+4 187616207  SP116648 BCL6-Intergenic-1
+5 187616296  SP116659 BCL6-Intergenic-1
+6 187616515 96-31596T BCL6-Intergenic-1
 # A tibble: 6 × 8
   age_group bam_available cohort            compression COO_consensus DHITsig_consensus EBV_status_inf ffpe_or_frozen
   <chr>     <lgl>         <chr>             <chr>       <chr>         <chr>             <chr>          <chr>         
@@ -58,13 +59,13 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: 
 Showing first 10 rows:
-      start sample_id region_name age_group bam_available    cohort compression COO_consensus DHITsig_consensus EBV_status_inf
-1 187461989  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-2 187463885  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-3 187462199  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-4 187462508  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-5 187462612  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-6 187462966  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
+      start sample_id       region_name age_group bam_available             cohort compression COO_consensus DHITsig_consensus EBV_status_inf
+1 187620119  OCI-Ly10 BCL6-Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           ABC        DHITsigNeg   EBV-negative
+2 187622610  SU-DHL-4 BCL6-Intergenic-1     Other          TRUE   DLBCL_cell_lines         bam           GCB        DHITsigPos   EBV-negative
+3 187615657  FL1003T2 BCL6-Intergenic-1     Other          TRUE          FL_Kridel        cram           GCB        DHITsigPos           <NA>
+4 187616207  SP116648 BCL6-Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+5 187616296  SP116659 BCL6-Intergenic-1     Other          TRUE         DLBCL_ICGC        cram          <NA>                NA           <NA>
+6 187616515 96-31596T BCL6-Intergenic-1     Other          TRUE DLBCL_GenomeCanada         bam       UNCLASS        DHITsigNeg           <NA>
 [1] "plotting"
 [1] "done"
 
@@ -511,4 +512,4 @@ Running example for function: prettyStackedOncoplot
 +             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
 +         secondPlotHeight = 9)
 + }))
-[1] "=== COMPLETED AT 2025-11-04 15:55:46 ==="
+[1] "=== COMPLETED AT 2026-02-20 17:31:35.73622 ==="
