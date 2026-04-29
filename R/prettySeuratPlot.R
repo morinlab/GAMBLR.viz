@@ -18,7 +18,7 @@
 #'      where the item name corresponds to the value from feature matrix and the
 #'      item itself is the hex code for the desired colour.
 #' @param round_matrix Whether to round values in the provided feature matrix.
-#'      Default is FALSE.
+#'      The values will be rounded to the nearest integer. Default is FALSE.
 #' @import ggplot2 dplyr tibble GAMBLR.helpers
 #' @export
 #' @return plot

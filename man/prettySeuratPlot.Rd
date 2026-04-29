@@ -31,7 +31,7 @@ where the item name corresponds to the value from feature matrix and the
 item itself is the hex code for the desired colour.}
 
 \item{round_matrix}{Whether to round values in the provided feature matrix.
-Default is FALSE.}
+The values will be rounded to the nearest integer. Default is FALSE.}
 }
 \value{
 plot
