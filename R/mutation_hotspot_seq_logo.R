@@ -30,7 +30,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' g_meta <- suppressMessages(get_gambl_metadata()) %>%
 #'   dplyr::filter(seq_type == "genome")
 #' # CXCR4 non-coding hotspot

@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #'
 #' #get metadata
 #' this_metadata = get_gambl_metadata()

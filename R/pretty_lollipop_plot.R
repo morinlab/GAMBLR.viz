@@ -35,7 +35,7 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
@@ -65,7 +65,7 @@
 #' 
 #' \dontrun{
 #'  # Or, with GAMBLR.results:
-#'  library(GAMBLR.results)
+#'  suppressPackageStartupMessages(library(GAMBLR.results))
 #'  metadata <- GAMBLR.results::get_gambl_metadata() %>%
 #'     dplyr::filter(cohort %in% c("BL_Pediatric", "BL_Adult"))
 #' 

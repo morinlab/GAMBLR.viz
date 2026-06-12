@@ -189,8 +189,8 @@
 #'   suppressWarnings({
 #'     # load packages
 #'     library(grid)
-#'     library(dplyr)
-#'     library(GAMBLR.open)
+#'     suppressPackageStartupMessages(library(dplyr))
+#'     suppressPackageStartupMessages(library(GAMBLR.open))
 #'
 #'     # Using GAMBLR.open
 #'     maf_metadata <- GAMBLR.open::get_gambl_metadata(

@@ -31,8 +31,8 @@
 #'
 #' @examples
 #' cat("running examples for pretty_circular_mutation_frequency_heatmap\n")
-#' library(dplyr)
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(dplyr))
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
