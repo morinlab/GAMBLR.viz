@@ -249,7 +249,7 @@ pretty_circular_mutation_frequency_heatmap = function(prettyOncoplot_output,
   }
   mut_sums = group_by(mut_status_meta,pathology) %>%
     mutate(total=n()) %>%
-    group_by(total,add=T) %>%
+    group_by(total,.add=TRUE) %>%
     summarise(across(all_of(genes),~calc_percent(.x))) %>%
     as.data.frame()
 

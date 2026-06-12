@@ -422,6 +422,50 @@ suppressMessages(
   })
 )
 
+# Include non-coding mutation classes by naming the accepted classes
+# for each gene in include_noncoding.
+noncoding_maf <- data.frame(
+  Hugo_Symbol = c("BCL2", "BCL2", "BCL2", "MYC"),
+  Tumor_Sample_Barcode = c("S1", "S2", "S3", "S4"),
+  Variant_Classification = c(
+    "3'UTR",
+    "5'Flank",
+    "Intron",
+    "Missense_Mutation"
+  ),
+  Chromosome = "18",
+  Start_Position = 1:4,
+  End_Position = 1:4,
+  stringsAsFactors = FALSE
+)
+
+noncoding_metadata <- data.frame(
+  sample_id = paste0("S", 1:4),
+  pathology = c("FL", "FL", "DLBCL", "DLBCL"),
+  seq_type = "genome",
+  stringsAsFactors = FALSE
+)
+
+prettyOncoplot(
+  maf_df = noncoding_maf,
+  these_samples_metadata = noncoding_metadata,
+  genes = c("BCL2", "MYC"),
+  keepGeneOrder = TRUE,
+  minMutationPercent = 0,
+  include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")),
+  simplify_annotation = FALSE
+)
+
+prettyOncoplot(
+  maf_df = noncoding_maf,
+  these_samples_metadata = noncoding_metadata,
+  genes = c("BCL2", "MYC"),
+  keepGeneOrder = TRUE,
+  minMutationPercent = 0,
+  include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")),
+  simplify_annotation = TRUE
+)
+
 # Want to include copy number? You have two options.
 # Option 1:
 # Incorporate CN status of specific genes into your oncoplot
@@ -448,7 +492,7 @@ suppressMessages(
   suppressWarnings({
     gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
       only_cnv = "all",
-      these_samples_metadata = get_gambl_metadata(),
+      these_samples_metadata = maf_metadata,
       genes_and_cn_threshs = gene_regions
     )
 

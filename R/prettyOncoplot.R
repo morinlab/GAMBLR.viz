@@ -252,6 +252,50 @@
 #'   })
 #' )
 #'
+#' # Include non-coding mutation classes by naming the accepted classes
+#' # for each gene in include_noncoding.
+#' noncoding_maf <- data.frame(
+#'   Hugo_Symbol = c("BCL2", "BCL2", "BCL2", "MYC"),
+#'   Tumor_Sample_Barcode = c("S1", "S2", "S3", "S4"),
+#'   Variant_Classification = c(
+#'     "3'UTR",
+#'     "5'Flank",
+#'     "Intron",
+#'     "Missense_Mutation"
+#'   ),
+#'   Chromosome = "18",
+#'   Start_Position = 1:4,
+#'   End_Position = 1:4,
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' noncoding_metadata <- data.frame(
+#'   sample_id = paste0("S", 1:4),
+#'   pathology = c("FL", "FL", "DLBCL", "DLBCL"),
+#'   seq_type = "genome",
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' prettyOncoplot(
+#'   maf_df = noncoding_maf,
+#'   these_samples_metadata = noncoding_metadata,
+#'   genes = c("BCL2", "MYC"),
+#'   keepGeneOrder = TRUE,
+#'   minMutationPercent = 0,
+#'   include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")),
+#'   simplify_annotation = FALSE
+#' )
+#'
+#' prettyOncoplot(
+#'   maf_df = noncoding_maf,
+#'   these_samples_metadata = noncoding_metadata,
+#'   genes = c("BCL2", "MYC"),
+#'   keepGeneOrder = TRUE,
+#'   minMutationPercent = 0,
+#'   include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")),
+#'   simplify_annotation = TRUE
+#' )
+#'
 #' # Want to include copy number? You have two options.
 #' # Option 1:
 #' # Incorporate CN status of specific genes into your oncoplot
@@ -278,7 +322,7 @@
 #'   suppressWarnings({
 #'     gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(
 #'       only_cnv = "all",
-#'       these_samples_metadata = get_gambl_metadata(),
+#'       these_samples_metadata = maf_metadata,
 #'       genes_and_cn_threshs = gene_regions
 #'     )
 #'
@@ -910,10 +954,13 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           mutate(Mutated = TRUE)
       }
       if (nrow(snv_maf) == 0) {
-        stop(paste(
-          "There are no genes left.",
-          "Try reducing minMutationPercent"
-        ))
+        empty_mat <- matrix(
+          FALSE,
+          nrow = nrow(mat),
+          ncol = ncol(mat),
+          dimnames = list(rownames(mat), colnames(mat))
+        )
+        return(empty_mat)
       }
       #print("904")
       snv_wide <- pivot_wider(snv_maf,
@@ -939,6 +986,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       }
       return(snv_wide[rownames(mat), colnames(mat)])
     }
+
     col["Missense"] <- col["Missense_Mutation"]
     col["Truncating"] <- col["Nonsense_Mutation"]
     col["CNV"] <- "purple"
@@ -948,9 +996,16 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     #  "Missense", "Truncating", "Splice_Site",
     #  "HotSpot", "CNV"
     # )
+
     path_cols = get_gambl_colours("pathology")
     dilution = 40
     width_adj <- 1 - gap
+
+    bgcol <- NA
+    if (!simplify_bg_colour %in% c("transparent", "pathology", "coverage", "background") &&
+        !simplify_bg_colour %in% colnames(these_samples_metadata)) {
+      bgcol <- simplify_bg_colour
+    }
     alter_fun <- list(
       coverage = function(x, y, w, h) {
         grid.rect(x, y, w, h, gp = gpar(fill = "grey", col = NA))
@@ -958,7 +1013,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       background = function(x, y, w, h) {
         grid.rect(x,
           y, w, h,
-          gp = gpar(fill = NA, col = NA)
+          gp = gpar(fill = bgcol, col = NA)
         )
       },
       DLBCL = function(x, y, w, h) {
@@ -1149,21 +1204,32 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       }
     }
   } else { # end simplifyAnnotation
+    col["RNA"] <- col["3'UTR"]
+    col["hot_spot"] <- "magenta"
+
     alter_fun <- list(background = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
         gp = gpar(fill = "#e6e6e6", col = box_col)
       )
     }, RNA = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
-        gp = gpar(fill = "#F2ED36", col = box_col)
+        gp = gpar(fill = col["RNA"], col = box_col)
       )
     }, `3'UTR` = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
-        gp = gpar(fill = "#F2ED36", col = box_col)
+        gp = gpar(fill = col["3'UTR"], col = box_col)
       )
     }, `5'UTR` = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
         gp = gpar(fill = col["5'UTR"], col = box_col)
+      )
+    }, `3'Flank` = function(x, y, w, h) {
+      grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+                gp = gpar(fill = col["3'Flank"], col = box_col)
+      )
+    }, `5'Flank` = function(x, y, w, h) {
+      grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+                gp = gpar(fill = col["5'Flank"], col = box_col)
       )
     }, Intron = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), 0.75 * h *
@@ -1220,7 +1286,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       )
     }, hot_spot = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), (height_scaling / 5) *
-        h, gp = gpar(fill = "magenta", col = box_col))
+        h, gp = gpar(fill = col["hot_spot"], col = box_col))
     }, Silent = function(x, y, w, h) {
       grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
         gp = gpar(fill = col["Silent"], col = box_col)
@@ -1341,7 +1407,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   # check for missing colours
   colours <- map_metadata_to_colours(
     metadataColumns = metadataColumns,
-    these_samples_metadata = these_samples_metadata, annoAlpha = annoAlpha,
+    these_samples_metadata = these_samples_metadata,
+    annoAlpha = annoAlpha,
     verbose = verbose
   )
   if (highlightHotspots) {
@@ -1350,11 +1417,29 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   }
   if (!is.null(custom_colours)) {
     for (colname in names(custom_colours)) {
-      colours[[colname]] <- custom_colours[[colname]]
+      matched_colname <- colname
+      if (!matched_colname %in% colnames(metadata_df)) {
+        metadata_colname_aliases <- gsub(
+          "[^[:alnum:]]+",
+          "_",
+          colnames(metadata_df)
+        )
+        alias_matches <- colnames(metadata_df)[metadata_colname_aliases == colname]
+        if (length(alias_matches) == 1) {
+          matched_colname <- alias_matches
+        } else {
+          warning(paste(
+            "custom_colours entry",
+            colname,
+            "does not match any metadata column and will be ignored"
+          ))
+        }
+      }
+      colours[[matched_colname]] <- custom_colours[[colname]]
       if (verbose) {
         print("adding:")
-        print(colname)
-        print(colours[[colname]])
+        print(matched_colname)
+        print(colours[[matched_colname]])
       }
     }
     if (verbose) {
@@ -1578,6 +1663,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     #if (!missing(include_noncoding)) {
     if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       any_hit[silent_df == TRUE] <- TRUE
+      all_hit[silent_df == TRUE & all_hit == ""] <- "Silent"
     }
     if (highlightHotspots) {
       any_hit[hotspot_df == TRUE] <- TRUE
@@ -1714,7 +1800,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     mat_input <- mat_list
   } else { # end simplify
     if (missing(sortByColumns) && keepSampleOrder == FALSE) {
-      if ("verbose") {
+      if (verbose) {
         print("col_order will be NULL")
       }
       col_order <- NULL
@@ -1889,7 +1975,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     return_inputs = return_inputs,
     split_rows_kmeans = split_rows_kmeans,
     split_columns_kmeans = split_columns_kmeans,
-    verbose = verbose, use_raster = use_raster,
+    verbose = verbose,
+    use_raster = use_raster,
     pw = plot_width,
     ph = plot_height,
     pct_side = pct_side,
@@ -1975,6 +2062,40 @@ make_prettyoncoplot <- function(
     genesForClustering,
     annotation_name_fontsize,
     include_noncoding) {
+  validate_mutation_colours <- function(mat_input, col, plot_type) {
+    classes_without_colours <- c("coverage", "BL", "FL", "DLBCL")
+    if (plot_type == "simplify") {
+      present_alterations <- setdiff(names(mat_input), classes_without_colours)
+    } else {
+      present_alterations <- unique(unlist(strsplit(
+        as.character(mat_input),
+        ";",
+        fixed = TRUE
+      )))
+      present_alterations <- present_alterations[
+        !is.na(present_alterations) &
+          nzchar(present_alterations) &
+          present_alterations != "background"
+      ]
+    }
+    missing_colours <- setdiff(present_alterations, names(col))
+    if (length(missing_colours) > 0) {
+      stop(
+        paste(
+          "No mutation colour assigned for alteration class(es):",
+          paste(missing_colours, collapse = ", "),
+          "Update the internal mutation colour map before plotting."
+        )
+      )
+    }
+  }
+
+  validate_mutation_colours(
+    mat_input = mat_input,
+    col = col,
+    plot_type = plot_type
+  )
+
   if (plot_type == "simplify") {
     ## Speedier, less detailed plot (3 categories of mutations)
     at <- c("Missense", "Truncating", "Splice_Site")
@@ -1993,22 +2114,35 @@ make_prettyoncoplot <- function(
       labels_gp = gpar(fontsize = legendFontSize)
     )
   } else { # end simplify, set up legend for basic plot type instead
+    legend_labels <- c(
+      RNA = "RNA",
+      `5'Flank` = "5'Flank",
+      `3'Flank` = "3'Flank",
+      `5'UTR` = "5'UTR",
+      `3'UTR` = "3'UTR",
+      Intron = "Intron",
+      Nonsense_Mutation = "Nonsense Mutation",
+      Splice_Site = "Splice Site",
+      Splice_Region = "Splice Region",
+      Nonstop_Mutation = "Nonstop Mutation",
+      Translation_Start_Site = "Translation Start Site",
+      In_Frame_Ins = "In Frame Insertion",
+      In_Frame_Del = "In Frame Deletion",
+      Frame_Shift_Ins = "Frame Shift Insertion",
+      Frame_Shift_Del = "Frame Shift Deletion",
+      Multi_Hit = "Multi Hit",
+      Missense_Mutation = "Missense Mutation",
+      Silent = "Silent",
+      hot_spot = "HotSpot"
+    )
+    legend_at <- names(legend_labels)[names(legend_labels) %in% names(col)]
     heatmap_legend_param <- list(
-      title = "Alterations", at = c(
-        "RNA",
-        "3'UTR", "Nonsense_Mutation", "Splice_Site", "Splice_Region",
-        "Nonstop_Mutation", "Translation_Start_Site", "In_Frame_Ins",
-        "In_Frame_Del", "Frame_Shift_Ins", "Frame_Shift_Del",
-        "Multi_Hit", "Missense_Mutation", "Silent", "hot_spot"
-      ),
-      labels = c(
-        "RNA", "3'UTR", "Nonsense Mutation", "Splice Site",
-        "Splice Region", "Nonstop Mutation", "Translation Start Site",
-        "In Frame Insertion", "In Frame Deletion", "Frame Shift Insertion",
-        "Frame Shift Deletion", "Multi Hit", "Missense Mutation",
-         "Silent", "HotSpot"
-      ), nrow = annotation_row,
-      ncol = annotation_col, legend_direction = legend_direction,
+      title = "Alterations",
+      at = legend_at,
+      labels = unname(legend_labels[legend_at]),
+      nrow = annotation_row,
+      ncol = annotation_col,
+      legend_direction = legend_direction,
       labels_gp = gpar(fontsize = legendFontSize)
     )
   }
@@ -2104,7 +2238,10 @@ make_prettyoncoplot <- function(
     any_mut[mat_input$Missense] <- 1
     any_mut[mat_input$Truncating] <- 1
     any_mut[mat_input$Splice_Site] <- 1
-    if ("HotSpot" %in% names(mat_input$mut_mat)) {
+    if ("Silent" %in% names(mat_input)) {
+      any_mut[mat_input$Silent] <- 1
+    }
+    if ("HotSpot" %in% names(mat_input)) {
       if (verbose) {
         print("Counting hot spots!")
       }
@@ -2368,5 +2505,3 @@ make_prettyoncoplot <- function(
     annotation_legend_side = legend_position
   ))
 }
-
-
