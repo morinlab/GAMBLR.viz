@@ -40,9 +40,15 @@
 #' more than two values or is not a factor, specify a character vector
 #' of length two in the order you would like the factor levels to be set,
 #' reference group first.
-#' @param separate_hotspots Optional: If you would like to treat hotspots
-#' separately from other mutations in any gene. Requires that the maf file
-#' is annotated with [GAMBLR::annotate_hotspots].
+#' @param separate_hotspots Deprecated. Use `maf_column = "hot_spot"` instead.
+#' @param maf_column The MAF column to use as the feature identifier for each
+#' row in the mutation matrix. Default is `"Hugo_Symbol"` (one test per gene).
+#' Set to `"mutation_alias"` or `"driver_alias"` to use sub-gene categories
+#' produced by [GAMBLR.utils::annotate_curated_drivers] (e.g. `TP53_trunc`,
+#' `TP53_R175`, `MYD88_L265P`). Set to `"hot_spot"` for backward-compatible
+#' hotspot separation: TRUE rows become `<Hugo_Symbol>HOTSPOT`, FALSE rows
+#' keep `Hugo_Symbol`. The `genes` parameter always filters by `Hugo_Symbol`
+#' first, regardless of `maf_column`.
 #' @param comparison_name Optional: Specify the legend title if different
 #' from the comparison column name.
 #' @param custom_colours Optional: Specify a named vector of colours that
@@ -65,6 +71,80 @@
 #'
 #' @examples
 #' cat("Running example for function: prettyForestPlot\n")
+#'
+#' # Compare FL vs DLBCL using fine-grained driver/hotspot categories from
+#' # annotate_curated_drivers() instead of plain gene-level mutation status.
+#' # This reveals whether specific mutation subtypes (e.g. EZH2 hotspot vs
+#' # truncating vs other missense) drive the association rather than the
+#' # gene overall.
+#'
+#' suppressPackageStartupMessages(library(GAMBLR.open))
+#' suppressPackageStartupMessages(library(GAMBLR.utils))
+#' suppressWarnings(
+#'   suppressMessages({
+#'
+#' meta = get_gambl_metadata()
+#' fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", "DLBCL")) %>%
+#'   check_and_clean_metadata(duplicate_action = "keep_first")
+#'
+#' # Get all coding SSMs (genome + capture) for these samples
+#' fl_dlbcl_maf = get_all_coding_ssm(fl_dlbcl_meta)
+#'
+#' # Annotate driver/hotspot categories for selected genes
+#' fl_dlbcl_maf = annotate_curated_drivers(
+#'   maf_data = fl_dlbcl_maf,
+#'   genes_of_interest = c("EZH2", "CREBBP", "TP53",
+#'                         "MYD88", "NOTCH1", "NOTCH2")
+#' )
+#'
+#' # mutation_alias gives the finest resolution: each named region or hotspot
+#' # codon becomes its own feature (e.g. EZH2_Y641, CREBBP_KAT, TP53_trunc,
+#' # TP53_R175). One Fisher test is run per category.
+#' alias_plots = prettyForestPlot(
+#'   maf = fl_dlbcl_maf,
+#'   metadata = fl_dlbcl_meta,
+#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+#'   maf_column = "mutation_alias",
+#'   comparison_column = "pathology",
+#'   comparison_values = c("DLBCL", "FL"),
+#'   comparison_name = "FL vs DLBCL"
+#' )
+#' alias_plots$arranged
+#'
+#' # driver_alias collapses to just two categories per gene: GENE_driver (any
+#' # mutation matching a curated driver region, regardless of specific position)
+#' # vs GENE_other (everything else). This is coarser than mutation_alias but
+#' # useful when you only care whether a driver-class mutation is enriched,
+#' # not which specific hotspot or region it falls in.
+#' driver_plots = prettyForestPlot(
+#'   maf = fl_dlbcl_maf,
+#'   metadata = fl_dlbcl_meta,
+#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+#'   maf_column = "driver_alias",
+#'   comparison_column = "pathology",
+#'   comparison_values = c("DLBCL", "FL"),
+#'   comparison_name = "FL vs DLBCL"
+#' )
+#' driver_plots$arranged
+#'
+#' # hotspot_alias captures only the strictest hotspot class: named recurrent
+#' # codons (e.g. EZH2_hotspot, MYD88_hotspot). Truncating mutations and
+#' # general LOF regions do not produce a hotspot_alias entry, so genes like
+#' # TP53 whose driver biology is dominated by truncations will have few or no
+#' # rows here. Use mutation_alias if you want those included.
+#' hotspot_plots = prettyForestPlot(
+#'   maf = fl_dlbcl_maf,
+#'   metadata = fl_dlbcl_meta,
+#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+#'   maf_column = "hotspot_alias",
+#'   comparison_column = "pathology",
+#'   comparison_values = c("DLBCL", "FL"),
+#'   comparison_name = "FL vs DLBCL"
+#' )
+#' hotspot_plots$arranged
+#'
+#' }))
+#'
 #' suppressPackageStartupMessages(library(GAMBLR.open))
 #' suppressWarnings(
 #'   suppressMessages({
@@ -100,6 +180,7 @@ prettyForestPlot = function(maf,
                             rm_na_samples = FALSE,
                             comparison_values = FALSE,
                             separate_hotspots = FALSE,
+                            maf_column = "Hugo_Symbol",
                             comparison_name = FALSE,
                             custom_colours = FALSE,
                             custom_labels = FALSE,
@@ -155,24 +236,41 @@ prettyForestPlot = function(maf,
     maf = maf[maf$Tumor_Sample_Barcode %in% metadata$Tumor_Sample_Barcode, ]
   }
 
-  #If separate_hotspots = true, confirm the input maf is hotspot annotated
   if(!missing(mutmat)){
     #add the required columns from the metadata and make the names consistent
     mutmat = left_join(dplyr::select(metadata, sample_id, comparison),mutmat) %>%
       dplyr::rename("Tumor_Sample_Barcode"="sample_id")
   }else if(!missing(maf)){
-    if(separate_hotspots){
-      if(!"hot_spot" %in% colnames(maf))
-        stop("No \"hot_spot\" column in maf file. Annotate your maf file with GAMBLR::annotate_hot_spots() first. ")
-      maf$Hugo_Symbol = ifelse(!is.na(maf$hot_spot), paste0(maf$Hugo_Symbol, "_hotspot"), maf$Hugo_Symbol)
+    # backward compat: separate_hotspots = TRUE is equivalent to maf_column = "hot_spot"
+    if(separate_hotspots && maf_column == "Hugo_Symbol"){
+      .Deprecated(msg = "separate_hotspots is deprecated; use maf_column = \"hot_spot\" instead.")
+      maf_column = "hot_spot"
     }
+
+    # derive the feature column used to name columns in the mutation matrix
+    if(maf_column == "hot_spot"){
+      if(!"hot_spot" %in% colnames(maf))
+        stop("No \"hot_spot\" column in maf. Run annotate_curated_drivers() first.")
+      maf$.feature = ifelse(
+        maf$hot_spot %in% c(TRUE, "TRUE"),
+        paste0(maf$Hugo_Symbol, "HOTSPOT"),
+        maf$Hugo_Symbol
+      )
+    } else if(maf_column == "Hugo_Symbol"){
+      maf$.feature = maf$Hugo_Symbol
+    } else {
+      if(!maf_column %in% colnames(maf))
+        stop(paste0("Column \"", maf_column, "\" not found in maf. Run annotate_curated_drivers() first."))
+      maf$.feature = maf[[maf_column]]
+    }
+
     #Convert the maf file to a binary matrix
     mutmat = maf %>%
-      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+      dplyr::select(.feature, Tumor_Sample_Barcode) %>%
       full_join(dplyr::select(metadata, Tumor_Sample_Barcode, comparison), by = "Tumor_Sample_Barcode") %>%
       distinct() %>%
       dplyr::mutate(is_mutated = 1) %>%
-      pivot_wider(names_from = Hugo_Symbol, values_from = is_mutated, values_fill = 0) %>%
+      pivot_wider(names_from = .feature, values_from = is_mutated, values_fill = 0) %>%
       dplyr::mutate(across(where(is.numeric), ~replace_na(., 0)))
     if(rm_na_samples && "NA" %in% colnames(mutmat)){
       mutmat = mutmat %>%
