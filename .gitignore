@@ -6,3 +6,5 @@ config.yml
 .Ruserdata
 misc/*
 vignettes/*_cache/*
+Rplot.pdf
+docs/
