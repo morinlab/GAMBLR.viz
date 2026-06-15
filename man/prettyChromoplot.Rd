@@ -63,7 +63,7 @@ Other parameters are all optional. For a detailed explanation of how to use thes
 }
 \examples{
 cat("Running example for function: prettyChromoplot\n")
-suppressMessages(library(GAMBLR.open))
+suppressPackageStartupMessages(library(GAMBLR.open))
 
 # Bundled output from a GISTIC run using grch37 results
 gistic_scores = system.file("extdata",

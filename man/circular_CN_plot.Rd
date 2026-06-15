@@ -49,7 +49,7 @@ Circular overview of copy number data across a cohort
 }
 \examples{
 \dontrun{
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 meta = get_gambl_metadata()
 meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
 print("pretty_CN_heatmap") 
