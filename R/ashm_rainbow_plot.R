@@ -38,7 +38,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' suppressMessages(library(GAMBLR.open))
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' 
 #' # Get lymphgen colours
 #' lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")

@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' cat("running examples for map_metadata_to_colours\n")
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' 
 #' #get metadata
 #' all_meta = suppressMessages(get_gambl_metadata() %>%

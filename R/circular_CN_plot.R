@@ -19,7 +19,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' meta = get_gambl_metadata()
 #' meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
 #' print("pretty_CN_heatmap") 
@@ -325,7 +325,7 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #'
 #' @examples
 #' \dontrun{
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' meta = get_gambl_metadata()
 #' meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
 #' 
