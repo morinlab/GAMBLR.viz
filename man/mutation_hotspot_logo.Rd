@@ -25,6 +25,47 @@ mutation_hotspot_logo(
   verbose = FALSE
 )
 }
+\arguments{
+\item{maf_df}{MAF-like data frame with mutation records.}
+
+\item{hotspot_position}{Genomic coordinate at the hotspot center.}
+
+\item{genome_build}{Genome build string (e.g., "grch37" or "hg38").}
+
+\item{pad_length}{Number of bases to include on each side of the hotspot.}
+
+\item{fasta_path}{Optional path to a reference FASTA file.}
+
+\item{include_AA}{If TRUE, add amino-acid annotation track.}
+
+\item{group_AA}{If TRUE, group AA labels (same as include_AA but grouped).}
+
+\item{annotate_motif}{If TRUE, color WRCY motifs in the reference track.}
+
+\item{annotate_only}{If TRUE, return annotated mutations and reference only.}
+
+\item{return_data}{If TRUE, return a list with plot and data.}
+
+\item{base_size}{Font size for base letters.}
+
+\item{aa_size}{Font size for AA labels.}
+
+\item{text_size}{Font size for plot text.}
+
+\item{prepend_plot_label}{Optional label prefix for the plot title.}
+
+\item{include_title}{If TRUE, show the plot title.}
+
+\item{real_coordinates}{If TRUE, label x-axis with genomic coordinates.}
+
+\item{reverse}{If TRUE, reverse the sequence context (currently unused).}
+
+\item{verbose}{If TRUE, print diagnostic output.}
+
+\item{gene_symbol}{Deprecated/unused.}
+
+\item{include_reference}{If TRUE, add a reference base track.}
+}
 \value{
 a named list containing a ggplot object and various processed data
 }

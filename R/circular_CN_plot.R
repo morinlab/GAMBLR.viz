@@ -316,6 +316,8 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #' Categorize arm-level and chromosomal CNV events
 #'
 #' @param pretty_CN_heatmap_output The output from running the pretty_CN_heatmap function
+#' @param loss_threshold Arm-level loss threshold applied to arm means (default: -0.8)
+#' @param gain_threshold Arm-level gain threshold applied to arm means (default: 0.8)
 #'
 #' @return List of data frames
 #' @import circlize
@@ -347,21 +349,27 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #' 
 #' }
 #' @keywords internal
-categorize_CN_events = function(pretty_CN_heatmap_output){
+categorize_CN_events = function(pretty_CN_heatmap_output, loss_threshold = -0.8, gain_threshold = 0.8){
   CN_mat = pretty_CN_heatmap_output$data
   labels = pretty_CN_heatmap_output$labels
   
   cytoband_df = circlize::read.cytoband()$df
   #whole chromosome, arm-level or focal
   chromosome_cols = pretty_CN_heatmap_output$chromosome_columns
-  chroms_u = unique(chromosome_cols)
   if(is.null(chromosome_cols)){
     stop("problem with input")
   }
+  # normalize chromosome naming to match cytoband (chr1, chr2, ...)
+  chrom_has_chr = grepl("^chr", chromosome_cols)
+  if(any(!chrom_has_chr)){
+    chromosome_cols = ifelse(chrom_has_chr, chromosome_cols, paste0("chr", chromosome_cols))
+  }
+  chroms_u = unique(chromosome_cols)
   regions_df = data.frame(regions=colnames(CN_mat)) %>% 
     mutate(name=regions) %>%
     separate(regions,into=c("chromosome","coords"),sep=":") %>%
     separate(coords,into=c("start","end"),sep="-") %>%
+    mutate(chromosome=ifelse(grepl("^chr", chromosome), chromosome, paste0("chr", chromosome))) %>%
     mutate(start=as.integer(start),end=as.integer(end)) %>%
     mutate(arm=NA)
   chrom_arm_ranges = list()
@@ -395,7 +403,7 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   }
   chrom_events = list()
   chrom_arm_events = list()
-  skip_arms = c("chr20p","chr15p","chr14p","chr21p","chr22p","chr13p","chrXp","chrXq")
+  skip_arms = c("chr20p","chr15p","chr14p","chr21p","chr22p","chr13p","chrXp","chrXq","chrYp","chrYq")
   unique_chrom = unique(chromosome_cols)
   for(chrom in unique_chrom){
     
@@ -493,23 +501,37 @@ categorize_CN_events = function(pretty_CN_heatmap_output){
   rownames(arm_events_df)= rownames(CN_mat)
   # give arm-level events meaningful names and only report the most common event (drop the others) per arm
   arm_events_simplified = arm_events_df
-  arm_means = colMeans(arm_events_df)
-  for(i in c(1:ncol(arm_events_simplified))){
+  arm_pos = colSums(arm_events_df > gain_threshold, na.rm = TRUE)
+  arm_neg = colSums(arm_events_df < loss_threshold, na.rm = TRUE)
+  neutral_cols = which((arm_pos == 0 & arm_neg == 0) | is.na(arm_pos) | is.na(arm_neg))
+  if(length(neutral_cols) > 0){
+    arm_events_simplified = arm_events_simplified[, -neutral_cols, drop = FALSE]
+    arm_pos = arm_pos[-neutral_cols]
+    arm_neg = arm_neg[-neutral_cols]
+  }
+  if(ncol(arm_events_simplified) == 0){
+    return(list(chrom_events=chrom_events_df,
+                arm_events=arm_events_df,
+                arm_events_simplified=arm_events_simplified))
+  }
+  for(i in seq_len(ncol(arm_events_simplified))){
     arm = colnames(arm_events_simplified)[i]
-    if(arm_means[i]<0){
+    if(is.na(arm_pos[i]) | is.na(arm_neg[i]) | (arm_pos[i] == 0 & arm_neg[i] == 0)){
+      next
+    }else if(arm_neg[i] > arm_pos[i]){
       #deletion
       new_name = paste0(arm,"_LOSS")
-      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i]<0,1,0)
-    }else if(arm_means[i]>0){
+      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i] < loss_threshold,1,0)
+    }else if(arm_pos[i] > arm_neg[i]){
       #gain 
       new_name = paste0(arm,"_GAIN")
-      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i]>0,1,0)
+      arm_events_simplified[,i]=ifelse(arm_events_simplified[,i] > gain_threshold,1,0)
     }else{
-      stop(paste("arm_events_simplified[,i]:",arm_events_simplified[,i]))
+      # neutral arm (mean between thresholds) should not be labeled
+      next
     }
     colnames(arm_events_simplified)[i] = new_name
     
   }
   return(list(chrom_events=chrom_events_df,arm_events=arm_events_df,arm_events_simplified=arm_events_simplified))
 }
-

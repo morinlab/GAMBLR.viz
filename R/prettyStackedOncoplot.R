@@ -8,22 +8,35 @@
 #' @param metadataColumns A character vector of column names that specifies
 #' which columns from these_samples_metadata will be displayed below the
 #' oncoplot.
-#' @param sortByMetadataColumns
-#' @param seg_data
-#' @param sortByPGA
-#' @param cn_state_matrix
-#' @param genes
-#' @param sortByGenes
-#' @param genesCNVinOncoplot
+#' @param sortByMetadataColumns Optional vector specifying which metadata columns to
+#'   sort samples by.
+#' @param seg_data CNV segment data (only used if `cn_state_matrix` is missing).
+#' @param sortByPGA If TRUE, sort by PGA.
+#' @param cn_state_matrix Optional CN state matrix for CN plots/sorting.
+#' @param ashm_matrix Optional ASHM matrix for `secondPlotType="prettyMutationDensity"`.
+#' @param regions_bed Optional BED regions for mutation density plot.
+#' @param genes Genes to include in the oncoplot.
+#' @param second_oncoplot_genes Optional genes for a second oncoplot when
+#'   `secondPlotType="prettyOncoplot"`.
+#' @param sortByGenes Genes used to order samples by mutation/CN status.
+#' @param genes_CN_thresh Named numeric vector of CN thresholds for genes.
 #' @param secondPlotType Defaults to pretty_CN_heatmap, which is currently
 #' the only option tested with this function.
-#' @param oncoplot_location
-#' @param cluster_samples
-#' @param secondPlotArgs
-#' @param oncoplotArgs
-#' @param verbose Set to TRUE for ultra chatty mode
+#' @param oncoplot_location "top" or "bottom" placement of the oncoplot.
+#' @param cluster_samples If TRUE, cluster samples by mutation status.
+#' @param secondPlotArgs List of arguments passed to the secondary plot function.
+#' @param oncoplotArgs List of arguments passed to the oncoplot.
+#' @param returnEverything If TRUE, return plots and intermediate matrices.
+#' @param plot_width Optional plot width (cm) for ComplexHeatmap.
+#' @param oncoplotHeight Height of the oncoplot (cm).
+#' @param secondPlotHeight Height of the second plot (cm).
+#' @param verbose Set to TRUE for ultra chatty mode.
+#' @param row_names_side Side for row names in ComplexHeatmap.
+#' @param pctFontSize Font size for percent labels.
+#' @param heatmap_legend_side Side for heatmap legend.
 #'
-#' @return
+#' @return A `Heatmap` object when `returnEverything=FALSE`, otherwise a list
+#'   containing plots and intermediate matrices.
 #' 
 #' @import GAMBLR.helpers GAMBLR.utils
 #' @export

@@ -62,6 +62,7 @@ prettyOncoplot(
   split_rows_kmeans,
   split_columns_kmeans,
   dry_run = FALSE,
+  sample_gene_coverage = NULL,
   simplify_annotation = FALSE,
   simplify_bg_colour = "transparent",
   stacked = FALSE,
@@ -257,12 +258,21 @@ when cluster_cols = TRUE}
 \item{dry_run}{Set to TRUE to more efficiently view the clustering
 result while debugging cluster_rows/clustering_distance_rows}
 
+\item{sample_gene_coverage}{Optional data frame specifying which samples
+had insufficient coverage for which genes. Two columns: sample_id Hugo_Symbol}
+
 \item{simplify_annotation}{Collapse/group the variant effect categories
 to only 3 options. This is a much faster option for when many
 patients/genes are included.}
 
 \item{simplify_bg_colour}{When simplify_annotation is called, adjust
 the color of the background by passign a value to this argument.
+Options are: "transparent" (default), "white", or any other color name or hex code.
+Overloaded to accept "pathology" or "background". When "background" 
+is specified, the background of the oncoplot will be coloured grey
+for all gene-sample combinations specified in the gene_sample_coverage data frame. 
+This is useful for visually distinguishing gene-sample combinations with 
+insufficient coverage from those with sufficient coverage but no mutations.
 Default is NA.}
 
 \item{stacked}{Deprecated. See [GAMBLR.viz::prettyStackedOncoplot]
