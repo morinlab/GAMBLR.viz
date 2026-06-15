@@ -99,21 +99,21 @@ suppressPackageStartupMessages(library(GAMBLR.open))
 suppressPackageStartupMessages(library(GAMBLR.utils))
 
 meta = get_gambl_metadata()
-fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL","BL")) \%>\%
   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 
 maf = get_all_coding_ssm(fl_dlbcl_meta)
 maf = annotate_curated_drivers(
   maf,
-  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
+  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
 )
 
 results = test_feature_associations(
   maf = maf,
   metadata = fl_dlbcl_meta,
   comparison_column = "pathology",
-  comparison_values = c("FL", "DLBCL"),
-  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  comparison_values = c("FL", "DLBCL","BL"),
+  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC"),
   maf_column = "mutation_alias"
 )
 
@@ -121,8 +121,7 @@ results = test_feature_associations(
 plots = plot_feature_associations(
   results = results,
   metadata = fl_dlbcl_meta,
-  comparison_column = "pathology",
-  comparison_name = "FL vs DLBCL"
+  comparison_column = "pathology"
 )
 plots$arranged
 

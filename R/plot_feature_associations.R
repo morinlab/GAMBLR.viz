@@ -69,21 +69,21 @@
 #' suppressPackageStartupMessages(library(GAMBLR.utils))
 #'
 #' meta = get_gambl_metadata()
-#' fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", "DLBCL")) %>%
+#' fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", "DLBCL","BL")) %>%
 #'   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 #'
 #' maf = get_all_coding_ssm(fl_dlbcl_meta)
 #' maf = annotate_curated_drivers(
 #'   maf,
-#'   genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
+#'   genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
 #' )
 #'
 #' results = test_feature_associations(
 #'   maf = maf,
 #'   metadata = fl_dlbcl_meta,
 #'   comparison_column = "pathology",
-#'   comparison_values = c("FL", "DLBCL"),
-#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+#'   comparison_values = c("FL", "DLBCL","BL"),
+#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC"),
 #'   maf_column = "mutation_alias"
 #' )
 #'
@@ -91,8 +91,7 @@
 #' plots = plot_feature_associations(
 #'   results = results,
 #'   metadata = fl_dlbcl_meta,
-#'   comparison_column = "pathology",
-#'   comparison_name = "FL vs DLBCL"
+#'   comparison_column = "pathology"
 #' )
 #' plots$arranged
 #'
@@ -126,6 +125,9 @@ plot_feature_associations = function(results,
          "\nDid you use test_feature_associations() with test = 'fisher'?")
   }
 
+  pairwise_mode = "comparison" %in% colnames(results) &&
+                  dplyr::n_distinct(results$comparison) > 1
+
   # detect group names from n_mutated_* columns
   group_count_cols = grep("^n_mutated_[^$]", colnames(results), value = TRUE)
   group_names = sub("^n_mutated_", "", group_count_cols)
@@ -155,26 +157,33 @@ plot_feature_associations = function(results,
 
   # order features
   if (keepFeatureOrder) {
-    feature_levels = plot_data$feature
+    feature_levels = unique(as.character(plot_data$feature))
+  } else if (pairwise_mode) {
+    feature_levels = plot_data %>%
+      dplyr::group_by(feature) %>%
+      dplyr::summarise(mean_logOR = mean(log(OR), na.rm = TRUE), .groups = "drop") %>%
+      dplyr::arrange(mean_logOR) %>%
+      dplyr::pull(feature)
   } else {
     feature_levels = plot_data$feature[order(plot_data$OR)]
   }
   plot_data = dplyr::mutate(plot_data,
                             feature = factor(feature, levels = feature_levels))
 
-  # sizing
-  n_features = nrow(plot_data)
+  # sizing (base on unique features, not total rows)
+  n_features = dplyr::n_distinct(plot_data$feature)
   point_size = min(5, max(1, 50 / n_features))
   error_width = ifelse(point_size >= 5, 0.1, 0.2)
   col_width   = ifelse(point_size >= 5, 0.3, 0.5)
 
-  # colours
+  # colours for bar chart (group fills) — same for both modes
   if (is.null(custom_colours)) {
     gambl_cols = GAMBLR.helpers::get_gambl_colours()
     if (length(intersect(group_names, names(gambl_cols))) == length(group_names)) {
       colours = gambl_cols[group_names]
     } else {
-      colours = GAMBLR.helpers::get_gambl_colours(classification = "blood")[c("Red", "Blue")]
+      blood_cols = GAMBLR.helpers::get_gambl_colours(classification = "blood")
+      colours = blood_cols[seq_len(length(group_names))]
       names(colours) = group_names
     }
   } else {
@@ -191,31 +200,97 @@ plot_feature_associations = function(results,
     labels = stats::setNames(group_names, group_names)
   }
 
-  if (is.null(comparison_name)) {
-    comparison_name = paste(group_names, collapse = " vs ")
-  }
-
   legend_pos = if (show_legend) "bottom" else "none"
 
-  # forest plot
-  forest = plot_data %>%
-    ggplot2::ggplot(ggplot2::aes(x = feature, y = log(OR))) +
-    ggplot2::geom_point(size = point_size, shape = "square") +
-    ggplot2::geom_hline(yintercept = 0, lty = 2) +
-    ggplot2::coord_flip() +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high)),
-      width = error_width
-    ) +
-    ggplot2::ylab("ln(Odds Ratio)") +
-    ggplot2::xlab("Feature\n") +
-    theme_Morons(base_size = base_size) +
-    ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size))
+  if (pairwise_mode) {
+    comp_levels = unique(as.character(plot_data$comparison))
+    plot_data = plot_data %>%
+      dplyr::mutate(
+        comparison  = factor(comparison, levels = comp_levels),
+        comp_group1 = sub(" vs .*", "", as.character(comparison)),
+        comp_group2 = sub(".* vs ", "", as.character(comparison)),
+        enriched_group = dplyr::case_when(
+          conf_low  > 1 ~ comp_group1,
+          conf_high < 1 ~ comp_group2,
+          TRUE          ~ "none"
+        ),
+        depleted_group = dplyr::case_when(
+          conf_low  > 1 ~ comp_group2,
+          conf_high < 1 ~ comp_group1,
+          TRUE          ~ "none"
+        ),
+        enriched_group = factor(enriched_group, levels = c(group_names, "none")),
+        depleted_group = factor(depleted_group, levels = c(group_names, "none"))
+      )
+
+    comp_shapes = stats::setNames(
+      c(15L, 16L, 17L, 18L)[seq_along(comp_levels)],
+      comp_levels
+    )
+
+    if (is.null(comparison_name)) comparison_name = "Comparison"
+
+    forest = plot_data %>%
+      ggplot2::ggplot(ggplot2::aes(x = feature, y = log(OR),
+                                   group = comparison)) +
+      ggplot2::geom_hline(yintercept = 0, lty = 2) +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high),
+                     colour = enriched_group),
+        position = ggplot2::position_dodge(width = 0.6),
+        width = error_width
+      ) +
+      ggplot2::geom_point(
+        ggplot2::aes(shape = comparison, colour = depleted_group),
+        position = ggplot2::position_dodge(width = 0.6),
+        size = point_size
+      ) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_colour_manual(
+        name   = "Enriched in",
+        values = c(colours, none = "grey60"),
+        breaks = group_names,
+        guide  = ggplot2::guide_legend(
+          override.aes = list(shape = NA, linewidth = 1)
+        )
+      ) +
+      ggplot2::scale_shape_manual(
+        name   = comparison_name,
+        values = comp_shapes,
+        guide  = ggplot2::guide_legend(
+          override.aes = list(colour = "black", linetype = 0)
+        )
+      ) +
+      ggplot2::ylab("ln(Odds Ratio)") +
+      ggplot2::xlab("Feature\n") +
+      theme_Morons(base_size = base_size) +
+      ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size))
+  } else {
+    if (is.null(comparison_name)) {
+      comparison_name = paste(group_names, collapse = " vs ")
+    }
+
+    # forest plot (single comparison)
+    forest = plot_data %>%
+      ggplot2::ggplot(ggplot2::aes(x = feature, y = log(OR))) +
+      ggplot2::geom_point(size = point_size, shape = "square") +
+      ggplot2::geom_hline(yintercept = 0, lty = 2) +
+      ggplot2::coord_flip() +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high)),
+        width = error_width
+      ) +
+      ggplot2::ylab("ln(Odds Ratio)") +
+      ggplot2::xlab("Feature\n") +
+      theme_Morons(base_size = base_size) +
+      ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size))
+  }
 
   # bar plot — only if group sizes are available
   if (!is.null(group_sizes) && length(group_count_cols) > 0) {
     bar_data = plot_data %>%
       dplyr::select(feature, dplyr::all_of(group_count_cols)) %>%
+      dplyr::distinct() %>%
       tidyr::pivot_longer(
         dplyr::all_of(group_count_cols),
         names_to = "group",
@@ -228,6 +303,8 @@ plot_feature_associations = function(results,
         group = factor(group, levels = group_names)
       )
 
+    bar_legend_title = if (pairwise_mode) "Group" else comparison_name
+
     bar = bar_data %>%
       ggplot2::ggplot(ggplot2::aes(x = feature, y = percent_mutated, fill = group)) +
       ggplot2::geom_col(position = "dodge", width = col_width) +
@@ -235,7 +312,7 @@ plot_feature_associations = function(results,
       ggplot2::ylab(bar_label) +
       ggplot2::coord_flip() +
       ggplot2::scale_fill_manual(
-        name   = comparison_name,
+        name   = bar_legend_title,
         values = colours,
         labels = labels[group_names]
       ) +
@@ -245,12 +322,26 @@ plot_feature_associations = function(results,
         legend.position = legend_pos
       )
 
-    arranged = ggpubr::ggarrange(
-      forest, bar,
-      widths = c(1, 0.6),
-      common.legend = show_legend,
-      align = "h"
-    )
+    if (pairwise_mode) {
+      # Bar Group colours are identical to forest Enriched-in colours so the
+      # bar legend is redundant. Use the forest legend as the common legend
+      # placed at the bottom of the arranged figure.
+      arranged = ggpubr::ggarrange(
+        forest,
+        bar + ggplot2::theme(legend.position = "none"),
+        widths        = c(1, 0.6),
+        common.legend = show_legend,
+        legend        = "bottom",
+        align         = "h"
+      )
+    } else {
+      arranged = ggpubr::ggarrange(
+        forest, bar,
+        widths = c(1, 0.6),
+        common.legend = show_legend,
+        align = "h"
+      )
+    }
   } else {
     if (is.null(group_sizes)) {
       message("No group_sizes or metadata supplied — returning forest plot only.")
