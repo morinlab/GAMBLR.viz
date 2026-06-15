@@ -84,7 +84,7 @@ would not need code modifications in this function.
 }
 \examples{
 cat("Running example for function: prettyCoOncoplot\n")
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 #get data for plotting
 meta <- get_gambl_metadata()
 meta <- meta \%>\%

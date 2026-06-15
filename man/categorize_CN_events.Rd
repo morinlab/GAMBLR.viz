@@ -25,7 +25,7 @@ Categorize arm-level and chromosomal CNV events
 }
 \examples{
 \dontrun{
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 meta = get_gambl_metadata()
 meta = check_and_clean_metadata(meta,duplicate_action="keep_first")
 

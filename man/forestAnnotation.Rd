@@ -71,8 +71,8 @@ heatmap. The `forestplot_output` argument must be a named list of
 }
 \examples{
 cat("Running example for function: forestAnnotation\n")
-library(GAMBLR.open)
-library(dplyr)
+suppressPackageStartupMessages(library(GAMBLR.open))
+suppressPackageStartupMessages(library(dplyr))
 
 metadata <- get_gambl_metadata(seq_type_filter = "genome") \%>\%
     dplyr::filter(

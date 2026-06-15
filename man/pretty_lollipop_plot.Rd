@@ -85,7 +85,7 @@ can then be visualized with the given maf data. Silent mutations can be visualiz
 include_silent to TRUE.
 }
 \examples{
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 suppressMessages(
   suppressWarnings({
 
@@ -115,7 +115,7 @@ lollipop_result$plot
 
 \dontrun{
  # Or, with GAMBLR.results:
- library(GAMBLR.results)
+ suppressPackageStartupMessages(library(GAMBLR.results))
  metadata <- GAMBLR.results::get_gambl_metadata() \%>\%
     dplyr::filter(cohort \%in\% c("BL_Pediatric", "BL_Adult"))
 

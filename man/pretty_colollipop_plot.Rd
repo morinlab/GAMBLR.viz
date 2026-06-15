@@ -56,7 +56,7 @@ can then be visualized with the given maf data files, and comparison commands. S
 visualized setting include_silent to TRUE.
 }
 \examples{
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 
 #get meta data (DLBCL_Hilton)
 meta = GAMBLR.open::get_gambl_metadata()

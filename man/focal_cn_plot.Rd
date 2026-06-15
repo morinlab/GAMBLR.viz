@@ -49,7 +49,7 @@ Sample IDs are specified along the y-axis and the genomic position is visualized
 }
 \examples{
 \dontrun{
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 
 #get metadata
 this_metadata = get_gambl_metadata()
