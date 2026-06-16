@@ -11,12 +11,15 @@ plot_feature_associations(
   comparison_column = NULL,
   max_q = 1,
   keepFeatureOrder = FALSE,
+  sort_by = NULL,
+  box_colour = "depleted",
   comparison_name = NULL,
   custom_colours = NULL,
   custom_labels = NULL,
   base_size = 10,
   bar_label = "\% Mutated",
-  show_legend = TRUE
+  show_legend = TRUE,
+  return_data = FALSE
 )
 }
 \arguments{
@@ -39,15 +42,35 @@ automatically and \code{group_sizes} is only needed to override them.}
 \item{comparison_column}{Name of the column in \code{metadata} used to
 define groups. Required when \code{metadata} is supplied.}
 
-\item{max_q}{Numeric. Features with \code{q_value} above this threshold
-are excluded from the plot. Default is 1 (show all).}
+\item{max_q}{Numeric. Rows with \code{q_value} strictly above this
+threshold are excluded from the plot entirely; rows at or below it are
+always shown and coloured by enriched/comparitor group. Default is 1
+(show all).}
 
 \item{keepFeatureOrder}{Logical. If TRUE, features are plotted in the
 order they appear in \code{results} rather than sorted by odds ratio.
 Default is FALSE.}
 
-\item{comparison_name}{Optional string for the legend title. Defaults to
-the names of the two groups joined by " vs ".}
+\item{sort_by}{Optional character scalar or vector of group names
+controlling feature ordering in pairwise mode. A single group name (e.g.
+\code{"FL"}) places features most enriched in that group at the top. An
+ordered vector (e.g. \code{c("FL", "DLBCL", "BL")}) produces a
+hierarchical sort: features enriched in the first group sort to the top,
+then features enriched in the second group, and so on; features not
+enriched in any listed group sort to the bottom. In all cases the sort
+key is the maximum \code{log(reciproc_OR)} across the relevant
+comparisons. \code{NULL} (default) sorts by the maximum
+\code{log(reciproc_OR)} across all comparisons. Ignored when
+\code{keepFeatureOrder = TRUE} or in non-pairwise mode.}
+
+\item{box_colour}{String controlling what the filled square (point) colour
+represents in pairwise mode. \code{"depleted"} (default): square fill shows
+the comparitor (depleted group) and CI line shows the enriched group.
+\code{"enriched"}: square fill shows the enriched group and CI line shows
+the comparitor. The legends swap titles accordingly.}
+
+\item{comparison_name}{Optional string for the bar chart legend title in
+non-pairwise mode. Defaults to the two group names joined by " vs ".}
 
 \item{custom_colours}{Optional named vector of colours matching the group
 labels.}
@@ -62,12 +85,18 @@ display labels for the two groups in legend order.}
 
 \item{show_legend}{Logical. Set to FALSE to suppress the legend.
 Default is TRUE.}
+
+\item{return_data}{Logical. Set to TRUE to include \code{plot_data} (the
+processed data frame used for plotting, with reciprocated OR display columns)
+in the returned list. Default is FALSE.}
 }
 \value{
 A named list with elements:
 \code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
 \code{arranged} (combined plot or just the forest plot if no bar data),
 and \code{results} (the filtered results tibble used for plotting).
+If \code{return_data = TRUE}, also includes \code{plot_data} (the fully
+processed data frame with display columns).
 }
 \description{
 Visualise the output of
@@ -82,10 +111,11 @@ tibble directly and produces the same paired forest/bar layout as
 upstream. This separation allows the test results to be inspected,
 filtered, or modified before plotting.
 
-Features are ordered by odds ratio by default. Set
-\code{keepFeatureOrder = TRUE} to preserve the row order in \code{results}
-(e.g. to honour an ordering applied by
-[GAMBLR.utils::order_features_by_gene]).
+Features are ordered by odds ratio by default (mean log OR across
+comparisons in pairwise mode). Set \code{keepFeatureOrder = TRUE} to
+preserve the row order in \code{results} (e.g. to honour an ordering
+applied by [GAMBLR.utils::order_features_by_gene]). In pairwise mode,
+use \code{sort_by} to order by a specific comparison or group instead.
 
 For the bar plot, per-group mutation frequencies are computed from the
 \code{n_mutated_<group>} columns in \code{results} and the total sample
