@@ -10,6 +10,7 @@ plot_feature_associations(
   metadata = NULL,
   comparison_column = NULL,
   max_q = 1,
+  positive_only = FALSE,
   keepFeatureOrder = FALSE,
   sort_by = NULL,
   box_colour = "enriched",
@@ -22,7 +23,8 @@ plot_feature_associations(
   return_data = FALSE,
   sort_comparison = NULL,
   use_glmnet = FALSE,
-  mode = "combined"
+  mode = "combined",
+  coef_limits = c(-5, 5)
 )
 }
 \arguments{
@@ -52,6 +54,17 @@ threshold are excluded from the plot entirely; rows at or below it are
 always shown and coloured by enriched/comparator group. Default is 1
 (show all).}
 
+\item{positive_only}{Logical. If \code{TRUE}, restricts the plotted
+features to those with a positive \code{coef} (glmnet coefficient) in at
+least one comparison, mirroring the
+\code{select_informative_features(positive_only = TRUE)} filter but
+applied at plot time instead of at training time — useful for dropping
+all-negative (depletion-only) features from an already-trained model
+without re-running \code{cv.glmnet}. Requires a \code{coef} column in
+\code{results} (present when \code{select_informative_features} was
+called with \code{return_models = TRUE}, or more generally whenever
+glmnet was used). Default is \code{FALSE}.}
+
 \item{keepFeatureOrder}{Logical. If TRUE, features are plotted in the
 order they appear in \code{results} rather than sorted by odds ratio.
 Default is FALSE.}
@@ -66,7 +79,12 @@ enriched in any listed group sort to the bottom. In all cases the sort
 key is the maximum \code{log(reciproc_OR)} across the relevant
 comparisons. \code{NULL} (default) sorts by the maximum
 \code{log(reciproc_OR)} across all comparisons. Ignored when
-\code{keepFeatureOrder = TRUE} or in non-pairwise mode.}
+\code{keepFeatureOrder = TRUE} or in non-pairwise mode. In
+\code{mode = "split"}, the same vector also controls left-to-right panel
+order: each comparison (e.g. \code{"FL vs rest"}) is ranked by the
+earliest position of either side in \code{sort_by}; comparisons
+involving groups not listed in \code{sort_by} are placed after the
+ordered ones, in their original relative order.}
 
 \item{box_colour}{String controlling what the filled square (point) colour
 represents in pairwise mode. \code{"enriched"} (default): square fill shows
@@ -118,7 +136,19 @@ dodged forest plot using the two-colour encoding. In \code{"split"} mode a
 separate paired forest+bar plot is produced for each comparison; the feature
 order is derived from the full combined data (respecting \code{sort_by} and
 \code{keepFeatureOrder}) and is shared across all plots so rows are aligned
-when panels are placed side by side. Ignored in non-pairwise mode.}
+when panels are placed side by side. The left-to-right panel order also
+follows \code{sort_by} (see above). Ignored in non-pairwise mode.}
+
+\item{coef_limits}{Numeric vector of length 2 giving the lower and upper
+bound used to truncate the plotted \code{log(OR)} (or, in pairwise mode,
+\code{log(reciproc_OR)}) value before plotting. This prevents a single
+extreme value (e.g. a near-complete-separation feature in regularized
+glmnet output, which can produce a regularized ln(OR) far outside the
+range of all other features) from compressing the visual scale for
+every other point in the panel. Truncation is applied only to the
+plotted point position; the underlying \code{results} values (and the
+feature sort order) are unaffected. Set to \code{NULL} to disable
+truncation. Default is \code{c(-5, 5)}.}
 }
 \value{
 In \code{"combined"} mode (or non-pairwise mode): a named list with

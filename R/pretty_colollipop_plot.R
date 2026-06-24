@@ -195,18 +195,24 @@ pretty_colollipop_plot <- function(
             dplyr::filter(Hugo_Symbol == gene, Variant_Classification %in% variants)
     }
 
-    ##### Compute driver regions from combined mutations (both groups) #####
+    ##### Shared geometry from combined mutations (both groups) #####
+    # used both for the protein-length axis floor (below) and, when
+    # highlight_driver_regions = TRUE, for the driver region boxes — computed
+    # once here so the top/bottom panels are sized/shaded identically rather
+    # than each pretty_lollipop_plot() call deriving it from its own subset
+    combined_ssm <- dplyr::bind_rows(ssm1, ssm2) %>%
+        dplyr::mutate(
+            AA = as.numeric(gsub(
+                "[^0-9]+", "",
+                gsub("([0-9]+).*", "\\1", HGVSp_Short)
+            ))
+        )
+    protein_length_min <- suppressWarnings(max(combined_ssm$AA, na.rm = TRUE))
+    if (!is.finite(protein_length_min)) protein_length_min <- NULL
+
     region_df <- NULL
     if (highlight_driver_regions) {
-        combined_ssm <- dplyr::bind_rows(ssm1, ssm2)
         if ("mutation_alias" %in% colnames(combined_ssm)) {
-            combined_ssm <- combined_ssm %>%
-                dplyr::mutate(
-                    AA = as.numeric(gsub(
-                        "[^0-9]+", "",
-                        gsub("([0-9]+).*", "\\1", HGVSp_Short)
-                    ))
-                )
             region_df <- compute_driver_regions(
                 combined_ssm, gene, driver_region_padding
             )
@@ -346,7 +352,8 @@ pretty_colollipop_plot <- function(
             plot_title           = paste0(gene, " in ", comparison_values[1]),
             region_df            = region_df_top,
             driver_region_alpha  = driver_region_alpha,
-            coef_limits          = shared_coef_lim
+            coef_limits          = shared_coef_lim,
+            protein_length_min   = protein_length_min
         ),
         lollipopplot_args
     ))
@@ -363,7 +370,8 @@ pretty_colollipop_plot <- function(
             mirror               = TRUE,
             region_df            = region_df_bot,
             driver_region_alpha  = driver_region_alpha,
-            coef_limits          = shared_coef_lim
+            coef_limits          = shared_coef_lim,
+            protein_length_min   = protein_length_min
         ),
         lollipopplot_args
     ))

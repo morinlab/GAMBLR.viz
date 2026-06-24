@@ -44,6 +44,16 @@
 #' threshold are excluded from the plot entirely; rows at or below it are
 #' always shown and coloured by enriched/comparator group. Default is 1
 #' (show all).
+#' @param positive_only Logical. If \code{TRUE}, restricts the plotted
+#' features to those with a positive \code{coef} (glmnet coefficient) in at
+#' least one comparison, mirroring the
+#' \code{select_informative_features(positive_only = TRUE)} filter but
+#' applied at plot time instead of at training time — useful for dropping
+#' all-negative (depletion-only) features from an already-trained model
+#' without re-running \code{cv.glmnet}. Requires a \code{coef} column in
+#' \code{results} (present when \code{select_informative_features} was
+#' called with \code{return_models = TRUE}, or more generally whenever
+#' glmnet was used). Default is \code{FALSE}.
 #' @param keepFeatureOrder Logical. If TRUE, features are plotted in the
 #' order they appear in \code{results} rather than sorted by odds ratio.
 #' Default is FALSE.
@@ -57,7 +67,12 @@
 #' key is the maximum \code{log(reciproc_OR)} across the relevant
 #' comparisons. \code{NULL} (default) sorts by the maximum
 #' \code{log(reciproc_OR)} across all comparisons. Ignored when
-#' \code{keepFeatureOrder = TRUE} or in non-pairwise mode.
+#' \code{keepFeatureOrder = TRUE} or in non-pairwise mode. In
+#' \code{mode = "split"}, the same vector also controls left-to-right panel
+#' order: each comparison (e.g. \code{"FL vs rest"}) is ranked by the
+#' earliest position of either side in \code{sort_by}; comparisons
+#' involving groups not listed in \code{sort_by} are placed after the
+#' ordered ones, in their original relative order.
 #' @param box_colour String controlling what the filled square (point) colour
 #' represents in pairwise mode. \code{"enriched"} (default): square fill shows
 #' the numerator (enriched group) and CI line shows the depleted group.
@@ -98,7 +113,18 @@
 #' separate paired forest+bar plot is produced for each comparison; the feature
 #' order is derived from the full combined data (respecting \code{sort_by} and
 #' \code{keepFeatureOrder}) and is shared across all plots so rows are aligned
-#' when panels are placed side by side. Ignored in non-pairwise mode.
+#' when panels are placed side by side. The left-to-right panel order also
+#' follows \code{sort_by} (see above). Ignored in non-pairwise mode.
+#' @param coef_limits Numeric vector of length 2 giving the lower and upper
+#' bound used to truncate the plotted \code{log(OR)} (or, in pairwise mode,
+#' \code{log(reciproc_OR)}) value before plotting. This prevents a single
+#' extreme value (e.g. a near-complete-separation feature in regularized
+#' glmnet output, which can produce a regularized ln(OR) far outside the
+#' range of all other features) from compressing the visual scale for
+#' every other point in the panel. Truncation is applied only to the
+#' plotted point position; the underlying \code{results} values (and the
+#' feature sort order) are unaffected. Set to \code{NULL} to disable
+#' truncation. Default is \code{c(-5, 5)}.
 #'
 #' @return In \code{"combined"} mode (or non-pairwise mode): a named list with
 #' elements \code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
@@ -173,6 +199,7 @@ plot_feature_associations = function(results,
                                      metadata = NULL,
                                      comparison_column = NULL,
                                      max_q = 1,
+                                     positive_only = FALSE,
                                      keepFeatureOrder = FALSE,
                                      sort_by = NULL,
                                      box_colour = "enriched",
@@ -185,9 +212,16 @@ plot_feature_associations = function(results,
                                      return_data = FALSE,
                                      sort_comparison = NULL,
                                      use_glmnet = FALSE,
-                                     mode = "combined") {
+                                     mode = "combined",
+                                     coef_limits = c(-5, 5)) {
 
   mode = match.arg(mode, c("combined", "split"))
+
+  # truncate a log(OR)-scale value to coef_limits; NULL disables truncation
+  clip_log_or = function(x) {
+    if (is.null(coef_limits)) return(x)
+    pmin(pmax(x, coef_limits[1]), coef_limits[2])
+  }
 
   # auto-detect glmnet output: OR absent but OR_glmnet present
   glmnet_mode = use_glmnet ||
@@ -261,8 +295,25 @@ plot_feature_associations = function(results,
     dplyr::filter(results, is.finite(OR) | is.na(OR))
   }
 
+  # drop features that are never positive (i.e. depletion-only across every
+  # comparison) — same rule as select_informative_features(positive_only),
+  # applied here so it doesn't require re-fitting the (slow) glmnet models
+  if (positive_only) {
+    if (!"coef" %in% colnames(plot_data)) {
+      stop("positive_only = TRUE requires a 'coef' column (glmnet coefficient) ",
+           "in results. Did you train with select_informative_features()?")
+    }
+    keep_features = plot_data %>%
+      dplyr::group_by(feature) %>%
+      dplyr::summarise(any_positive = any(coef > 0, na.rm = TRUE), .groups = "drop") %>%
+      dplyr::filter(any_positive) %>%
+      dplyr::pull(feature)
+    plot_data = dplyr::filter(plot_data, feature %in% keep_features)
+  }
+
   if (nrow(plot_data) == 0) {
     stop("No features remain after applying max_q = ", max_q,
+         if (positive_only) " and positive_only = TRUE" else "",
          ". Try a less stringent threshold.")
   }
 
@@ -422,6 +473,18 @@ plot_feature_associations = function(results,
     # union of all features across comparisons (in shared sort order)
     all_features = levels(plot_data$feature)
     comparisons = unique(as.character(plot_data$comparison))
+    # order panels by sort_by: each comparison is ranked by the earliest
+    # position (of either side, e.g. "FL vs rest") in sort_by; comparisons
+    # involving groups absent from sort_by sort last, in their original order
+    if (!is.null(sort_by)) {
+      comp_side1 = sub(" vs .*", "", comparisons)
+      comp_side2 = sub(".* vs ", "", comparisons)
+      rank1 = match(comp_side1, sort_by)
+      rank2 = match(comp_side2, sort_by)
+      panel_rank = pmin(ifelse(is.na(rank1), Inf, rank1),
+                        ifelse(is.na(rank2), Inf, rank2))
+      comparisons = comparisons[order(panel_rank, seq_along(comparisons))]
+    }
     split_plots = lapply(setNames(comparisons, comparisons), function(comp) {
       pair = strsplit(comp, " vs ")[[1]]
       sub_results = plot_data %>%
@@ -457,18 +520,25 @@ plot_feature_associations = function(results,
         show_legend       = FALSE,
         return_data       = return_data,
         use_glmnet        = glmnet_mode,
-        mode              = "combined"
+        mode              = "combined",
+        coef_limits       = coef_limits
       )
     })
 
     # combined panel: all forests side-by-side, one shared bar on the right
     legend_pos_split = if (show_legend) "bottom" else "none"
+    # When a shared bar chart is available, feature labels are shown there
+    # instead (see bar_shared below) so every forest panel can be blanked
+    # identically — no panel carries extra margin, so all render the same
+    # width. Without a bar, panel 1 keeps the labels since nothing else
+    # can carry them.
+    has_shared_bar = !is.null(group_sizes) && length(group_count_cols) > 0
     forests = lapply(seq_along(split_plots), function(i) {
       f = split_plots[[i]]$forest +
         ggplot2::ggtitle(names(split_plots)[i]) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5,
                                                           size = base_size))
-      if (i > 1) {
+      if (has_shared_bar || i > 1) {
         f = f + ggplot2::theme(axis.text.y  = ggplot2::element_blank(),
                                axis.title.y = ggplot2::element_blank(),
                                axis.ticks.y = ggplot2::element_blank())
@@ -476,9 +546,10 @@ plot_feature_associations = function(results,
       f
     })
     # build the shared bar from the full union plot_data so features only
-    # significant in one comparison still get bars from all groups
+    # significant in one comparison still get bars from all groups; it also
+    # carries the feature labels when present (see has_shared_bar above)
     bar_shared = NULL
-    if (!is.null(group_sizes) && length(group_count_cols) > 0) {
+    if (has_shared_bar) {
       bar_shared = plot_data %>%
         dplyr::select(feature, dplyr::all_of(group_count_cols)) %>%
         dplyr::distinct() %>%
@@ -496,7 +567,7 @@ plot_feature_associations = function(results,
         ggplot2::ggplot(ggplot2::aes(x = feature, y = percent_mutated,
                                      fill = group)) +
         ggplot2::geom_col(position = "dodge", width = col_width) +
-        ggplot2::xlab("") +
+        ggplot2::xlab("Feature\n") +
         ggplot2::ylab(bar_label) +
         ggplot2::coord_flip() +
         ggplot2::scale_fill_manual(
@@ -505,7 +576,7 @@ plot_feature_associations = function(results,
           labels = labels[group_names]
         ) +
         theme_Morons(base_size = base_size) +
-        ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+        ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size),
                        legend.position = legend_pos)
     }
     forests_no_legend = lapply(forests,
@@ -515,7 +586,8 @@ plot_feature_associations = function(results,
         plotlist = c(forests_no_legend,
                      list(bar_shared + ggplot2::theme(legend.position = "none"))),
         nrow     = 1,
-        widths   = c(rep(1, length(forests)), 0.6)
+        widths   = c(rep(1, length(forests)), 0.6),
+        align    = "h"
       )
       if (show_legend) {
         bar_legend = ggpubr::get_legend(
@@ -533,7 +605,8 @@ plot_feature_associations = function(results,
     } else {
       split_plots$combined = ggpubr::ggarrange(
         plotlist = forests_no_legend,
-        nrow     = 1
+        nrow     = 1,
+        align    = "h"
       )
     }
     return(split_plots)
@@ -563,7 +636,15 @@ plot_feature_associations = function(results,
       # fill missing feature × comparison combos with NA so position_dodge
       # always allocates equal slot width regardless of which ORs were finite
       tidyr::complete(feature, comparison) %>%
-      dplyr::mutate(feature = factor(feature, levels = feature_levels))
+      dplyr::mutate(
+        feature                  = factor(feature, levels = feature_levels),
+        # truncate the plotted value so one extreme estimate (e.g. a
+        # near-complete-separation glmnet coefficient) doesn't compress the
+        # visual scale for every other feature; underlying OR is untouched
+        y_reciproc_OR            = clip_log_or(log(reciproc_OR)),
+        y_reciproc_conf_low      = if (has_ci) clip_log_or(log(reciproc_conf_low))  else NA_real_,
+        y_reciproc_conf_high     = if (has_ci) clip_log_or(log(reciproc_conf_high)) else NA_real_
+      )
 
     if (box_colour == "enriched") {
       line_var  = "depleted_group";  line_title = "Comparator"
@@ -574,12 +655,12 @@ plot_feature_associations = function(results,
     }
 
     forest = plot_data %>%
-      ggplot2::ggplot(ggplot2::aes(x = feature, y = log(reciproc_OR),
+      ggplot2::ggplot(ggplot2::aes(x = feature, y = y_reciproc_OR,
                                    group = comparison)) +
       ggplot2::geom_hline(yintercept = 0, lty = 2) +
       { if (has_ci)
           ggplot2::geom_errorbar(
-            ggplot2::aes(ymin = log(reciproc_conf_low), ymax = log(reciproc_conf_high),
+            ggplot2::aes(ymin = y_reciproc_conf_low, ymax = y_reciproc_conf_high,
                          colour = .data[[line_var]]),
             position = ggplot2::position_dodge(width = 0.6),
             width = error_width
@@ -639,7 +720,13 @@ plot_feature_associations = function(results,
           TRUE   ~ "none"
         ),
         enriched_group = factor(enriched_group, levels = c(group_names, "none")),
-        depleted_group = factor(depleted_group, levels = c(group_names, "none"))
+        depleted_group = factor(depleted_group, levels = c(group_names, "none")),
+        # truncate the plotted value so one extreme estimate (e.g. a
+        # near-complete-separation glmnet coefficient) doesn't compress the
+        # visual scale for every other feature; underlying OR is untouched
+        y_OR            = clip_log_or(log(OR)),
+        y_conf_low      = if (has_ci) clip_log_or(log(conf_low))  else NA_real_,
+        y_conf_high     = if (has_ci) clip_log_or(log(conf_high)) else NA_real_
       )
 
     if (box_colour == "enriched") {
@@ -651,11 +738,11 @@ plot_feature_associations = function(results,
     }
 
     forest = plot_data %>%
-      ggplot2::ggplot(ggplot2::aes(x = feature, y = log(OR))) +
+      ggplot2::ggplot(ggplot2::aes(x = feature, y = y_OR)) +
       ggplot2::geom_hline(yintercept = 0, lty = 2) +
       { if (has_ci)
           ggplot2::geom_errorbar(
-            ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high),
+            ggplot2::aes(ymin = y_conf_low, ymax = y_conf_high,
                          colour = .data[[line_var]]),
             width = error_width
           )

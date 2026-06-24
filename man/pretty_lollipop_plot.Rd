@@ -32,7 +32,8 @@ pretty_lollipop_plot(
   driver_region_padding = 5,
   limit_driver_regions = NULL,
   region_df = NULL,
-  coef_limits = NULL
+  coef_limits = NULL,
+  protein_length_min = NULL
 )
 }
 \arguments{
@@ -102,6 +103,16 @@ Default `NULL` (show all non-`_other`/non-`_trunc` regions).}
 overrides internal computation. Intended for use by
 [pretty_colollipop_plot()] to enforce identical region boundaries across
 both panels. Default `NULL`.}
+
+\item{protein_length_min}{Optional numeric floor for the computed protein
+length used to set the x-axis range (`max(protein_length,
+protein_length_min)`). When no domain reference is available for the
+gene, the axis otherwise falls back to the maximum observed mutation
+position in `maf_df` alone, which can differ across panels when calling
+this function once per group (e.g. from [stacked_lollipop_plot()] or
+[pretty_colollipop_plot()]). Passing the maximum observed position across
+*all* groups here keeps the x-axis range consistent across panels.
+Ignored when a domain reference is available. Default `NULL`.}
 }
 \value{
 A list of plot and data objects.
