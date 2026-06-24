@@ -6,7 +6,7 @@
 \usage{
 pretty_lollipop_plot(
   maf_df,
-  these_samples_metadata,
+  these_samples_metadata = NULL,
   gene,
   plot_title,
   refseq_id = NULL,
@@ -26,13 +26,19 @@ pretty_lollipop_plot(
   domain_label_orientation = "auto",
   aa_label_size = 3,
   point_alpha = 1,
-  point_size_range = c(2, 8)
+  point_size_range = c(2, 8),
+  highlight_driver_regions = FALSE,
+  driver_region_alpha = 0.15,
+  driver_region_padding = 5,
+  limit_driver_regions = NULL,
+  region_df = NULL,
+  coef_limits = NULL
 )
 }
 \arguments{
-\item{maf_df}{A data frame containing the mutation data.}
+\item{maf_df}{A data frame containing the mutation data. If the `RefSeq` and `Protein_position` columns are absent, a warning is issued and the plot is produced without protein domain annotation.}
 
-\item{these_samples_metadata}{Required argument. A data.frame with metadata.}
+\item{these_samples_metadata}{A data.frame with metadata. Only required when `show_rate = TRUE` (used to derive the mutation rate denominator). Default `NULL`.}
 
 \item{gene}{The gene symbol to plot.}
 
@@ -72,6 +78,30 @@ When FALSE, and combined with labelPos, the labels will only indicate the amino 
 \item{point_alpha}{Alpha to apply to the lollipop points. Default is 1 (no transparency).}
 
 \item{point_size_range}{Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8).}
+
+\item{highlight_driver_regions}{Logical. If `TRUE` and the input `maf_df`
+contains a `mutation_alias` column (added by
+[GAMBLR.utils::annotate_curated_drivers()]), draws semi-transparent
+coloured rectangles spanning the AA coordinate range of each distinct
+driver region. Excludes `_other` aliases. Default `FALSE`.}
+
+\item{driver_region_alpha}{Transparency of the driver region highlight
+boxes (0 = fully transparent, 1 = opaque). Default `0.15`.}
+
+\item{driver_region_padding}{Number of AA positions added to each side of
+a region's observed range. Prevents single-point hotspots from collapsing
+to a line. Default `5`.}
+
+\item{limit_driver_regions}{Optional character vector of region names
+(gene-prefix-stripped, e.g. `c("KAT", "HAT")`) used to restrict which
+driver region boxes are drawn. Regions not listed are silently dropped.
+Default `NULL` (show all non-`_other`/non-`_trunc` regions).}
+
+\item{region_df}{Optional data frame of pre-computed regions (columns
+`mutation_alias`, `xmin`, `xmax`, `label`, `x_mid`). When supplied,
+overrides internal computation. Intended for use by
+[pretty_colollipop_plot()] to enforce identical region boundaries across
+both panels. Default `NULL`.}
 }
 \value{
 A list of plot and data objects.

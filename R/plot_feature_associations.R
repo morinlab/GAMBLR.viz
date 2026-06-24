@@ -24,9 +24,11 @@
 #' is returned.
 #'
 #' @param results A tibble returned by
-#' [GAMBLR.utils::test_feature_associations]. Must contain at least
-#' \code{feature}, \code{OR}, \code{conf_low}, \code{conf_high},
-#' \code{p_value}, and \code{q_value}.
+#' [GAMBLR.utils::test_feature_associations] or
+#' [GAMBLR.utils::select_informative_features]. Must contain at least
+#' \code{feature} and \code{OR} (or \code{OR_glmnet}). \code{conf_low},
+#' \code{conf_high}, and \code{q_value} are optional; when absent, error bars
+#' and the \code{max_q} filter are skipped automatically.
 #' @param group_sizes Optional named numeric vector giving the total number
 #' of samples per group (e.g. \code{c(FL = 219, DLBCL = 2317)}). Used to
 #' compute percentage mutated for the bar plot. When \code{results} contains
@@ -40,7 +42,7 @@
 #' define groups. Required when \code{metadata} is supplied.
 #' @param max_q Numeric. Rows with \code{q_value} strictly above this
 #' threshold are excluded from the plot entirely; rows at or below it are
-#' always shown and coloured by enriched/comparitor group. Default is 1
+#' always shown and coloured by enriched/comparator group. Default is 1
 #' (show all).
 #' @param keepFeatureOrder Logical. If TRUE, features are plotted in the
 #' order they appear in \code{results} rather than sorted by odds ratio.
@@ -57,10 +59,10 @@
 #' \code{log(reciproc_OR)} across all comparisons. Ignored when
 #' \code{keepFeatureOrder = TRUE} or in non-pairwise mode.
 #' @param box_colour String controlling what the filled square (point) colour
-#' represents in pairwise mode. \code{"depleted"} (default): square fill shows
-#' the comparitor (depleted group) and CI line shows the enriched group.
-#' \code{"enriched"}: square fill shows the enriched group and CI line shows
-#' the comparitor. The legends swap titles accordingly.
+#' represents in pairwise mode. \code{"enriched"} (default): square fill shows
+#' the numerator (enriched group) and CI line shows the depleted group.
+#' \code{"depleted"}: square fill shows the comparator group and CI line shows
+#' the enriched group. The legends swap titles accordingly.
 #' @param comparison_name Optional string for the bar chart legend title in
 #' non-pairwise mode. Defaults to the two group names joined by " vs ".
 #' @param custom_colours Optional named vector of colours matching the group
@@ -75,13 +77,38 @@
 #' @param return_data Logical. Set to TRUE to include \code{plot_data} (the
 #' processed data frame used for plotting, with reciprocated OR display columns)
 #' in the returned list. Default is FALSE.
+#' @param sort_comparison Optional string giving a single comparison label
+#' (e.g. \code{"FL vs DLBCL"}) to use as the reference when computing the
+#' feature sort order in pairwise mode. When supplied, the sort key is derived
+#' only from rows belonging to that comparison rather than taking the maximum
+#' across all comparisons. Particularly useful in \code{mode = "split"} to
+#' anchor the shared feature order to one specific pair. Ignored when
+#' \code{keepFeatureOrder = TRUE} or in non-pairwise mode.
+#' @param use_glmnet Logical. Set to \code{TRUE} to use the \code{OR_glmnet}
+#' column (exponentiated regularized logistic regression coefficient) from
+#' [GAMBLR.utils::select_informative_features] output as the plotted value
+#' instead of a Fisher OR. Error bars are suppressed (no CI available for
+#' regularized estimates), and the x-axis is labelled \code{"Regularized
+#' ln(OR)"}. Auto-detected when \code{OR} is absent but \code{OR_glmnet}
+#' is present, so passing \code{select_informative_features()} output directly
+#' works without setting this flag. Default is \code{FALSE}.
+#' @param mode One of \code{"combined"} (default) or \code{"split"}.
+#' In \code{"combined"} mode all pairwise comparisons are overlaid on a single
+#' dodged forest plot using the two-colour encoding. In \code{"split"} mode a
+#' separate paired forest+bar plot is produced for each comparison; the feature
+#' order is derived from the full combined data (respecting \code{sort_by} and
+#' \code{keepFeatureOrder}) and is shared across all plots so rows are aligned
+#' when panels are placed side by side. Ignored in non-pairwise mode.
 #'
-#' @return A named list with elements:
-#' \code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
+#' @return In \code{"combined"} mode (or non-pairwise mode): a named list with
+#' elements \code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
 #' \code{arranged} (combined plot or just the forest plot if no bar data),
 #' and \code{results} (the filtered results tibble used for plotting).
-#' If \code{return_data = TRUE}, also includes \code{plot_data} (the fully
-#' processed data frame with display columns).
+#' If \code{return_data = TRUE}, also includes \code{plot_data}.
+#' In \code{"split"} mode: a named list keyed by comparison label
+#' (e.g. \code{"FL vs DLBCL"}), where each element is the same list structure
+#' described above, plus a \code{combined} element containing all forest plots
+#' arranged side-by-side with a single shared bar plot on the right.
 #'
 #' @import dplyr ggplot2 tidyr GAMBLR.helpers
 #' @rawNamespace import(ggpubr, except = "get_legend")
@@ -97,17 +124,20 @@
 #'   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 #'
 #' maf = get_all_coding_ssm(fl_dlbcl_meta)
-#' maf = annotate_curated_drivers(
-#'   maf,
-#'   genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
-#' )
+#' genes_driver = dplyr::filter(GAMBLR.data::lymphoma_genes,
+#'                              DLBCL_Tier == 1 | FL_Tier == 1 | BL_Tier == 1) %>%
+#'                              pull(Gene)
+#' genes_hotspot = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
+#' annotated_maf= annotate_curated_drivers(maf_data = maf,
+#'                                           genes_of_interest = unique(c(genes_hotspot,
+#'                                                                        genes_driver)))
 #'
+#'  
 #' results = test_feature_associations(
-#'   maf = maf,
+#'   maf = annotated_maf,
 #'   metadata = fl_dlbcl_meta,
 #'   comparison_column = "pathology",
 #'   comparison_values = c("FL", "DLBCL","BL"),
-#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC"),
 #'   maf_column = "mutation_alias"
 #' )
 #'
@@ -116,7 +146,8 @@
 #'   results = results,
 #'   comparison_column = "pathology",
 #'   max_q = 0.1,
-#'   sort_by = c("FL", "DLBCL","BL")
+#'   sort_by = c("FL", "DLBCL","BL"),
+#'   base_size = 6
 #' )
 #' plots$arranged
 #'
@@ -128,7 +159,14 @@
 #'   max_q = 0.1
 #' )
 #' plots$arranged
+#' 
+#' #combined mode with separate panels per comparison
+#' plot_feature_associations(results,max_q = 0.00001,
+#'  sort_by = "FL",
+#'  mode="split",
+#'   base_size = 6)
 #' }
+#' 
 #'
 plot_feature_associations = function(results,
                                      group_sizes = NULL,
@@ -137,21 +175,39 @@ plot_feature_associations = function(results,
                                      max_q = 1,
                                      keepFeatureOrder = FALSE,
                                      sort_by = NULL,
-                                     box_colour = "depleted",
+                                     box_colour = "enriched",
                                      comparison_name = NULL,
                                      custom_colours = NULL,
                                      custom_labels = NULL,
                                      base_size = 10,
                                      bar_label = "% Mutated",
                                      show_legend = TRUE,
-                                     return_data = FALSE) {
+                                     return_data = FALSE,
+                                     sort_comparison = NULL,
+                                     use_glmnet = FALSE,
+                                     mode = "combined") {
 
-  required_cols = c("feature", "OR", "conf_low", "conf_high", "p_value", "q_value")
-  missing_cols = setdiff(required_cols, colnames(results))
-  if (length(missing_cols) > 0) {
-    stop("results is missing required columns: ", paste(missing_cols, collapse = ", "),
-         "\nDid you use test_feature_associations() with test = 'fisher'?")
+  mode = match.arg(mode, c("combined", "split"))
+
+  # auto-detect glmnet output: OR absent but OR_glmnet present
+  glmnet_mode = use_glmnet ||
+    (!"OR" %in% colnames(results) && "OR_glmnet" %in% colnames(results))
+
+  if (glmnet_mode) {
+    if (!"OR_glmnet" %in% colnames(results)) {
+      stop("use_glmnet = TRUE but 'OR_glmnet' column not found. ",
+           "Pass output from select_informative_features() with run_fisher = FALSE.")
+    }
+    results = dplyr::mutate(results, OR = OR_glmnet)
   }
+
+  if (!"feature" %in% colnames(results) || !"OR" %in% colnames(results)) {
+    stop("results must contain at least 'feature' and 'OR' (or 'OR_glmnet') columns.",
+         if (!glmnet_mode) "\nDid you use test_feature_associations() with test = 'fisher'?" else "")
+  }
+
+  has_ci     = !glmnet_mode && all(c("conf_low", "conf_high") %in% colnames(results))
+  has_qvalue = "q_value" %in% colnames(results)
 
   pairwise_mode = "comparison" %in% colnames(results) &&
                   dplyr::n_distinct(results$comparison) > 1
@@ -159,6 +215,26 @@ plot_feature_associations = function(results,
   # detect group names from n_mutated_* columns
   group_count_cols = grep("^n_mutated_[^$]", colnames(results), value = TRUE)
   group_names = sub("^n_mutated_", "", group_count_cols)
+
+  # When run_fisher = FALSE there are no n_mutated_* columns; derive group names
+  # from the comparison labels so colours and factor levels are populated correctly.
+  if (length(group_names) == 0 && "comparison" %in% colnames(results)) {
+    comp_strings = unique(as.character(results$comparison))
+    all_sides = unique(c(
+      sub(" vs .*", "", comp_strings),
+      sub(".* vs ", "", comp_strings)
+    ))
+    group_names = setdiff(all_sides, "rest")
+  }
+  # In split-mode recursive calls the comparison column is stripped from
+  # sub_results, so the block above never fires.  Fall back to comparison_name.
+  if (length(group_names) == 0 && !is.null(comparison_name)) {
+    group_names = setdiff(
+      unique(c(sub(" vs .*", "", comparison_name),
+               sub(".* vs ", "", comparison_name))),
+      "rest"
+    )
+  }
 
   # resolve group_sizes: n_total_* from results takes priority,
   # then metadata, then the caller-supplied group_sizes
@@ -175,8 +251,15 @@ plot_feature_associations = function(results,
     names(group_sizes) = group_names
   }
 
-  # filter by max_q and drop infinite OR (complete separation)
-  plot_data = dplyr::filter(results, q_value <= max_q, is.finite(OR))
+  # filter by max_q when q_value is available; in glmnet mode it is absent so
+  # all selected features pass through (selection already serves as the filter).
+  # Drop Inf OR (complete separation) but keep NA OR — ggplot2 silently omits
+  # them, leaving blank space at that feature position in split mode.
+  plot_data = if (has_qvalue) {
+    dplyr::filter(results, q_value <= max_q, is.finite(OR) | is.na(OR))
+  } else {
+    dplyr::filter(results, is.finite(OR) | is.na(OR))
+  }
 
   if (nrow(plot_data) == 0) {
     stop("No features remain after applying max_q = ", max_q,
@@ -189,23 +272,41 @@ plot_feature_associations = function(results,
   if (pairwise_mode) {
     plot_data = plot_data %>%
       dplyr::mutate(
-        comp_group1       = sub(" vs .*", "", as.character(comparison)),
-        comp_group2       = sub(".* vs ", "", as.character(comparison)),
-        reciproc_OR       = dplyr::if_else(OR < 1, 1 / OR,        OR),
-        .cl               = conf_low,
-        reciproc_conf_low = dplyr::if_else(OR < 1, 1 / conf_high, conf_low),
-        reciproc_conf_high= dplyr::if_else(OR < 1, 1 / .cl,       conf_high),
-        .cl               = NULL
+        comp_group1 = sub(" vs .*", "", as.character(comparison)),
+        comp_group2 = sub(".* vs ", "", as.character(comparison)),
+        reciproc_OR = dplyr::if_else(OR < 1, 1 / OR, OR)
       )
+    if (has_ci) {
+      plot_data = plot_data %>%
+        dplyr::mutate(
+          .cl                = conf_low,
+          reciproc_conf_low  = dplyr::if_else(OR < 1, 1 / conf_high, conf_low),
+          reciproc_conf_high = dplyr::if_else(OR < 1, 1 / .cl,       conf_high),
+          .cl                = NULL
+        )
+    }
   }
 
   # order features
   if (keepFeatureOrder) {
     feature_levels = unique(as.character(plot_data$feature))
   } else if (pairwise_mode) {
+    # optionally restrict sort-key computation to a single reference comparison
+    if (!is.null(sort_comparison)) {
+      if (!sort_comparison %in% as.character(plot_data$comparison)) {
+        warning("sort_comparison '", sort_comparison,
+                "' not found in results; using all comparisons for sort.")
+        sort_data = plot_data
+      } else {
+        sort_data = dplyr::filter(plot_data,
+                                  as.character(comparison) == sort_comparison)
+      }
+    } else {
+      sort_data = plot_data
+    }
     if (is.null(sort_by)) {
-      # sort by max log(reciproc_OR) across all comparisons
-      feature_levels = plot_data %>%
+      # sort by max log(reciproc_OR) across sort_data comparisons
+      feature_levels = sort_data %>%
         dplyr::group_by(feature) %>%
         dplyr::summarise(sort_key = max(log(reciproc_OR), na.rm = TRUE), .groups = "drop") %>%
         dplyr::arrange(sort_key) %>%
@@ -225,7 +326,7 @@ plot_feature_associations = function(results,
       tier_keys = lapply(seq_along(sort_by), function(i) {
         grp = sort_by[i]
         grp_data = dplyr::filter(
-          plot_data,
+          sort_data,
           grepl(grp, as.character(comparison), fixed = TRUE) &
             ((comp_group1 == grp & OR > 1) | (comp_group2 == grp & OR < 1))
         )
@@ -241,11 +342,26 @@ plot_feature_associations = function(results,
         dplyr::ungroup() %>%
         dplyr::arrange(dplyr::desc(tier), sort_key)
       feature_levels = as.character(all_tiers$feature)
-      # features not enriched in any listed group go to the bottom
-      feature_levels = c(
-        setdiff(unique(as.character(plot_data$feature)), feature_levels),
-        feature_levels
-      )
+      # features not enriched in any listed group go to the bottom,
+      # sorted by min log(OR) ascending (most depleted at bottom,
+      # least depleted just below the enriched block)
+      remaining = setdiff(unique(as.character(plot_data$feature)), feature_levels)
+      if (length(remaining) > 0) {
+        remainder_order = sort_data %>%
+          dplyr::filter(as.character(feature) %in% remaining) %>%
+          dplyr::group_by(feature) %>%
+          dplyr::summarise(sort_key = min(log(OR), na.rm = TRUE),
+                           .groups = "drop") %>%
+          dplyr::arrange(sort_key) %>%
+          dplyr::pull(feature) %>%
+          as.character()
+        # features absent from sort_data (e.g. only in other comparisons) go lowest
+        remainder_order = c(
+          setdiff(remaining, remainder_order),
+          remainder_order
+        )
+        feature_levels = c(remainder_order, feature_levels)
+      }
     }
   } else {
     feature_levels = plot_data$feature[order(plot_data$OR)]
@@ -253,27 +369,41 @@ plot_feature_associations = function(results,
   plot_data = dplyr::mutate(plot_data,
                             feature = factor(feature, levels = feature_levels))
 
-  # sizing (base on unique features, not total rows)
+  # sizing, colours, and labels — computed here so they are available inside
+  # the split block for building the shared bar from the full plot_data
   n_features = dplyr::n_distinct(plot_data$feature)
   point_size = min(5, max(1, 50 / n_features))
   error_width = ifelse(point_size >= 5, 0.1, 0.2)
   col_width   = ifelse(point_size >= 5, 0.3, 0.5)
 
-  # colours for bar chart (group fills) — same for both modes
   if (is.null(custom_colours)) {
-    gambl_cols = GAMBLR.helpers::get_gambl_colours()
-    if (length(intersect(group_names, names(gambl_cols))) == length(group_names)) {
-      colours = gambl_cols[group_names]
+    if (!is.null(comparison_column)) {
+      # Build a minimal stub so map_metadata_to_colours can pick the right
+      # palette by column name (e.g. "lymphgen" → lymphgen colours)
+      stub_meta          = data.frame(
+        v = factor(group_names, levels = group_names),
+        stringsAsFactors = FALSE
+      )
+      names(stub_meta)   = comparison_column
+      col_map  = map_metadata_to_colours(
+        metadataColumns        = comparison_column,
+        these_samples_metadata = stub_meta
+      )
+      colours = col_map[[comparison_column]][group_names]
     } else {
-      blood_cols = GAMBLR.helpers::get_gambl_colours(classification = "blood")
-      colours = blood_cols[seq_len(length(group_names))]
-      names(colours) = group_names
+      gambl_cols = GAMBLR.helpers::get_gambl_colours()
+      if (length(intersect(group_names, names(gambl_cols))) == length(group_names)) {
+        colours = gambl_cols[group_names]
+      } else {
+        blood_cols     = GAMBLR.helpers::get_gambl_colours(classification = "blood")
+        colours        = blood_cols[seq_len(length(group_names))]
+        names(colours) = group_names
+      }
     }
   } else {
     colours = custom_colours
   }
 
-  # labels
   if (is.null(custom_labels)) {
     labels = stats::setNames(group_names, group_names)
   } else if (length(custom_labels) == length(group_names)) {
@@ -285,6 +415,130 @@ plot_feature_associations = function(results,
 
   legend_pos = if (show_legend) "bottom" else "none"
 
+  # split mode: recurse once per comparison using the shared feature order
+  if (pairwise_mode && mode == "split") {
+    drop_cols = c("comparison", "comp_group1", "comp_group2",
+                  "reciproc_OR", "reciproc_conf_low", "reciproc_conf_high")
+    # union of all features across comparisons (in shared sort order)
+    all_features = levels(plot_data$feature)
+    comparisons = unique(as.character(plot_data$comparison))
+    split_plots = lapply(setNames(comparisons, comparisons), function(comp) {
+      pair = strsplit(comp, " vs ")[[1]]
+      sub_results = plot_data %>%
+        dplyr::filter(as.character(comparison) == comp) %>%
+        dplyr::select(-dplyr::any_of(drop_cols)) %>%
+        # expand to full union: NA rows for features absent from this comparison
+        dplyr::mutate(feature = factor(feature, levels = all_features)) %>%
+        tidyr::complete(feature) %>%
+        # give NA rows q_value = 0 so they survive the max_q filter in the
+        # recursive call; OR stays NA so ggplot2 leaves the row blank
+        { if (has_qvalue) dplyr::mutate(., q_value = dplyr::coalesce(q_value, 0)) else . } %>%
+        dplyr::arrange(feature)
+      sub_meta = if (!is.null(metadata) && !is.null(comparison_column))
+        dplyr::filter(metadata, .data[[comparison_column]] %in% pair)
+      else
+        metadata
+      plot_feature_associations(
+        results           = sub_results,
+        # pass already-resolved group_sizes so the recursive call doesn't try
+        # to read from NA-filled n_total_* rows
+        group_sizes       = group_sizes,
+        metadata          = sub_meta,
+        comparison_column = comparison_column,
+        max_q             = max_q,
+        keepFeatureOrder  = TRUE,
+        sort_by           = NULL,
+        box_colour        = box_colour,
+        comparison_name   = comp,
+        custom_colours    = custom_colours,
+        custom_labels     = custom_labels,
+        base_size         = base_size,
+        bar_label         = bar_label,
+        show_legend       = FALSE,
+        return_data       = return_data,
+        use_glmnet        = glmnet_mode,
+        mode              = "combined"
+      )
+    })
+
+    # combined panel: all forests side-by-side, one shared bar on the right
+    legend_pos_split = if (show_legend) "bottom" else "none"
+    forests = lapply(seq_along(split_plots), function(i) {
+      f = split_plots[[i]]$forest +
+        ggplot2::ggtitle(names(split_plots)[i]) +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5,
+                                                          size = base_size))
+      if (i > 1) {
+        f = f + ggplot2::theme(axis.text.y  = ggplot2::element_blank(),
+                               axis.title.y = ggplot2::element_blank(),
+                               axis.ticks.y = ggplot2::element_blank())
+      }
+      f
+    })
+    # build the shared bar from the full union plot_data so features only
+    # significant in one comparison still get bars from all groups
+    bar_shared = NULL
+    if (!is.null(group_sizes) && length(group_count_cols) > 0) {
+      bar_shared = plot_data %>%
+        dplyr::select(feature, dplyr::all_of(group_count_cols)) %>%
+        dplyr::distinct() %>%
+        tidyr::pivot_longer(
+          dplyr::all_of(group_count_cols),
+          names_to  = "group",
+          values_to = "n_mutated"
+        ) %>%
+        dplyr::mutate(
+          group           = sub("^n_mutated_", "", group),
+          n_total         = group_sizes[group],
+          percent_mutated = n_mutated / n_total * 100,
+          group           = factor(group, levels = group_names)
+        ) %>%
+        ggplot2::ggplot(ggplot2::aes(x = feature, y = percent_mutated,
+                                     fill = group)) +
+        ggplot2::geom_col(position = "dodge", width = col_width) +
+        ggplot2::xlab("") +
+        ggplot2::ylab(bar_label) +
+        ggplot2::coord_flip() +
+        ggplot2::scale_fill_manual(
+          name   = "Group",
+          values = colours,
+          labels = labels[group_names]
+        ) +
+        theme_Morons(base_size = base_size) +
+        ggplot2::theme(axis.text.y = ggplot2::element_blank(),
+                       legend.position = legend_pos)
+    }
+    forests_no_legend = lapply(forests,
+      function(f) f + ggplot2::theme(legend.position = "none"))
+    if (!is.null(bar_shared)) {
+      top_row = ggpubr::ggarrange(
+        plotlist = c(forests_no_legend,
+                     list(bar_shared + ggplot2::theme(legend.position = "none"))),
+        nrow     = 1,
+        widths   = c(rep(1, length(forests)), 0.6)
+      )
+      if (show_legend) {
+        bar_legend = ggpubr::get_legend(
+          bar_shared + ggplot2::theme(legend.position = "bottom")
+        )
+        split_plots$combined = ggpubr::ggarrange(
+          top_row,
+          ggpubr::as_ggplot(bar_legend),
+          nrow    = 2,
+          heights = c(20, 2)
+        )
+      } else {
+        split_plots$combined = top_row
+      }
+    } else {
+      split_plots$combined = ggpubr::ggarrange(
+        plotlist = forests_no_legend,
+        nrow     = 1
+      )
+    }
+    return(split_plots)
+  }
+
   if (pairwise_mode) {
     comp_levels = unique(as.character(plot_data$comparison))
     # scale cap size so it stays visible regardless of feature count
@@ -292,16 +546,16 @@ plot_feature_associations = function(results,
     plot_data = plot_data %>%
       dplyr::mutate(
         comparison     = factor(comparison, levels = comp_levels),
-        # enriched/depleted derived from original OR direction
+        # enriched/depleted derived from OR direction; q_value gate only when available
         enriched_group = dplyr::case_when(
-          OR > 1 & q_value < max_q ~ comp_group1,
-          OR < 1 & q_value < max_q ~ comp_group2,
-          TRUE                     ~ "none"
+          OR > 1 & (!has_qvalue | q_value < max_q) ~ comp_group1,
+          OR < 1 & (!has_qvalue | q_value < max_q) ~ comp_group2,
+          TRUE                                      ~ "none"
         ),
         depleted_group = dplyr::case_when(
-          OR > 1 & q_value < max_q ~ comp_group2,
-          OR < 1 & q_value < max_q ~ comp_group1,
-          TRUE                     ~ "none"
+          OR > 1 & (!has_qvalue | q_value < max_q) ~ comp_group2,
+          OR < 1 & (!has_qvalue | q_value < max_q) ~ comp_group1,
+          TRUE                                      ~ "none"
         ),
         enriched_group = factor(enriched_group, levels = c(group_names, "none")),
         depleted_group = factor(depleted_group, levels = c(group_names, "none"))
@@ -312,48 +566,53 @@ plot_feature_associations = function(results,
       dplyr::mutate(feature = factor(feature, levels = feature_levels))
 
     if (box_colour == "enriched") {
-      line_var  = "depleted_group";  line_title = "Comparitor"
+      line_var  = "depleted_group";  line_title = "Comparator"
       point_var = "enriched_group";  point_title = "Enriched in"
     } else {
       line_var  = "enriched_group";  line_title = "Enriched in"
-      point_var = "depleted_group";  point_title = "Comparitor"
+      point_var = "depleted_group";  point_title = "Comparator"
     }
 
     forest = plot_data %>%
       ggplot2::ggplot(ggplot2::aes(x = feature, y = log(reciproc_OR),
                                    group = comparison)) +
       ggplot2::geom_hline(yintercept = 0, lty = 2) +
-      ggplot2::geom_errorbar(
-        ggplot2::aes(ymin = log(reciproc_conf_low), ymax = log(reciproc_conf_high),
-                     colour = .data[[line_var]]),
-        position = ggplot2::position_dodge(width = 0.6),
-        width = error_width
-      ) +
+      { if (has_ci)
+          ggplot2::geom_errorbar(
+            ggplot2::aes(ymin = log(reciproc_conf_low), ymax = log(reciproc_conf_high),
+                         colour = .data[[line_var]]),
+            position = ggplot2::position_dodge(width = 0.6),
+            width = error_width
+          )
+        else
+          ggplot2::geom_blank()
+      } +
       ggplot2::geom_point(
-        ggplot2::aes(fill = .data[[point_var]]),
+        ggplot2::aes(fill = .data[[point_var]],
+                     colour = ggplot2::after_scale(fill)),
         position = ggplot2::position_dodge(width = 0.6),
         size = point_size,
-        shape = 22,
-        colour = "black"
+        shape = 22
       ) +
       ggplot2::coord_flip() +
       ggplot2::scale_colour_manual(
         name   = line_title,
         values = c(colours, none = "grey60"),
         breaks = group_names,
-        guide  = ggplot2::guide_legend(
-          override.aes = list(shape = NA, linewidth = 1)
-        )
+        guide  = if (has_ci)
+          ggplot2::guide_legend(override.aes = list(shape = NA, linewidth = 1))
+        else
+          "none"
       ) +
       ggplot2::scale_fill_manual(
         name   = point_title,
         values = c(colours, none = "grey60"),
         breaks = group_names,
         guide  = ggplot2::guide_legend(
-          override.aes = list(shape = 22, size = 3, colour = "black")
+          override.aes = list(shape = 22, size = 3)
         )
       ) +
-      ggplot2::ylab("ln(Odds Ratio)") +
+      ggplot2::ylab(if (glmnet_mode) "Regularized ln(OR)" else "ln(Odds Ratio)") +
       ggplot2::xlab("Feature\n") +
       theme_Morons(base_size = base_size) +
       ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size))
@@ -362,17 +621,75 @@ plot_feature_associations = function(results,
       comparison_name = paste(group_names, collapse = " vs ")
     }
 
-    # forest plot (single comparison)
+    # extract the two groups from comparison_name rather than group_names[1/2]
+    # because in split mode sub-results still carry all groups' n_mutated_* cols
+    pair = strsplit(comparison_name, " vs ")[[1]]
+    g1 = pair[1]; g2 = pair[2]
+
+    plot_data = plot_data %>%
+      dplyr::mutate(
+        enriched_group = dplyr::case_when(
+          OR > 1 ~ g1,
+          OR < 1 ~ g2,
+          TRUE   ~ "none"
+        ),
+        depleted_group = dplyr::case_when(
+          OR > 1 ~ g2,
+          OR < 1 ~ g1,
+          TRUE   ~ "none"
+        ),
+        enriched_group = factor(enriched_group, levels = c(group_names, "none")),
+        depleted_group = factor(depleted_group, levels = c(group_names, "none"))
+      )
+
+    if (box_colour == "enriched") {
+      line_var   = "depleted_group"; line_title  = "Comparator"
+      point_var  = "enriched_group"; point_title = "Enriched in"
+    } else {
+      line_var   = "enriched_group"; line_title  = "Enriched in"
+      point_var  = "depleted_group"; point_title = "Comparator"
+    }
+
     forest = plot_data %>%
       ggplot2::ggplot(ggplot2::aes(x = feature, y = log(OR))) +
-      ggplot2::geom_point(size = point_size, shape = "square") +
       ggplot2::geom_hline(yintercept = 0, lty = 2) +
-      ggplot2::coord_flip() +
-      ggplot2::geom_errorbar(
-        ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high)),
-        width = error_width
+      { if (has_ci)
+          ggplot2::geom_errorbar(
+            ggplot2::aes(ymin = log(conf_low), ymax = log(conf_high),
+                         colour = .data[[line_var]]),
+            width = error_width
+          )
+        else
+          ggplot2::geom_blank()
+      } +
+      ggplot2::geom_point(
+        ggplot2::aes(fill = .data[[point_var]],
+                     colour = ggplot2::after_scale(fill)),
+        size = point_size, shape = 22
       ) +
-      ggplot2::ylab("ln(Odds Ratio)") +
+      ggplot2::coord_flip() +
+      ggplot2::scale_colour_manual(
+        name     = line_title,
+        values   = c(colours, none = "grey60"),
+        breaks   = group_names,
+        na.value = "grey60",
+        drop     = FALSE,
+        guide    = if (has_ci)
+          ggplot2::guide_legend(override.aes = list(shape = NA, linewidth = 1))
+        else
+          "none"
+      ) +
+      ggplot2::scale_fill_manual(
+        name     = point_title,
+        values   = c(colours, none = "grey60"),
+        breaks   = group_names,
+        na.value = "grey60",
+        drop     = FALSE,
+        guide    = ggplot2::guide_legend(
+          override.aes = list(shape = 22, size = 3)
+        )
+      ) +
+      ggplot2::ylab(if (glmnet_mode) "Regularized ln(OR)" else "ln(Odds Ratio)") +
       ggplot2::xlab("Feature\n") +
       theme_Morons(base_size = base_size) +
       ggplot2::theme(axis.text.y = ggplot2::element_text(size = base_size))

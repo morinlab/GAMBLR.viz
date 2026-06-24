@@ -6,8 +6,8 @@
 #' can then be visualized with the given maf data. Silent mutations can be visualized setting
 #' include_silent to TRUE.
 #'
-#' @param maf_df A data frame containing the mutation data.
-#' @param these_samples_metadata Required argument. A data.frame with metadata.
+#' @param maf_df A data frame containing the mutation data. If the `RefSeq` and `Protein_position` columns are absent, a warning is issued and the plot is produced without protein domain annotation.
+#' @param these_samples_metadata A data.frame with metadata. Only required when `show_rate = TRUE` (used to derive the mutation rate denominator). Default `NULL`.
 #' @param gene The gene symbol to plot.
 #' @param plot_title Optional, the title of the plot. Default is gene.
 #' @param refseq_id Insert a specific NM_xxx value of interest
@@ -27,7 +27,26 @@
 #' @param domain_label_orientation Manually override the orientation of the protein domain labels with "horizontal" or "vertical". Default is "auto", inferred from the size of the smallest domain relative to the protein length. 
 #' @param aa_label_size Font size for the amino acid labels. Default is 3.
 #' @param point_alpha Alpha to apply to the lollipop points. Default is 1 (no transparency).
-#' @param point_size_range Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8). 
+#' @param point_size_range Vector of length 2 specifiying the size range of points on the lollipops. Default is c(2,8).
+#' @param highlight_driver_regions Logical. If `TRUE` and the input `maf_df`
+#'   contains a `mutation_alias` column (added by
+#'   [GAMBLR.utils::annotate_curated_drivers()]), draws semi-transparent
+#'   coloured rectangles spanning the AA coordinate range of each distinct
+#'   driver region. Excludes `_other` aliases. Default `FALSE`.
+#' @param driver_region_alpha Transparency of the driver region highlight
+#'   boxes (0 = fully transparent, 1 = opaque). Default `0.15`.
+#' @param driver_region_padding Number of AA positions added to each side of
+#'   a region's observed range. Prevents single-point hotspots from collapsing
+#'   to a line. Default `5`.
+#' @param limit_driver_regions Optional character vector of region names
+#'   (gene-prefix-stripped, e.g. `c("KAT", "HAT")`) used to restrict which
+#'   driver region boxes are drawn. Regions not listed are silently dropped.
+#'   Default `NULL` (show all non-`_other`/non-`_trunc` regions).
+#' @param region_df Optional data frame of pre-computed regions (columns
+#'   `mutation_alias`, `xmin`, `xmax`, `label`, `x_mid`). When supplied,
+#'   overrides internal computation. Intended for use by
+#'   [pretty_colollipop_plot()] to enforce identical region boundaries across
+#'   both panels. Default `NULL`.
 #'
 #' @return A list of plot and data objects.
 #'
@@ -85,7 +104,7 @@
 #'}
 pretty_lollipop_plot <- function(
     maf_df,
-    these_samples_metadata,
+    these_samples_metadata = NULL,
     gene,
     plot_title,
     refseq_id = NULL,
@@ -104,8 +123,14 @@ pretty_lollipop_plot <- function(
     domain_label_size = 4,
     domain_label_orientation = "auto", 
     aa_label_size = 3, 
-    point_alpha = 1, 
-    point_size_range = c(2, 8)
+    point_alpha = 1,
+    point_size_range = c(2, 8),
+    highlight_driver_regions = FALSE,
+    driver_region_alpha      = 0.15,
+    driver_region_padding    = 5,
+    limit_driver_regions     = NULL,
+    region_df                = NULL,
+    coef_limits              = NULL
 ){
     ##### Input checks #####
     if(missing(gene)){
@@ -116,10 +141,9 @@ pretty_lollipop_plot <- function(
         plot_title = gene
     }
     
-    if (!"RefSeq" %in% colnames(maf_df) & !"Protein_position" %in% colnames(maf_df)) {
-        stop("Error: The provided maf_df is missing the 'RefSeq' and/or 'Protein_position' column. 
-              Ensure that get_ssm_by_samples() is run with basic_columns = FALSE, 
-              or that you have updated GAMBLR.data to the latest version.")
+    no_domain_mode <- !"RefSeq" %in% colnames(maf_df) || !"Protein_position" %in% colnames(maf_df)
+    if (no_domain_mode) {
+        warning("maf_df is missing 'RefSeq' and/or 'Protein_position'; plotting without protein domain information.")
     }
     
     if(!is.null(labelPos) & !is.null(labelHGVSp)){
@@ -144,101 +168,85 @@ pretty_lollipop_plot <- function(
     }
     
     maf_df <- as.data.frame(maf_df) %>%
-        filter(
-            Hugo_Symbol == gene
-        ) %>%
-        filter(
-            Variant_Classification %in% variants 
-        ) %>% 
-        # Separate RefSeq column if it is comma-delimited
-        separate_longer_delim(
-            RefSeq, 
-            delim = ","
-            ) %>% 
-        mutate(
-            RefSeq = str_remove(RefSeq, "[.].*"), 
-            aa.length = str_remove(Protein_position, ".*/")
-        )
-        
-    # Verify that all variants belong to a single gene model
-    if(length(unique(maf_df$aa.length)) > 1){
-        maf_df %>% 
-            count(
-                Hugo_Symbol, 
-                Transcript_ID,
-                RefSeq, 
-                aa.length
-            ) %>% 
-            print()
-        warning("The provided maf_df has more than one gene model for the specified gene. 
-            Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
-        maf_df %>% 
-            group_by(RefSeq) %>% 
-            filter(n() == max(n())) %>% 
-            ungroup()
-    }
+        filter(Hugo_Symbol == gene, Variant_Classification %in% variants)
 
-    ##### Load the protein domain table for the current gene #####
-    
-    if(!is.null(refseq_id)){
-        # User-specified refseq_id
-        refseq_id = str_remove(refseq_id, "[.].*") # Remove version number if present
-        protein_domain_subset <- protein_domains %>% 
-            filter(HGNC == gene) %>% 
-            filter(refseq.ID == refseq_id)
-        if(length(unique(protein_domain_subset$refseq.ID)) == 0){
-            warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
+    if (!no_domain_mode) {
+        maf_df <- maf_df %>%
+            # Separate RefSeq column if it is comma-delimited
+            separate_longer_delim(RefSeq, delim = ",") %>%
+            mutate(
+                RefSeq = str_remove(RefSeq, "[.].*"),
+                aa.length = str_remove(Protein_position, ".*/")
+            )
+
+        # Verify that all variants belong to a single gene model
+        if (length(unique(maf_df$aa.length)) > 1) {
+            maf_df %>%
+                count(Hugo_Symbol, Transcript_ID, RefSeq, aa.length) %>%
+                print()
+            warning("The provided maf_df has more than one gene model for the specified gene.
+            Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
+            maf_df <- maf_df %>%
+                group_by(RefSeq) %>%
+                filter(n() == max(n())) %>%
+                ungroup()
+        }
+
+        ##### Load the protein domain table for the current gene #####
+
+        if (!is.null(refseq_id)) {
+            refseq_id <- str_remove(refseq_id, "[.].*")
+            protein_domain_subset <- protein_domains %>%
+                filter(HGNC == gene, refseq.ID == refseq_id)
+            if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
+                warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
+                protein_domain_subset <- data.frame()
+            }
+        } else {
+            protein_domain_subset <- protein_domains %>%
+                filter(HGNC == gene) %>%
+                filter(refseq.ID %in% unique(maf_df$RefSeq)) %>%
+                filter(aa.length == unique(maf_df$aa.length))
+        }
+
+        if (length(unique(protein_domain_subset$refseq.ID)) > 1) {
+            print(protein_domain_subset)
+            protein_domain_subset <- protein_domain_subset %>%
+                filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
+            message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
+        Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
+        } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
+            warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
             protein_domain_subset <- data.frame(
-                
+                HGNC = gene,
+                Start = -1,
+                End = -1,
+                Label = "",
+                refseq.ID = NA_character_,
+                aa.length = as.numeric(unique(maf_df$aa.length))
             )
         }
-    } else {
-        # Infer refseq_id to use from the maf_df
-        # Use the length of the gene model from the maf to identify the correct RefSeq ID
-        protein_domain_subset <- protein_domains %>% 
-            filter(HGNC == gene) %>% 
-            filter(refseq.ID %in% unique(maf_df$RefSeq)) %>%
-            filter(aa.length == unique(maf_df$aa.length))
-    }
-    
-    # Verify that this reduces down to a single gene model
-    if(length(unique(protein_domain_subset$refseq.ID)) > 1){
-        print(protein_domain_subset)
-        protein_domain_subset <- protein_domain_subset %>%
-            filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
-        message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
-        Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
-    } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
-       warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
-       protein_domain_subset <- data.frame(
-            HGNC = gene,
-            Start  = -1,
-            End = -1,
-            Label = "",
-            aa.length = as.numeric(unique(maf_df$aa.length))
-        )
     }
 
     ##### Count mutations according to user specified options #####
-    gene_df <- maf_df %>%
-        filter(
-            RefSeq == unique(protein_domain_subset$refseq.ID)
-        ) %>%
+    gene_df <- maf_df
+
+    if (!no_domain_mode && !is.na(protein_domain_subset$refseq.ID[1])) {
+        gene_df <- gene_df %>% filter(RefSeq == unique(protein_domain_subset$refseq.ID))
+    }
+
+    gene_df <- gene_df %>%
         mutate(
             AA = as.numeric(
                 gsub(
                     "[^0-9]+",
                     "",
-                    gsub(
-                        "([0-9]+).*",
-                        "\\1",
-                        HGVSp_Short
-                    )
+                    gsub("([0-9]+).*", "\\1", HGVSp_Short)
                 )
             )
         ) %>%
         mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
-        arrange(AA) 
+        arrange(AA)
         
     if(by_allele){
         # Keep different HGVSp values even if AA position is the same
@@ -306,74 +314,116 @@ pretty_lollipop_plot <- function(
     }
 
     ##### Generate the final domain_data object and make the domain_plot #####
-    domain_data <- protein_domain_subset %>% 
-        data.frame(
-            start.points = protein_domain_subset$Start,
-            end.points = protein_domain_subset$End,
-            text.label = protein_domain_subset$Label,
-            color = protein_domain_subset$Label
-        )
+    if (!no_domain_mode) {
+        domain_data <- protein_domain_subset %>%
+            data.frame(
+                start.points = protein_domain_subset$Start,
+                end.points = protein_domain_subset$End,
+                text.label = protein_domain_subset$Label,
+                color = protein_domain_subset$Label
+            )
+        domain_data$text.position <- (domain_data$start.points + domain_data$end.points) / 2
 
-    domain_data$text.position <- (domain_data$start.points + domain_data$end.points) / 2
-
-    domain_plot <- draw_domain_plot(
-        domain_data, 
-        font = font, 
-        domain_label_size = domain_label_size,
-        domain_label_orientation = domain_label_orientation, 
-        x_axis_size = x_axis_size
+        domain_plot <- draw_domain_plot(
+            domain_data,
+            font = font,
+            domain_label_size = domain_label_size,
+            domain_label_orientation = domain_label_orientation,
+            x_axis_size = x_axis_size
         )
+        protein_length <- domain_data$aa.length[1]
+    } else {
+        domain_data <- NULL
+        domain_plot <- NULL
+        protein_length <- max(gene_counts$AA, na.rm = TRUE)
+    }
+
+    ##### Resolve driver region highlight data #####
+    final_region_df <- NULL
+    if (!is.null(region_df)) {
+        final_region_df <- region_df
+    } else if (highlight_driver_regions) {
+        if ("mutation_alias" %in% colnames(gene_df)) {
+            final_region_df <- compute_driver_regions(
+                gene_df, gene, driver_region_padding
+            )
+            if (nrow(final_region_df) == 0) final_region_df <- NULL
+        } else {
+            warning(
+                "highlight_driver_regions = TRUE but 'mutation_alias' column ",
+                "not found in maf_df. Run annotate_curated_drivers() first."
+            )
+        }
+    }
+
+    if (!is.null(final_region_df) && !is.null(limit_driver_regions)) {
+        final_region_df <- dplyr::filter(
+            final_region_df, label %in% limit_driver_regions
+        )
+        if (nrow(final_region_df) == 0) final_region_df <- NULL
+    }
 
     ##### Generate the final mutation_plot object #####
     mutation_plot <- draw_mutation_plot(
-        gene_counts = gene_counts, 
-        plot_title = plot_title,
-        protein_length = domain_data$aa.length[1],
-        colours_manual = get_gambl_colours("mutation"), 
-        font = font, 
-        mirror = mirror, 
-        aa_label_size = aa_label_size,
-        title_size = title_size, 
-        max_count = max_count, 
-        point_size_range = point_size_range,
-        point_alpha = point_alpha
+        gene_counts          = gene_counts,
+        plot_title           = plot_title,
+        protein_length       = protein_length,
+        colours_manual       = get_gambl_colours("mutation"),
+        font                 = font,
+        mirror               = mirror,
+        aa_label_size        = aa_label_size,
+        title_size           = title_size,
+        max_count            = max_count,
+        point_size_range     = point_size_range,
+        point_alpha          = point_alpha,
+        region_df            = final_region_df,
+        region_alpha         = driver_region_alpha,
+        coef_limits          = coef_limits
     )
-    
-    if(show_rate){
+
+    if (show_rate) {
+        if (is.null(these_samples_metadata)) {
+            stop("these_samples_metadata is required when show_rate = TRUE.")
+        }
         denominator <- length(unique(these_samples_metadata$sample_id))
-        numerator <- length(unique(gene_df[gene_df$RefSeq == protein_domain_subset$refseq.ID[1],]$Tumor_Sample_Barcode))
+        if (!no_domain_mode) {
+            numerator <- length(unique(gene_df[gene_df$RefSeq == protein_domain_subset$refseq.ID[1], ]$Tumor_Sample_Barcode))
+        } else {
+            numerator <- length(unique(gene_df$Tumor_Sample_Barcode))
+        }
         somatic_mutation_rate <- round((numerator / denominator) * 100, 1)
-        
-        mutation_plot <- mutation_plot + 
+
+        mutation_plot <- mutation_plot +
             ggtitle(
-                plot_title, 
-                subtitle = paste0(
-                    "Somatic mutation rate: ", 
-                    somatic_mutation_rate, 
-                    "%"
-                )
-            ) + 
+                plot_title,
+                subtitle = paste0("Somatic mutation rate: ", somatic_mutation_rate, "%")
+            ) +
             theme(
-                text = element_text(family = font), 
+                text = element_text(family = font),
                 plot.subtitle = element_text(hjust = 0.5)
             )
     }
+
     ##### Combine domain and mutation plots #####
-    combined_plot <- ggpubr::ggarrange(
-        mutation_plot,
-        domain_plot, 
-        ncol = 1, 
-        align = "v", 
-        heights = c(3, 1), 
-        common.legend = TRUE, 
-        legend = "right"
-    )
+    if (!no_domain_mode) {
+        combined_plot <- ggpubr::ggarrange(
+            mutation_plot,
+            domain_plot,
+            ncol = 1,
+            align = "v",
+            heights = c(3, 1),
+            common.legend = TRUE,
+            legend = "right"
+        )
+    } else {
+        combined_plot <- mutation_plot
+    }
 
     to_return <- list(
         plot = combined_plot,
-        domain_plot = domain_plot, 
-        mutation_plot = mutation_plot, 
-        gene_counts = gene_counts, 
+        domain_plot = domain_plot,
+        mutation_plot = mutation_plot,
+        gene_counts = gene_counts,
         domain_data = domain_data
     )
     return(to_return)
@@ -488,21 +538,84 @@ draw_domain_plot <- function(
 }
 
 draw_mutation_plot <- function(
-    gene_counts, 
-    plot_title, 
-    protein_length, 
-    font = "sans", 
-    colours_manual, 
+    gene_counts,
+    plot_title,
+    protein_length,
+    font = "sans",
+    colours_manual,
     mirror = FALSE,
-    max_count, 
+    max_count,
     point_size_range,
     title_size,
-    aa_label_size, 
-    point_alpha
+    aa_label_size,
+    point_alpha,
+    region_df    = NULL,
+    region_alpha = 0.15,
+    coef_limits  = NULL
     ){
-    
+
     nudge_factor <- ifelse(mirror, -0.5, 0.5)
-    mutation_plot <- ggplot() +
+
+    mutation_plot <- ggplot()
+
+    if (!is.null(region_df) && nrow(region_df) > 0) {
+        has_coef <- "coef" %in% colnames(region_df)
+        if (has_coef) {
+            coef_limits_vec <- if (!is.null(coef_limits)) {
+                if (length(coef_limits) == 2L) coef_limits else c(-coef_limits, coef_limits)
+            } else {
+                lim <- max(abs(region_df$coef), na.rm = TRUE)
+                if (lim == 0) lim <- 1
+                c(-lim, lim)
+            }
+            mutation_plot <- mutation_plot +
+                geom_rect(
+                    data        = region_df,
+                    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf,
+                        fill = coef),
+                    alpha       = region_alpha,
+                    inherit.aes = FALSE
+                ) +
+                scale_fill_gradient2(
+                    low      = "#2166AC",
+                    mid      = "white",
+                    high     = "#D6604D",
+                    midpoint = 0,
+                    limits   = coef_limits_vec,
+                    oob      = scales::squish,
+                    name     = "Coef"
+                ) +
+                geom_text(
+                    data        = if ("show_label" %in% colnames(region_df))
+                                      dplyr::filter(region_df, show_label)
+                                  else region_df,
+                    aes(x = x_mid,
+                        y     = if (mirror) -Inf else Inf,
+                        label = label),
+                    vjust       = if (mirror) -0.5 else 1.5,
+                    size        = aa_label_size,
+                    family      = font,
+                    inherit.aes = FALSE
+                )
+        } else {
+            n_reg   <- nrow(region_df)
+            reg_pal <- stats::setNames(
+                grDevices::hcl.colors(n_reg, palette = "Dark 3"),
+                region_df$label
+            )
+            mutation_plot <- mutation_plot +
+                geom_rect(
+                    data        = region_df,
+                    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf,
+                        fill = label),
+                    alpha       = region_alpha,
+                    inherit.aes = FALSE
+                ) +
+                scale_fill_manual(name = "Driver\nRegion", values = reg_pal)
+        }
+    }
+
+    mutation_plot <- mutation_plot +
         geom_segment(
             data = gene_counts, 
             aes(
@@ -578,6 +691,26 @@ draw_mutation_plot <- function(
             name = "Variant\nClassification", 
             values = colours_manual
         )+
-    guides(color = guide_legend(override.aes = list(size = 3))) 
+    guides(color = guide_legend(override.aes = list(size = 3)))
     return(mutation_plot)
+}
+
+compute_driver_regions <- function(maf_with_aa, gene, padding = 5) {
+    maf_with_aa %>%
+        dplyr::filter(
+            !grepl("_other$|_trunc$", mutation_alias),
+            !is.na(mutation_alias),
+            !is.na(AA)
+        ) %>%
+        dplyr::group_by(mutation_alias) %>%
+        dplyr::summarise(
+            xmin = min(AA, na.rm = TRUE) - padding,
+            xmax = max(AA, na.rm = TRUE) + padding,
+            .groups = "drop"
+        ) %>%
+        dplyr::mutate(
+            xmin  = pmax(xmin, 1L),
+            label = sub(paste0("^", gene, "_"), "", mutation_alias),
+            x_mid = (xmin + xmax) / 2
+        )
 }
