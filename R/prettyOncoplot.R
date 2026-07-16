@@ -1356,6 +1356,11 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(numericMetadataColumns)) {
     metadata_df <- dplyr::filter(these_samples_metadata, sample_id %in%
       patients_kept) %>%
+      # a sample can legitimately have more than one row here (e.g. both a
+      # genome and a capture seq_type row), which column_to_rownames() below
+      # can't tolerate -- annotation columns don't vary by seq_type, so
+      # keeping the first row per sample_id is safe.
+      dplyr::distinct(sample_id, .keep_all = TRUE) %>%
       column_to_rownames("sample_id") %>%
       dplyr::select(all_of(c(
         metadataColumns, numericMetadataColumns,
@@ -1397,6 +1402,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   } else {
     metadata_df <- dplyr::filter(these_samples_metadata, sample_id %in%
       patients_kept) %>%
+      # see comment in the numericMetadataColumns branch above
+      dplyr::distinct(sample_id, .keep_all = TRUE) %>%
       column_to_rownames("sample_id") %>%
       dplyr::select(all_of(c(metadataColumns, expressionColumns)))
   }
