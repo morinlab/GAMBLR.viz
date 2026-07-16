@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-06-15 12:23:20.342616 ==="
+[1] "=== STARTED AT 2026-07-16 16:38:02.924872 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 40 example files ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+── Running 41 example files ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
 Running example for function: ashm_multi_rainbow_plot
@@ -336,6 +336,22 @@ Running example for function: prettyCoOncoplot
 +     label1 = "DLBCL", label2 = "FL", simplify_annotation = TRUE, 
 +     minMutationPercent = 5)
 
+> meta <- get_gambl_metadata()
+
+> meta <- meta %>% dplyr::filter(pathology %in% c("DLBCL", 
++     "FL", "BL"))
+
+> ssm <- get_all_coding_ssm(these_samples_metadata = meta)
+
+> lymphomagenes <- dplyr::filter(lymphoma_genes, FL_Tier == 
++     1 | DLBCL_Tier == 1 | BL_Tier == 1) %>% dplyr::pull(Gene)
+
+> prettyCoOncoplot(maf = ssm, metadata = meta, comparison_column = "pathology", 
++     genes = lymphomagenes, metadataColumns = c("pathology", "lymphgen", 
++         "pairing_status"), metadataBarHeight = 7, fontSizeGene = 12, 
++     metadataBarFontsize = 9, legend_row = 2, simplify_annotation = TRUE, 
++     minMutationPercent = 5)
+
 > cat("Running example for function: prettyForestPlot\n")
 Running example for function: prettyForestPlot
 
@@ -386,7 +402,10 @@ Running example for function: prettyForestPlot
 > cat("Running example for function: prettyGeneCloud\n")
 Running example for function: prettyGeneCloud
 
-> maf = GAMBLR.data::sample_data$grch37$maf
+> cell_line_meta <- GAMBLR.open::get_gambl_metadata() %>% 
++     dplyr::filter(cohort == "DLBCL_cell_lines")
+
+> maf = GAMBLR.open::get_coding_ssm(these_samples_metadata = cell_line_meta)
 
 > prettyGeneCloud(maf_df = maf, wordcloud_version = 2, 
 +     zoomout = 0.3)
@@ -509,9 +528,12 @@ running examples for prettyRainfallPlot
 
 > suppressPackageStartupMessages(library(GAMBLR.open))
 
-> maf = GAMBLR.data::sample_data$grch37$maf
+> cell_line_meta <- get_gambl_metadata() %>% dplyr::filter(cohort == 
++     "DLBCL_cell_lines")
 
-> prettyRainfallPlot(this_sample_id = "14-35026", this_maf = maf, 
+> maf = get_ssm_by_samples(these_samples_metadata = cell_line_meta)
+
+> prettyRainfallPlot(this_sample_id = "DOHH-2", this_maf = maf, 
 +     label_sv = FALSE, chromosome = "3")
 
 > cat("Running example for function: prettyStackedOncoplot\n")
@@ -587,4 +609,4 @@ Running example for function: prettyStackedOncoplot
 +             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
 +         secondPlotHeight = 9)
 + }))
-[1] "=== COMPLETED AT 2026-06-15 12:26:45.15556 ==="
+[1] "=== COMPLETED AT 2026-07-16 16:40:45.381648 ==="
