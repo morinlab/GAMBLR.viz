@@ -35,7 +35,7 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' suppressMessages(
 #'   suppressWarnings({
 #' 
@@ -65,7 +65,7 @@
 #' 
 #' \dontrun{
 #'  # Or, with GAMBLR.results:
-#'  library(GAMBLR.results)
+#'  suppressPackageStartupMessages(library(GAMBLR.results))
 #'  metadata <- GAMBLR.results::get_gambl_metadata() %>%
 #'     dplyr::filter(cohort %in% c("BL_Pediatric", "BL_Adult"))
 #' 
@@ -107,276 +107,277 @@ pretty_lollipop_plot <- function(
     point_alpha = 1, 
     point_size_range = c(2, 8)
 ){
-    ##### Input checks #####
-    if(missing(gene)){
-        stop("Please provide a gene...")
-    }
-
-    if(missing(plot_title)){
-        plot_title = gene
-    }
-    
-    if (!"RefSeq" %in% colnames(maf_df) & !"Protein_position" %in% colnames(maf_df)) {
-        stop("Error: The provided maf_df is missing the 'RefSeq' and/or 'Protein_position' column. 
+  ##### Input checks #####
+  if(missing(gene)){
+    stop("Please provide a gene...")
+  }
+  
+  if(missing(plot_title)){
+    plot_title = gene
+  }
+  
+  if (!"RefSeq" %in% colnames(maf_df) & !"Protein_position" %in% colnames(maf_df)) {
+    stop("Error: The provided maf_df is missing the 'RefSeq' and/or 'Protein_position' column. 
               Ensure that get_ssm_by_samples() is run with basic_columns = FALSE, 
               or that you have updated GAMBLR.data to the latest version.")
-    }
-    
-    if(!is.null(labelPos) & !is.null(labelHGVSp)){
-        stop("Please provide either labelPos or labelHGVSp, not both.")
-    }
-    
-    if(!is.null(labelHGVSp) & !by_allele){
-        stop("Please set by_allele = TRUE when using labelHGVSp.
+  }
+  
+  if(!is.null(labelPos) & !is.null(labelHGVSp)){
+    stop("Please provide either labelPos or labelHGVSp, not both.")
+  }
+  
+  if(!is.null(labelHGVSp) & !by_allele){
+    stop("Please set by_allele = TRUE when using labelHGVSp.
         When by_allele = FALSE, all alleles at the same position are counted together and HGVSp information is lost. ")
-    }
-
-    
-    ##### Subset the maf to gene and variants of interest #####
-    
-    if(include_silent){
-        variants <- coding_class
-    } else {
-        variants <- coding_class[!coding_class %in% c(
-            "Silent",
-            "Splice_Region" # Is this useful? Aren't these all intronic? Won't affect cds
-        )]
-    }
-    
-    maf_df <- as.data.frame(maf_df) %>%
-        filter(
-            Hugo_Symbol == gene
-        ) %>%
-        filter(
-            Variant_Classification %in% variants 
-        ) %>% 
-        # Separate RefSeq column if it is comma-delimited
-        separate_longer_delim(
-            RefSeq, 
-            delim = ","
-            ) %>% 
-        mutate(
-            RefSeq = str_remove(RefSeq, "[.].*"), 
-            aa.length = str_remove(Protein_position, ".*/")
-        )
-        
-    # Verify that all variants belong to a single gene model
-    if(length(unique(maf_df$aa.length)) > 1){
-        maf_df %>% 
-            count(
-                Hugo_Symbol, 
-                Transcript_ID,
-                RefSeq, 
-                aa.length
-            ) %>% 
-            print()
-        warning("The provided maf_df has more than one gene model for the specified gene. 
+  }
+  
+  
+  ##### Subset the maf to gene and variants of interest #####
+  
+  if(include_silent){
+    variants <- coding_class
+  } else {
+    variants <- coding_class[!coding_class %in% c(
+      "Silent",
+      "Splice_Region" # Is this useful? Aren't these all intronic? Won't affect cds
+    )]
+  }
+  
+  maf_df <- as.data.frame(maf_df) %>%
+    filter(
+      Hugo_Symbol == gene
+    ) %>%
+    filter(
+      Variant_Classification %in% variants 
+    ) %>% 
+    # Separate RefSeq column if it is comma-delimited
+    separate_longer_delim(
+      RefSeq, 
+      delim = ","
+    ) %>% 
+    mutate(
+      RefSeq = str_remove(RefSeq, "[.].*"), 
+      aa.length = str_remove(Protein_position, ".*/")
+    )
+  
+  # Verify that all variants belong to a single gene model
+  if(length(unique(maf_df$aa.length)) > 1){
+    maf_df %>% 
+      count(
+        Hugo_Symbol, 
+        Transcript_ID,
+        RefSeq, 
+        aa.length
+      ) %>% 
+      print()
+    warning("The provided maf_df has more than one gene model for the specified gene. 
             Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
-        maf_df %>% 
-            group_by(RefSeq) %>% 
-            filter(n() == max(n())) %>% 
-            ungroup()
+    maf_df %>% 
+      group_by(RefSeq) %>% 
+      filter(n() == max(n())) %>% 
+      ungroup()
+  }
+  
+  ##### Load the protein domain table for the current gene #####
+  
+  if(!is.null(refseq_id)){
+    # User-specified refseq_id
+    refseq_id = str_remove(refseq_id, "[.].*") # Remove version number if present
+    protein_domain_subset <- protein_domains %>% 
+      filter(HGNC == gene) %>% 
+      filter(refseq.ID == refseq_id)
+    if(length(unique(protein_domain_subset$refseq.ID)) == 0){
+      warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
+      protein_domain_subset <- data.frame(
+        
+      )
     }
-
-    ##### Load the protein domain table for the current gene #####
-    
-    if(!is.null(refseq_id)){
-        # User-specified refseq_id
-        refseq_id = str_remove(refseq_id, "[.].*") # Remove version number if present
-        protein_domain_subset <- protein_domains %>% 
-            filter(HGNC == gene) %>% 
-            filter(refseq.ID == refseq_id)
-        if(length(unique(protein_domain_subset$refseq.ID)) == 0){
-            warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
-            protein_domain_subset <- data.frame(
-                
-            )
-        }
-    } else {
-        # Infer refseq_id to use from the maf_df
-        # Use the length of the gene model from the maf to identify the correct RefSeq ID
-        protein_domain_subset <- protein_domains %>% 
-            filter(HGNC == gene) %>% 
-            filter(refseq.ID %in% unique(maf_df$RefSeq)) %>%
-            filter(aa.length == unique(maf_df$aa.length))
-    }
-    
-    # Verify that this reduces down to a single gene model
-    if(length(unique(protein_domain_subset$refseq.ID)) > 1){
-        print(protein_domain_subset)
-        protein_domain_subset <- protein_domain_subset %>%
-            filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
-        message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
+  } else {
+    # Infer refseq_id to use from the maf_df
+    # Use the length of the gene model from the maf to identify the correct RefSeq ID
+    protein_domain_subset <- protein_domains %>% 
+      filter(HGNC == gene) %>% 
+      filter(refseq.ID %in% unique(maf_df$RefSeq)) 
+  if(aa.length == unique(maf_df$aa.length)){ 
+    warning(paste("The length of the protein for the specified RefSeq does not match the length of the protein in database"))
+  }
+  
+  # Verify that this reduces down to a single gene model
+  if(length(unique(protein_domain_subset$refseq.ID)) > 1){
+    print(protein_domain_subset)
+    protein_domain_subset <- protein_domain_subset %>%
+      filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
+    message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
         Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
-    } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
-       warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
-       protein_domain_subset <- data.frame(
-            HGNC = gene,
-            Start  = -1,
-            End = -1,
-            Label = "",
-            aa.length = as.numeric(unique(maf_df$aa.length))
+  } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
+    warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
+    protein_domain_subset <- data.frame(
+      HGNC = gene,
+      Start  = -1,
+      End = -1,
+      Label = "",
+      aa.length = as.numeric(unique(maf_df$aa.length))
+    )
+  }
+  
+  ##### Count mutations according to user specified options #####
+  gene_df <- maf_df %>%
+    filter(
+      RefSeq == unique(protein_domain_subset$refseq.ID)
+    ) %>%
+    mutate(
+      AA = as.numeric(
+        gsub(
+          "[^0-9]+",
+          "",
+          gsub(
+            "([0-9]+).*",
+            "\\1",
+            HGVSp_Short
+          )
         )
-    }
-
-    ##### Count mutations according to user specified options #####
-    gene_df <- maf_df %>%
-        filter(
-            RefSeq == unique(protein_domain_subset$refseq.ID)
-        ) %>%
-        mutate(
-            AA = as.numeric(
-                gsub(
-                    "[^0-9]+",
-                    "",
-                    gsub(
-                        "([0-9]+).*",
-                        "\\1",
-                        HGVSp_Short
-                    )
-                )
-            )
-        ) %>%
-        mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
-        arrange(AA) 
-        
-    if(by_allele){
-        # Keep different HGVSp values even if AA position is the same
-        gene_counts <- gene_df %>%
-            group_by(
-                HGVSp_Short,
-                AA,
-                AA_position,
-                Variant_Classification
-            ) %>%
-            arrange(AA) %>%
-            summarise(mutation_count = n()) %>%
-            ungroup() %>% 
-            mutate(size = ifelse(
-                mutation_count > max_count, 
-                max_count, 
-                mutation_count
-                ))     
-    }else{
-        # Collapse HGVSp values if AA is the same
-        gene_counts <- gene_df %>%
-            group_by(
-                AA, 
-                Variant_Classification
-            ) %>%
-            arrange(AA) %>%
-            summarise(mutation_count = n()) %>% 
-            mutate(size = ifelse(
-                mutation_count > max_count, 
-                max_count, 
-                mutation_count
-                )) 
-    }
+      )
+    ) %>%
+    mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
+    arrange(AA) 
+  
+  if(by_allele){
+    # Keep different HGVSp values even if AA position is the same
+    gene_counts <- gene_df %>%
+      group_by(
+        HGVSp_Short,
+        AA,
+        AA_position,
+        Variant_Classification
+      ) %>%
+      arrange(AA) %>%
+      summarise(mutation_count = n()) %>%
+      ungroup() %>% 
+      mutate(size = ifelse(
+        mutation_count > max_count, 
+        max_count, 
+        mutation_count
+      ))     
+  }else{
+    # Collapse HGVSp values if AA is the same
+    gene_counts <- gene_df %>%
+      group_by(
+        AA, 
+        Variant_Classification
+      ) %>%
+      arrange(AA) %>%
+      summarise(mutation_count = n()) %>% 
+      mutate(size = ifelse(
+        mutation_count > max_count, 
+        max_count, 
+        mutation_count
+      )) 
+  }
+  
+  if(!is.null(labelHGVSp)){
+    # Only label user-specified HGVSp values
+    gene_counts <- gene_counts %>% 
+      mutate(label = ifelse(
+        HGVSp_Short %in% labelHGVSp, 
+        AA_position, 
+        ""
+      ), 
+      size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
     
-    if(!is.null(labelHGVSp)){
-        # Only label user-specified HGVSp values
-        gene_counts <- gene_counts %>% 
-            mutate(label = ifelse(
-                HGVSp_Short %in% labelHGVSp, 
-                AA_position, 
-                ""
-            ), 
-            size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
-
-    } else if(!is.null(labelPos)){
-        # Only label user-specified AA positions
-        gene_counts <- gene_counts %>% 
-            mutate(label = ifelse(
-                AA %in% labelPos, 
-                as.character(AA), 
-                ""
-            ), 
-            size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
-
-    } else {
-        # Only label variants that exceed label_threshold recurrence
-        gene_counts <- gene_counts %>% 
-            mutate(label = ifelse(
-                mutation_count >= label_threshold, 
-                str_remove(HGVSp_Short, "p[.]"), 
-                ""
-            ), 
-            size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
-
-    }
-
-    ##### Generate the final domain_data object and make the domain_plot #####
-    domain_data <- protein_domain_subset %>% 
-        data.frame(
-            start.points = protein_domain_subset$Start,
-            end.points = protein_domain_subset$End,
-            text.label = protein_domain_subset$Label,
-            color = protein_domain_subset$Label
-        )
-
-    domain_data$text.position <- (domain_data$start.points + domain_data$end.points) / 2
-
-    domain_plot <- draw_domain_plot(
-        domain_data, 
-        font = font, 
-        domain_label_size = domain_label_size,
-        domain_label_orientation = domain_label_orientation, 
-        x_axis_size = x_axis_size
-        )
-
-    ##### Generate the final mutation_plot object #####
-    mutation_plot <- draw_mutation_plot(
-        gene_counts = gene_counts, 
-        plot_title = plot_title,
-        protein_length = domain_data$aa.length[1],
-        colours_manual = get_gambl_colours("mutation"), 
-        font = font, 
-        mirror = mirror, 
-        aa_label_size = aa_label_size,
-        title_size = title_size, 
-        max_count = max_count, 
-        point_size_range = point_size_range,
-        point_alpha = point_alpha
-    )
+  } else if(!is.null(labelPos)){
+    # Only label user-specified AA positions
+    gene_counts <- gene_counts %>% 
+      mutate(label = ifelse(
+        AA %in% labelPos, 
+        as.character(AA), 
+        ""
+      ), 
+      size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
     
-    if(show_rate){
-        denominator <- length(unique(these_samples_metadata$sample_id))
-        numerator <- length(unique(gene_df[gene_df$RefSeq == protein_domain_subset$refseq.ID[1],]$Tumor_Sample_Barcode))
-        somatic_mutation_rate <- round((numerator / denominator) * 100, 1)
-        
-        mutation_plot <- mutation_plot + 
-            ggtitle(
-                plot_title, 
-                subtitle = paste0(
-                    "Somatic mutation rate: ", 
-                    somatic_mutation_rate, 
-                    "%"
-                )
-            ) + 
-            theme(
-                text = element_text(family = font), 
-                plot.subtitle = element_text(hjust = 0.5)
-            )
-    }
-    ##### Combine domain and mutation plots #####
-    combined_plot <- ggpubr::ggarrange(
-        mutation_plot,
-        domain_plot, 
-        ncol = 1, 
-        align = "v", 
-        heights = c(3, 1), 
-        common.legend = TRUE, 
-        legend = "right"
+  } else {
+    # Only label variants that exceed label_threshold recurrence
+    gene_counts <- gene_counts %>% 
+      mutate(label = ifelse(
+        mutation_count >= label_threshold, 
+        str_remove(HGVSp_Short, "p[.]"), 
+        ""
+      ), 
+      size = ifelse(mutation_count > max_count, max_count, mutation_count)) 
+    
+  }
+  
+  ##### Generate the final domain_data object and make the domain_plot #####
+  domain_data <- protein_domain_subset %>% 
+    data.frame(
+      start.points = protein_domain_subset$Start,
+      end.points = protein_domain_subset$End,
+      text.label = protein_domain_subset$Label,
+      color = protein_domain_subset$Label
     )
-
-    to_return <- list(
-        plot = combined_plot,
-        domain_plot = domain_plot, 
-        mutation_plot = mutation_plot, 
-        gene_counts = gene_counts, 
-        domain_data = domain_data
-    )
-    return(to_return)
+  
+  domain_data$text.position <- (domain_data$start.points + domain_data$end.points) / 2
+  
+  domain_plot <- draw_domain_plot(
+    domain_data, 
+    font = font, 
+    domain_label_size = domain_label_size,
+    domain_label_orientation = domain_label_orientation, 
+    x_axis_size = x_axis_size
+  )
+  
+  ##### Generate the final mutation_plot object #####
+  mutation_plot <- draw_mutation_plot(
+    gene_counts = gene_counts, 
+    plot_title = plot_title,
+    protein_length = domain_data$aa.length[1],
+    colours_manual = get_gambl_colours("mutation"), 
+    font = font, 
+    mirror = mirror, 
+    aa_label_size = aa_label_size,
+    title_size = title_size, 
+    max_count = max_count, 
+    point_size_range = point_size_range,
+    point_alpha = point_alpha
+  )
+  
+  if(show_rate){
+    denominator <- length(unique(these_samples_metadata$sample_id))
+    numerator <- length(unique(gene_df[gene_df$RefSeq == protein_domain_subset$refseq.ID[1],]$Tumor_Sample_Barcode))
+    somatic_mutation_rate <- round((numerator / denominator) * 100, 1)
+    
+    mutation_plot <- mutation_plot + 
+      ggtitle(
+        plot_title, 
+        subtitle = paste0(
+          "Somatic mutation rate: ", 
+          somatic_mutation_rate, 
+          "%"
+        )
+      ) + 
+      theme(
+        text = element_text(family = font), 
+        plot.subtitle = element_text(hjust = 0.5)
+      )
+  }
+  ##### Combine domain and mutation plots #####
+  combined_plot <- ggpubr::ggarrange(
+    mutation_plot,
+    domain_plot, 
+    ncol = 1, 
+    align = "v", 
+    heights = c(3, 1), 
+    common.legend = TRUE, 
+    legend = "right"
+  )
+  
+  to_return <- list(
+    plot = combined_plot,
+    domain_plot = domain_plot, 
+    mutation_plot = mutation_plot, 
+    gene_counts = gene_counts, 
+    domain_data = domain_data
+  )
+  return(to_return)
 }
 
 
@@ -386,105 +387,105 @@ draw_domain_plot <- function(
     x_axis_size = 10, 
     domain_label_size = 4, 
     domain_label_orientation = "auto"
-    ){
-    domain_palette <- unname(get_gambl_colours("domains"))[1:length(unique(domain_data$text.label))]
-    
-    # Determine angle of domain labels based on width of domains relative to protein
-    if(domain_label_orientation == "auto"){
-        angle = ifelse(
-            min((domain_data$End - domain_data$Start)/domain_data$aa.length) >= 0.1,
-            0, 90
-        )
-    } else if(domain_label_orientation == "horizontal"){
-        angle = 0
-    } else if(domain_label_orientation == "vertical"){
-        angle = 90
-    } else {
-        stop("Invalid domain_label_orientation. Use 'auto', 'horizontal', or 'vertical'.")
-    }
-    
-    
-    # Add the p-value to the text label if it exists in the provided domain_data
-    if("p_value" %in% colnames(domain_data)){
-        domain_data$text.label <- ifelse(
-            domain_data$p_value != "", 
-            str_c(
-                domain_data$text.label,
-                "\n",
-                domain_data$p_value
-            ), 
-            domain_data$text.label
-        )
-    } 
-    
-    # Fix labels that are too close together
-    # TODO: Fix it to retain significant p-values if they exist
-    domain_data <- domain_data %>% 
-        arrange(text.position) %>% 
-        mutate(
-            text.label = ifelse(
-                text.position - lag(text.position) >= 10 | is.na(lag(text.position)), 
-                text.label, 
-                ""
-            )
-        )
-    # Specify plot start and end points
-    x_min <- 1 # Set 1 as the start for any protein (obviously)
-    x_max = unique(domain_data$aa.length)[1] # Assuming aa.length is a single value for the gene
-    domain_plot <- ggplot() + 
-            geom_rect(
-                aes(
-                    xmin = x_min, 
-                    xmax = x_max, 
-                    ymin = -1, 
-                    ymax = 1
-                    ), 
-                fill = "lightgrey", 
-                color = "lightgrey"
-            ) + 
-            geom_rect(
-                data = domain_data, 
-                aes(
-                    xmin = start.points, 
-                    xmax = end.points, 
-                    ymin = -1.2, 
-                    ymax = 1.2, 
-                    fill = color
-                    ), 
-                color = "black", 
-                show.legend = FALSE
-            ) +
-            geom_text(
-                data = domain_data, 
-                aes(
-                    x = text.position, 
-                    y = 0,
-                    angle = angle, 
-                    label = text.label
-                ), 
-                hjust = 0.5, 
-                vjust = 0.5,
-                size = domain_label_size, 
-                family = font
-            ) +
-            scale_fill_manual(values = domain_palette) + 
-            scale_x_continuous(
-                breaks = seq(
-                    0,
-                    x_max,
-                    by = 5*round(x_max/25) # Breaks in multiples of 5
-                ), 
-                limits = c(0, x_max)
-            ) +
-            theme_void() +
-            theme(
-                axis.text.x = element_text(
-                    size = x_axis_size, 
-                    vjust = rel(0.5)
-                    ), 
-                text = element_text(family = font)
-            ) 
-    return(domain_plot)
+){
+  domain_palette <- unname(get_gambl_colours("domains"))[1:length(unique(domain_data$text.label))]
+  
+  # Determine angle of domain labels based on width of domains relative to protein
+  if(domain_label_orientation == "auto"){
+    angle = ifelse(
+      min((domain_data$End - domain_data$Start)/domain_data$aa.length) >= 0.1,
+      0, 90
+    )
+  } else if(domain_label_orientation == "horizontal"){
+    angle = 0
+  } else if(domain_label_orientation == "vertical"){
+    angle = 90
+  } else {
+    stop("Invalid domain_label_orientation. Use 'auto', 'horizontal', or 'vertical'.")
+  }
+  
+  
+  # Add the p-value to the text label if it exists in the provided domain_data
+  if("p_value" %in% colnames(domain_data)){
+    domain_data$text.label <- ifelse(
+      domain_data$p_value != "", 
+      str_c(
+        domain_data$text.label,
+        "\n",
+        domain_data$p_value
+      ), 
+      domain_data$text.label
+    )
+  } 
+  
+  # Fix labels that are too close together
+  # TODO: Fix it to retain significant p-values if they exist
+  domain_data <- domain_data %>% 
+    arrange(text.position) %>% 
+    mutate(
+      text.label = ifelse(
+        text.position - lag(text.position) >= 10 | is.na(lag(text.position)), 
+        text.label, 
+        ""
+      )
+    )
+  # Specify plot start and end points
+  x_min <- 1 # Set 1 as the start for any protein (obviously)
+  x_max = unique(domain_data$aa.length)[1] # Assuming aa.length is a single value for the gene
+  domain_plot <- ggplot() + 
+    geom_rect(
+      aes(
+        xmin = x_min, 
+        xmax = x_max, 
+        ymin = -1, 
+        ymax = 1
+      ), 
+      fill = "lightgrey", 
+      color = "lightgrey"
+    ) + 
+    geom_rect(
+      data = domain_data, 
+      aes(
+        xmin = start.points, 
+        xmax = end.points, 
+        ymin = -1.2, 
+        ymax = 1.2, 
+        fill = color
+      ), 
+      color = "black", 
+      show.legend = FALSE
+    ) +
+    geom_text(
+      data = domain_data, 
+      aes(
+        x = text.position, 
+        y = 0,
+        angle = angle, 
+        label = text.label
+      ), 
+      hjust = 0.5, 
+      vjust = 0.5,
+      size = domain_label_size, 
+      family = font
+    ) +
+    scale_fill_manual(values = domain_palette) + 
+    scale_x_continuous(
+      breaks = seq(
+        0,
+        x_max,
+        by = 5*round(x_max/25) # Breaks in multiples of 5
+      ), 
+      limits = c(0, x_max)
+    ) +
+    theme_void() +
+    theme(
+      axis.text.x = element_text(
+        size = x_axis_size, 
+        vjust = rel(0.5)
+      ), 
+      text = element_text(family = font)
+    ) 
+  return(domain_plot)
 }
 
 draw_mutation_plot <- function(
@@ -499,85 +500,85 @@ draw_mutation_plot <- function(
     title_size,
     aa_label_size, 
     point_alpha
-    ){
-    
-    nudge_factor <- ifelse(mirror, -0.5, 0.5)
-    mutation_plot <- ggplot() +
-        geom_segment(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                xend = AA, 
-                y = 0, 
-                yend = mutation_count
-                )
-        ) +
-        geom_point(
-            data = gene_counts, 
-            aes(
-                x = AA, 
-                y = mutation_count, 
-                color = Variant_Classification, 
-                size = size
-                ), 
-            alpha = point_alpha
-        ) +
-        ggrepel::geom_text_repel(data = gene_counts, aes(
-                x = AA, 
-                y = mutation_count, 
-                label = label, 
-                point.size = size
-            ), 
-            min.segment.length = 0, 
-            nudge_y = nudge_factor,
-            nudge_x = 0,
-            direction = "y", 
-            size = aa_label_size, 
-            family = font
-        ) +
-        labs(
-            x = "AA Position", 
-            y = "Mutation Count", 
-            title = paste0(
-                plot_title
-            )
-        ) + 
-        scale_y_continuous(
-            breaks = seq(
-                0,
-                max(gene_counts$mutation_count) * 1.2,
-                by = ifelse(max(gene_counts$mutation_count) * 1.2 <= 5, 1, round(max(gene_counts$mutation_count) * 1.2 / 5))
-            ), 
-            limits = c(0, max(gene_counts$mutation_count) * 1.2)
-        )  +
-        xlim(1, protein_length) +
-        scale_size_continuous(
-            limits = c(1, max_count),
-            breaks = seq(
-                1, 
-                max_count,
-                by = round(max_count / 5)
-            ), 
-            range = point_size_range,
-            guide = "none"  
-        )  +
-        ggpubr::theme_pubr() +
-        theme(
-            plot.title = element_text(
-                hjust = 0.5, 
-                size = title_size
-                ),
-            # axis.text.x = element_blank(),
-            # axis.line.x = element_blank(),
-            # axis.ticks.x = element_blank(),
-            axis.title.x = element_blank(),
-            text = element_text(family = font), 
-            legend.position = "right"
-        ) +
-        scale_color_manual(
-            name = "Variant\nClassification", 
-            values = colours_manual
-        )+
+){
+  
+  nudge_factor <- ifelse(mirror, -0.5, 0.5)
+  mutation_plot <- ggplot() +
+    geom_segment(
+      data = gene_counts, 
+      aes(
+        x = AA, 
+        xend = AA, 
+        y = 0, 
+        yend = mutation_count
+      )
+    ) +
+    geom_point(
+      data = gene_counts, 
+      aes(
+        x = AA, 
+        y = mutation_count, 
+        color = Variant_Classification, 
+        size = size
+      ), 
+      alpha = point_alpha
+    ) +
+    ggrepel::geom_text_repel(data = gene_counts, aes(
+      x = AA, 
+      y = mutation_count, 
+      label = label, 
+      point.size = size
+    ), 
+    min.segment.length = 0, 
+    nudge_y = nudge_factor,
+    nudge_x = 0,
+    direction = "y", 
+    size = aa_label_size, 
+    family = font
+    ) +
+    labs(
+      x = "AA Position", 
+      y = "Mutation Count", 
+      title = paste0(
+        plot_title
+      )
+    ) + 
+    scale_y_continuous(
+      breaks = seq(
+        0,
+        max(gene_counts$mutation_count) * 1.2,
+        by = ifelse(max(gene_counts$mutation_count) * 1.2 <= 5, 1, round(max(gene_counts$mutation_count) * 1.2 / 5))
+      ), 
+      limits = c(0, max(gene_counts$mutation_count) * 1.2)
+    )  +
+    xlim(1, protein_length) +
+    scale_size_continuous(
+      limits = c(1, max_count),
+      breaks = seq(
+        1, 
+        max_count,
+        by = round(max_count / 5)
+      ), 
+      range = point_size_range,
+      guide = "none"  
+    )  +
+    ggpubr::theme_pubr() +
+    theme(
+      plot.title = element_text(
+        hjust = 0.5, 
+        size = title_size
+      ),
+      # axis.text.x = element_blank(),
+      # axis.line.x = element_blank(),
+      # axis.ticks.x = element_blank(),
+      axis.title.x = element_blank(),
+      text = element_text(family = font), 
+      legend.position = "right"
+    ) +
+    scale_color_manual(
+      name = "Variant\nClassification", 
+      values = colours_manual
+    )+
     guides(color = guide_legend(override.aes = list(size = 3))) 
-    return(mutation_plot)
+  return(mutation_plot)
 }
