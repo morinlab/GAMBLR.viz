@@ -197,9 +197,17 @@ pretty_lollipop_plot <- function(
     # Use the length of the gene model from the maf to identify the correct RefSeq ID
     protein_domain_subset <- protein_domains %>% 
       filter(HGNC == gene) %>% 
-      filter(refseq.ID %in% unique(maf_df$RefSeq)) 
-  if(aa.length == unique(maf_df$aa.length)){ 
-    warning(paste("The length of the protein for the specified RefSeq does not match the length of the protein in database"))
+      filter(refseq.ID %in% unique(maf_df$RefSeq)) ## identify aa.length through protein_domains$aa.length 
+    if(protein_domains$aa.length != unique(maf_df$aa.length)){ 
+      difference <- abs(protein_domains$aa.length - unique(maf_df$aa.length))
+      warning(
+        paste(
+          "The length of the protein for the specified RefSeq differs from the length of the protein in database by",
+          difference,
+          "amino acid(s)"
+        )
+      )
+    }
   }
   
   # Verify that this reduces down to a single gene model
