@@ -1285,8 +1285,6 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         gp = gpar(fill = col["Missense_Mutation"], col = box_col)
       )
     }, hot_spot = function(x, y, w, h) {
-      grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
-        gp = gpar(fill = col["Missense_Mutation"], col = box_col))
       grid.rect(x, y, w - unit(spacing, "pt"), (height_scaling / 5) *
         h, gp = gpar(fill = col["hot_spot"], col = box_col))
     }, Silent = function(x, y, w, h) {
@@ -1305,6 +1303,30 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     }
     if (verbose) {
       print("annotating hot spots")
+    }
+    # For non-simplify mode, generate a composite alter_fun for every existing
+    # mutation type. The composite key "<type>_hs" maps to col["hot_spot"] so
+    # the barplot counts hotspot mutations under a single magenta category, while
+    # the alter_fun draws the original type's full-height bar first and then
+    # overlays the small magenta hotspot indicator — preserving the background
+    # colour regardless of which mutation class the hotspot belongs to.
+    if (!simplify_annotation) {
+      for (type in setdiff(names(alter_fun), "background")) {
+        hs_type <- paste0(type, "_hs")
+        col[hs_type] <- col["hot_spot"]
+        local({
+          hs_t <- paste0(type, "_hs")
+          base_fun <- alter_fun[[type]]
+          alter_fun[[hs_t]] <<- function(x, y, w, h) {
+            base_fun(x, y, w, h)
+            grid.rect(
+              x, y, w - unit(spacing, "pt"),
+              (height_scaling / 5) * h,
+              gp = gpar(fill = col["hot_spot"], col = box_col)
+            )
+          }
+        })
+      }
     }
     hot_samples <- dplyr::filter(maf_df, hot_spot == TRUE &
       Hugo_Symbol %in% genes_kept) %>%
@@ -1327,9 +1349,19 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       column_to_rownames("Hugo_Symbol") %>%
       as.matrix()
 
-    for (i in colnames(mat)) {
-      mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])] <-
-        hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])]
+    if (!simplify_annotation) {
+      # Replace non-empty hotspot cells with a composite key that encodes the
+      # original mutation type so the correct background colour is drawn.
+      # Empty cells (unmutated samples) are skipped — a hotspot annotation in
+      # the MAF without a corresponding coding mutation in the matrix has no
+      # visual representation.
+      for (i in colnames(mat)) {
+        hotspot_mask <- !is.na(hot_mat[genes_kept, i]) &
+          nzchar(mat[genes_kept, i])
+        mat[genes_kept, i][hotspot_mask] <- paste0(
+          mat[genes_kept, i][hotspot_mask], "_hs"
+        )
+      }
     }
 
     if (verbose) {
