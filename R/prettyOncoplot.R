@@ -1285,6 +1285,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         gp = gpar(fill = col["Missense_Mutation"], col = box_col)
       )
     }, hot_spot = function(x, y, w, h) {
+      grid.rect(x, y, w - unit(spacing, "pt"), h * height_scaling,
+        gp = gpar(fill = col["Missense_Mutation"], col = box_col))
       grid.rect(x, y, w - unit(spacing, "pt"), (height_scaling / 5) *
         h, gp = gpar(fill = col["hot_spot"], col = box_col))
     }, Silent = function(x, y, w, h) {
@@ -1327,11 +1329,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
 
     for (i in colnames(mat)) {
       mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])] <-
-        paste0(
-          mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])],
-          ";",
-          hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])]
-        )
+        hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])]
     }
 
     if (verbose) {
