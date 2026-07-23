@@ -5,11 +5,15 @@
 \title{Pretty CoLollipop Plot.}
 \usage{
 pretty_colollipop_plot(
-  maf_df,
-  these_samples_metadata,
-  comparison_column,
+  maf_df = NULL,
+  these_samples_metadata = NULL,
+  comparison_column = NULL,
   comparison_values,
   gene,
+  maf_top = NULL,
+  maf_bottom = NULL,
+  name_top = "Group 1",
+  name_bottom = "Group 2",
   include_silent = FALSE,
   label_threshold = 5,
   plot_title,
@@ -18,19 +22,34 @@ pretty_colollipop_plot(
   compare_distributions = FALSE,
   show_rate = FALSE,
   font = "sans",
+  highlight_driver_regions = FALSE,
+  driver_region_alpha = 0.15,
+  driver_region_padding = 5,
+  limit_driver_regions = NULL,
+  glm_results = NULL,
+  glm_comparison = NULL,
+  coef_scale_limits = NULL,
   ...
 )
 }
 \arguments{
-\item{maf_df}{A data frame containing the mutation data.}
+\item{maf_df}{A data frame containing the mutation data. Required when using metadata-based stratification; omit when supplying `maf_top`/`maf_bottom`.}
 
-\item{these_samples_metadata}{Required argument. A data.frame with metadata for the CoLollipop Plot.}
+\item{these_samples_metadata}{A data.frame with metadata for the CoLollipop Plot. Required when using metadata-based stratification; omit when supplying `maf_top`/`maf_bottom`.}
 
-\item{comparison_column}{Required: the name of the metadata column containing the comparison values.}
+\item{comparison_column}{The name of the metadata column containing the comparison values. Required when using metadata-based stratification; omit when supplying `maf_top`/`maf_bottom`.}
 
-\item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first.}
+\item{comparison_values}{Optional: If the comparison column contains more than two values or is not a factor, specify a character vector of length two in the order you would like the factor levels to be set, reference group first. When using `maf_top`/`maf_bottom`, serves only as plot labels and defaults to `c("Group 1", "Group 2")`.}
 
 \item{gene}{The gene symbol to plot.}
+
+\item{maf_top}{A data frame of mutations to use for the upper lollipop panel. When provided together with `maf_bottom`, bypasses metadata-based stratification entirely.}
+
+\item{maf_bottom}{A data frame of mutations to use for the lower lollipop panel. When provided together with `maf_top`, bypasses metadata-based stratification entirely.}
+
+\item{name_top}{Display label for the upper panel group when using `maf_top`/`maf_bottom`. Used in the plot title and y-axis label. Ignored when `comparison_values` is also supplied. Default `"Group 1"`.}
+
+\item{name_bottom}{Display label for the lower panel group when using `maf_top`/`maf_bottom`. Used in the plot title and y-axis label. Ignored when `comparison_values` is also supplied. Default `"Group 2"`.}
 
 \item{label_threshold}{Threshold for labels to appear on plot. Default 5.}
 
@@ -38,9 +57,49 @@ pretty_colollipop_plot(
 
 \item{refseq_id}{Insert a specific NM_xxx value of interest.}
 
-\item{forestarg}{Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE.}
+\item{forestarg}{Logical parameter indicating whether to plot the colollipopplot with or without the forest plot. Default is TRUE. Ignored (with a warning) when using `maf_top`/`maf_bottom`.}
 
 \item{compare_distributions}{Logical parameter indicating whether to compare the distribution of variants along the length of the gene and its domains between the groups. Default is FALSE.}
+
+\item{highlight_driver_regions}{Logical. When `TRUE` and the input MAF
+contains a `mutation_alias` column (from
+[GAMBLR.utils::annotate_curated_drivers()]), draws semi-transparent
+region boxes on both panels. Region boundaries are derived from the
+*combined* mutations of both groups so that both panels share identical
+boxes. Default `FALSE`.}
+
+\item{driver_region_alpha}{Transparency of driver region boxes. Default `0.15`.}
+
+\item{driver_region_padding}{AA positions of padding on each side of a
+region's observed range. Default `5`.}
+
+\item{limit_driver_regions}{Optional character vector of stripped region
+names (e.g. `c("KAT", "HAT")`) to restrict which boxes are drawn in
+both panels. Applied to the combined region set before passing to each
+panel. Default `NULL` (show all regions).}
+
+\item{glm_results}{Optional data frame returned by
+[GAMBLR.utils::select_informative_features], with at least columns
+`feature`, `coef`, and `comparison`. When supplied, driver region boxes
+are coloured by their GLM coefficient using the same diverging blue–white–
+red scale as [gene_feat_heatmap()], replacing the default qualitative
+palette. Feature names must match the `mutation_alias` values in the MAF
+(e.g. `CREBBP_KAT`). Default `NULL`.}
+
+\item{glm_comparison}{Override for the comparison name used to colour the
+**top** panel (after stripping `" vs rest"`, e.g. `"FL"`). When `NULL`
+(default), it is inferred from `comparison_values[1]` / `name_top`. The
+bottom panel always uses `comparison_values[2]` / `name_bottom` if that
+label exists in `glm_results`; otherwise it falls back to qualitative
+colouring. Both panels share the same colour-scale limits so their
+coefficients are directly comparable.}
+
+\item{coef_scale_limits}{Optional override for the GLM coefficient colour
+scale. Supply a single positive number (symmetric, e.g. `0.3` gives
+`c(-0.3, 0.3)`) or a length-2 vector (`c(-0.1, 0.5)`) for asymmetric
+limits. Values outside the range are squished to the nearest endpoint
+colour. When `NULL` (default), limits are `±max(|coef|)` across both
+panels.}
 
 \item{...}{`pretty_lollipop_plot` arguments, see that function for more info on available parameters.}
 }

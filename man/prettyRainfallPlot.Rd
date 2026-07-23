@@ -71,8 +71,9 @@ Create a sample-level rainfall plot visualizing single nucleotide
 \examples{
 cat("running examples for prettyRainfallPlot\n")
 suppressPackageStartupMessages(library(GAMBLR.open))
-maf = GAMBLR.data::sample_data$grch37$maf
-prettyRainfallPlot(this_sample_id = "14-35026",
+cell_line_meta <- get_gambl_metadata() \%>\% dplyr::filter(cohort == "DLBCL_cell_lines")
+maf = get_ssm_by_samples(these_samples_metadata = cell_line_meta)
+prettyRainfallPlot(this_sample_id = "DOHH-2",
                    this_maf = maf,
                    label_sv = FALSE,
                    chromosome = "3")

@@ -58,8 +58,10 @@ If no genes are supplied when calling the function, this function will default t
 }
 \examples{
 cat("Running example for function: prettyGeneCloud\n")
-#get all coding SSM directly from GAMBLR.data
-maf = GAMBLR.data::sample_data$grch37$maf
+#get coding SSMs for a small, fast, always-available sample set
+cell_line_meta <- GAMBLR.open::get_gambl_metadata() \%>\%
+     dplyr::filter(cohort == "DLBCL_cell_lines")
+maf = GAMBLR.open::get_coding_ssm(these_samples_metadata = cell_line_meta)
 
 
 #build wordcloud
