@@ -193,46 +193,49 @@ pretty_lollipop_plot <- function(
       )
     }
   } else {
-    # Infer refseq_id to use from the maf_df
-    # Use the length of the gene model from the maf to identify the correct RefSeq ID
     protein_domain_subset <- protein_domains %>% 
-      filter(HGNC == gene) %>% 
-      filter(refseq.ID %in% unique(maf_df$RefSeq)) ## identify aa.length through protein_domains$aa.length 
-    if(protein_domains$aa.length != unique(maf_df$aa.length)){ 
-      difference <- abs(protein_domains$aa.length - unique(maf_df$aa.length))
-      warning(
-        paste(
-          "The length of the protein for the specified RefSeq differs from the length of the protein in database by",
-          difference,
-          "amino acid(s)"
+      filter(HGNC == gene)
+    
+    # Ensure refseq id matches
+    if(! unique(maf_df$RefSeq) %in% protein_domain_subset$refseq.ID){
+        warning(
+            paste(
+                "The RefSeq of the protein for the specified gene differs from the RefSeq of the protein in database.\n",
+                "The RefSeq for the gene", gene, "in your maf data is ", unique(maf_df$RefSeq), ".\n",
+                "The RefSeq(s) for the gene", gene, "in the protein database: ",
+                paste(unique(protein_domain_subset$refseq.ID), collapse = ", "), ".\n"
+            )
         )
-      )
+    }else{
+        protein_domain_subset <- protein_domain_subset %>%
+            filter(refseq.ID %in% unique(maf_df$RefSeq))
     }
-  }
-  
-  # Verify that this reduces down to a single gene model
-  if(length(unique(protein_domain_subset$refseq.ID)) > 1){
-    print(protein_domain_subset)
-    protein_domain_subset <- protein_domain_subset %>%
-      filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
-    message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.
-        Arbitrarily selecting", unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
-  } else if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
-    warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
-    protein_domain_subset <- data.frame(
-      HGNC = gene,
-      Start  = -1,
-      End = -1,
-      Label = "",
-      aa.length = as.numeric(unique(maf_df$aa.length))
-    )
+
+    # Ensure AA length matches
+    if(! unique(maf_df$aa.length) %in% protein_domain_subset$aa.length){
+        protein_domain_subset <- protein_domain_subset %>%
+            mutate(
+                difference = as.numeric(aa.length) - as.numeric(unique(maf_df$aa.length))
+            ) %>%
+            filter(
+                difference == min(abs(difference))
+            )
+        
+        difference <- abs(protein_domain_subset$difference)
+        warning(
+            paste(
+            "The length of the protein for the specified RefSeq differs from the length of the protein in database.\n",
+            "They are different by", difference, "aminoacid(s)."
+            )
+        )
+    }else{
+        protein_domain_subset <- protein_domain_subset %>%
+            filter(aa.length == unique(maf_df$aa.length))
+    }
   }
   
   ##### Count mutations according to user specified options #####
   gene_df <- maf_df %>%
-    filter(
-      RefSeq == unique(protein_domain_subset$refseq.ID)
-    ) %>%
     mutate(
       AA = as.numeric(
         gsub(
