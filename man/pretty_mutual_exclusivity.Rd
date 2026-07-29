@@ -114,7 +114,7 @@ Pretty mutual exclusivity plot
 }
 \examples{
 cat("running examples from pretty_mutual_exclusivity\n")
-suppressMessages(library(GAMBLR.open))
+suppressPackageStartupMessages(library(GAMBLR.open))
 suppressMessages(library(ComplexHeatmap))
 suppressMessages(library(dplyr))
 

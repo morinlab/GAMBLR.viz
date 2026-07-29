@@ -106,7 +106,7 @@ cat("Running example for function: prettyStackedOncoplot\n")
 suppressMessages(
   suppressWarnings({
 
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 
 # Prepare some metadata
  dlbcl_genome_meta = get_gambl_metadata() \%>\% 

@@ -56,7 +56,7 @@
 #' @examples
 #' cat("Running example for function: prettyMutationDensity\n")
 #' 
-#' library(GAMBLR.open)
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' # get meta data
 #' my_meta <- get_gambl_metadata() %>%
 #'   dplyr::filter(pathology %in% c("FL","DLBCL"), seq_type != "mrna") %>%

@@ -15,6 +15,7 @@ prettyForestPlot(
   rm_na_samples = FALSE,
   comparison_values = FALSE,
   separate_hotspots = FALSE,
+  maf_column = "Hugo_Symbol",
   comparison_name = FALSE,
   custom_colours = FALSE,
   custom_labels = FALSE,
@@ -58,9 +59,16 @@ more than two values or is not a factor, specify a character vector
 of length two in the order you would like the factor levels to be set,
 reference group first.}
 
-\item{separate_hotspots}{Optional: If you would like to treat hotspots
-separately from other mutations in any gene. Requires that the maf file
-is annotated with [GAMBLR::annotate_hotspots].}
+\item{separate_hotspots}{Deprecated. Use `maf_column = "hot_spot"` instead.}
+
+\item{maf_column}{The MAF column to use as the feature identifier for each
+row in the mutation matrix. Default is `"Hugo_Symbol"` (one test per gene).
+Set to `"mutation_alias"` or `"driver_alias"` to use sub-gene categories
+produced by [GAMBLR.utils::annotate_curated_drivers] (e.g. `TP53_trunc`,
+`TP53_R175`, `MYD88_L265P`). Set to `"hot_spot"` for backward-compatible
+hotspot separation: TRUE rows become `<Hugo_Symbol>HOTSPOT`, FALSE rows
+keep `Hugo_Symbol`. The `genes` parameter always filters by `Hugo_Symbol`
+first, regardless of `maf_column`.}
 
 \item{comparison_name}{Optional: Specify the legend title if different
 from the comparison column name.}
@@ -105,7 +113,81 @@ inside the function documentation or the vignettes.
 }
 \examples{
 cat("Running example for function: prettyForestPlot\n")
-library(GAMBLR.open)
+
+# Compare FL vs DLBCL using fine-grained driver/hotspot categories from
+# annotate_curated_drivers() instead of plain gene-level mutation status.
+# This reveals whether specific mutation subtypes (e.g. EZH2 hotspot vs
+# truncating vs other missense) drive the association rather than the
+# gene overall.
+
+suppressPackageStartupMessages(library(GAMBLR.open))
+suppressPackageStartupMessages(library(GAMBLR.utils))
+suppressWarnings(
+  suppressMessages({
+
+meta = get_gambl_metadata()
+fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+  check_and_clean_metadata(duplicate_action = "keep_first")
+
+# Get all coding SSMs (genome + capture) for these samples
+fl_dlbcl_maf = get_all_coding_ssm(fl_dlbcl_meta)
+
+# Annotate driver/hotspot categories for selected genes
+fl_dlbcl_maf = annotate_curated_drivers(
+  maf_data = fl_dlbcl_maf,
+  genes_of_interest = c("EZH2", "CREBBP", "TP53",
+                        "MYD88", "NOTCH1", "NOTCH2")
+)
+
+# mutation_alias gives the finest resolution: each named region or hotspot
+# codon becomes its own feature (e.g. EZH2_Y641, CREBBP_KAT, TP53_trunc,
+# TP53_R175). One Fisher test is run per category.
+alias_plots = prettyForestPlot(
+  maf = fl_dlbcl_maf,
+  metadata = fl_dlbcl_meta,
+  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  maf_column = "mutation_alias",
+  comparison_column = "pathology",
+  comparison_values = c("DLBCL", "FL"),
+  comparison_name = "FL vs DLBCL"
+)
+alias_plots$arranged
+
+# driver_alias collapses to just two categories per gene: GENE_driver (any
+# mutation matching a curated driver region, regardless of specific position)
+# vs GENE_other (everything else). This is coarser than mutation_alias but
+# useful when you only care whether a driver-class mutation is enriched,
+# not which specific hotspot or region it falls in.
+driver_plots = prettyForestPlot(
+  maf = fl_dlbcl_maf,
+  metadata = fl_dlbcl_meta,
+  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  maf_column = "driver_alias",
+  comparison_column = "pathology",
+  comparison_values = c("DLBCL", "FL"),
+  comparison_name = "FL vs DLBCL"
+)
+driver_plots$arranged
+
+# hotspot_alias captures only the strictest hotspot class: named recurrent
+# codons (e.g. EZH2_hotspot, MYD88_hotspot). Truncating mutations and
+# general LOF regions do not produce a hotspot_alias entry, so genes like
+# TP53 whose driver biology is dominated by truncations will have few or no
+# rows here. Use mutation_alias if you want those included.
+hotspot_plots = prettyForestPlot(
+  maf = fl_dlbcl_maf,
+  metadata = fl_dlbcl_meta,
+  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  maf_column = "hotspot_alias",
+  comparison_column = "pathology",
+  comparison_values = c("DLBCL", "FL"),
+  comparison_name = "FL vs DLBCL"
+)
+hotspot_plots$arranged
+
+}))
+
+suppressPackageStartupMessages(library(GAMBLR.open))
 suppressWarnings(
   suppressMessages({
 

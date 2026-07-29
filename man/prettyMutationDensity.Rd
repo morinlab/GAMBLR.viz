@@ -160,7 +160,7 @@ to retrieve mutation counts for sliding windows across one or more regions and g
 \examples{
 cat("Running example for function: prettyMutationDensity\n")
 
-library(GAMBLR.open)
+suppressPackageStartupMessages(library(GAMBLR.open))
 # get meta data
 my_meta <- get_gambl_metadata() \%>\%
   dplyr::filter(pathology \%in\% c("FL","DLBCL"), seq_type != "mrna") \%>\%

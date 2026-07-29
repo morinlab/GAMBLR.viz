@@ -20,7 +20,7 @@
 #' @export
 #'
 #' @examples
-#' suppressMessages(library(GAMBLR.open))
+#' suppressPackageStartupMessages(library(GAMBLR.open))
 #' cat("running examples for pretty_MAF_summary\n")
 #' FL_meta <- GAMBLR.open::get_gambl_metadata() %>%
 #'     dplyr::filter(pathology == "FL") %>%
