@@ -32,6 +32,14 @@
 #' ordering.
 #' @param highlightHotspots Set to TRUE to highlight hot spots.
 #' Default is FALSE.
+#' @param prioritizeCNV Set to TRUE to have CN alterations (from `gene_cnv_df`
+#' /`binned_cnv_df`+`genes_CN_thresh`) outrank other mutation types (SNV,
+#' truncating, splice, silent) when ordering samples via `sortByGenes` or the
+#' default frequency-based sort. By default (FALSE), sorting only considers
+#' whether a gene is altered at all, treating a CN alteration and a point
+#' mutation as equivalent. Has no effect without CN data or when
+#' `keepSampleOrder`/`sortByColumns` is used, since neither of those perform
+#' the alteration-based memoSort.
 #' @param these_samples_metadata Data frame containing metadata for your
 #' samples.
 #' @param genes_CN_thresh A named vector specifying the genes whose copy
@@ -64,7 +72,7 @@
 #' reuse the oncomatrix saved by maftools.
 #' @param sample_gene_coverage Optional data frame specifying which samples
 #' had insufficient coverage for which genes. Two columns: sample_id Hugo_Symbol
-#' 
+#'
 #' @param box_col Colour of boxes for outlining mutations (can be
 #' problematic with larger oncoprints).
 #' @param metadataBarHeight Optional argument to adjust the height of
@@ -130,10 +138,10 @@
 #' @param simplify_bg_colour When simplify_annotation is called, adjust
 #' the color of the background by passign a value to this argument.
 #' Options are: "transparent" (default), "white", or any other color name or hex code.
-#' Overloaded to accept "pathology" or "background". When "background" 
+#' Overloaded to accept "pathology" or "background". When "background"
 #' is specified, the background of the oncoplot will be coloured grey
-#' for all gene-sample combinations specified in the gene_sample_coverage data frame. 
-#' This is useful for visually distinguishing gene-sample combinations with 
+#' for all gene-sample combinations specified in the gene_sample_coverage data frame.
+#' This is useful for visually distinguishing gene-sample combinations with
 #' insufficient coverage from those with sufficient coverage but no mutations.
 #' Default is NA.
 #' @param gap Size of gap between columns represented as a proportion
@@ -417,6 +425,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            keepGeneOrder = FALSE,
                            keepSampleOrder = FALSE,
                            highlightHotspots = FALSE,
+                           prioritizeCNV = FALSE,
                            these_samples_metadata,
                            genes_CN_thresh,
                            metadataColumns,
@@ -812,7 +821,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(gene_cnv_df)) {
     if (verbose) {
       print("BEFORE:")
-      print(dim(cnv_df))
+      print(dim(gene_cnv_df))
     }
     cnv_df <- gene_cnv_df[rownames(gene_cnv_df) %in% patients, ,
       drop = FALSE
@@ -836,7 +845,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (missing(genes)) {
     genes <- rownames(mat)
   }
-   
+
   col <- GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
   patients_dropped <- patients[which(!patients %in% colnames(mat))]
   if (verbose) {
@@ -898,18 +907,31 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       print(genes_kept)
       print("CNV MAT:")
       print(dim(mat))
+      print("COL SUMS")
+      print(colSums(cnv_df))
     }
     mat1 <- matrix(nrow = length(extra_cnv_genes), ncol = ncol(mat))
     colnames(mat1) <- colnames(mat)
     rownames(mat1) <- extra_cnv_genes
     mat1[] <- 0
     mat <- rbind(mat1, mat)
-    for (pat in extra_cnv_patients) {
-      mat[, pat] <- 0
+    if (length(extra_cnv_patients) > 0) {
+      # mat is a plain matrix here, so new patient columns (e.g. samples
+      # with a CN alteration but no point mutation, which removeNonMutated
+      # would otherwise have excluded from mat entirely) must be added via
+      # cbind rather than assigned in place -- matrices can't grow a column
+      # that doesn't exist yet the way a data frame can.
+      mat2 <- matrix(0, nrow = nrow(mat), ncol = length(extra_cnv_patients))
+      rownames(mat2) <- rownames(mat)
+      colnames(mat2) <- extra_cnv_patients
+      mat <- cbind(mat, mat2)
     }
     if (verbose) {
-      print("MAT:")
-      print(dim(mat))
+      print("unique MAT:")
+      print(unique(mat[1,]))
+      print("dim mat1")
+
+      print(dim(mat1))
     }
   }
   spacing <- 0
@@ -936,7 +958,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           snv_maf = bind_rows(snv_maf,these_snv)
           #print("879")
         }
-        
+
       } else if ("hot_spot" %in% mutation_set) {
         snv_maf <- filter(maf_df, hot_spot == TRUE) %>%
           filter(Hugo_Symbol %in% rownames(mat)) %>%
@@ -1077,7 +1099,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "In_Frame_Del", "In_Frame_Ins", "Translation_Start_Site"
     ))
     #if(!missing(include_noncoding)){
-    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {  
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       message("summarize noncoding mutation status")
       silent_df = summarize_mutation_by_class(gene_silent = include_noncoding)
 
@@ -1092,7 +1114,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "Nonsense_Mutation",
       "Frame_Shift_Del", "Frame_Shift_Ins", "Nonstop_Mutation"
     ))
-    splice_df <- summarize_mutation_by_class(mutation_set = "Splice_Site")
+    splice_df <- summarize_mutation_by_class(mutation_set = c("Splice_Site","Splice_Region"))
     if (highlightHotspots) {
       if (verbose) {
         print("summarize hot spots")
@@ -1148,9 +1170,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         s = sample_gene_coverage[i,1]
         g = sample_gene_coverage[i,2]
         if(s %in% colnames(bg_df) && g %in% rownames(bg_df)){
-          bg_df[g,s] = TRUE 
+          bg_df[g,s] = TRUE
         }
-      }       
+      }
     }
     if (!missing(cnv_df)) {
       transposed_cnv_df <- t(cnv_df)
@@ -1201,6 +1223,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         print("ROWNAMES cn_df:")
         print(rownames(cn_df))
         print(table(unlist(cn_df[1, ])))
+
       }
     }
   } else { # end simplifyAnnotation
@@ -1304,6 +1327,30 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (verbose) {
       print("annotating hot spots")
     }
+    # For non-simplify mode, generate a composite alter_fun for every existing
+    # mutation type. The composite key "<type>_hs" maps to col["hot_spot"] so
+    # the barplot counts hotspot mutations under a single magenta category, while
+    # the alter_fun draws the original type's full-height bar first and then
+    # overlays the small magenta hotspot indicator — preserving the background
+    # colour regardless of which mutation class the hotspot belongs to.
+    if (!simplify_annotation) {
+      for (type in setdiff(names(alter_fun), "background")) {
+        hs_type <- paste0(type, "_hs")
+        col[hs_type] <- col["hot_spot"]
+        local({
+          hs_t <- paste0(type, "_hs")
+          base_fun <- alter_fun[[type]]
+          alter_fun[[hs_t]] <<- function(x, y, w, h) {
+            base_fun(x, y, w, h)
+            grid.rect(
+              x, y, w - unit(spacing, "pt"),
+              (height_scaling / 5) * h,
+              gp = gpar(fill = col["hot_spot"], col = box_col)
+            )
+          }
+        })
+      }
+    }
     hot_samples <- dplyr::filter(maf_df, hot_spot == TRUE &
       Hugo_Symbol %in% genes_kept) %>%
       dplyr::select(
@@ -1325,13 +1372,19 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       column_to_rownames("Hugo_Symbol") %>%
       as.matrix()
 
-    for (i in colnames(mat)) {
-      mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])] <-
-        paste0(
-          mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])],
-          ";",
-          hot_mat[genes_kept, i][!is.na(hot_mat[genes_kept, i])]
+    if (!simplify_annotation) {
+      # Replace non-empty hotspot cells with a composite key that encodes the
+      # original mutation type so the correct background colour is drawn.
+      # Empty cells (unmutated samples) are skipped — a hotspot annotation in
+      # the MAF without a corresponding coding mutation in the matrix has no
+      # visual representation.
+      for (i in colnames(mat)) {
+        hotspot_mask <- !is.na(hot_mat[genes_kept, i]) &
+          nzchar(mat[genes_kept, i])
+        mat[genes_kept, i][hotspot_mask] <- paste0(
+          mat[genes_kept, i][hotspot_mask], "_hs"
         )
+      }
     }
 
     if (verbose) {
@@ -1453,7 +1506,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       print(names(colours))
     }
   }
-  col_fun <- circlize::colorRamp2(c(1, 2, 5), c(
+  col_fun <- circlize::colorRamp2(c(0, 0.5, 1), c(
     "blue", "white",
     "red"
   ))
@@ -1651,6 +1704,15 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       silent_df <- silent_df[genes_kept, patients_kept]
     }
+    if (highlightHotspots) {
+      # hotspot_df was built against the full mat dimensions and, unlike
+      # its siblings above, was never trimmed to genes_kept/patients_kept
+      # before being used to build any_hit below. Indexing any_hit (already
+      # trimmed) with a differently-shaped/ordered hotspot_df applies the
+      # TRUE flags positionally instead of by gene/sample identity, which
+      # silently corrupts any_hit and therefore the sortByGenes ordering.
+      hotspot_df <- hotspot_df[genes_kept, patients_kept]
+    }
     if (verbose) {
       print("Simplify Annotations")
     }
@@ -1675,11 +1737,26 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (highlightHotspots) {
       any_hit[hotspot_df == TRUE] <- TRUE
     }
+    # any_hit only records whether a gene is altered at all, so by default
+    # a CN alteration and a point mutation are indistinguishable for sorting
+    # purposes. When prioritizeCNV is TRUE, build a weighted version of the
+    # sort key so CN alterations outrank other alteration types within the
+    # same gene/sample (any_hit itself stays boolean for everything else,
+    # e.g. removeNonMutated and the default gene-frequency ordering below).
+    if (prioritizeCNV && !missing(cnv_df)) {
+      sort_hit <- any_hit
+      sort_hit[] <- 0
+      sort_hit[any_hit == TRUE] <- 1
+      sort_hit[cn_df == TRUE] <- 2
+    } else {
+      sort_hit <- any_hit
+    }
     if (!missing(sortByGenes) && !keepSampleOrder) {
-      tany_hit <- t(any_hit) %>% as.data.frame()
+      tany_hit <- t(sort_hit) %>% as.data.frame()
       tany_hit <- arrange(tany_hit, desc(across(sortByGenes)))
-      any_hit <- t(tany_hit) %>% as.data.frame()
-      patients_kept <- colnames(any_hit)
+      sort_hit <- t(tany_hit) %>% as.data.frame()
+      patients_kept <- colnames(sort_hit)
+      any_hit <- any_hit[, patients_kept]
       col_order <- patients_kept
     } else if (keepSampleOrder) {
       patients_kept <- colnames(any_hit)
@@ -1714,10 +1791,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         print(genes_sorted)
       }
       any_hit <- any_hit[genes_sorted, ]
-      tany_hit <- t(any_hit) %>% as.data.frame()
+      sort_hit <- sort_hit[genes_sorted, ]
+      tany_hit <- t(sort_hit) %>% as.data.frame()
       tany_hit <- arrange(tany_hit, desc(across(genes_sorted)))
-      any_hit <- t(tany_hit) %>% as.data.frame()
-      patients_kept <- colnames(any_hit)
+      sort_hit <- t(tany_hit) %>% as.data.frame()
+      patients_kept <- colnames(sort_hit)
+      any_hit <- any_hit[, patients_kept]
       col_order <- patients_kept
     }
     if (removeNonMutated) {
@@ -1800,7 +1879,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     }else if(simplify_bg_colour == "coverage"){
       path_mat <- as.matrix(bg_df[genes_kept,patients_kept])
       mat_list[["coverage"]] = path_mat
-    } 
+    }
     if (verbose) {
       message("done")
     }
@@ -2165,8 +2244,11 @@ make_prettyoncoplot <- function(
     right_annotation = NULL
   }
   show_row_names = !hide_gene_names
-  if("CNV" %in% names(mat_input) || "coverage" %in% names(mat_input) | "BL" %in% names(mat_input) | "FL" %in% names(mat_input) | "DLBCL" %in% names(mat_input) ){
-    pct_include = setdiff(names(mat_input) ,c("CNV","coverage","BL","FL","DLBCL"))
+  if("coverage" %in% names(mat_input) | "BL" %in% names(mat_input) | "FL" %in% names(mat_input) | "DLBCL" %in% names(mat_input) ){
+    # CNV is a genuine alteration type (unlike the background-shading
+    # matrices below) so it stays in pct_include and counts toward the
+    # percentage shown next to each gene.
+    pct_include = setdiff(names(mat_input) ,c("coverage","BL","FL","DLBCL"))
   }else{
     pct_include = NULL
   }

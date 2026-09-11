@@ -13,6 +13,7 @@ prettyOncoplot(
   keepGeneOrder = FALSE,
   keepSampleOrder = FALSE,
   highlightHotspots = FALSE,
+  prioritizeCNV = FALSE,
   these_samples_metadata,
   genes_CN_thresh,
   metadataColumns,
@@ -121,6 +122,15 @@ ordering.}
 
 \item{highlightHotspots}{Set to TRUE to highlight hot spots.
 Default is FALSE.}
+
+\item{prioritizeCNV}{Set to TRUE to have CN alterations (from `gene_cnv_df`
+/`binned_cnv_df`+`genes_CN_thresh`) outrank other mutation types (SNV,
+truncating, splice, silent) when ordering samples via `sortByGenes` or the
+default frequency-based sort. By default (FALSE), sorting only considers
+whether a gene is altered at all, treating a CN alteration and a point
+mutation as equivalent. Has no effect without CN data or when
+`keepSampleOrder`/`sortByColumns` is used, since neither of those perform
+the alteration-based memoSort.}
 
 \item{these_samples_metadata}{Data frame containing metadata for your
 samples.}
@@ -268,10 +278,10 @@ patients/genes are included.}
 \item{simplify_bg_colour}{When simplify_annotation is called, adjust
 the color of the background by passign a value to this argument.
 Options are: "transparent" (default), "white", or any other color name or hex code.
-Overloaded to accept "pathology" or "background". When "background" 
+Overloaded to accept "pathology" or "background". When "background"
 is specified, the background of the oncoplot will be coloured grey
-for all gene-sample combinations specified in the gene_sample_coverage data frame. 
-This is useful for visually distinguishing gene-sample combinations with 
+for all gene-sample combinations specified in the gene_sample_coverage data frame.
+This is useful for visually distinguishing gene-sample combinations with
 insufficient coverage from those with sufficient coverage but no mutations.
 Default is NA.}
 
