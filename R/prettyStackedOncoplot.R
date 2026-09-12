@@ -20,6 +20,16 @@
 #'   `secondPlotType="prettyOncoplot"`.
 #' @param sortByGenes Genes used to order samples by mutation/CN status.
 #' @param genes_CN_thresh Named numeric vector of CN thresholds for genes.
+#' @param gene_cn_states Optional data frame or matrix of ad hoc, pre-computed
+#'   per-gene CN status: rows named by sample_id, columns named by Hugo gene
+#'   symbol, values encoded as -2 (homozygous deletion), -1 (deletion), 0 (no
+#'   change), 1 (gain) or 2 (amplification). When supplied, this is used
+#'   directly for CN-based sorting and for the CN marks on the oncoplot,
+#'   bypassing `genes_CN_thresh`/`get_cnv_and_ssm_status()` and the specific
+#'   bin-labeled `cn_state_matrix` format they require. `cn_state_matrix` is
+#'   still needed if you also want the accompanying genome-wide CN heatmap
+#'   panel; `gene_cn_states` only replaces the per-gene status used for
+#'   sorting/annotation.
 #' @param secondPlotType Defaults to pretty_CN_heatmap, which is currently
 #' the only option tested with this function.
 #' @param oncoplot_location "top" or "bottom" placement of the oncoplot.
@@ -153,6 +163,33 @@
 #'                      secondPlotHeight=9)
 #' }))
 #' 
+#' # Provide ad hoc, pre-computed per-gene CN states directly instead of
+#' # deriving them from cn_state_matrix + genes_CN_thresh via
+#' # get_cnv_and_ssm_status(). Encoding: -2 = homozygous deletion,
+#' # -1 = deletion, 0 = no change, 1 = gain, 2 = amplification.
+#' # cn_state_matrix is still supplied here because it drives the
+#' # accompanying genome-wide CN heatmap panel; gene_cn_states only
+#' # replaces genes_CN_thresh for per-gene sorting/annotation.
+#' suppressMessages(
+#'   suppressWarnings({
+#' set.seed(123)
+#' cn_genes = c("TP53","CDKN2A","MYC")
+#' gene_cn_states = matrix(
+#'   sample(c(-2,-1,0,1,2), size = nrow(dlbcl_genome_meta) * length(cn_genes),
+#'          replace = TRUE, prob = c(0.05,0.15,0.6,0.15,0.05)),
+#'   nrow = nrow(dlbcl_genome_meta),
+#'   dimnames = list(dlbcl_genome_meta$sample_id, cn_genes)
+#' )
+#'
+#' prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
+#'                      maf_data = dlbcl_maf,
+#'                      metadataColumns = c("pathology","lymphgen"),
+#'                      sortByGenes = c("TP53","CDKN2A"),
+#'                      cn_state_matrix = cn_mat,
+#'                      gene_cn_states = gene_cn_states,
+#'                      genes = genes)
+#' }))
+#'
 #' some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
 #'                               fix_names = "concat",
 #'                               concat_cols = c("gene","region"),sep="-")
@@ -194,6 +231,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                                   second_oncoplot_genes,
                                   sortByGenes,
                                   genes_CN_thresh,
+                                  gene_cn_states,
                                   secondPlotType = "pretty_CN_heatmap", #also allowed: prettyMutationDensity, prettyOncoplot
                                   oncoplot_location = "top",
                                   cluster_samples = FALSE,
@@ -213,6 +251,20 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     stop("maf_data must be provided")
   } else {
     maf_samples <- unique(maf_data$Tumor_Sample_Barcode)
+  }
+  used_gene_cn_states = !missing(gene_cn_states)
+  if(used_gene_cn_states){
+    if(is.null(rownames(gene_cn_states))){
+      stop("gene_cn_states must have sample_id as rownames")
+    }
+    gene_cn_states = as.data.frame(gene_cn_states)
+    if(!all(sapply(gene_cn_states, is.numeric))){
+      stop("gene_cn_states must be entirely numeric (e.g. -2, -1, 0, 1, 2)")
+    }
+    if(!missing(genes_CN_thresh)){
+      message("Both gene_cn_states and genes_CN_thresh were provided. ",
+              "gene_cn_states takes precedence and genes_CN_thresh will be ignored.")
+    }
   }
   if(grepl("CN",secondPlotType)){
     plot_flavour = "CN"
@@ -258,8 +310,8 @@ prettyStackedOncoplot <- function(these_samples_metadata,
      print(paste("proceeding with", length(core_samples), "core samples"))
   }
   if(!missing(cn_state_matrix)){
-    if(missing(genes_CN_thresh)){
-      stop("you must provide genes_CN_thresh along with cn_state_matrix")
+    if(missing(genes_CN_thresh) && !used_gene_cn_states){
+      stop("you must provide genes_CN_thresh or gene_cn_states along with cn_state_matrix")
     }
   }
   these_samples_metadata <- dplyr::filter(these_samples_metadata, 
@@ -267,8 +319,32 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
   ### Oncoplot on TOP scenario ###
   if (oncoplot_location == "top") {
-    if(!missing(sortByGenes) || !missing(genes_CN_thresh)){
-      if(!missing(genes_CN_thresh)){
+    if(!missing(sortByGenes) || !missing(genes_CN_thresh) || used_gene_cn_states){
+      if(used_gene_cn_states){
+        if(verbose){
+          print("using user-provided gene_cn_states for CN status")
+        }
+        cn_state_mat = gene_cn_states[rownames(gene_cn_states) %in%
+                                         these_samples_metadata$sample_id, ,
+                                       drop = FALSE]
+        if(!missing(sortByGenes)){
+          #assume no CN change if not specified
+          missing_g = sortByGenes[!sortByGenes %in% colnames(cn_state_mat)]
+          if(length(missing_g)){
+            cn_state_mat[missing_g] = 0
+          }
+        }
+        old_names = colnames(cn_state_mat)
+        cn_name = sapply(old_names,function(x){paste0(x,"_cn")})
+        if(!missing(sortByGenes)){
+          sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
+        }
+        colnames(cn_state_mat) = cn_name
+        cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
+        if(verbose){
+          print(head(cn_state_mat))
+        }
+      } else if(!missing(genes_CN_thresh)){
         if(verbose){
           print("getting CN status for sorting")
         }
@@ -287,14 +363,14 @@ prettyStackedOncoplot <- function(these_samples_metadata,
                               cn_matrix = cn_state_matrix,
                               these_samples_metadata = these_samples_metadata,
                               maf_df = maf_data,
-                              only_cnv="all") 
-        
+                              only_cnv="all")
+
         old_names= colnames(cn_state_mat)
         cn_name = sapply(old_names,function(x){paste0(x,"_cn")})
         if(!missing(sortByGenes)){
           sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
         }
-        
+
         colnames(cn_state_mat) = c(cn_name)
         cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
         if(verbose){
@@ -332,19 +408,32 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
       these_samples_metadata = these_samples_metadata %>%
                                   left_join(.,ssm_state_mat)
-      if(plot_flavour == "CN"){
-              these_samples_metadata = these_samples_metadata %>% 
+      if(plot_flavour == "CN" && used_gene_cn_states){
+              # rank by magnitude of alteration (either direction) so the
+              # strongest events (amp/homdel) sort ahead of weaker ones (gain/del)
+              these_samples_metadata = these_samples_metadata %>%
+                  arrange(across(any_of(sortByGenes),desc),
+                          across(any_of(sort_cn_name), ~desc(abs(.x))))
+      } else if(plot_flavour == "CN"){
+              these_samples_metadata = these_samples_metadata %>%
                   arrange(across(any_of(sortByGenes),desc),across(any_of(sort_cn_name),desc))
       } else{
-              these_samples_metadata = these_samples_metadata %>% 
+              these_samples_metadata = these_samples_metadata %>%
                   arrange(across(any_of(sortByGenes),desc))
       }
     }
     if(plot_flavour=="CN"){
-        cnv_df = select(these_samples_metadata,sample_id,all_of(cn_name)) 
+        cnv_df = select(these_samples_metadata,sample_id,all_of(cn_name))
         cnv_df = column_to_rownames(cnv_df,"sample_id")
 
         colnames(cnv_df) = gsub("_cn","",colnames(cnv_df))
+        if(used_gene_cn_states){
+          # prettyOncoplot's gene_cnv_df only marks an exact value of 1 as
+          # "altered"; collapse the signed encoding to presence/absence for
+          # the mark (the signed values were already used above to prioritize
+          # the strongest events when sorting)
+          cnv_df[] = as.integer(abs(as.matrix(cnv_df)) > 0)
+        }
     }
     if(verbose){
       print("making oncoplot")  
@@ -544,13 +633,37 @@ prettyStackedOncoplot <- function(these_samples_metadata,
     # get a basic mutation status matrix to allow ordering of samples to be 
     # driven by information in both plot types
     #print(paste("BOTTOM",plot_flavour))
-    if(!missing(sortByGenes) | !missing(genes_CN_thresh)){
+    if(!missing(sortByGenes) | !missing(genes_CN_thresh) | used_gene_cn_states){
       if(plot_flavour == "CN"){
-        if(!missing(genes_CN_thresh)){
+        if(used_gene_cn_states){
           if(verbose){
+            print("using user-provided gene_cn_states for CN status")
+          }
+          cn_state_mat = gene_cn_states[rownames(gene_cn_states) %in%
+                                           these_samples_metadata$sample_id, ,
+                                         drop = FALSE]
+          if(!missing(sortByGenes)){
+            #assume no CN change if not specified
+            missing_g = sortByGenes[!sortByGenes %in% colnames(cn_state_mat)]
+            if(length(missing_g)){
+              cn_state_mat[missing_g] = 0
+            }
+          }
+          old_names = colnames(cn_state_mat)
+          cn_name = sapply(old_names,function(x){paste0(x,"_cn")})
+          if(!missing(sortByGenes)){
+            sort_cn_name = sapply(sortByGenes,function(x){paste0(x,"_cn")})
+          }
+          cn_state_mat = rownames_to_column(cn_state_mat,"sample_id")
+          colnames(cn_state_mat) = c("sample_id",cn_name)
+
+          these_samples_metadata = left_join(these_samples_metadata,
+                                              cn_state_mat)
+        } else if(!missing(genes_CN_thresh)){
+        if(verbose){
             print("getting CN status for sorting")
           }
-        
+
           if(!missing(sortByGenes)){
             #assume diploid if not specified
             missing_g = sortByGenes[!sortByGenes %in% names(genes_CN_thresh)]
@@ -558,7 +671,6 @@ prettyStackedOncoplot <- function(these_samples_metadata,
               genes_CN_thresh[missing_g] = 2
             }
           }
-        }
 
         cn_thresh = data.frame(gene_id=names(genes_CN_thresh),
                                cn_thresh = genes_CN_thresh)
@@ -584,7 +696,7 @@ prettyStackedOncoplot <- function(these_samples_metadata,
         these_samples_metadata = left_join(these_samples_metadata,
                                             cn_state_mat)
 
-
+        }
       }
     }else{
         if(!missing(sortByGenes)){
@@ -620,23 +732,36 @@ prettyStackedOncoplot <- function(these_samples_metadata,
 
         these_samples_metadata = these_samples_metadata %>%
                                   left_join(.,ssm_state_mat)
-      if(plot_flavour == "CN"){
+      if(plot_flavour == "CN" && used_gene_cn_states){
+        # rank by magnitude of alteration (either direction) so the
+        # strongest events (amp/homdel) sort ahead of weaker ones (gain/del)
+        these_samples_metadata = these_samples_metadata %>%
+                                  arrange(across(any_of(sort_cn_name), ~desc(abs(.x))),
+                                  across(any_of(sortByGenes),desc))
+      } else if(plot_flavour == "CN"){
 
-        these_samples_metadata = these_samples_metadata %>% 
+        these_samples_metadata = these_samples_metadata %>%
                                   arrange(across(any_of(sort_cn_name),desc),
                                   across(any_of(sortByGenes),desc))
       }else{
-                        these_samples_metadata = these_samples_metadata %>% 
+                        these_samples_metadata = these_samples_metadata %>%
                                   arrange(across(any_of(sortByGenes),desc))
       }
     }
-    
+
     if(plot_flavour == "CN"){
        cnv_df = select(these_samples_metadata,
                        sample_id,all_of(cn_name)
-                       ) 
+                       )
        cnv_df = column_to_rownames(cnv_df, "sample_id")
        colnames(cnv_df) = gsub("_cn","",colnames(cnv_df))
+       if(used_gene_cn_states){
+         # prettyOncoplot's gene_cnv_df only marks an exact value of 1 as
+         # "altered"; collapse the signed encoding to presence/absence for
+         # the mark (the signed values were already used above to prioritize
+         # the strongest events when sorting)
+         cnv_df[] = as.integer(abs(as.matrix(cnv_df)) > 0)
+       }
        if(verbose){
          print(head(cnv_df))
        }

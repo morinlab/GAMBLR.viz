@@ -10,20 +10,30 @@ plot_feature_associations(
   metadata = NULL,
   comparison_column = NULL,
   max_q = 1,
+  positive_only = FALSE,
   keepFeatureOrder = FALSE,
+  sort_by = NULL,
+  box_colour = "enriched",
   comparison_name = NULL,
   custom_colours = NULL,
   custom_labels = NULL,
   base_size = 10,
   bar_label = "\% Mutated",
-  show_legend = TRUE
+  show_legend = TRUE,
+  return_data = FALSE,
+  sort_comparison = NULL,
+  use_glmnet = FALSE,
+  mode = "combined",
+  coef_limits = c(-5, 5)
 )
 }
 \arguments{
 \item{results}{A tibble returned by
-[GAMBLR.utils::test_feature_associations]. Must contain at least
-\code{feature}, \code{OR}, \code{conf_low}, \code{conf_high},
-\code{p_value}, and \code{q_value}.}
+[GAMBLR.utils::test_feature_associations] or
+[GAMBLR.utils::select_informative_features]. Must contain at least
+\code{feature} and \code{OR} (or \code{OR_glmnet}). \code{conf_low},
+\code{conf_high}, and \code{q_value} are optional; when absent, error bars
+and the \code{max_q} filter are skipped automatically.}
 
 \item{group_sizes}{Optional named numeric vector giving the total number
 of samples per group (e.g. \code{c(FL = 219, DLBCL = 2317)}). Used to
@@ -39,15 +49,51 @@ automatically and \code{group_sizes} is only needed to override them.}
 \item{comparison_column}{Name of the column in \code{metadata} used to
 define groups. Required when \code{metadata} is supplied.}
 
-\item{max_q}{Numeric. Features with \code{q_value} above this threshold
-are excluded from the plot. Default is 1 (show all).}
+\item{max_q}{Numeric. Rows with \code{q_value} strictly above this
+threshold are excluded from the plot entirely; rows at or below it are
+always shown and coloured by enriched/comparator group. Default is 1
+(show all).}
+
+\item{positive_only}{Logical. If \code{TRUE}, restricts the plotted
+features to those with a positive \code{coef} (glmnet coefficient) in at
+least one comparison, mirroring the
+\code{select_informative_features(positive_only = TRUE)} filter but
+applied at plot time instead of at training time — useful for dropping
+all-negative (depletion-only) features from an already-trained model
+without re-running \code{cv.glmnet}. Requires a \code{coef} column in
+\code{results} (present when \code{select_informative_features} was
+called with \code{return_models = TRUE}, or more generally whenever
+glmnet was used). Default is \code{FALSE}.}
 
 \item{keepFeatureOrder}{Logical. If TRUE, features are plotted in the
 order they appear in \code{results} rather than sorted by odds ratio.
 Default is FALSE.}
 
-\item{comparison_name}{Optional string for the legend title. Defaults to
-the names of the two groups joined by " vs ".}
+\item{sort_by}{Optional character scalar or vector of group names
+controlling feature ordering in pairwise mode. A single group name (e.g.
+\code{"FL"}) places features most enriched in that group at the top. An
+ordered vector (e.g. \code{c("FL", "DLBCL", "BL")}) produces a
+hierarchical sort: features enriched in the first group sort to the top,
+then features enriched in the second group, and so on; features not
+enriched in any listed group sort to the bottom. In all cases the sort
+key is the maximum \code{log(reciproc_OR)} across the relevant
+comparisons. \code{NULL} (default) sorts by the maximum
+\code{log(reciproc_OR)} across all comparisons. Ignored when
+\code{keepFeatureOrder = TRUE} or in non-pairwise mode. In
+\code{mode = "split"}, the same vector also controls left-to-right panel
+order: each comparison (e.g. \code{"FL vs rest"}) is ranked by the
+earliest position of either side in \code{sort_by}; comparisons
+involving groups not listed in \code{sort_by} are placed after the
+ordered ones, in their original relative order.}
+
+\item{box_colour}{String controlling what the filled square (point) colour
+represents in pairwise mode. \code{"enriched"} (default): square fill shows
+the numerator (enriched group) and CI line shows the depleted group.
+\code{"depleted"}: square fill shows the comparator group and CI line shows
+the enriched group. The legends swap titles accordingly.}
+
+\item{comparison_name}{Optional string for the bar chart legend title in
+non-pairwise mode. Defaults to the two group names joined by " vs ".}
 
 \item{custom_colours}{Optional named vector of colours matching the group
 labels.}
@@ -62,12 +108,58 @@ display labels for the two groups in legend order.}
 
 \item{show_legend}{Logical. Set to FALSE to suppress the legend.
 Default is TRUE.}
+
+\item{return_data}{Logical. Set to TRUE to include \code{plot_data} (the
+processed data frame used for plotting, with reciprocated OR display columns)
+in the returned list. Default is FALSE.}
+
+\item{sort_comparison}{Optional string giving a single comparison label
+(e.g. \code{"FL vs DLBCL"}) to use as the reference when computing the
+feature sort order in pairwise mode. When supplied, the sort key is derived
+only from rows belonging to that comparison rather than taking the maximum
+across all comparisons. Particularly useful in \code{mode = "split"} to
+anchor the shared feature order to one specific pair. Ignored when
+\code{keepFeatureOrder = TRUE} or in non-pairwise mode.}
+
+\item{use_glmnet}{Logical. Set to \code{TRUE} to use the \code{OR_glmnet}
+column (exponentiated regularized logistic regression coefficient) from
+[GAMBLR.utils::select_informative_features] output as the plotted value
+instead of a Fisher OR. Error bars are suppressed (no CI available for
+regularized estimates), and the x-axis is labelled \code{"Regularized
+ln(OR)"}. Auto-detected when \code{OR} is absent but \code{OR_glmnet}
+is present, so passing \code{select_informative_features()} output directly
+works without setting this flag. Default is \code{FALSE}.}
+
+\item{mode}{One of \code{"combined"} (default) or \code{"split"}.
+In \code{"combined"} mode all pairwise comparisons are overlaid on a single
+dodged forest plot using the two-colour encoding. In \code{"split"} mode a
+separate paired forest+bar plot is produced for each comparison; the feature
+order is derived from the full combined data (respecting \code{sort_by} and
+\code{keepFeatureOrder}) and is shared across all plots so rows are aligned
+when panels are placed side by side. The left-to-right panel order also
+follows \code{sort_by} (see above). Ignored in non-pairwise mode.}
+
+\item{coef_limits}{Numeric vector of length 2 giving the lower and upper
+bound used to truncate the plotted \code{log(OR)} (or, in pairwise mode,
+\code{log(reciproc_OR)}) value before plotting. This prevents a single
+extreme value (e.g. a near-complete-separation feature in regularized
+glmnet output, which can produce a regularized ln(OR) far outside the
+range of all other features) from compressing the visual scale for
+every other point in the panel. Truncation is applied only to the
+plotted point position; the underlying \code{results} values (and the
+feature sort order) are unaffected. Set to \code{NULL} to disable
+truncation. Default is \code{c(-5, 5)}.}
 }
 \value{
-A named list with elements:
-\code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
+In \code{"combined"} mode (or non-pairwise mode): a named list with
+elements \code{forest} (ggplot object), \code{bar} (ggplot object or NULL),
 \code{arranged} (combined plot or just the forest plot if no bar data),
 and \code{results} (the filtered results tibble used for plotting).
+If \code{return_data = TRUE}, also includes \code{plot_data}.
+In \code{"split"} mode: a named list keyed by comparison label
+(e.g. \code{"FL vs DLBCL"}), where each element is the same list structure
+described above, plus a \code{combined} element containing all forest plots
+arranged side-by-side with a single shared bar plot on the right.
 }
 \description{
 Visualise the output of
@@ -82,10 +174,11 @@ tibble directly and produces the same paired forest/bar layout as
 upstream. This separation allows the test results to be inspected,
 filtered, or modified before plotting.
 
-Features are ordered by odds ratio by default. Set
-\code{keepFeatureOrder = TRUE} to preserve the row order in \code{results}
-(e.g. to honour an ordering applied by
-[GAMBLR.utils::order_features_by_gene]).
+Features are ordered by odds ratio by default (mean log OR across
+comparisons in pairwise mode). Set \code{keepFeatureOrder = TRUE} to
+preserve the row order in \code{results} (e.g. to honour an ordering
+applied by [GAMBLR.utils::order_features_by_gene]). In pairwise mode,
+use \code{sort_by} to order by a specific comparison or group instead.
 
 For the bar plot, per-group mutation frequencies are computed from the
 \code{n_mutated_<group>} columns in \code{results} and the total sample
@@ -99,30 +192,34 @@ suppressPackageStartupMessages(library(GAMBLR.open))
 suppressPackageStartupMessages(library(GAMBLR.utils))
 
 meta = get_gambl_metadata()
-fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL","BL")) \%>\%
   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 
 maf = get_all_coding_ssm(fl_dlbcl_meta)
-maf = annotate_curated_drivers(
-  maf,
-  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
-)
+genes_driver = dplyr::filter(GAMBLR.data::lymphoma_genes,
+                             DLBCL_Tier == 1 | FL_Tier == 1 | BL_Tier == 1) \%>\%
+                             pull(Gene)
+genes_hotspot = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
+annotated_maf= annotate_curated_drivers(maf_data = maf,
+                                          genes_of_interest = unique(c(genes_hotspot,
+                                                                       genes_driver)))
 
+ 
 results = test_feature_associations(
-  maf = maf,
+  maf = annotated_maf,
   metadata = fl_dlbcl_meta,
   comparison_column = "pathology",
-  comparison_values = c("FL", "DLBCL"),
-  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  comparison_values = c("FL", "DLBCL","BL"),
   maf_column = "mutation_alias"
 )
 
 # group_sizes derived automatically from metadata
 plots = plot_feature_associations(
   results = results,
-  metadata = fl_dlbcl_meta,
   comparison_column = "pathology",
-  comparison_name = "FL vs DLBCL"
+  max_q = 0.1,
+  sort_by = c("FL", "DLBCL","BL"),
+  base_size = 6
 )
 plots$arranged
 
@@ -134,6 +231,13 @@ plots = plot_feature_associations(
   max_q = 0.1
 )
 plots$arranged
+
+#combined mode with separate panels per comparison
+plot_feature_associations(results,max_q = 0.00001,
+ sort_by = "FL",
+ mode="split",
+  base_size = 6)
 }
+
 
 }

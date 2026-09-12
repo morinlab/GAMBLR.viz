@@ -93,6 +93,39 @@
 #'     minMutationPercent = 5
 #' )
 #'
+#' # A second example comparing 3 pathologies at once (DLBCL, FL, BL) rather
+#' # than 2, using get_all_coding_ssm() and a 3-way gene tier filter
+#' meta <- get_gambl_metadata()
+#' meta <- meta %>%
+#'     dplyr::filter(
+#'         pathology %in% c("DLBCL", "FL", "BL")
+#'     )
+#' ssm <- get_all_coding_ssm(
+#'     these_samples_metadata = meta
+#' )
+#'
+#' lymphomagenes <- dplyr::filter(lymphoma_genes,
+#'                         FL_Tier==1 | DLBCL_Tier==1 | BL_Tier==1) %>%
+#'                         dplyr::pull(Gene)
+#'
+#' prettyCoOncoplot(
+#'     maf = ssm,
+#'     metadata = meta,
+#'     comparison_column = "pathology",
+#'     genes = lymphomagenes,
+#'     metadataColumns = c(
+#'         "pathology",
+#'         "lymphgen",
+#'         "pairing_status"
+#'     ),
+#'     metadataBarHeight = 7,
+#'     fontSizeGene = 12,
+#'     metadataBarFontsize = 9,
+#'     legend_row = 2,
+#'     simplify_annotation = TRUE,
+#'     minMutationPercent = 5
+#' )
+#'
 prettyCoOncoplot = function(maf,
                             metadata,
                             comparison_column,

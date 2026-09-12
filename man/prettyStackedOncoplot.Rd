@@ -18,6 +18,7 @@ prettyStackedOncoplot(
   second_oncoplot_genes,
   sortByGenes,
   genes_CN_thresh,
+  gene_cn_states,
   secondPlotType = "pretty_CN_heatmap",
   oncoplot_location = "top",
   cluster_samples = FALSE,
@@ -66,6 +67,17 @@ sort samples by.}
 \item{sortByGenes}{Genes used to order samples by mutation/CN status.}
 
 \item{genes_CN_thresh}{Named numeric vector of CN thresholds for genes.}
+
+\item{gene_cn_states}{Optional data frame or matrix of ad hoc, pre-computed
+per-gene CN status: rows named by sample_id, columns named by Hugo gene
+symbol, values encoded as -2 (homozygous deletion), -1 (deletion), 0 (no
+change), 1 (gain) or 2 (amplification). When supplied, this is used
+directly for CN-based sorting and for the CN marks on the oncoplot,
+bypassing `genes_CN_thresh`/`get_cnv_and_ssm_status()` and the specific
+bin-labeled `cn_state_matrix` format they require. `cn_state_matrix` is
+still needed if you also want the accompanying genome-wide CN heatmap
+panel; `gene_cn_states` only replaces the per-gene status used for
+sorting/annotation.}
 
 \item{secondPlotType}{Defaults to pretty_CN_heatmap, which is currently
 the only option tested with this function.}
@@ -211,6 +223,33 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
                      genes_CN_thresh = CN_thresh,
                      genes = genes,
                      secondPlotHeight=9)
+}))
+
+# Provide ad hoc, pre-computed per-gene CN states directly instead of
+# deriving them from cn_state_matrix + genes_CN_thresh via
+# get_cnv_and_ssm_status(). Encoding: -2 = homozygous deletion,
+# -1 = deletion, 0 = no change, 1 = gain, 2 = amplification.
+# cn_state_matrix is still supplied here because it drives the
+# accompanying genome-wide CN heatmap panel; gene_cn_states only
+# replaces genes_CN_thresh for per-gene sorting/annotation.
+suppressMessages(
+  suppressWarnings({
+set.seed(123)
+cn_genes = c("TP53","CDKN2A","MYC")
+gene_cn_states = matrix(
+  sample(c(-2,-1,0,1,2), size = nrow(dlbcl_genome_meta) * length(cn_genes),
+         replace = TRUE, prob = c(0.05,0.15,0.6,0.15,0.05)),
+  nrow = nrow(dlbcl_genome_meta),
+  dimnames = list(dlbcl_genome_meta$sample_id, cn_genes)
+)
+
+prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
+                     maf_data = dlbcl_maf,
+                     metadataColumns = c("pathology","lymphgen"),
+                     sortByGenes = c("TP53","CDKN2A"),
+                     cn_state_matrix = cn_mat,
+                     gene_cn_states = gene_cn_states,
+                     genes = genes)
 }))
 
 some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions,
