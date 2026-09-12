@@ -653,7 +653,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       ) %>%
       filter(
         Tumor_Sample_Barcode %in% patients,
-        Variant_Classification %in% onco_matrix_coding
+        Variant_Classification %in% onco_matrix_coding,
+        # exclude the placeholder rows supplement_maf() adds (and
+        # uniquifies to GARBAGE<row number>) for metadata samples with no
+        # real mutations -- these exist only so the sample survives as a
+        # column and are not real genes
+        !grepl("^GARBAGE[0-9]*$", Hugo_Symbol)
       ) %>%
       distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
       group_by(Hugo_Symbol) %>%
