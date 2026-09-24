@@ -14,6 +14,8 @@ prettyOncoplot(
   keepSampleOrder = FALSE,
   highlightHotspots = FALSE,
   prioritizeCNV = FALSE,
+  overlayColumn,
+  overlayColours,
   these_samples_metadata,
   genes_CN_thresh,
   metadataColumns,
@@ -131,6 +133,19 @@ whether a gene is altered at all, treating a CN alteration and a point
 mutation as equivalent. Has no effect without CN data or when
 `keepSampleOrder`/`sortByColumns` is used, since neither of those perform
 the alteration-based memoSort.}
+
+\item{overlayColumn}{Optional column name in `maf_df` (like `hot_spot`,
+but categorical instead of boolean) whose non-NA values are drawn as a
+small colour overlay on top of each mutated cell -- one colour per
+distinct value, e.g. the HLA allele associated with a predicted
+neoepitope. NA (the default for any row) draws no overlay. Independent
+of `highlightHotspots`/`hot_spot` -- both can be used at once.}
+
+\item{overlayColours}{Optional named vector mapping `overlayColumn`
+values to colours (e.g. `c("HLA-A*02:01"="red", "HLA-B*07:02"="blue")`).
+Any value present in the data but missing from this vector (or all
+values, if this argument is omitted entirely) gets a colour assigned
+automatically from a qualitative palette.}
 
 \item{these_samples_metadata}{Data frame containing metadata for your
 samples.}
@@ -474,6 +489,31 @@ prettyOncoplot(
   minMutationPercent = 0,
   include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")),
   simplify_annotation = TRUE
+)
+
+# Overlay a categorical marker on individual mutations, e.g. the HLA
+# allele associated with a predicted neoepitope. Any column in maf_df
+# works: each distinct non-NA value gets its own colour (auto-assigned
+# unless you supply overlayColours), NA draws no overlay. Independent of
+# highlightHotspots -- both can be used together.
+neoepitope_maf <- data.frame(
+  Hugo_Symbol = c("BCL2", "MYC"),
+  Tumor_Sample_Barcode = c("S1", "S2"),
+  Variant_Classification = c("Missense_Mutation", "Missense_Mutation"),
+  Chromosome = "18",
+  Start_Position = 1:2,
+  End_Position = 1:2,
+  neoepitope_allele = c("HLA-A*02:01", NA),
+  stringsAsFactors = FALSE
+)
+
+prettyOncoplot(
+  maf_df = neoepitope_maf,
+  these_samples_metadata = noncoding_metadata,
+  genes = c("BCL2", "MYC"),
+  keepGeneOrder = TRUE,
+  minMutationPercent = 0,
+  overlayColumn = "neoepitope_allele"
 )
 
 # Want to include copy number? You have two options.
