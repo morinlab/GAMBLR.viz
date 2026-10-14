@@ -165,55 +165,18 @@ segments_to_exact_cn_matrix = function(seg_data,
   if(adjust_for_ploidy){
     t0 = Sys.time()
     seg_data = seg_data %>%
-      dplyr::mutate(
-        CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN),
-        .size = end - start
-      )
+      dplyr::mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
 
-    # Baseline ploidy per sample: the length-weighted MODE of (rounded) CN,
-    # not the length-weighted mean. The mean isn't robust to a skewed CN
-    # distribution -- a sample that's genuinely diploid at baseline but
-    # carries a substantial burden of gains (very common) gets its mean
-    # pulled above 2 by those gains alone, even though most of its genome
-    # (by length) is still truly CN=2; shifting by that inflated mean then
-    # pushes the actually-neutral majority of the genome into "loss"
-    # territory. The mode -- whichever (rounded) CN level covers the most
-    # total genomic length -- is far more robust to that skew.
-    #
-    # Sex chromosomes are excluded from the baseline calculation (but not
-    # from the matrix/plot -- the resulting autosome-derived shift is still
-    # applied to X/Y) by default: X/Y copy number reflects patient sex, not
-    # tumour biology, and would bias the baseline for roughly half of any
-    # mixed-sex cohort.
-    #
-    # The dominant level is *identified* by rounding (robust to skew -- see
-    # above), but the shift itself is computed from the continuous,
-    # length-weighted mean CN of the segments inside that dominant bucket,
-    # not from the rounded integer label. Using the rounded label directly
-    # would silently skip correction for exactly the samples that most need
-    # it: a low-signal/"boring" sample whose caller-assigned neutral CN is
-    # consistently ~1.9 (not 2.0) still has its dominant bucket round to 2,
-    # which would give a baseline of 2 and a shift of 0 -- leaving the whole
-    # sample under-corrected even though adjust_for_ploidy ran.
-    baseline_segs = seg_data
-    if(ploidy_baseline_autosomes_only){
-      baseline_segs = dplyr::filter(
-        baseline_segs, !grepl("^(chr)?[XY]$", chrom, ignore.case = TRUE)
-      )
-    }
-    baseline_df = baseline_segs %>%
-      dplyr::mutate(CN_level = round(CN)) %>%
-      dplyr::group_by(ID, CN_level) %>%
-      dplyr::summarise(
-        total_length = sum(.size),
-        level_CN = stats::weighted.mean(CN, .size),
-        .groups = "drop"
-      ) %>%
-      dplyr::arrange(CN_level) %>%
-      dplyr::group_by(ID) %>%
-      dplyr::slice_max(total_length, n = 1, with_ties = FALSE) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(ID, .baseline = level_CN)
+    # see GAMBLR.utils::segmented_data_to_ploidy_estimate for why the
+    # length-weighted mode is used and why sex chromosomes are excluded
+    # by default (the resulting shift is still applied to X/Y)
+    baseline_df = GAMBLR.utils::segmented_data_to_ploidy_estimate(
+      seg_data,
+      method = "mode",
+      autosomes_only = ploidy_baseline_autosomes_only,
+      max_CN_allowed = max_CN_allowed
+    ) %>%
+      dplyr::select(ID = sample_id, .baseline = ploidy)
 
     seg_data = seg_data %>%
       dplyr::left_join(baseline_df, by = "ID") %>%
@@ -223,7 +186,7 @@ segments_to_exact_cn_matrix = function(seg_data,
         .baseline = ifelse(is.na(.baseline), 2, .baseline),
         CN = 2 + CN - .baseline
       ) %>%
-      dplyr::select(-.size, -.baseline)
+      dplyr::select(-.baseline)
     tick("ploidy adjustment (length-weighted mode baseline)", t0)
   }
 
