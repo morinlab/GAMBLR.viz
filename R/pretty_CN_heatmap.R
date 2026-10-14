@@ -24,6 +24,10 @@
 #' @param cluster_regions More intuitive alias for cluster_columns
 #' @param cluster_samples More intuitive alias for cluster_rows, especially when combining with rotate = TRUE
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
+#' @param clusterRowsByGenes Optional: A vector of Hugo gene symbols. When provided (and cluster_rows is TRUE), the rows (samples) are clustered using only the bins that contain these genes rather than all bins. Genes are mapped to bins the same way as for labelTheseGenes. Bins outside keep_these_chromosomes can still be used for clustering.
+#' Alternatively, a data frame with columns "gene_id" and "cn_thresh" (the same format as genes_and_cn_threshs in get_cnv_and_ssm_status) restricts each gene to its relevant direction of CN change.
+#' A cn_thresh below 2 is the maximum CN considered a loss for that gene (tumour suppressor) and above 2 is the minimum CN considered a gain (oncogene).
+#' Any value in that gene's bin not passing its threshold is set to 2 (neutral) before clustering. A cn_thresh of 2 uses the bin without any direction filter. The displayed heatmap values are not altered.
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
@@ -126,6 +130,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              genome_build = "grch37",
                              cluster_columns=FALSE,
                              cluster_rows=TRUE,
+                             clusterRowsByGenes,
                              show_row_names=FALSE,
                              show_column_names=FALSE,
                              keep_these_chromosomes,
@@ -254,6 +259,44 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }
   }
   gene_bins = list()
+  cluster_gene_df = NULL
+  if(!missing(clusterRowsByGenes)){
+    if(is.data.frame(clusterRowsByGenes)){
+      stopifnot('clusterRowsByGenes data frame must have columns "gene_id" (characters) and "cn_thresh" (numeric)' = {
+        all(c("gene_id","cn_thresh") %in% names(clusterRowsByGenes)) &&
+          is.character(clusterRowsByGenes$gene_id) &&
+          is.numeric(clusterRowsByGenes$cn_thresh)
+      })
+      cluster_genes = clusterRowsByGenes$gene_id
+      cluster_threshs = clusterRowsByGenes$cn_thresh
+    }else{
+      cluster_genes = clusterRowsByGenes
+      cluster_threshs = rep(2,length(clusterRowsByGenes))
+    }
+    message("mapping clustering genes to bins")
+    for(j in seq_along(cluster_genes)){
+      g = cluster_genes[j]
+      gene_region = suppressMessages(gene_to_region(g))
+      if(length(gene_region)==0){
+        message(paste("no region for",g))
+        next
+      }
+      this_gene_region = map_bin_to_bin(gene_region)
+      if (is.na(this_gene_region)){
+        message(paste("no region for",g))
+        next
+      }
+      cluster_gene_df = rbind(cluster_gene_df,
+                              data.frame(gene_id=g,
+                                         bin=this_gene_region,
+                                         cn_thresh=cluster_threshs[j]))
+    }
+    #genes sharing a bin and threshold would otherwise double that bin's weight
+    cluster_gene_df = cluster_gene_df[!duplicated(cluster_gene_df[,c("bin","cn_thresh")]),,drop=FALSE]
+    if(is.null(cluster_gene_df)||nrow(cluster_gene_df)==0){
+      stop("None of the genes in clusterRowsByGenes could be mapped to a bin")
+    }
+  }
   if(!missing(labelTheseGenes) | !missing(labelTheseCytobands) | !missing(sortByGenes)){
 
     if(!missing(sortByGenes)){
@@ -482,6 +525,47 @@ pretty_CN_heatmap = function(cn_state_matrix,
     total_loss = colSums(loss_state, na.rm = TRUE)
     #sample_CN_anno = HeatmapAnnotation(PGA=sample_average,which="row")
 
+
+    if(!is.null(cluster_gene_df)){
+      #snapshot before chromosome/bin restriction so genes outside the
+      #displayed chromosomes can still drive the sample clustering
+      bin_present = cluster_gene_df$bin %in% colnames(cn_state_matrix)
+      if(any(!bin_present)){
+        message(paste("these clustering bins were removed by other filters:",
+                      paste(unique(cluster_gene_df$bin[!bin_present]),collapse=", ")))
+      }
+      cluster_gene_df = cluster_gene_df[bin_present,,drop=FALSE]
+      if(nrow(cluster_gene_df)==0){
+        stop("None of the bins for clusterRowsByGenes remain after filtering")
+      }
+      #one column per gene so a bin shared by genes with opposing
+      #thresholds contributes each relevant direction separately
+      cluster_gene_mat = as.matrix(cn_state_matrix[,cluster_gene_df$bin,drop=FALSE])
+      colnames(cluster_gene_mat) = cluster_gene_df$gene_id
+      for(j in seq_len(nrow(cluster_gene_df))){
+        thresh = cluster_gene_df$cn_thresh[j]
+        vals = cluster_gene_mat[,j]
+        if(thresh < 2){
+          vals[!is.na(vals) & vals > thresh] = 2
+        }else if(thresh > 2){
+          vals[!is.na(vals) & vals < thresh] = 2
+        }
+        cluster_gene_mat[,j] = vals
+      }
+      if(cluster_rows){
+        #A function (rather than a precomputed hclust) keeps this compatible
+        #with row_split, since ComplexHeatmap calls it on each slice
+        cluster_rows = function(m){
+          these_ids = rownames(m)
+          if(!all(these_ids %in% rownames(cluster_gene_mat))){
+            these_ids = colnames(m)
+          }
+          hclust(dist(cluster_gene_mat[these_ids,,drop=FALSE]))
+        }
+      }else{
+        message("clusterRowsByGenes is ignored because row clustering is disabled")
+      }
+    }
 
     if(!missing(keep_these_chromosomes)){
       keep_cols = which(column_chromosome %in% keep_these_chromosomes)

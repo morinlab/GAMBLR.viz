@@ -15,6 +15,7 @@ pretty_CN_heatmap(
   genome_build = "grch37",
   cluster_columns = FALSE,
   cluster_rows = TRUE,
+  clusterRowsByGenes,
   show_row_names = FALSE,
   show_column_names = FALSE,
   keep_these_chromosomes,
@@ -82,6 +83,11 @@ should be considered numeric}
 \item{cluster_columns}{Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all patients in the heatmap}
 
 \item{cluster_rows}{Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap}
+
+\item{clusterRowsByGenes}{Optional: A vector of Hugo gene symbols. When provided (and cluster_rows is TRUE), the rows (samples) are clustered using only the bins that contain these genes rather than all bins. Genes are mapped to bins the same way as for labelTheseGenes. Bins outside keep_these_chromosomes can still be used for clustering.
+Alternatively, a data frame with columns "gene_id" and "cn_thresh" (the same format as genes_and_cn_threshs in get_cnv_and_ssm_status) restricts each gene to its relevant direction of CN change.
+A cn_thresh below 2 is the maximum CN considered a loss for that gene (tumour suppressor) and above 2 is the minimum CN considered a gain (oncogene).
+Any value in that gene's bin not passing its threshold is set to 2 (neutral) before clustering. A cn_thresh of 2 uses the bin without any direction filter. The displayed heatmap values are not altered.}
 
 \item{show_row_names}{Set to TRUE to display the ID of every bin (region) shown in the heatmap}
 
