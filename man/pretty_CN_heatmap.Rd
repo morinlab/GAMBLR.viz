@@ -25,11 +25,30 @@ pretty_CN_heatmap(
   hide_cumulative_plot = FALSE,
   sortByBins,
   sortByGenes,
+  sortByFeatures,
+  cnv_status,
   splitByBinState,
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
   labelTheseCytobands,
+  labelTheseFeatures,
+  feature_label = "gene",
+  colour_feature_labels = TRUE,
+  label_style = "mark",
+  heatmap_name = "CN",
+  heatmap_row_title = NULL,
+  cumulative_as_fraction = FALSE,
+  cumulative_ylim = NULL,
+  cumulative_track_height = 1,
+  cumulative_position = "bottom",
+  show_mean_cn = TRUE,
+  cumulative_axis = "full",
+  show_chromosome_strip = TRUE,
+  heatmap_row_title_fontsize = 13,
+  heatmap_row_title_rot = 90,
+  annotation_colours = NULL,
+  show_legends = TRUE,
   highlightTheseRegions,
   bin_label_fontsize = 5,
   bin_label_nudge = 1.03,
@@ -63,9 +82,14 @@ pretty_CN_heatmap(
 )
 }
 \arguments{
-\item{cn_state_matrix}{The output of get_cn_states}
+\item{cn_state_matrix}{Copy number matrix with samples as rows and bins as
+columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Build it
+with `adjust_for_ploidy = TRUE` to correct for sample ploidy (see Details).}
 
-\item{scale_by_sample}{Set to TRUE to scale CN values within each sample_id}
+\item{scale_by_sample}{Set to TRUE to recentre each sample on 2 by
+subtracting its mean CN. Not recommended: use
+`adjust_for_ploidy = TRUE` when building the matrix instead, and don't
+combine the two (see Details). Default FALSE.}
 
 \item{these_samples_metadata}{The output of get_gambl_metadata}
 
@@ -103,6 +127,12 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 
 \item{sortByBins}{Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.}
 
+\item{sortByGenes}{Optional: genes whose bins (mapped as for labelTheseGenes) order the rows by their CN value, highest first, so gains sort first and losses last. Row clustering is turned off. For direction-aware sorting use sortByFeatures.}
+
+\item{sortByFeatures}{Optional: names of CN features (columns of `cnv_status`) to order the rows by, in priority order. Samples are sorted by the level of each feature (strongest first: 2, then 1, then 0, using the absolute value so gains and losses both sort ahead of unaltered samples), then by the next feature, and so on. Remaining ties keep the clustering order (or the input order if cluster_rows = FALSE). Row clustering is turned off.}
+
+\item{cnv_status}{Sample-by-feature CN calls used by sortByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.}
+
 \item{splitByBinState}{Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin}
 
 \item{sortByPGA}{Optional: Sort the rows based on percent genome altered (PGA) instead of the other options}
@@ -111,9 +141,41 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 
 \item{labelTheseGenes}{A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap}
 
+\item{labelTheseFeatures}{Optional data frame of CNV features to label, in the format returned by [GAMBLR.utils::get_cnv_features] (subset it to the features you want). Each feature is labelled at the bin containing its midpoint; features sharing a bin are joined with "/". Can be combined with labelTheseGenes.}
+
+\item{feature_label}{What to show for each feature in labelTheseFeatures: "gene" (default; representative_gene, or region_name where there is none), "name" (e.g. "2p16.1_gain") or "region" (e.g. "2p16.1").}
+
+\item{colour_feature_labels}{Colour feature labels by direction (gains red, losses blue; black where features of both directions share a bin). Default TRUE.}
+
+\item{label_style}{How gene, feature and bin labels are drawn. "mark" (default) uses a ComplexHeatmap anno_mark annotation: labels are aligned along one line, spread apart where crowded with connector lines to their bins, and given their own space above the heatmap (or to the left with rotate = TRUE). "classic" draws them on the heatmap body as before, positioned with bin_label_nudge.}
+
+\item{heatmap_name}{Name of the ComplexHeatmap object (default "CN"). Heatmaps combined into one figure need distinct names.}
+
+\item{heatmap_row_title}{Optional title shown to the left of the heatmap rows (not used with rotate = TRUE).}
+
+\item{cumulative_as_fraction}{Plot the gain/loss tracks as the fraction of samples shown instead of counts. Default FALSE.}
+
+\item{cumulative_ylim}{Optional y-axis limits for the gain/loss tracks, e.g. to share one scale across several heatmaps.}
+
+\item{cumulative_track_height}{Height in cm of each of the gain and loss tracks (their width with rotate = TRUE). Default 1, ComplexHeatmap's default.}
+
+\item{cumulative_position}{Where to put the gain/loss tracks: "bottom" (default, below the heatmap with the chromosome strip) or "top" (above the heatmap, under any labels, so labels point at the peaks). "top" isn't supported with rotate = TRUE.}
+
+\item{show_mean_cn}{Show the mean CN strip above the heatmap. Default TRUE.}
+
+\item{cumulative_axis}{Axis on the gain/loss tracks: "full" (default), "minimal" (only 0 and the top of the scale, legible on short tracks) or "none".}
+
+\item{show_chromosome_strip}{Show the chromosome colour strip below the heatmap. Default TRUE.}
+
+\item{heatmap_row_title_fontsize, heatmap_row_title_rot}{Font size (default 13) and rotation (default 90) of heatmap_row_title.}
+
+\item{annotation_colours}{Optional named list of colour mappings for the sample annotations (named vectors for categorical columns, circlize::colorRamp2 functions for numeric ones such as PGA). These replace the automatically chosen colours for those annotations.}
+
+\item{show_legends}{Set to FALSE to omit all legends. Default TRUE.}
+
 \item{bin_label_fontsize}{Font size for the gene labels (default 5)}
 
-\item{bin_label_nudge}{Increase or decrease this value to shift the gene labels up/down (default 1.03)}
+\item{bin_label_nudge}{Increase or decrease this value to shift the gene labels up/down (default 1.03). Only used with label_style = "classic".}
 
 \item{bin_label_rotation}{Rotate the direction of the bin label. Default is 45.}
 
@@ -145,13 +207,15 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 
 \item{return_data}{Specify TRUE to get some of the internal data back including the heatmap object}
 
-\item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded}
+\item{drop_bin_if_sd_below}{Force bins with standard deviation below this value to be excluded. Set to -Inf to keep all bins.}
 
 \item{verbose}{Control verbosity of the console output. Default is FALSE.}
 
 \item{rotate}{Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.}
 
-\item{width}{Set the width of the heatmap. Default is 10.}
+\item{width}{Width of the heatmap in cm when rotate = TRUE. Default 15; NULL fills the available space.}
+
+\item{height}{Height of the heatmap in cm when rotate = TRUE. Default 6; NULL fills the available space.}
 
 \item{cluster_samples}{More intuitive alias for cluster_rows, especially when combining with rotate = TRUE}
 
@@ -162,6 +226,23 @@ list (when return_data = TRUE)
 }
 \description{
 Pretty Copy Number Heatmap
+}
+\details{
+**Correcting for ploidy.** To show copy number relative to each sample's
+own ploidy, build the matrix with
+`GAMBLR.utils::segmented_data_to_cn_matrix(..., adjust_for_ploidy = TRUE)`
+and leave `scale_by_sample = FALSE` (the default). That adjustment
+recentres each sample's segments on its dominant CN level *before* the
+bins are made, so bins with no data are filled after the adjustment and
+stay neutral.
+
+Avoid `scale_by_sample = TRUE` on a matrix built with
+`fill_missing_with = "diploid"` (the default fill): the filled bins are a
+fixed CN of 2, so after subtracting a high-ploidy sample's mean they
+appear as deletions in that sample only (commonly on chrY, pericentromeric
+9q and the acrocentric p arms). The mean is also pulled around by large
+gains and losses. Don't combine the two approaches either, as that shifts
+samples twice.
 }
 \examples{
 cat("Running example for function: pretty_CN_heatmap\n")
@@ -176,12 +257,15 @@ dlbcl_genome_meta = suppressMessages(get_gambl_metadata()) \%>\%
 meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
                                       duplicate_action = "keep_first")
 
-# Create the copy number matrix using the helper functions
+# Create the copy number matrix using the helper functions.
+# adjust_for_ploidy = TRUE shows CN relative to each sample's own ploidy;
+# use it instead of scale_by_sample (see Details).
 all_segments = get_cn_segments(these = meta_clean)
 dlbcl_cn_binned = segmented_data_to_cn_matrix(
                                   seg_data = all_segments,
                                   strategy="auto_split",
                                   n_bins_split=1300,
+                                  adjust_for_ploidy = TRUE,
                                   these_samples_metadata = meta_clean)
 
 # Generate a basic genome-wide CN heatmap

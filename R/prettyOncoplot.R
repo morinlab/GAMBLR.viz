@@ -158,7 +158,9 @@
 #' @param gap Size of gap between columns represented as a proportion
 #' of the full width of the column. Default 0 (no gap).
 #' @param return_inputs Optional flag to return the plot and various
-#' other internal objects such as the underlying mutation matrix.
+#' other internal objects such as the underlying mutation matrix, and
+#' `oncoprint_args`: the arguments passed to `ComplexHeatmap::oncoPrint()`
+#' (alteration matrices, `alter_fun` and colours).
 #' @param use_raster Whether to rasterize image
 #' @param show_pct TRUE by default. Set to FALSE to hide percentage.
 #' @param hide_annotation_name Default: FALSE
@@ -2811,6 +2813,10 @@ make_prettyoncoplot <- function(
     } else {
       to_return <- list("gene_order" = gene_order)
     }
+    # the arguments given to oncoPrint (alteration matrices, alter_fun,
+    # colours), so the same cells can be redrawn in another layout
+    # (e.g. sideways in linked_CN_oncoplot)
+    to_return[["oncoprint_args"]] <- oncoprint_args
     if (plot_type == "simplify") {
       metadata_df <- bind_cols(metadata_df, mut_status)
       return(c(

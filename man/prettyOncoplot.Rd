@@ -304,7 +304,9 @@ Default is NA.}
 for this functionality.}
 
 \item{return_inputs}{Optional flag to return the plot and various
-other internal objects such as the underlying mutation matrix.}
+other internal objects such as the underlying mutation matrix, and
+`oncoprint_args`: the arguments passed to `ComplexHeatmap::oncoPrint()`
+(alteration matrices, `alter_fun` and colours).}
 
 \item{gap}{Size of gap between columns represented as a proportion
 of the full width of the column. Default 0 (no gap).}

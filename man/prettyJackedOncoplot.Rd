@@ -28,7 +28,9 @@ mode; do not provide `cn_mat` simultaneously.}
 
 \item{cn_mat}{Optional matrix or data frame of copy-number features with
 **samples in rows** (row names as sample IDs). Provide this for CNV mode;
-do not provide `all_exp` simultaneously.}
+do not provide `all_exp` simultaneously. To correct for sample ploidy,
+build it with `GAMBLR.utils::segmented_data_to_cn_matrix(...,
+adjust_for_ploidy = TRUE)`; see the Details of [pretty_CN_heatmap].}
 
 \item{genes}{Character vector of gene symbols/feature names to extract from
 `all_exp` (ignored in CNV mode).}
@@ -49,6 +51,11 @@ where to insert the new heatmap relative to the existing stack.}
 `TRUE`, no drawing is performed and a list is returned containing the new
 heatmap plus the original `existing_heatmaps` (order depends on
 `heatmap_location`).}
+
+\item{cn_args}{Optional named list of arguments passed to
+[pretty_CN_heatmap] in CNV mode, overriding the defaults used here
+(e.g. `list(keep_these_chromosomes = "9")`). `scale_by_sample` defaults
+to FALSE; setting it to TRUE isn't recommended (see [pretty_CN_heatmap]).}
 }
 \value{
 - If `returnEverything = FALSE`: invisibly returns `NULL` and draws the
@@ -107,7 +114,10 @@ prettyJackedOncoplot(
   returnEverything = FALSE
 )
 
-# CNV mode:
+# CNV mode, with ploidy corrected when the matrix is built:
+cn_matrix <- GAMBLR.utils::segmented_data_to_cn_matrix(segs,
+                                                       these_samples_metadata = md,
+                                                       adjust_for_ploidy = TRUE)
 out <- prettyJackedOncoplot(
   these_samples_metadata = md,
   all_exp = NULL,

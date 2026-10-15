@@ -183,8 +183,8 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
 
 }))
 # make a list of arguments for the second (here, the upper) plot
-CN_args = list("keep_these_chromosomes"=c("2"),
-              "scale_by_sample" = TRUE)
+# cn_mat was built with adjust_for_ploidy = TRUE, so no scale_by_sample
+CN_args = list("keep_these_chromosomes"=c("2"))
 suppressMessages(
   suppressWarnings({
 
@@ -203,7 +203,6 @@ prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta,
 }))
 # make a list of arguments for the second (here, the upper) plot
 CN_args = list(
-              "scale_by_sample" = TRUE,
               "hide_these_chromosomes" = "X")
 
 # Specifying sortByGenes automatically ensures those genes
