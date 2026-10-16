@@ -52,7 +52,12 @@
 #' Any value in that gene's bin not passing its threshold is set to 2 (neutral) before clustering. A cn_thresh of 2 uses the bin without any direction filter. The displayed heatmap values are not altered.
 #' @param sortByGenes Optional: genes whose bins (mapped as for labelTheseGenes) order the rows by their CN value, highest first, so gains sort first and losses last. Row clustering is turned off. For direction-aware sorting use sortByFeatures.
 #' @param sortByFeatures Optional: names of CN features (columns of `cnv_status`) to order the rows by, in priority order. Samples are sorted by the level of each feature (strongest first: 2, then 1, then 0, using the absolute value so gains and losses both sort ahead of unaltered samples), then by the next feature, and so on. Remaining ties keep the clustering order (or the input order if cluster_rows = FALSE). Row clustering is turned off.
-#' @param cnv_status Sample-by-feature CN calls used by sortByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.
+#' @param cnv_status Sample-by-feature CN calls used by sortByFeatures and clusterRowsByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.
+#' @param clusterRowsByFeatures Optional: cluster the samples on CN feature calls from `cnv_status` instead of on the CN bins. Either a vector of feature names (columns of `cnv_status`) or a table from `GAMBLR.utils::pairwise_event_association()`, in which case the events in pairs with q below `cluster_feature_q` are used (events that aren't columns of `cnv_status`, e.g. mutations, are skipped). By default each feature counts as present or absent and samples are clustered with binary (Jaccard) distance, so samples are similar when they share events; samples with none of the events are grouped together. Works with split_by (each group is clustered separately). Can't be combined with clusterRowsByGenes.
+#' @param cluster_feature_q q value threshold used when clusterRowsByFeatures is an association table. Default 0.05.
+#' @param cluster_feature_method Linkage method for clusterRowsByFeatures, passed to [stats::hclust]. Default "ward.D2", which gives groups of usable size with binary event data; "complete" tends to put most samples in one group because many pairs of samples share no events (distance 1).
+#' @param cluster_feature_levels Set to TRUE to cluster on event levels (0/1/2) with Euclidean distance instead, so high-level events weigh more. Default FALSE.
+#' @param cluster_k Optional number of sample clusters to cut the clusterRowsByFeatures dendrogram into. The heatmap is split into blocks labelled C1, C2, ... (top to bottom) and each sample's cluster is returned (as the value of the function, invisibly, or as sample_clusters with return_data = TRUE), e.g. for testing against COO or LymphGen. Can't be combined with split_by.
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
 #' @param split_by Optional: name of a metadata column used to split the samples into groups (slices), each clustered or sorted separately, with one gain/loss summary across all samples. Samples with no value are left out. With rotate = TRUE the groups are columns. Can't be combined with splitByBinState or geneBoxPlot. For a separate summary per group, see [stacked_CN_heatmap].
@@ -71,6 +76,8 @@
 #' @param show_mean_cn Show the mean CN strip above the heatmap. Default TRUE.
 #' @param cumulative_axis Axis on the gain/loss tracks: "full" (default), "minimal" (only 0 and the top of the scale, legible on short tracks) or "none".
 #' @param show_chromosome_strip Show the chromosome colour strip below the heatmap. Default TRUE.
+#' @param chromosome_labels Write each chromosome's name on its block of the chromosome strip, which replaces the Chromosome legend. Default TRUE. Set to FALSE for the legend instead.
+#' @param chromosome_label_fontsize Font size of the chromosome labels (default 7). Lower it if the small chromosomes' labels crowd each other.
 #' @param heatmap_row_title_fontsize,heatmap_row_title_rot Font size (default 13) and rotation (default 90) of heatmap_row_title.
 #' @param cumulative_track_height Height in cm of each of the gain and loss tracks (their width with rotate = TRUE). Default 1, ComplexHeatmap's default.
 #' @param annotation_colours Optional named list of colour mappings for the sample annotations (named vectors for categorical columns, circlize::colorRamp2 functions for numeric ones such as PGA). These replace the automatically chosen colours for those annotations.
@@ -178,6 +185,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              cluster_columns=FALSE,
                              cluster_rows=TRUE,
                              clusterRowsByGenes,
+                             clusterRowsByFeatures,
+                             cluster_feature_q = 0.05,
+                             cluster_feature_levels = FALSE,
+                             cluster_feature_method = "ward.D2",
+                             cluster_k = NULL,
                              show_row_names=FALSE,
                              show_column_names=FALSE,
                              keep_these_chromosomes,
@@ -209,6 +221,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              show_mean_cn = TRUE,
                              cumulative_axis = "full",
                              show_chromosome_strip = TRUE,
+                             chromosome_labels = TRUE,
+                             chromosome_label_fontsize = 7,
                              heatmap_row_title_fontsize = 13,
                              heatmap_row_title_rot = 90,
                              annotation_colours = NULL,
@@ -789,6 +803,100 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }
     }
 
+    # cluster samples on CN feature calls (e.g. the events in significant
+    # pairs from pairwise_event_association)
+    sample_clusters = NULL
+    if(!missing(clusterRowsByFeatures)){
+      if(!missing(clusterRowsByGenes)){
+        stop("use either clusterRowsByGenes or clusterRowsByFeatures, not both")
+      }
+      # sorting turns row clustering off, which would silently undo this
+      sort_args = c("sortByFeatures", "sortByGenes", "sortByBins",
+                    "sortByMetadataColumns")[c(!missing(sortByFeatures),
+                                               !missing(sortByGenes),
+                                               !missing(sortByBins),
+                                               !missing(sortByMetadataColumns))]
+      if(length(sort_args) > 0){
+        stop(paste0("clusterRowsByFeatures can't be combined with ",
+                    paste(sort_args, collapse = " or "),
+                    ", which orders the rows instead of clustering them"))
+      }
+      if(isFALSE(cluster_rows)){
+        stop("clusterRowsByFeatures needs row clustering: remove cluster_rows = FALSE (or cluster_samples = FALSE)")
+      }
+      if(missing(cnv_status)){
+        stop("clusterRowsByFeatures needs cnv_status, e.g. from GAMBLR.utils::segmented_data_to_cnv_status()")
+      }
+      cluster_features = clusterRowsByFeatures
+      if(is.data.frame(cluster_features)){
+        if(!all(c("event_a", "event_b", "q_value") %in% colnames(cluster_features))){
+          stop("an association table for clusterRowsByFeatures needs event_a, event_b and q_value columns")
+        }
+        significant = cluster_features[!is.na(cluster_features$q_value) &
+                                         cluster_features$q_value < cluster_feature_q, ]
+        cluster_features = unique(c(significant$event_a, significant$event_b))
+        skipped = setdiff(cluster_features, colnames(cnv_status))
+        if(length(skipped) > 0){
+          message(length(skipped), " event(s) not in cnv_status are skipped: ",
+                  paste(utils::head(skipped, 10), collapse = ", "))
+        }
+        cluster_features = intersect(cluster_features, colnames(cnv_status))
+      }else{
+        unknown = setdiff(cluster_features, colnames(cnv_status))
+        if(length(unknown) > 0){
+          stop(paste("clusterRowsByFeatures not found in cnv_status:",
+                     paste(unknown, collapse = ", ")))
+        }
+      }
+      if(length(cluster_features) == 0){
+        stop("no features to cluster on")
+      }
+      message("clustering samples on ", length(cluster_features),
+              " CN feature(s)")
+      status_rows = match(rownames(cn_state_matrix), rownames(cnv_status))
+      if(anyNA(status_rows)){
+        message(sum(is.na(status_rows)),
+                " sample(s) not in cnv_status count as having no events")
+      }
+      feature_values = as.matrix(as.data.frame(cnv_status)[status_rows,
+                                                           cluster_features,
+                                                           drop = FALSE])
+      rownames(feature_values) = rownames(cn_state_matrix)
+      if(!is.null(cluster_k)){
+        if(has_split_by){
+          stop("cluster_k can't be combined with split_by")
+        }
+        sample_tree = .event_status_hclust(feature_values,
+                                           cluster_feature_levels,
+                                           cluster_feature_method)
+        raw_cluster = stats::cutree(sample_tree, k = cluster_k)
+        first_seen = unique(raw_cluster[sample_tree$order])
+        # numbered top to bottom; the heatmap is split by these clusters
+        # (rather than by cutting its own dendrogram, which can differ when
+        # many samples are tied) so the blocks match what is returned
+        sample_cluster = match(raw_cluster, first_seen)
+        names(sample_cluster) = rownames(feature_values)
+        sample_clusters = data.frame(
+          sample_id = rownames(feature_values)[sample_tree$order],
+          cluster = sample_cluster[sample_tree$order],
+          stringsAsFactors = FALSE)
+        rownames(sample_clusters) = NULL
+      }
+      #A function (rather than a precomputed hclust) keeps this compatible
+      #with row_split, since ComplexHeatmap calls it on each slice
+      cluster_rows = function(m){
+        these_ids = rownames(m)
+        if(!all(these_ids %in% rownames(feature_values))){
+          these_ids = colnames(m)
+        }
+        .event_status_hclust(feature_values[these_ids, , drop = FALSE],
+                             cluster_feature_levels,
+                             cluster_feature_method)
+      }
+    }else if(!is.null(cluster_k)){
+      stop("cluster_k needs clusterRowsByFeatures")
+    }
+
     if(!missing(keep_these_chromosomes)){
       keep_cols = which(column_chromosome %in% keep_these_chromosomes)
       cn_state_matrix = cn_state_matrix[,keep_cols]
@@ -1039,8 +1147,29 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }
     #need to create a data frame with the bin names as rownames and a different value depending on whether
     # the bin is in regions_highlight
+    # chromosome strip: either a plain colour strip identified by its legend or,
+    # with chromosome_labels, an anno_simple with each name written (as a text
+    # "pch") at the middle bin of its chromosome, in black or white by contrast
+    chrom_strip = column_chromosome
+    chrom_strip_col = list(chromosome = chrom_col)
+    if(chromosome_labels){
+      runs = rle(column_chromosome)
+      run_end = cumsum(runs$lengths)
+      run_mid = floor((run_end - runs$lengths + 1 + run_end) / 2)
+      label_at = rep(NA_character_, length(column_chromosome))
+      label_at[run_mid] = gsub("^chr", "", runs$values)
+      fill_rgb = grDevices::col2rgb(chrom_col[column_chromosome])
+      luminance = (0.299 * fill_rgb[1, ] + 0.587 * fill_rgb[2, ] + 0.114 * fill_rgb[3, ]) / 255
+      chrom_strip = anno_simple(column_chromosome,
+                                col = chrom_col,
+                                pch = label_at,
+                                pt_gp = gpar(fontsize = chromosome_label_fontsize,
+                                             col = ifelse(luminance > 0.6, "black", "white")),
+                                which = ifelse(rotate, "row", "column"))
+      chrom_strip_col = list()
+    }
     if(rotate){
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
                                         Gain = anno_barplot(gain_bars,
                                                             ylim = cumulative_ylim,
                                                             width = unit(cumulative_track_height, "cm"),
@@ -1066,10 +1195,10 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
     }else{
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
                                         #annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                         Gain = anno_barplot(gain_bars,
                                                             ylim = cumulative_ylim,
@@ -1094,13 +1223,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
     }
     
     bars_on_top = !rotate && cumulative_position == "top" && !hide_cumulative_plot
     if(hide_cumulative_plot || bars_on_top){
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
         annotation_legend_param = list(title = "Chromosome",
                                                nrow=legend_row,
                                                ncol = legend_col,
@@ -1111,7 +1240,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
     }
     if(!show_chromosome_strip){
@@ -1162,6 +1291,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
         slice_title = "%s"
       }
     }
+    if(!is.null(sample_clusters)){
+      splits = factor(sample_cluster[rownames(cn_state_matrix)],
+                      levels = seq_len(cluster_k))
+      if(is.null(slice_title)){
+        slice_title = "C%s"
+      }
+    }
     if(anyNA(cn_state_matrix)){
       na_safe_clustering = function(m) hclust(dist(neutral_for_clustering(m)))
       if(isTRUE(cluster_rows)){
@@ -1209,11 +1345,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
         }
         ho = Heatmap(t(cn_state_matrix),
                    name=heatmap_name,
-                   column_title = if(has_split_by) "%s" else " ",
-                   column_split = if(has_split_by) splits else NULL,
+                   column_title = if(has_split_by) "%s" else
+                     if(!is.null(sample_clusters)) "C%s" else " ",
+                   column_split = splits,
                    # keep the groups in split_order rather than reordering
                    # them by similarity
-                   cluster_column_slices = !has_split_by,
+                   cluster_column_slices = !has_split_by &&
+                     is.null(sample_clusters),
                    cluster_columns=cluster_rows,
                    cluster_rows=cluster_columns,
                    show_row_names = show_row_names,
@@ -1242,7 +1380,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    top_annotation = top_anno,
                    left_annotation=left_anno,
                    row_split=splits,
-                   cluster_row_slices = !has_split_by,
+                   cluster_row_slices = !has_split_by &&
+                     is.null(sample_clusters),
                    row_title = slice_title,
                    row_title_gp = gpar(fontsize = heatmap_row_title_fontsize),
                    row_title_rot = heatmap_row_title_rot,
@@ -1346,7 +1485,35 @@ pretty_CN_heatmap = function(cn_state_matrix,
                 chromosome_columns=column_chromosome,
                 bin_means=bin_average,
                 local_optima=cn_av_df,
-                row_anno = anno_rows))
+                row_anno = anno_rows,
+                sample_clusters = sample_clusters))
+  }
+  if(!is.null(sample_clusters)){
+    return(invisible(sample_clusters))
   }
 
+}
+
+# Sample clustering on event status (CN feature calls and/or mutations),
+# shared by pretty_CN_heatmap (clusterRowsByFeatures) and linked_CN_oncoplot
+# (cluster_by). values: samples x events, any value > 0 (by absolute value)
+# is an event. Binary (Jaccard) distance by default; two samples without any
+# of the events have no defined Jaccard distance, so they count as identical.
+# Ward linkage by default: with complete linkage most samples end up in one
+# group, because many pairs share no events (distance 1).
+.event_status_hclust = function(values, cluster_levels = FALSE,
+                                method = "ward.D2"){
+  values = abs(as.matrix(values))
+  storage.mode(values) = "double"
+  values[is.na(values)] = 0
+  if(!cluster_levels){
+    values = (values > 0) * 1
+  }
+  if(nrow(values) < 2){
+    return(NULL)
+  }
+  distances = if(cluster_levels) stats::dist(values) else
+    stats::dist(values, method = "binary")
+  distances[is.na(distances)] = 0
+  stats::hclust(distances, method = method)
 }

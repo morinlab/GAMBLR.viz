@@ -63,7 +63,7 @@
 #' and/or CN feature names. By default each feature counts as present or
 #' absent and samples are clustered with binary (Jaccard) distance, so
 #' samples are similar when they share alterations. The resulting dendrogram
-#' is shown on the CN heatmap. Can't be combined with `sort_by`; `order_by`
+#' is shown on the CN heatmap (Ward linkage, as for clusterRowsByFeatures in [pretty_CN_heatmap]). Can't be combined with `sort_by`; `order_by`
 #' is ignored. With `split_by`, each group is clustered separately.
 #' @param cluster_levels Set to TRUE to cluster on CN event levels (0/1/2,
 #' mutations 0/1) with Euclidean distance instead, so high-level events
@@ -498,14 +498,9 @@ linked_CN_oncoplot = function(cn_state_matrix,
   }
   status = .linked_sort_status(onco, samples, cluster_by, cnv_status,
                                arg_name = "cluster_by")
-  values = as.matrix(as.data.frame(lapply(status, function(x){
-    x = abs(as.numeric(x))
-    x[is.na(x)] = 0
-    if(cluster_levels) x else as.numeric(x > 0)
-  })))
+  values = as.matrix(as.data.frame(lapply(status, as.numeric)))
   rownames(values) = samples
-  distances = if(cluster_levels) dist(values) else dist(values, method = "binary")
-  hclust(distances)
+  .event_status_hclust(values, cluster_levels)
 }
 
 # Sorting table for sort_by: mutation status (0/1) for genes in the oncoplot,

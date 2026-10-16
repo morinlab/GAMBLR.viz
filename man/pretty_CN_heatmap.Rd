@@ -16,6 +16,11 @@ pretty_CN_heatmap(
   cluster_columns = FALSE,
   cluster_rows = TRUE,
   clusterRowsByGenes,
+  clusterRowsByFeatures,
+  cluster_feature_q = 0.05,
+  cluster_feature_levels = FALSE,
+  cluster_feature_method = "ward.D2",
+  cluster_k = NULL,
   show_row_names = FALSE,
   show_column_names = FALSE,
   keep_these_chromosomes,
@@ -47,6 +52,8 @@ pretty_CN_heatmap(
   show_mean_cn = TRUE,
   cumulative_axis = "full",
   show_chromosome_strip = TRUE,
+  chromosome_labels = TRUE,
+  chromosome_label_fontsize = 7,
   heatmap_row_title_fontsize = 13,
   heatmap_row_title_rot = 90,
   annotation_colours = NULL,
@@ -115,6 +122,16 @@ Alternatively, a data frame with columns "gene_id" and "cn_thresh" (the same for
 A cn_thresh below 2 is the maximum CN considered a loss for that gene (tumour suppressor) and above 2 is the minimum CN considered a gain (oncogene).
 Any value in that gene's bin not passing its threshold is set to 2 (neutral) before clustering. A cn_thresh of 2 uses the bin without any direction filter. The displayed heatmap values are not altered.}
 
+\item{clusterRowsByFeatures}{Optional: cluster the samples on CN feature calls from `cnv_status` instead of on the CN bins. Either a vector of feature names (columns of `cnv_status`) or a table from `GAMBLR.utils::pairwise_event_association()`, in which case the events in pairs with q below `cluster_feature_q` are used (events that aren't columns of `cnv_status`, e.g. mutations, are skipped). By default each feature counts as present or absent and samples are clustered with binary (Jaccard) distance, so samples are similar when they share events; samples with none of the events are grouped together. Works with split_by (each group is clustered separately). Can't be combined with clusterRowsByGenes.}
+
+\item{cluster_feature_q}{q value threshold used when clusterRowsByFeatures is an association table. Default 0.05.}
+
+\item{cluster_feature_levels}{Set to TRUE to cluster on event levels (0/1/2) with Euclidean distance instead, so high-level events weigh more. Default FALSE.}
+
+\item{cluster_feature_method}{Linkage method for clusterRowsByFeatures, passed to [stats::hclust]. Default "ward.D2", which gives groups of usable size with binary event data; "complete" tends to put most samples in one group because many pairs of samples share no events (distance 1).}
+
+\item{cluster_k}{Optional number of sample clusters to cut the clusterRowsByFeatures dendrogram into. The heatmap is split into blocks labelled C1, C2, ... (top to bottom) and each sample's cluster is returned (as the value of the function, invisibly, or as sample_clusters with return_data = TRUE), e.g. for testing against COO or LymphGen. Can't be combined with split_by.}
+
 \item{show_row_names}{Set to TRUE to display the ID of every bin (region) shown in the heatmap}
 
 \item{show_column_names}{Set to TRUE to display the sample_id of every sample shown in the heatmap}
@@ -133,7 +150,7 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 
 \item{sortByFeatures}{Optional: names of CN features (columns of `cnv_status`) to order the rows by, in priority order. Samples are sorted by the level of each feature (strongest first: 2, then 1, then 0, using the absolute value so gains and losses both sort ahead of unaltered samples), then by the next feature, and so on. Remaining ties keep the clustering order (or the input order if cluster_rows = FALSE). Row clustering is turned off.}
 
-\item{cnv_status}{Sample-by-feature CN calls used by sortByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.}
+\item{cnv_status}{Sample-by-feature CN calls used by sortByFeatures and clusterRowsByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.}
 
 \item{splitByBinState}{Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin}
 
@@ -172,6 +189,10 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 \item{cumulative_axis}{Axis on the gain/loss tracks: "full" (default), "minimal" (only 0 and the top of the scale, legible on short tracks) or "none".}
 
 \item{show_chromosome_strip}{Show the chromosome colour strip below the heatmap. Default TRUE.}
+
+\item{chromosome_labels}{Write each chromosome's name on its block of the chromosome strip, which replaces the Chromosome legend. Default TRUE. Set to FALSE for the legend instead.}
+
+\item{chromosome_label_fontsize}{Font size of the chromosome labels (default 7). Lower it if the small chromosomes' labels crowd each other.}
 
 \item{heatmap_row_title_fontsize, heatmap_row_title_rot}{Font size (default 13) and rotation (default 90) of heatmap_row_title.}
 

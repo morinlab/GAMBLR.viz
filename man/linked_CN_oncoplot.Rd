@@ -65,7 +65,7 @@ the oncoplot plus every column of `cnv_status`) or a vector of genes
 and/or CN feature names. By default each feature counts as present or
 absent and samples are clustered with binary (Jaccard) distance, so
 samples are similar when they share alterations. The resulting dendrogram
-is shown on the CN heatmap. Can't be combined with `sort_by`; `order_by`
+is shown on the CN heatmap (Ward linkage, as for clusterRowsByFeatures in [pretty_CN_heatmap]). Can't be combined with `sort_by`; `order_by`
 is ignored. With `split_by`, each group is clustered separately.}
 
 \item{cluster_levels}{Set to TRUE to cluster on CN event levels (0/1/2,
