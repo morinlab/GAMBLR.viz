@@ -27,7 +27,8 @@
 #' See the Details of [pretty_CN_heatmap].
 #'
 #' @param cn_state_matrix Copy number matrix with samples as rows and bins as
-#' columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Build it
+#' columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Only
+#' samples also in `these_samples_metadata` are shown. Build it
 #' with `adjust_for_ploidy = TRUE` to correct for sample ploidy (see
 #' Details).
 #' @param these_samples_metadata Metadata with one row per sample_id
@@ -134,6 +135,11 @@ stacked_CN_heatmap = function(cn_state_matrix,
                "see check_and_clean_metadata()"))
   }
 
+  not_in_metadata = setdiff(rownames(cn_state_matrix), these_samples_metadata$sample_id)
+  if(length(not_in_metadata) > 0){
+    message(paste(length(not_in_metadata),
+                  "sample(s) in cn_state_matrix but not in these_samples_metadata are left out"))
+  }
   meta = dplyr::filter(these_samples_metadata,
                        sample_id %in% rownames(cn_state_matrix))
   no_group = is.na(meta[[split_by]])

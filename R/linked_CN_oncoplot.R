@@ -196,6 +196,11 @@ linked_CN_oncoplot = function(cn_state_matrix,
     stop("split_style = \"panels\" needs split_by and layout = \"stacked\"")
   }
 
+  not_in_metadata = setdiff(rownames(cn_state_matrix), these_samples_metadata$sample_id)
+  if(length(not_in_metadata) > 0){
+    message(paste(length(not_in_metadata),
+                  "sample(s) in cn_state_matrix but not in these_samples_metadata are left out"))
+  }
   # samples present in both the CN matrix and the metadata
   meta = dplyr::filter(these_samples_metadata,
                        sample_id %in% rownames(cn_state_matrix))

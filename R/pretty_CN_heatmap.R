@@ -27,7 +27,7 @@
 #' subtracting its mean CN. Not recommended: use
 #' `adjust_for_ploidy = TRUE` when building the matrix instead, and don't
 #' combine the two (see Details). Default FALSE.
-#' @param these_samples_metadata The output of get_gambl_metadata
+#' @param these_samples_metadata Sample metadata, e.g. from get_gambl_metadata, with one row per sample_id. Only samples present in both this and cn_state_matrix are shown; samples in the matrix but not here are left out (with a message).
 #' @param keep_sample_order FALSE. Set to TRUE to ensure samples are in the same
 #' order as in the metadata
 #' @param metadataColumns One or more columns from the metadata you want to
@@ -55,6 +55,8 @@
 #' @param cnv_status Sample-by-feature CN calls used by sortByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
+#' @param split_by Optional: name of a metadata column used to split the samples into groups (slices), each clustered or sorted separately, with one gain/loss summary across all samples. Samples with no value are left out. With rotate = TRUE the groups are columns. Can't be combined with splitByBinState or geneBoxPlot. For a separate summary per group, see [stacked_CN_heatmap].
+#' @param split_order Optional vector giving the groups to show, in order. Samples in other groups are left out. Defaults to the factor levels of split_by, or its sorted values.
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
 #' @param sortByMetadataColumns A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
@@ -188,6 +190,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              sortByFeatures,
                              cnv_status,
                              splitByBinState,
+                             split_by,
+                             split_order,
                              sortByPGA=FALSE,
                              sortByMetadataColumns,
                              labelTheseGenes,
@@ -551,15 +555,54 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
 
   if(!missing(these_samples_metadata)){
+    # only samples in both the matrix and the metadata are shown
     keep_samples = pull(these_samples_metadata, sample_id)
     all_samples = rownames(cn_state_matrix)
-    overlap_samples = all_samples[all_samples %in% keep_samples]
-    if(keep_sample_order){
-      cn_state_matrix = cn_state_matrix[keep_samples,]
+    not_in_metadata = setdiff(all_samples, keep_samples)
+    if(length(not_in_metadata) > 0){
+      message(paste(length(not_in_metadata),
+                    "sample(s) in cn_state_matrix but not in these_samples_metadata are left out"))
     }
-
-    
-
+    overlap_samples = all_samples[all_samples %in% keep_samples]
+    if(length(overlap_samples) == 0){
+      stop("no samples in cn_state_matrix are in these_samples_metadata")
+    }
+    if(keep_sample_order){
+      # metadata order, skipping metadata samples the matrix doesn't have
+      overlap_samples = keep_samples[keep_samples %in% overlap_samples]
+    }
+    cn_state_matrix = cn_state_matrix[overlap_samples, , drop = FALSE]
+    these_samples_metadata = dplyr::filter(these_samples_metadata,
+                                           sample_id %in% overlap_samples)
+  }
+  has_split_by = !missing(split_by) && !is.null(split_by)
+  if(has_split_by){
+    if(!missing(splitByBinState) || !missing(geneBoxPlot)){
+      stop("split_by can't be combined with splitByBinState or geneBoxPlot")
+    }
+    if(missing(these_samples_metadata) ||
+       !split_by %in% colnames(these_samples_metadata)){
+      stop("split_by must name a column of these_samples_metadata")
+    }
+    group_values = as.character(these_samples_metadata[[split_by]])
+    in_group = !is.na(group_values)
+    if(!missing(split_order)){
+      in_group = in_group & group_values %in% split_order
+    }
+    if(any(!in_group)){
+      message(paste(sum(!in_group), "sample(s) with no", split_by,
+                    "value (or not in split_order) are left out"))
+    }
+    these_samples_metadata = these_samples_metadata[in_group, , drop = FALSE]
+    cn_state_matrix = cn_state_matrix[rownames(cn_state_matrix) %in%
+                                        these_samples_metadata$sample_id, , drop = FALSE]
+    if(nrow(cn_state_matrix) == 0){
+      stop("no samples left after removing those without a split_by group")
+    }
+    split_levels = if(!missing(split_order)) split_order
+                   else if(is.factor(these_samples_metadata[[split_by]]))
+                     levels(these_samples_metadata[[split_by]])
+                   else sort(unique(as.character(these_samples_metadata[[split_by]])))
   }
   if(!missing(numericMetadataColumns)){
   	not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
@@ -1108,6 +1151,17 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }
     }
     top_anno = if(length(top_parts) > 0) Reduce(c, top_parts) else NULL
+    slice_title = heatmap_row_title
+    if(has_split_by){
+      sample_groups = as.character(these_samples_metadata[[split_by]])[
+        match(rownames(cn_state_matrix), these_samples_metadata$sample_id)]
+      splits = factor(sample_groups,
+                      levels = split_levels[split_levels %in% sample_groups])
+      # name each slice after its group unless a title was given
+      if(is.null(slice_title)){
+        slice_title = "%s"
+      }
+    }
     if(anyNA(cn_state_matrix)){
       na_safe_clustering = function(m) hclust(dist(neutral_for_clustering(m)))
       if(isTRUE(cluster_rows)){
@@ -1155,7 +1209,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
         }
         ho = Heatmap(t(cn_state_matrix),
                    name=heatmap_name,
-                   column_title=" ",
+                   column_title = if(has_split_by) "%s" else " ",
+                   column_split = if(has_split_by) splits else NULL,
+                   # keep the groups in split_order rather than reordering
+                   # them by similarity
+                   cluster_column_slices = !has_split_by,
                    cluster_columns=cluster_rows,
                    cluster_rows=cluster_columns,
                    show_row_names = show_row_names,
@@ -1184,7 +1242,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    top_annotation = top_anno,
                    left_annotation=left_anno,
                    row_split=splits,
-                   row_title = heatmap_row_title,
+                   cluster_row_slices = !has_split_by,
+                   row_title = slice_title,
                    row_title_gp = gpar(fontsize = heatmap_row_title_fontsize),
                    row_title_rot = heatmap_row_title_rot,
                    #right_annotation = sample_CN_anno,

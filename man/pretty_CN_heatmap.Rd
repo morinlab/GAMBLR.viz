@@ -28,6 +28,8 @@ pretty_CN_heatmap(
   sortByFeatures,
   cnv_status,
   splitByBinState,
+  split_by,
+  split_order,
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
@@ -91,7 +93,7 @@ subtracting its mean CN. Not recommended: use
 `adjust_for_ploidy = TRUE` when building the matrix instead, and don't
 combine the two (see Details). Default FALSE.}
 
-\item{these_samples_metadata}{The output of get_gambl_metadata}
+\item{these_samples_metadata}{Sample metadata, e.g. from get_gambl_metadata, with one row per sample_id. Only samples present in both this and cn_state_matrix are shown; samples in the matrix but not here are left out (with a message).}
 
 \item{keep_sample_order}{FALSE. Set to TRUE to ensure samples are in the same
 order as in the metadata}
@@ -134,6 +136,10 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 \item{cnv_status}{Sample-by-feature CN calls used by sortByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.}
 
 \item{splitByBinState}{Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin}
+
+\item{split_by}{Optional: name of a metadata column used to split the samples into groups (slices), each clustered or sorted separately, with one gain/loss summary across all samples. Samples with no value are left out. With rotate = TRUE the groups are columns. Can't be combined with splitByBinState or geneBoxPlot. For a separate summary per group, see [stacked_CN_heatmap].}
+
+\item{split_order}{Optional vector giving the groups to show, in order. Samples in other groups are left out. Defaults to the factor levels of split_by, or its sorted values.}
 
 \item{sortByPGA}{Optional: Sort the rows based on percent genome altered (PGA) instead of the other options}
 

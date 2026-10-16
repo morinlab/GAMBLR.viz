@@ -30,7 +30,8 @@ stacked_CN_heatmap(
 }
 \arguments{
 \item{cn_state_matrix}{Copy number matrix with samples as rows and bins as
-columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Build it
+columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Only
+samples also in `these_samples_metadata` are shown. Build it
 with `adjust_for_ploidy = TRUE` to correct for sample ploidy (see
 Details).}
 
