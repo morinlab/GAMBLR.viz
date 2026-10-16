@@ -9,17 +9,19 @@ plot_sample_circos(
   sv_df,
   cnv_df,
   ssm_df,
-  include_sv = TRUE,
-  include_ssm = FALSE,
+  include_sv,
+  include_cnv,
+  include_ssm,
   legend_metadata_columns,
   legend_metadata_names = c(),
-  include_cnv = TRUE,
   genome_build,
   this_seq_type = "genome",
   chrom_list,
   label_genes,
+  colour_labels_by_cn = FALSE,
   auto_label_sv = FALSE,
   link_colour_column = NULL,
+  cn_colour_range,
   hide_legend = FALSE,
   verbose = FALSE
 )
@@ -27,33 +29,65 @@ plot_sample_circos(
 \arguments{
 \item{this_sample_id}{Sample ID for the sample to plot.}
 
-\item{sv_df}{Optional data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.}
+\item{sv_df}{Optional data frame of SVs for this sample (e.g. from
+`get_manta_sv()`). Expected to have `tumour_sample_id`, `CHROM_A`,
+`START_A`, `END_A`, `CHROM_B`, `START_B`, `END_B`. Rows not matching
+`this_sample_id` are filtered out automatically.}
 
-\item{cnv_df}{Optional data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.}
+\item{cnv_df}{Optional data frame of CN segments for this sample (e.g.
+from `get_sample_cn_segments()`). Expected to have `chrom`, `start`,
+`end`, `log.ratio`.}
 
-\item{ssm_df}{This parameter does not do anything yet. Maybe it was meant to be implemented.}
+\item{ssm_df}{Optional data frame of SSMs for this sample in MAF-like
+format (e.g. from `get_ssm_by_sample()`). Expected to have
+`Tumor_Sample_Barcode`, `Chromosome`, `Start_Position`,
+`Variant_Classification`. Rows not matching `this_sample_id` are
+filtered out automatically.}
 
-\item{include_sv}{Default TRUE. (does not do anything yet).}
+\item{include_sv}{Whether to draw the SV link ring. Defaults to `TRUE`
+when `sv_df` is supplied and `FALSE` otherwise. Set explicitly to `TRUE`
+to get a clear error if `sv_df` was left out by mistake.}
 
-\item{include_ssm}{Defaul FALSE. (does not do anything yet).}
+\item{include_cnv}{Whether to draw the CNV ring. Defaults to `TRUE` when
+`cnv_df` is supplied and `FALSE` otherwise. Set explicitly to `TRUE` to
+get a clear error if `cnv_df` was left out by mistake.}
+
+\item{include_ssm}{Whether to draw the SSM point-mutation ring. Defaults
+to `TRUE` when `ssm_df` is supplied and `FALSE` otherwise. Set explicitly
+to `TRUE` to get a clear error if `ssm_df` was left out by mistake.}
 
 \item{legend_metadata_columns}{Column names from metadata}
 
 \item{legend_metadata_names}{List of metadata names to be plotted.}
 
-\item{include_cnv}{Default TRUE. (does not do anything yet).}
+\item{genome_build}{genome_build to use (this is usually inferred
+automatically from your data).}
 
-\item{genome_build}{genome_build to use (this is usually inferred automatically from your data)}
-
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+\item{this_seq_type}{Seq type to use when looking up this sample's
+metadata for the legend (only relevant when `legend_metadata_columns` is
+set). Default "genome".}
 
 \item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will be used.}
 
 \item{label_genes}{Gene labels (df, list or what type?)}
 
-\item{auto_label_sv}{Default is FALSE}
+\item{colour_labels_by_cn}{Set to TRUE to colour each `label_genes`
+entry's connector line (not the text itself, which stays black and
+readable) by the copy number state at that gene's location: red if the
+overlapping `cnv_df` segment's `log.ratio` is above 0 (gain), blue if
+below 0 (loss). A flat two-colour rule rather than a continuous scale,
+since intermediate colours along a gradient are hard to make out against
+the plot's white background. Requires `include_cnv` (i.e. `cnv_df`). Genes with no
+overlapping segment in `cnv_df` get a black connector line. Default FALSE.}
+
+\item{auto_label_sv}{Default is FALSE. Requires `include_sv`.}
 
 \item{link_colour_column}{Which column from sv_df to use for link colouring (default: NULL)}
+
+\item{cn_colour_range}{Numeric vector of length 3, `c(low, mid, high)`
+log ratio breakpoints for the blue-white-red CNV colour scale, shared by
+the plot and its legend. Defaults to a symmetric range covering the
+largest absolute log ratio observed in `cnv_df`.}
 
 \item{hide_legend}{Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata}
 
@@ -66,15 +100,29 @@ Nothing
 Plot a sample-centric circos overview.
 }
 \details{
-This function takes a sample ID in the `this_sample_id` parameter.
-Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the `sv_df`, `cnv_df` and `ssm_df` parameters.
-Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
+This function takes a sample ID in the `this_sample_id` parameter
+and draws one ring per genomic data type you provide: CNV segments
+(`cnv_df`), SV breakpoint links (`sv_df`) and/or SSM point mutations
+(`ssm_df`). This function does not fetch any of these on your behalf --
+retrieve them yourself (e.g. with `get_sample_cn_segments()`,
+`get_manta_sv()`, `get_ssm_by_sample()` or equivalent) and pass in
+whichever data types you want plotted. A ring is included automatically
+when its data frame is supplied; set the corresponding `include_*`
+argument to `FALSE` to suppress a ring even when data was provided, or
+to `TRUE` to get an explicit error if you forgot to pass it.
 }
 \examples{
 \dontrun{
 suppressPackageStartupMessages(library(GAMBLR.open))
 
+this_sample_cnv = get_sample_cn_segments(these_sample_ids = "02-13135T",
+                                         with_chr_prefix = TRUE)
+this_sample_sv = get_manta_sv() \%>\%
+  dplyr::filter(tumour_sample_id == "02-13135T")
+
 plot_sample_circos(this_sample_id = "02-13135T",
+                   cnv_df = this_sample_cnv,
+                   sv_df = this_sample_sv,
                    legend_metadata_columns = c("pathology",
                                                "lymphgen",
                                                "COO_consensus",

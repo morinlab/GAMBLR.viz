@@ -216,12 +216,13 @@ lg_genes = unique(lg_feats$Feature)
 
 all_segments =get_cn_segments(these_samples_metadata = dlbcl_meta)
 
-cn_binned = segmented_data_to_cn_matrix(all_segments,n_bins_split = 500)
+cn_binned = segmented_data_to_cn_matrix(all_segments,n_bins_split = 500,
+                                        adjust_for_ploidy = TRUE)
 
-pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+pretty_CN_heatmap(cn_binned,
                  these_samples_metadata = dlbcl_meta,hide_these_chromosomes = c("X","Y"))
 
-cn_out = pretty_CN_heatmap(cn_binned,scale_by_sample = T,
+cn_out = pretty_CN_heatmap(cn_binned,
                           these_samples_metadata = dlbcl_meta,return_data = T,
                           hide_these_chromosomes = c("X","Y"))
 
