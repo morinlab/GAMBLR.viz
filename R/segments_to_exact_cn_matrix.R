@@ -66,6 +66,10 @@
 #' caller's own neutral reference may be off by a similar amount) still gets
 #' shifted back to a true 2.0, instead of silently receiving no correction.
 #' See `ploidy_baseline_autosomes_only`.
+#' @param baseline_method The baseline `adjust_for_ploidy` shifts each
+#' sample by: "mode" (default), "mode_rounded" or "mean", as in
+#' `GAMBLR.utils::add_segment_baseline`. A `baseline_cn` column of that
+#' method already on `seg_data` is used instead of estimating it.
 #' @param ploidy_baseline_autosomes_only When `adjust_for_ploidy = TRUE`,
 #' exclude chrX/chrY segments from the baseline (mode) calculation. Default
 #' TRUE: sex chromosome copy number reflects patient sex, not tumour
@@ -113,6 +117,7 @@ segments_to_exact_cn_matrix = function(seg_data,
                                        max_segments_per_sample = 500,
                                        fill_missing_with = "diploid",
                                        adjust_for_ploidy = FALSE,
+                                       baseline_method = "mode",
                                        ploidy_baseline_autosomes_only = TRUE,
                                        max_CN_allowed = 6,
                                        rounded = FALSE,
@@ -164,19 +169,18 @@ segments_to_exact_cn_matrix = function(seg_data,
 
   if(adjust_for_ploidy){
     t0 = Sys.time()
-    seg_data = seg_data %>%
-      dplyr::mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
-
     # see GAMBLR.utils::segmented_data_to_ploidy_estimate for why the
     # length-weighted mode is used and why sex chromosomes are excluded
-    # by default (the resulting shift is still applied to X/Y)
+    # by default (the resulting shift is still applied to X/Y); the
+    # baseline is estimated before the values are capped at max_CN_allowed
     baseline_df = GAMBLR.utils::segmented_data_to_ploidy_estimate(
       seg_data,
-      method = "mode",
-      autosomes_only = ploidy_baseline_autosomes_only,
-      max_CN_allowed = max_CN_allowed
+      method = baseline_method,
+      autosomes_only = ploidy_baseline_autosomes_only
     ) %>%
       dplyr::select(ID = sample_id, .baseline = ploidy)
+    seg_data = seg_data %>%
+      dplyr::mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
 
     seg_data = seg_data %>%
       dplyr::left_join(baseline_df, by = "ID") %>%
@@ -187,7 +191,7 @@ segments_to_exact_cn_matrix = function(seg_data,
         CN = 2 + CN - .baseline
       ) %>%
       dplyr::select(-.baseline)
-    tick("ploidy adjustment (length-weighted mode baseline)", t0)
+    tick(paste0("ploidy adjustment (", baseline_method, " baseline)"), t0)
   }
 
   # 1. disjoint, breakpoint-exact (or merge_tolerance-exact) bins, cohort-wide

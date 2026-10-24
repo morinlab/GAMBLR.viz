@@ -12,9 +12,19 @@
 #'     (`cumulative_as_fraction = TRUE`) on one y-axis scale;
 #'   \item the same colours for every sample annotation, including PGA.
 #' }
-#' Gene and feature labels are drawn once, above the top group. Within each
+#' Gene and feature labels are drawn once, above the top group; with
+#' `label_associations`, features significantly enriched in a group are also
+#' labelled on that group's panel. Within each
 #' group, rows are ordered as [pretty_CN_heatmap] would order them (e.g.
 #' clustered, or sorted with the `sortBy*` options passed through `...`).
+#'
+#' With `metadata_summary = TRUE` (the default), a small bar is drawn above
+#' each sample annotation column of every group, summarizing that group:
+#' for categorical columns, a stacked bar of the proportion of samples with
+#' each value (in the annotation colours, missing values light grey, the
+#' first value at the top); for numeric columns (e.g. PGA), a box plot on a
+#' scale shared by all groups (range printed above the top group's box
+#' plot). The annotation names then move below the last group.
 #'
 #' Not supported: `rotate`, column (bin) clustering, `geneBoxPlot`,
 #' `splitByBinState` and `label_style = "classic"`.
@@ -55,6 +65,23 @@
 #' rotation (default 90; use 0 for horizontal) of the group titles.
 #' @param labelTheseGenes,labelTheseFeatures Labels drawn above the top group,
 #' as in [pretty_CN_heatmap].
+#' @param label_associations Optional output of
+#' [GAMBLR.utils::test_feature_associations] comparing the groups (its
+#' `comparison_column` values must be the `split_by` values). Each CNV
+#' feature with `q_value` below `association_q` is labelled on the panel of
+#' the group where it is more frequent (from the `n_mutated_<group>` and
+#' `n_total_<group>` columns), above that group's gain/loss track, pointing at
+#' the bin containing the feature's midpoint. Needs `cnv_features`.
+#' @param cnv_features Feature table with the coordinates of the features in
+#' `label_associations`, e.g. `GAMBLR.utils::get_cnv_features("grch37")`.
+#' Features are matched by name, including gene-labelled names such as
+#' "2p16.1~REL_gain".
+#' @param association_q q value threshold for `label_associations`. Default
+#' 0.05.
+#' @param metadata_summary Draw a per-group summary bar above each sample
+#' annotation column (see Details). Default TRUE.
+#' @param metadata_summary_height Height of the summary bars in mm. Default
+#' 12.
 #' @param legend_position Where to put the legends. Default "bottom".
 #' @param show_legends Set to FALSE to omit all legends. Default TRUE. When
 #' drawing the returned `heatmap_list` yourself, pass
@@ -88,6 +115,15 @@
 #'                    metadataColumns = c("COO_consensus", "lymphgen"),
 #'                    labelTheseFeatures = dplyr::filter(
 #'                      GAMBLR.utils::get_cnv_features("grch37"), type != "arm"))
+#'
+#' # label CNV features enriched in each group (q < 0.05)
+#' meta$Tumor_Sample_Barcode = meta$sample_id
+#' assoc = GAMBLR.utils::test_feature_associations(
+#'   metadata = meta, comparison_column = "COO_consensus",
+#'   feature_matrix = cnv_status, sample_id_column = NULL)
+#' stacked_CN_heatmap(cn_mat, meta, split_by = "COO_consensus",
+#'                    label_associations = assoc,
+#'                    cnv_features = GAMBLR.utils::get_cnv_features("grch37"))
 #' }
 stacked_CN_heatmap = function(cn_state_matrix,
                               these_samples_metadata,
@@ -105,6 +141,11 @@ stacked_CN_heatmap = function(cn_state_matrix,
                               group_title_rot = 90,
                               labelTheseGenes,
                               labelTheseFeatures,
+                              label_associations = NULL,
+                              cnv_features = NULL,
+                              association_q = 0.05,
+                              metadata_summary = TRUE,
+                              metadata_summary_height = 12,
                               legend_position = "bottom",
                               group_gap = 5,
                               show_legends = TRUE,
@@ -188,6 +229,13 @@ stacked_CN_heatmap = function(cn_state_matrix,
     extra_args$annotation_colours = NULL
   }
 
+  # features enriched in each group, from a test_feature_associations table
+  group_features = NULL
+  if(!is.null(label_associations)){
+    group_features = .enriched_features_by_group(label_associations, cnv_features,
+                                                 groups, association_q)
+  }
+
   group_args = function(g){
     m = meta[as.character(meta[[split_by]]) == g, , drop = FALSE]
     args = list(cn_state_matrix = cn_state_matrix[m$sample_id, , drop = FALSE],
@@ -256,10 +304,25 @@ stacked_CN_heatmap = function(cn_state_matrix,
         args$labelTheseFeatures = labelTheseFeatures
       }
     }
+    # features enriched in this group, above its gain/loss track
+    if(!is.null(group_features[[g]]) && nrow(group_features[[g]]) > 0){
+      args$labelTheseFeatures = unique(rbind(args$labelTheseFeatures,
+                                             group_features[[g]]))
+    }
+    # with summary bars above the annotations, name them once, below
+    if(metadata_summary){
+      args$left_annotation_name_side = "bottom"
+    }
     out = do.call(pretty_CN_heatmap, args)
     ho = out$heatmap_object
     if(i > 1){
       ho@heatmap_param$show_heatmap_legend = FALSE
+    }
+    if(metadata_summary && i < length(groups) && !is.null(ho@left_annotation)){
+      for(n in names(ho@left_annotation@anno_list)){
+        ho@left_annotation@anno_list[[n]]@name_param$show = FALSE
+      }
+      ho@left_annotation@extended = unit(c(0, 0, 0, 0), "mm")
     }
     heatmaps[[i]] = ho
     group_data[[g]] = out
@@ -278,5 +341,131 @@ stacked_CN_heatmap = function(cn_state_matrix,
        show_annotation_legend = show_legends,
        heatmap_legend_side = legend_position,
        annotation_legend_side = legend_position)
+  if(metadata_summary){
+    .draw_metadata_summary(heatmaps, group_data, metadata_summary_height)
+  }
   invisible(NULL)
+}
+
+# After drawing, add a summary of each group's sample annotations above each
+# annotation column: stacked proportions (categorical) or a box plot on a
+# shared scale (numeric).
+.draw_metadata_summary = function(heatmaps, group_data, height, gap = 1){
+  annos = lapply(heatmaps, function(ho) ho@left_annotation)
+  if(all(vapply(annos, is.null, logical(1)))){
+    return(invisible(NULL))
+  }
+  values = function(i, n){
+    v = group_data[[i]]$row_anno[[n]]
+    if(is.null(v)) NULL else v
+  }
+  # shared scales for numeric annotations
+  ranges = list()
+  for(i in seq_along(heatmaps)){
+    if(is.null(annos[[i]])) next
+    for(n in names(annos[[i]]@anno_list)){
+      v = values(i, n)
+      if(is.numeric(v)){
+        ranges[[n]] = range(c(ranges[[n]], v), na.rm = TRUE)
+      }
+    }
+  }
+  for(i in seq_along(heatmaps)){
+    if(is.null(annos[[i]])) next
+    for(n in names(annos[[i]]@anno_list)){
+      v = values(i, n)
+      cm = annos[[i]]@anno_list[[n]]@color_mapping
+      if(is.null(v) || is.null(cm)) next
+      ok = tryCatch({
+        grid::seekViewport(paste0("heatmap_", heatmaps[[i]]@name))
+        grid::downViewport(paste0("annotation_", n, "_1"))
+        TRUE
+      }, error = function(e) FALSE)
+      if(!ok){
+        grid::upViewport(0)
+        next
+      }
+      grid::pushViewport(grid::viewport(y = unit(1, "npc") + unit(gap, "mm"),
+                                        height = unit(height, "mm"),
+                                        just = "bottom", clip = "off"))
+      if(is.numeric(v)){
+        r = ranges[[n]]
+        if(diff(r) == 0) r = r + c(-0.5, 0.5)
+        grid::pushViewport(grid::viewport(yscale = r))
+        v = v[!is.na(v)]
+        if(length(v) > 0){
+          grid::grid.rect(gp = gpar(col = "grey80", fill = NA, lwd = 0.5))
+          ComplexHeatmap::grid.boxplot(v, pos = 0.5, direction = "vertical",
+                                       box_width = 0.7, outline = FALSE,
+                                       gp = gpar(fill = map_to_colors(cm, stats::median(v)),
+                                                 lwd = 0.5))
+        }
+        if(i == 1){
+          grid::grid.text(paste0(signif(r[1], 2), "-", signif(r[2], 2)),
+                          y = unit(1, "npc") + unit(0.5, "mm"), rot = 90,
+                          just = "left", gp = gpar(fontsize = 5))
+        }
+        grid::popViewport()
+      }else{
+        lev = cm@levels
+        cols = cm@colors[lev]
+        counts = table(factor(as.character(v), levels = lev))
+        n_na = sum(is.na(v) | !as.character(v) %in% lev)
+        prop = c(as.numeric(counts), n_na) / max(length(v), 1)
+        fill = c(unname(cols), "grey90")
+        keep = prop > 0
+        top = 1 - c(0, cumsum(prop))[seq_along(prop)]
+        grid::grid.rect(y = top[keep], height = prop[keep], just = "top",
+                        gp = gpar(fill = fill[keep], col = NA))
+        grid::grid.rect(gp = gpar(col = "grey40", fill = NA, lwd = 0.5))
+      }
+      grid::upViewport(0)
+    }
+  }
+  invisible(NULL)
+}
+
+# For a test_feature_associations() table, the cnv_features rows enriched in
+# each group (q < association_q; the group with the higher frequency).
+.enriched_features_by_group = function(associations, cnv_features, groups,
+                                       association_q){
+  if(is.null(cnv_features)){
+    stop("label_associations needs cnv_features (e.g. GAMBLR.utils::get_cnv_features(\"grch37\"))")
+  }
+  associations = as.data.frame(associations)
+  if(!all(c("feature", "q_value") %in% colnames(associations))){
+    stop("label_associations must be a test_feature_associations() table (with feature and q_value columns)")
+  }
+  freq_cols = paste0("n_mutated_", groups)
+  total_cols = paste0("n_total_", groups)
+  missing_cols = setdiff(c(freq_cols, total_cols), colnames(associations))
+  if(length(missing_cols) > 0){
+    stop(paste0("label_associations has no counts for the groups shown (missing ",
+                paste(missing_cols, collapse = ", "),
+                "); its comparison_column values must be the split_by values"))
+  }
+  significant = associations[!is.na(associations$q_value) &
+                               associations$q_value < association_q, , drop = FALSE]
+  cnv_features = as.data.frame(cnv_features)
+  # match names, allowing gene-labelled ones (region~GENE_direction)
+  plain = sub("~[^~]*(_(gain|loss))$", "\\1", significant$feature)
+  row = match(significant$feature, cnv_features$name)
+  row[is.na(row)] = match(plain[is.na(row)], cnv_features$name)
+  if(anyNA(row)){
+    message(sum(is.na(row)), " significant feature(s) are not in cnv_features and aren't labelled: ",
+            paste(utils::head(significant$feature[is.na(row)], 10), collapse = ", "))
+  }
+  significant = significant[!is.na(row), , drop = FALSE]
+  row = row[!is.na(row)]
+  if(nrow(significant) == 0){
+    return(stats::setNames(vector("list", length(groups)), groups))
+  }
+  freq = as.matrix(significant[, freq_cols, drop = FALSE]) /
+    pmax(as.matrix(significant[, total_cols, drop = FALSE]), 1)
+  enriched_in = groups[max.col(freq, ties.method = "first")]
+  # a feature tested in several comparisons is labelled once per group
+  keep = !duplicated(paste(row, enriched_in))
+  lapply(stats::setNames(groups, groups), function(g){
+    cnv_features[unique(row[keep & enriched_in == g]), , drop = FALSE]
+  })
 }

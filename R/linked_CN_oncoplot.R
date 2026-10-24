@@ -57,14 +57,35 @@
 #' sort by event level (strongest first; see `sortByFeatures` in
 #' [pretty_CN_heatmap]). Remaining ties are ordered by `order_by`. With
 #' `split_by`, samples are sorted within each group.
+#' @param sortByMetadataColumns Optional: columns of `these_samples_metadata`
+#' to order the samples by, in priority order, ascending as in
+#' [pretty_CN_heatmap] (e.g. a numeric score or a factor whose levels give
+#' the order; samples with missing values go last). Applied before any
+#' `sort_by` keys, which then break ties; remaining ties are ordered by
+#' `order_by`. With `split_by`, samples are ordered within each group. Can't
+#' be combined with `cluster_by`.
 #' @param cluster_by Optional: cluster samples on mutation and CN feature
 #' status together instead of on the CN bins. Either "all" (every gene in
-#' the oncoplot plus every column of `cnv_status`) or a vector of genes
-#' and/or CN feature names. By default each feature counts as present or
+#' the oncoplot plus every column of `cnv_status`), a vector of genes
+#' and/or CN feature names, or a table from
+#' `GAMBLR.utils::pairwise_event_association()`, in which case the events in
+#' pairs with q below `cluster_q` are used (events that are neither genes in
+#' the oncoplot nor columns of `cnv_status` are skipped). By default each feature counts as present or
 #' absent and samples are clustered with binary (Jaccard) distance, so
 #' samples are similar when they share alterations. The resulting dendrogram
-#' is shown on the CN heatmap (Ward linkage, as for clusterRowsByFeatures in [pretty_CN_heatmap]). Can't be combined with `sort_by`; `order_by`
-#' is ignored. With `split_by`, each group is clustered separately.
+#' is shown on the CN heatmap. Samples with none of the events are grouped
+#' together. Can't be combined with `sort_by`; `order_by` is ignored. With
+#' `split_by`, each group is clustered separately.
+#' @param cluster_q q value threshold used when `cluster_by` is an
+#' association table. Default 0.05.
+#' @param cluster_method Linkage method for `cluster_by`, passed to
+#' [stats::hclust]. Default "ward.D2", as for `clusterRowsByFeatures` in
+#' [pretty_CN_heatmap]; "complete" tends to put most samples in one group.
+#' @param cluster_k Optional number of sample clusters to cut the
+#' `cluster_by` dendrogram into. Both panels are split into blocks C1, C2,
+#' ... and each sample's cluster is returned (invisibly, or as
+#' `sample_clusters` with `return_data = TRUE`). Can't be combined with
+#' `split_by`.
 #' @param cluster_levels Set to TRUE to cluster on CN event levels (0/1/2,
 #' mutations 0/1) with Euclidean distance instead, so high-level events
 #' weigh more. Default FALSE.
@@ -97,8 +118,11 @@
 #' @param return_data Set to TRUE to return the plot components instead of
 #' drawing them.
 #'
-#' @return Draws the plot. With `return_data = TRUE`, a list with
-#' `heatmap_list` and `draw_args`; draw it with
+#' @return Draws the plot (returning the sample clusters invisibly with
+#' `cluster_k`). With `return_data = TRUE`, a list with `heatmap_list`,
+#' `draw_args` and, with `cluster_k`, `sample_clusters`. Any split
+#' (`split_by` or `cluster_k`) is stored in `heatmap_list` itself, so it is
+#' kept when the list is drawn on its own; draw it with
 #' `do.call(ComplexHeatmap::draw, c(list(x$heatmap_list), x$draw_args))`.
 #' With `split_style = "panels"`, a list with `panels` (one such
 #' `heatmap_list`/`draw_args` pair per group), `panel_widths_cm` and
@@ -145,8 +169,12 @@ linked_CN_oncoplot = function(cn_state_matrix,
                               oncoplot_side,
                               order_by = "cn",
                               sort_by = NULL,
+                              sortByMetadataColumns = NULL,
                               cluster_by = NULL,
                               cluster_levels = FALSE,
+                              cluster_q = 0.05,
+                              cluster_method = "ward.D2",
+                              cluster_k = NULL,
                               cnv_status = NULL,
                               split_by,
                               split_order,
@@ -180,6 +208,24 @@ linked_CN_oncoplot = function(cn_state_matrix,
   }
   if(!is.null(sort_by) && !is.null(cluster_by)){
     stop("use either sort_by or cluster_by, not both")
+  }
+  if(!is.null(sortByMetadataColumns)){
+    if(!is.null(cluster_by)){
+      stop("use either sortByMetadataColumns or cluster_by, not both")
+    }
+    unknown = setdiff(sortByMetadataColumns, colnames(these_samples_metadata))
+    if(length(unknown) > 0){
+      stop(paste("sortByMetadataColumns not found in these_samples_metadata:",
+                 paste(unknown, collapse = ", ")))
+    }
+  }
+  if(!is.null(cluster_k)){
+    if(is.null(cluster_by)){
+      stop("cluster_k needs cluster_by")
+    }
+    if(!missing(split_by) && !is.null(split_by)){
+      stop("cluster_k can't be combined with split_by")
+    }
   }
   if(!split_style %in% c("slices", "panels")){
     stop("split_style must be \"slices\" or \"panels\"")
@@ -224,8 +270,11 @@ linked_CN_oncoplot = function(cn_state_matrix,
   build_args = list(
     cn_state_matrix = cn_state_matrix, maf_df = maf_df, genes = genes,
     layout = layout, oncoplot_side = oncoplot_side, order_by = order_by,
-    sort_by = sort_by, cluster_by = cluster_by,
-    cluster_levels = cluster_levels, cnv_status = cnv_status,
+    sort_by = sort_by, sortByMetadataColumns = sortByMetadataColumns,
+    cluster_by = cluster_by,
+    cluster_levels = cluster_levels, cluster_q = cluster_q,
+    cluster_method = cluster_method, cluster_k = cluster_k,
+    cnv_status = cnv_status,
     metadataColumns = metadataColumns,
     numericMetadataColumns = if(missing(numericMetadataColumns)) NULL
                              else numericMetadataColumns,
@@ -262,6 +311,19 @@ linked_CN_oncoplot = function(cn_state_matrix,
     heatmap_legend_side = legend_position,
     annotation_legend_side = legend_position
   )
+  sample_clusters = built$sample_clusters
+  if(!is.null(sample_clusters)){
+    # split both panels into the clusters, numbered along the dendrogram
+    cluster_of = sample_clusters$cluster[match(built$meta$sample_id,
+                                               sample_clusters$sample_id)]
+    groups = factor(paste0("C", cluster_of),
+                    levels = paste0("C", sort(unique(sample_clusters$cluster))))
+    if(layout == "stacked"){
+      draw_args$column_split = groups
+    }else{
+      draw_args$row_split = groups
+    }
+  }
   if(has_split){
     split_levels = if(!missing(split_order)) split_order
                    else if(is.factor(meta[[split_by]])) levels(meta[[split_by]])
@@ -274,11 +336,29 @@ linked_CN_oncoplot = function(cn_state_matrix,
       draw_args$row_split = groups
     }
   }
+  # store the split in the CN heatmap too, so the returned heatmap_list keeps
+  # its slices however it is drawn (also without draw_args)
+  split_groups = if(layout == "stacked") draw_args$column_split else draw_args$row_split
+  if(!is.null(split_groups)){
+    cn_ht = built$heatmap_list@ht_list[["CN"]]
+    if(layout == "stacked"){
+      cn_ht@matrix_param$column_split = data.frame(split = split_groups)
+      cn_ht@column_dend_param$cluster_slices = FALSE
+    }else{
+      cn_ht@matrix_param$row_split = data.frame(split = split_groups)
+      cn_ht@row_dend_param$cluster_slices = FALSE
+    }
+    built$heatmap_list@ht_list[["CN"]] = cn_ht
+  }
   if(return_data){
-    return(list(heatmap_list = built$heatmap_list, draw_args = draw_args))
+    out = list(heatmap_list = built$heatmap_list, draw_args = draw_args)
+    if(!is.null(sample_clusters)){
+      out$sample_clusters = sample_clusters
+    }
+    return(out)
   }
   do.call(draw, c(list(built$heatmap_list), draw_args))
-  invisible(NULL)
+  invisible(sample_clusters)
 }
 
 # Build one linked CN heatmap + oncoplot (as a ComplexHeatmap list). `onco`
@@ -287,6 +367,10 @@ linked_CN_oncoplot = function(cn_state_matrix,
 .build_linked_CN_oncoplot = function(cn_state_matrix, meta, maf_df, genes,
                                      layout, oncoplot_side, order_by,
                                      sort_by, cluster_by, cluster_levels,
+                                     sortByMetadataColumns = NULL,
+                                     cluster_q = 0.05,
+                                     cluster_method = "ward.D2",
+                                     cluster_k = NULL,
                                      cnv_status,
                                      metadataColumns, numericMetadataColumns,
                                      labelTheseFeatures, labelTheseGenes,
@@ -307,6 +391,16 @@ linked_CN_oncoplot = function(cn_state_matrix,
   }
   meta = meta[match(samples, meta$sample_id), , drop = FALSE]
   cn_state_matrix = cn_state_matrix[samples, , drop = FALSE]
+  # metadata sort keys (ascending, missing values last), aligned to samples
+  metadata_keys = NULL
+  if(!is.null(sortByMetadataColumns)){
+    metadata_keys = lapply(sortByMetadataColumns, function(col){
+      key = rank(xtfrm(meta[[col]]), na.last = "keep", ties.method = "min")
+      key[is.na(key)] = Inf
+      key
+    })
+  }
+  has_sort = !is.null(sort_status) || !is.null(metadata_keys)
 
   # copy number heatmap for the same samples, in the same input order
   cn_call = utils::modifyList(cn_args, list(
@@ -336,12 +430,34 @@ linked_CN_oncoplot = function(cn_state_matrix,
     }
   }
   combined_clustering = NULL
+  sample_clusters = NULL
   if(!is.null(cluster_by)){
-    combined_clustering = .linked_combined_clustering(onco, samples,
-                                                      cluster_by, cnv_status,
-                                                      cluster_levels)
+    cluster_values = .linked_cluster_values(onco, samples, cluster_by,
+                                            cnv_status, cluster_q)
+    if(length(samples) >= 2){
+      # a function (rather than one tree) so that slices (split_by or
+      # cluster_k blocks) are each clustered on their own samples
+      combined_clustering = function(m){
+        these_ids = rownames(m)
+        if(!all(these_ids %in% rownames(cluster_values))){
+          these_ids = colnames(m)
+        }
+        .event_status_hclust(cluster_values[these_ids, , drop = FALSE],
+                             cluster_levels, cluster_method)
+      }
+      if(!is.null(cluster_k)){
+        tree = .event_status_hclust(cluster_values, cluster_levels,
+                                    cluster_method)
+        raw_cluster = stats::cutree(tree, k = cluster_k)
+        first_seen = unique(raw_cluster[tree$order])
+        sample_clusters = data.frame(
+          sample_id = rownames(cluster_values)[tree$order],
+          cluster = match(raw_cluster, first_seen)[tree$order],
+          stringsAsFactors = FALSE)
+      }
+    }
   }
-  if(order_by == "oncoplot" || !is.null(sort_status)){
+  if(order_by == "oncoplot" || has_sort){
     # the sample order comes from the oncoplot or from sort_by; nothing else
     # reorders the samples
     cn_call$cluster_rows = FALSE
@@ -354,23 +470,38 @@ linked_CN_oncoplot = function(cn_state_matrix,
   }
   cn_out = do.call(pretty_CN_heatmap, cn_call)
   cn_heatmap = cn_out$heatmap_object
-  if(!is.null(sort_status)){
+  if(!is.null(sample_clusters)){
+    # keep the cluster blocks in their numbered (dendrogram) order
+    cn_heatmap@row_dend_param$cluster_slices = FALSE
+    cn_heatmap@column_dend_param$cluster_slices = FALSE
+    # label each block with its cluster (C1, C2, ...)
+    if(layout == "stacked"){
+      cn_heatmap@column_title = "%s"
+    }else{
+      cn_heatmap@row_title = "%s"
+    }
+  }
+  if(has_sort){
     # Heatmaps combined in one list are matched by position, so both keep
     # their data in the same sample order and the sort is applied as the CN
     # heatmap's display order (it is the main heatmap; the oncoplot follows)
     if(!identical(rownames(cn_out$data), samples)){
-      stop("the CN heatmap dropped or reordered samples, so sort_by can't be applied")
+      stop("the CN heatmap dropped or reordered samples, so the sort can't be applied")
     }
     tie_order = if(order_by == "oncoplot"){
       onco_heatmap@column_order
     }else{
       hclust(dist(.neutral_for_clustering(cn_out$data)))$order
     }
-    keys = lapply(sort_status[tie_order, , drop = FALSE], function(x){
-      x = abs(as.numeric(x))
-      x[is.na(x)] = 0
-      -x
-    })
+    # metadata columns first (ascending), then sort_by keys (strongest first)
+    keys = lapply(metadata_keys, function(k) k[tie_order])
+    if(!is.null(sort_status)){
+      keys = c(keys, lapply(sort_status[tie_order, , drop = FALSE], function(x){
+        x = abs(as.numeric(x))
+        x[is.na(x)] = 0
+        -x
+      }))
+    }
     display_order = tie_order[do.call(order, c(keys, list(seq_along(tie_order))))]
     if(layout == "stacked"){
       cn_heatmap@column_order = display_order
@@ -435,6 +566,7 @@ linked_CN_oncoplot = function(cn_state_matrix,
       column_order = onco$gene_order,
       # with order_by = "oncoplot", keep its mutation-based sample order
       row_order = if(order_by == "oncoplot" && is.null(sort_by) &&
+                     is.null(sortByMetadataColumns) &&
                      is.null(cluster_by))
                     onco_heatmap@column_order else NULL,
       show_pct = FALSE,
@@ -467,10 +599,12 @@ linked_CN_oncoplot = function(cn_state_matrix,
   }
   list(heatmap_list = heatmap_list,
        main_heatmap = if(order_by == "cn" || !is.null(sort_by) ||
+                         !is.null(sortByMetadataColumns) ||
                          !is.null(cluster_by)) "CN"
                       else onco_panel@name,
        meta = meta,
-       onco = onco)
+       onco = onco,
+       sample_clusters = sample_clusters)
 }
 
 # Missing bins (e.g. fill_missing_with = "nothing") count as neutral when
@@ -481,16 +615,32 @@ linked_CN_oncoplot = function(cn_state_matrix,
   m
 }
 
-# Clustering of samples on mutation and CN feature status together, for
-# cluster_by. NULL when there are too few samples to cluster.
-.linked_combined_clustering = function(onco, samples, cluster_by, cnv_status,
-                                       cluster_levels){
-  if(length(samples) < 2){
-    return(NULL)
-  }
+# Sample-by-event values (mutation status 0/1, CN feature levels) for
+# cluster_by. cluster_by is "all", a vector of genes and/or CN features, or a
+# pairwise_event_association table (events from pairs with q < cluster_q).
+.linked_cluster_values = function(onco, samples, cluster_by, cnv_status,
+                                  cluster_q = 0.05){
   mat = onco$oncoprint_args$mat
   plotted_genes = if(is.list(mat) && !is.matrix(mat)) rownames(mat[[1]]) else rownames(mat)
-  if(identical(cluster_by, "all")){
+  if(is.data.frame(cluster_by)){
+    if(!all(c("event_a", "event_b", "q_value") %in% colnames(cluster_by))){
+      stop("an association table for cluster_by needs event_a, event_b and q_value columns")
+    }
+    significant = cluster_by[!is.na(cluster_by$q_value) &
+                               cluster_by$q_value < cluster_q, ]
+    events = unique(c(significant$event_a, significant$event_b))
+    usable = events %in% c(plotted_genes, colnames(cnv_status))
+    if(any(!usable)){
+      message(sum(!usable), " event(s) are neither genes in the oncoplot nor ",
+              "columns of cnv_status and are skipped: ",
+              paste(utils::head(events[!usable], 10), collapse = ", "))
+    }
+    cluster_by = events[usable]
+    if(length(cluster_by) == 0){
+      stop("no events from the association table can be used for cluster_by")
+    }
+    message("clustering samples on ", length(cluster_by), " event(s)")
+  }else if(identical(cluster_by, "all")){
     cluster_by = c(plotted_genes, colnames(cnv_status))
     if(is.null(cnv_status)){
       message("cluster_by = \"all\" without cnv_status uses mutation status only")
@@ -500,7 +650,7 @@ linked_CN_oncoplot = function(cn_state_matrix,
                                arg_name = "cluster_by")
   values = as.matrix(as.data.frame(lapply(status, as.numeric)))
   rownames(values) = samples
-  .event_status_hclust(values, cluster_levels)
+  values
 }
 
 # Sorting table for sort_by: mutation status (0/1) for genes in the oncoplot,

@@ -21,6 +21,11 @@ stacked_CN_heatmap(
   group_title_rot = 90,
   labelTheseGenes,
   labelTheseFeatures,
+  label_associations = NULL,
+  cnv_features = NULL,
+  association_q = 0.05,
+  metadata_summary = TRUE,
+  metadata_summary_height = 12,
   legend_position = "bottom",
   group_gap = 5,
   show_legends = TRUE,
@@ -71,6 +76,28 @@ rotation (default 90; use 0 for horizontal) of the group titles.}
 \item{labelTheseGenes, labelTheseFeatures}{Labels drawn above the top group,
 as in [pretty_CN_heatmap].}
 
+\item{label_associations}{Optional output of
+[GAMBLR.utils::test_feature_associations] comparing the groups (its
+`comparison_column` values must be the `split_by` values). Each CNV
+feature with `q_value` below `association_q` is labelled on the panel of
+the group where it is more frequent (from the `n_mutated_<group>` and
+`n_total_<group>` columns), above that group's gain/loss track, pointing at
+the bin containing the feature's midpoint. Needs `cnv_features`.}
+
+\item{cnv_features}{Feature table with the coordinates of the features in
+`label_associations`, e.g. `GAMBLR.utils::get_cnv_features("grch37")`.
+Features are matched by name, including gene-labelled names such as
+"2p16.1~REL_gain".}
+
+\item{association_q}{q value threshold for `label_associations`. Default
+0.05.}
+
+\item{metadata_summary}{Draw a per-group summary bar above each sample
+annotation column (see Details). Default TRUE.}
+
+\item{metadata_summary_height}{Height of the summary bars in mm. Default
+12.}
+
 \item{legend_position}{Where to put the legends. Default "bottom".}
 
 \item{group_gap}{Space between groups in mm. Default 5. When drawing the
@@ -106,9 +133,19 @@ The groups share everything needed to compare them:
     (`cumulative_as_fraction = TRUE`) on one y-axis scale;
   \item the same colours for every sample annotation, including PGA.
 }
-Gene and feature labels are drawn once, above the top group. Within each
+Gene and feature labels are drawn once, above the top group; with
+`label_associations`, features significantly enriched in a group are also
+labelled on that group's panel. Within each
 group, rows are ordered as [pretty_CN_heatmap] would order them (e.g.
 clustered, or sorted with the `sortBy*` options passed through `...`).
+
+With `metadata_summary = TRUE` (the default), a small bar is drawn above
+each sample annotation column of every group, summarizing that group:
+for categorical columns, a stacked bar of the proportion of samples with
+each value (in the annotation colours, missing values light grey, the
+first value at the top); for numeric columns (e.g. PGA), a box plot on a
+scale shared by all groups (range printed above the top group's box
+plot). The annotation names then move below the last group.
 
 Not supported: `rotate`, column (bin) clustering, `geneBoxPlot`,
 `splitByBinState` and `label_style = "classic"`.
@@ -134,5 +171,14 @@ stacked_CN_heatmap(cn_mat, meta,
                    metadataColumns = c("COO_consensus", "lymphgen"),
                    labelTheseFeatures = dplyr::filter(
                      GAMBLR.utils::get_cnv_features("grch37"), type != "arm"))
+
+# label CNV features enriched in each group (q < 0.05)
+meta$Tumor_Sample_Barcode = meta$sample_id
+assoc = GAMBLR.utils::test_feature_associations(
+  metadata = meta, comparison_column = "COO_consensus",
+  feature_matrix = cnv_status, sample_id_column = NULL)
+stacked_CN_heatmap(cn_mat, meta, split_by = "COO_consensus",
+                   label_associations = assoc,
+                   cnv_features = GAMBLR.utils::get_cnv_features("grch37"))
 }
 }

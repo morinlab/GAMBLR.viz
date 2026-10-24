@@ -11,6 +11,7 @@ segments_to_exact_cn_matrix(
   max_segments_per_sample = 500,
   fill_missing_with = "diploid",
   adjust_for_ploidy = FALSE,
+  baseline_method = "mode",
   ploidy_baseline_autosomes_only = TRUE,
   max_CN_allowed = 6,
   rounded = FALSE,
@@ -59,6 +60,11 @@ cluster at, say, 1.9 (common for low-signal/"boring" samples, where the
 caller's own neutral reference may be off by a similar amount) still gets
 shifted back to a true 2.0, instead of silently receiving no correction.
 See `ploidy_baseline_autosomes_only`.}
+
+\item{baseline_method}{The baseline `adjust_for_ploidy` shifts each
+sample by: "mode" (default), "mode_rounded" or "mean", as in
+`GAMBLR.utils::add_segment_baseline`. A `baseline_cn` column of that
+method already on `seg_data` is used instead of estimating it.}
 
 \item{ploidy_baseline_autosomes_only}{When `adjust_for_ploidy = TRUE`,
 exclude chrX/chrY segments from the baseline (mode) calculation. Default

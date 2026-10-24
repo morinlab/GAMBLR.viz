@@ -13,8 +13,12 @@ linked_CN_oncoplot(
   oncoplot_side,
   order_by = "cn",
   sort_by = NULL,
+  sortByMetadataColumns = NULL,
   cluster_by = NULL,
   cluster_levels = FALSE,
+  cluster_q = 0.05,
+  cluster_method = "ward.D2",
+  cluster_k = NULL,
   cnv_status = NULL,
   split_by,
   split_order,
@@ -59,18 +63,43 @@ sort by event level (strongest first; see `sortByFeatures` in
 [pretty_CN_heatmap]). Remaining ties are ordered by `order_by`. With
 `split_by`, samples are sorted within each group.}
 
+\item{sortByMetadataColumns}{Optional: columns of `these_samples_metadata`
+to order the samples by, in priority order, ascending as in
+[pretty_CN_heatmap] (e.g. a numeric score or a factor whose levels give
+the order; samples with missing values go last). Applied before any
+`sort_by` keys, which then break ties; remaining ties are ordered by
+`order_by`. With `split_by`, samples are ordered within each group. Can't
+be combined with `cluster_by`.}
+
 \item{cluster_by}{Optional: cluster samples on mutation and CN feature
 status together instead of on the CN bins. Either "all" (every gene in
-the oncoplot plus every column of `cnv_status`) or a vector of genes
-and/or CN feature names. By default each feature counts as present or
+the oncoplot plus every column of `cnv_status`), a vector of genes
+and/or CN feature names, or a table from
+`GAMBLR.utils::pairwise_event_association()`, in which case the events in
+pairs with q below `cluster_q` are used (events that are neither genes in
+the oncoplot nor columns of `cnv_status` are skipped). By default each feature counts as present or
 absent and samples are clustered with binary (Jaccard) distance, so
 samples are similar when they share alterations. The resulting dendrogram
-is shown on the CN heatmap (Ward linkage, as for clusterRowsByFeatures in [pretty_CN_heatmap]). Can't be combined with `sort_by`; `order_by`
-is ignored. With `split_by`, each group is clustered separately.}
+is shown on the CN heatmap. Samples with none of the events are grouped
+together. Can't be combined with `sort_by`; `order_by` is ignored. With
+`split_by`, each group is clustered separately.}
 
 \item{cluster_levels}{Set to TRUE to cluster on CN event levels (0/1/2,
 mutations 0/1) with Euclidean distance instead, so high-level events
 weigh more. Default FALSE.}
+
+\item{cluster_q}{q value threshold used when `cluster_by` is an
+association table. Default 0.05.}
+
+\item{cluster_method}{Linkage method for `cluster_by`, passed to
+[stats::hclust]. Default "ward.D2", as for `clusterRowsByFeatures` in
+[pretty_CN_heatmap]; "complete" tends to put most samples in one group.}
+
+\item{cluster_k}{Optional number of sample clusters to cut the
+`cluster_by` dendrogram into. Both panels are split into blocks C1, C2,
+... and each sample's cluster is returned (invisibly, or as
+`sample_clusters` with `return_data = TRUE`). Can't be combined with
+`split_by`.}
 
 \item{cnv_status}{Sample-by-feature CN calls with sample IDs as row names,
 e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Needed when
@@ -114,8 +143,11 @@ length of the sample axis. Default NULL fills the device.}
 drawing them.}
 }
 \value{
-Draws the plot. With `return_data = TRUE`, a list with
-`heatmap_list` and `draw_args`; draw it with
+Draws the plot (returning the sample clusters invisibly with
+`cluster_k`). With `return_data = TRUE`, a list with `heatmap_list`,
+`draw_args` and, with `cluster_k`, `sample_clusters`. Any split
+(`split_by` or `cluster_k`) is stored in `heatmap_list` itself, so it is
+kept when the list is drawn on its own; draw it with
 `do.call(ComplexHeatmap::draw, c(list(x$heatmap_list), x$draw_args))`.
 With `split_style = "panels"`, a list with `panels` (one such
 `heatmap_list`/`draw_args` pair per group), `panel_widths_cm` and
