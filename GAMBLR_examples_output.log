@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-07-29 10:09:13 ==="
+[1] "=== STARTED AT 2026-10-28 11:22:34.745651 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 40 example files ────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+── Running 56 example files ────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
 Running example for function: ashm_multi_rainbow_plot
@@ -40,32 +40,32 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-      start sample_id region_name
-1 187461989  FL1015T2    BCL6-TSS
-2 187463885  FL1015T2    BCL6-TSS
-3 187462199  FL1002T2    BCL6-TSS
-4 187462508  FL1002T2    BCL6-TSS
-5 187462612  FL1002T2    BCL6-TSS
-6 187462966  FL1002T2    BCL6-TSS
+      start                 sample_id region_name
+1 187458574           03-23488_tumorA    BCL6-TSS
+2 187458581                  SP116670    BCL6-TSS
+3 187458601                 06-34043T    BCL6-TSS
+4 187458609           19-16466_tumorA    BCL6-TSS
+5 187458611                 17-12136T    BCL6-TSS
+6 187458611 HTMCP-01-06-00146-01A-01D    BCL6-TSS
 # A tibble: 6 × 8
-  age_group bam_available cohort            compression COO_consensus DHITsig_consensus EBV_status_inf ffpe_or_frozen
-  <chr>     <lgl>         <chr>             <chr>       <chr>         <chr>             <chr>          <chr>         
-1 Other     TRUE          DLBCL_LSARP_Trios bam         UNCLASS       NEG               <NA>           FFPE          
-2 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           UNCLASS           <NA>           FFPE          
-3 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           NEG               <NA>           FFPE          
-4 Other     TRUE          DLBCL_LSARP_Trios cram        UNCLASS       NEG               <NA>           FFPE          
-5 Other     TRUE          <NA>              bam         UNCLASS       DHITsigPos        <NA>           frozen        
-6 Other     TRUE          DLBCL_Gascoyne    bam         UNCLASS       DHITsigPos        <NA>           frozen        
+  sample_id       seq_type study        patient_id pathology biopsy_res genome_build pairing_status
+  <chr>           <chr>    <chr>        <chr>      <chr>     <chr>      <chr>        <chr>         
+1 01-14774_tumorB genome   DLBCL_Hilton 01-14774   DLBCL     Bx_2634    grch37       matched       
+2 01-23117_tumorB genome   DLBCL_Hilton 01-23117   DLBCL     Bx_3273    grch37       matched       
+3 04-14093_tumorB genome   DLBCL_Hilton 04-14093   DLBCL     Bx_7724    grch37       matched       
+4 04-24061_tumorB genome   DLBCL_Hilton 04-24061   DLBCL     Bx_8150    grch37       matched       
+5 05-22052T       genome   FL_Dreval    05-22052   DLBCL     Bx_10683   grch37       matched       
+6 06-11677_tumorA genome   DLBCL_Hilton 06-11677   DLBCL     Bx_12093   grch37       matched       
 genomic_data Object
 Genome Build: 
 Showing first 10 rows:
-      start sample_id region_name age_group bam_available    cohort compression COO_consensus DHITsig_consensus EBV_status_inf
-1 187461989  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-2 187463885  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-3 187462199  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-4 187462508  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-5 187462612  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-6 187462966  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
+      start                 sample_id region_name seq_type        study        patient_id pathology biopsy_res genome_build pairing_status
+1 187458574           03-23488_tumorA    BCL6-TSS   genome DLBCL_Hilton          03-23488     DLBCL    Bx_6615       grch37        matched
+2 187458581                  SP116670    BCL6-TSS   genome    FL_Dreval           DO52675     DLBCL       <NA>       hs37d5        matched
+3 187458601                 06-34043T    BCL6-TSS   genome    FL_Dreval          06-34043     DLBCL   Bx_14093       grch37        matched
+4 187458609           19-16466_tumorA    BCL6-TSS   genome DLBCL_Hilton          19-16466     DLBCL   Bx_53599       grch37        matched
+5 187458611                 17-12136T    BCL6-TSS   genome    FL_Dreval          17-12136     DLBCL   Bx_36002       grch37        matched
+6 187458611 HTMCP-01-06-00146-01A-01D    BCL6-TSS   genome DLBCL_Thomas HTMCP-01-06-00146     DLBCL       <NA>       grch37        matched
 [1] "plotting"
 [1] "done"
 
@@ -177,7 +177,8 @@ Running example for function: pretty_CN_heatmap
 > all_segments = get_cn_segments(these = meta_clean)
 
 > dlbcl_cn_binned = segmented_data_to_cn_matrix(seg_data = all_segments, 
-+     strategy = "auto_split", n_bins_split = 1300, these_samples_metadata = meta_clean)
++     strategy = "auto_split", n_bins_split = 1300, adjust_for_ploidy = TRUE, 
++     these_samples_metadata = meta_clean)
 
 > pretty_CN_heatmap(cn_state_matrix = dlbcl_cn_binned, 
 +     these_samples_metadata = meta_clean, hide_annotations = "chromosome")
@@ -199,392 +200,1149 @@ Running example for function: pretty_CN_heatmap
 +     these_samples_metadata = metadata, comparison_column = "COO_consensus", 
 +     comparison_values = c("ABC", "GCB"), gene = "PIM1", label_threshold = 2, 
 +     forestarg = TRUE, show_rate = TRUE, compare_distributions = TRUE)
-
-> pretty_colollipop_plot_result$plot
-
-> meta = GAMBLR.open::get_gambl_metadata()
-
-> metadata = dplyr::filter(meta, pathology %in% c("FL", 
-+     "DLBCL"))
-
-> maf_df = GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
-
-> pretty_colollipop_plot_result <- pretty_colollipop_plot(maf_df = maf_df, 
-+     these_samples_metadata = metadata, comparison_column = "pathology", 
-+     comparison_values = c("FL", "DLBCL"), gene = "CREBBP", label_threshold = 2, 
-+     forestarg = TRUE, show_rate = TRUE, compare_distributions = TRUE)
-
-> pretty_colollipop_plot_result$plot
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> suppressMessages(suppressWarnings({
-+     metadata <- GAMBLR.open::get_gambl_metadata() %>% filter(seq_type == 
-+         "genome", cohort %in% c("BL_Pediatric", "BL_Adult"), 
-+         )
-+     maf_df <- GAMBLR.open::get_coding_ssm(these_samples_metadata = metadata)
-+     lollipop_result <- pretty_lollipop_plot(maf_df, these_samples_metadata = metadata, 
-+         gene = "DDX3X", point_size_range = c(5, 15), point_alpha = 0.8, 
-+         label_threshold = 3)
-+     lollipop_result$plot
-+ }))
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> cat("running examples for pretty_MAF_summary\n")
-running examples for pretty_MAF_summary
-
-> FL_meta <- GAMBLR.open::get_gambl_metadata() %>% dplyr::filter(pathology == 
-+     "FL") %>% check_and_clean_metadata(., duplicate_action = "keep_first")
-
-> FL_coding <- GAMBLR.open::get_coding_ssm(these_samples_metadata = FL_meta)
-
-> pretty_MAF_summary(FL_coding)
-
-> pretty_MAF_summary(FL_coding, top_n = 22, base_size = 6)
-
-> cat("running examples from pretty_mutual_exclusivity\n")
-running examples from pretty_mutual_exclusivity
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> suppressMessages(library(ComplexHeatmap))
-
-> suppressMessages(library(dplyr))
-
-> bl_fl_dlbcl_meta = get_gambl_metadata() %>% dplyr::filter(pathology %in% 
-+     c("DLBCL", "FL", "BL"), seq_type != "mrna") %>% check_and_clean_metadata(., 
-+     duplicate_action = "keep_first")
-
-> dlbcl_meta = dplyr::filter(bl_fl_dlbcl_meta, pathology == 
-+     "DLBCL") %>% check_and_clean_metadata(., duplicate_action = "keep_first")
-
-> all_coding <- get_coding_ssm(these_samples_metadata = bl_fl_dlbcl_meta)
-
-> fl_bl_dlbcl_genes = dplyr::filter(GAMBLR.data::lymphoma_genes, 
-+     FL_Tier == 1 | BL_Tier == 1 | DLBCL_Tier == 1) %>% pull(Gene)
-
-> suppressWarnings(suppressMessages({
-+     outs = pretty_mutual_exclusivity(maf_data = all_coding, genes = fl_bl_dlbcl_genes, 
-+         these = bl_fl_dlbcl_meta, engine = "ComplexHeatmap", 
-+         font_size = 5, use_alpha = TRUE, clustering_distance = "binary", 
-+         include_hotspots = FALSE, return_data = TRUE)
-+     draw(outs$plot)
-+ }))
-
-> suppressWarnings(suppressMessages({
-+     pretty_mutual_exclusivity(mut_mat = outs$mut_mat, corr_mat = outs$corr_mat, 
-+         p_mat = outs$p_mat, maf_data = all_coding, genes = fl_bl_dlbcl_genes, 
-+         these = bl_fl_dlbcl_meta, engine = "ComplexHeatmap", 
-+         font_size = 5, use_alpha = TRUE, size_factor = 0.004, 
-+         clustering_distance = "euclidean", include_hotspots = FALSE)
-+ }))
-
-> suppressWarnings(suppressMessages({
-+     pretty_mutual_exclusivity(p_mat = outs$p_mat, maf_data = all_coding, 
-+         genes = fl_bl_dlbcl_genes, these = dlbcl_meta, engine = "ComplexHeatmap", 
-+         font_size = 5, use_alpha = TRUE, size_factor = 0.004, 
-+         clustering_distance = "euclidean", legend_direction = "vertical", 
-+         include_hotspots = FALSE)
-+ }))
-
-> cat("Running example for function: prettyChromoplot\n")
-Running example for function: prettyChromoplot
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> gistic_scores = system.file("extdata", "scores.gistic", 
-+     package = "GAMBLR.viz")
-
-> suppressMessages(suppressWarnings({
-+     prettyChromoplot(scores_path = gistic_scores, default_gene_set = "FL", 
-+         genome_build = "grch37")
-+ }))
-
-> genes = c("MYC", "FCGR2B", "TNFRSF14", "FAS", "PTEN", 
-+     "B2M", "RB1", "TCL1A", "CD70", "TOX", "PRAME", "CD38", "BCL2", 
-+     "KLHL14", "TCF4", "REL", "BCL6", "SMARCA4", "CDKN2A", "RHOA", 
-+     "HIST1H1C", "TNFAIP3", "TP53", "CDK14", "RELN", "ETS1", "MDM1", 
-+     "MIR17HG", "CD58", "HNRNPD")
-
-> gene_bed = dplyr::select(GAMBLR.data::grch37_gene_coordinates, 
-+     -1) %>% dplyr::filter(hugo_symbol %in% genes) %>% dplyr::mutate(length = end - 
-+     start, mid = start + length/2) %>% dplyr::mutate(start = mid, 
-+     end = start + 1) %>% unique() %>% GAMBLR.utils::create_bed_data(genome_build = "grch37")
-
-> suppressMessages(suppressWarnings({
-+     prettyChromoplot(scores_path = gistic_scores, labels_bed = gene_bed)
-+ }))
-
-> cat("Running example for function: prettyCoOncoplot\n")
-Running example for function: prettyCoOncoplot
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> meta <- get_gambl_metadata()
-
-> meta <- meta %>% dplyr::filter(study == "FL_Dreval", 
-+     pathology %in% c("DLBCL", "FL"))
-
-> ssm <- get_coding_ssm(these_samples_metadata = meta)
-
-> prettyCoOncoplot(maf = ssm, metadata = meta, comparison_column = "pathology", 
-+     genes = dplyr::filter(lymphoma_genes, FL_Tier == 1 | DLBCL_Tier == 
-+         1) %>% dplyr::pull(Gene), metadataColumns = c("pathology", 
-+         "lymphgen", "pairing_status"), metadataBarHeight = 10, 
-+     fontSizeGene = 12, metadataBarFontsize = 10, legend_row = 2, 
-+     label1 = "DLBCL", label2 = "FL", simplify_annotation = TRUE, 
-+     minMutationPercent = 5)
-
-> cat("Running example for function: prettyForestPlot\n")
-Running example for function: prettyForestPlot
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> suppressPackageStartupMessages(library(GAMBLR.utils))
-
-> suppressWarnings(suppressMessages({
-+     meta = get_gambl_metadata()
-+     fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", 
-+         "DLBCL")) %>% check_and_clean_metadata(duplicate_action = "keep_first")
-+     fl_dlbcl_maf = get_all_coding_ssm(fl_dlbcl_meta)
-+     fl_dlbcl_maf = annotate_curated_drivers(maf_data = fl_dlbcl_maf, 
-+         genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", 
-+             "NOTCH1", "NOTCH2"))
-+     alias_plots = prettyForestPlot(maf = fl_dlbcl_maf, metadata = fl_dlbcl_meta, 
-+         genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", 
-+             "NOTCH2"), maf_column = "mutation_alias", comparison_column = "pathology", 
-+         comparison_values = c("DLBCL", "FL"), comparison_name = "FL vs DLBCL")
-+     alias_plots$arranged
-+     driver_plots = prettyForestPlot(maf = fl_dlbcl_maf, metadata = fl_dlbcl_meta, 
-+         genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", 
-+             "NOTCH2"), maf_column = "driver_alias", comparison_column = "pathology", 
-+         comparison_values = c("DLBCL", "FL"), comparison_name = "FL vs DLBCL")
-+     driver_plots$arranged
-+     hotspot_plots = prettyForestPlot(maf = fl_dlbcl_maf, metadata = fl_dlbcl_meta, 
-+         genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", 
-+             "NOTCH2"), maf_column = "hotspot_alias", comparison_column = "pathology", 
-+         comparison_values = c("DLBCL", "FL"), comparison_name = "FL vs DLBCL")
-+     hotspot_plots$arranged
-+ }))
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> suppressWarnings(suppressMessages({
-+     metadata = get_gambl_metadata()
-+     this_meta = dplyr::filter(metadata, pairing_status == "matched")
-+     this_meta = dplyr::filter(this_meta, pathology %in% c("FL", 
-+         "DLBCL")) %>% check_and_clean_metadata(., duplicate_action = "keep_first")
-+     maf = get_coding_ssm(these_samples_metadata = this_meta)
-+     plots = prettyForestPlot(maf = maf, metadata = this_meta, 
-+         genes = c("ATP6V1B2", "EZH2", "TNFRSF14", "RRAGC"), comparison_column = "pathology", 
-+         comparison_values = c("DLBCL", "FL"), separate_hotspots = FALSE, 
-+         comparison_name = "FL vs DLBCL")
-+     plots$arranged
-+ }))
-
-> cat("Running example for function: prettyGeneCloud\n")
-Running example for function: prettyGeneCloud
-
-> maf = GAMBLR.data::sample_data$grch37$maf
-
-> prettyGeneCloud(maf_df = maf, wordcloud_version = 2, 
-+     zoomout = 0.3)
-
-> cat("Running example for function: prettyMutationDensity\n")
-Running example for function: prettyMutationDensity
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> my_meta <- get_gambl_metadata() %>% dplyr::filter(pathology %in% 
-+     c("FL", "DLBCL"), seq_type != "mrna") %>% check_and_clean_metadata(duplicate_action = "keep_first")
-
-> my_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
-+     fix_names = "concat", concat_cols = c("gene", "region"), 
-+     sep = "-")
-
-> meta_columns <- c("pathology", "lymphgen", "COO_consensus", 
-+     "DHITsig_consensus")
-
-> suppressMessages(suppressWarnings({
-+     prettyMutationDensity(regions_bed = my_regions, these_samples_metadata = my_meta, 
-+         metadataColumns = meta_columns, orientation = "sample_columns", 
-+         sortByMetadataColumns = meta_columns, projection = "grch37", 
-+         backgroundColour = "transparent", show_legend = FALSE, 
-+         region_fontsize = 3)
-+ }))
-
-> cat("running examples for prettyOncoplot\n")
-running examples for prettyOncoplot
-
-> suppressMessages(suppressWarnings({
-+     library(grid)
-+     suppressPackageStartupMessages(library(dplyr))
-+     suppressPackageStartupMessages(library(GAMBLR.open))
-+     maf_metadata <- GAMBLR.open::get_gambl_metadata(seq_type_filter = "genome") %>% 
-+         dplyr::filter(pathology %in% c("FL", "DLBCL"), study == 
-+             "FL_Dreval")
-+     maf_data <- get_coding_ssm(these_samples_metadata = maf_metadata)
-+ }))
-
-> fl_genes <- GAMBLR.data::lymphoma_genes %>% dplyr::filter(FL_Tier == 
-+     1) %>% pull(Gene)
-
-> dlbcl_genes <- GAMBLR.data::lymphoma_genes %>% dplyr::filter(DLBCL_Tier == 
-+     1, !Gene %in% fl_genes) %>% pull(Gene)
-
-> genes <- c(fl_genes, dlbcl_genes)
-
-> split_genes <- c(rep("FL", length(fl_genes)), rep("DLBCL", 
-+     length(dlbcl_genes)))
-
-> names(split_genes) <- genes
-
-> suppressMessages(suppressWarnings({
-+     prettyOncoplot(maf_df = maf_data, genes = genes, these_samples_metadata = maf_metadata, 
-+         splitGeneGroups = split_genes, minMutationPercent = 5)
-+ }))
-
-> suppressMessages(suppressWarnings({
-+     prettyOncoplot(maf_df = maf_data, genes = genes, these_samples_metadata = maf_metadata, 
-+         splitGeneGroups = split_genes, minMutationPercent = 5, 
-+         simplify_annotation = TRUE)
-+ }))
-
-> noncoding_maf <- data.frame(Hugo_Symbol = c("BCL2", 
-+     "BCL2", "BCL2", "MYC"), Tumor_Sample_Barcode = c("S1", "S2", 
-+     "S3", "S4"), Variant_Classification = c("3'UTR", "5'Flank", 
-+     "Intron", "Missense_Mutation"), Chromosome = "18", Start_Position = 1:4, 
-+     End_Position = 1:4, stringsAsFactors = FALSE)
-
-> noncoding_metadata <- data.frame(sample_id = paste0("S", 
-+     1:4), pathology = c("FL", "FL", "DLBCL", "DLBCL"), seq_type = "genome", 
-+     stringsAsFactors = FALSE)
-
-> prettyOncoplot(maf_df = noncoding_maf, these_samples_metadata = noncoding_metadata, 
-+     genes = c("BCL2", "MYC"), keepGeneOrder = TRUE, minMutationPercent = 0, 
-+     include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")), 
-+     simplify_annotation = FALSE)
-
-> prettyOncoplot(maf_df = noncoding_maf, these_samples_metadata = noncoding_metadata, 
-+     genes = c("BCL2", "MYC"), keepGeneOrder = TRUE, minMutationPercent = 0, 
-+     include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")), 
-+     simplify_annotation = TRUE)
-
-> gene_regions <- data.frame(gene_id = c("REL", "CDKN2A", 
-+     "MIR17HG", "TP53", "ATM", "FAS", "SMARCA4", "B2M", "TNFRSF14", 
-+     "TMEM30A", "TNFAIP3", "BCL2"), cn_thresh = c(4, 1, 4, 1, 
-+     1, 1, 1, 1, 1, 1, 1, 3))
-
-> print(gene_regions)
-    gene_id cn_thresh
-1       REL         4
-2    CDKN2A         1
-3   MIR17HG         4
-4      TP53         1
-5       ATM         1
-6       FAS         1
-7   SMARCA4         1
-8       B2M         1
-9  TNFRSF14         1
-10  TMEM30A         1
-11  TNFAIP3         1
-12     BCL2         3
-
-> suppressMessages(suppressWarnings({
-+     gene_cnv <- GAMBLR.results::get_cnv_and_ssm_status(only_cnv = "all", 
-+         these_samples_metadata = maf_metadata, genes_and_cn_threshs = gene_regions)
-+     prettyOncoplot(maf_df = maf_data, genes = c("CREBBP", "EZH2", 
-+         "MYD88", "TCF3", "BCL2", "BCL7A", "MEF2B", "POU2F2", 
-+         "POU2AF1", "ID3", "MYC", "RRAGC", "TCL1A", "KMT2D", "PIM1", 
-+         "CD79B", "TMSB4X", "TMEM30A", "TNFAIP3"), these_samples_metadata = maf_metadata, 
-+         cluster_rows = TRUE, metadataColumns = c("pathology", 
-+             "lymphgen", "seq_type", "ffpe_or_frozen"), cluster_cols = FALSE, 
-+         simplify_annotation = TRUE, cnv_df = gene_cnv, sortByColumns = c("pathology", 
-+             "lymphgen"))
-+ }))
-
-> cat("running examples for prettyRainfallPlot\n")
-running examples for prettyRainfallPlot
-
-> suppressPackageStartupMessages(library(GAMBLR.open))
-
-> maf = GAMBLR.data::sample_data$grch37$maf
-
-> prettyRainfallPlot(this_sample_id = "14-35026", this_maf = maf, 
-+     label_sv = FALSE, chromosome = "3")
-
-> cat("Running example for function: prettyStackedOncoplot\n")
-Running example for function: prettyStackedOncoplot
-
-> suppressMessages(suppressWarnings({
-+     suppressPackageStartupMessages(library(GAMBLR.open))
-+     dlbcl_genome_meta = get_gambl_metadata() %>% dplyr::filter(pathology == 
-+         "DLBCL", seq_type == "genome") %>% check_and_clean_metadata(., 
-+         duplicate_action = "keep_first")
-+     dlbcl_seg = get_cn_segments(dlbcl_genome_meta)
-+     cn_mat = segmented_data_to_cn_matrix(dlbcl_seg, these = dlbcl_genome_meta, 
-+         adjust_for_ploidy = TRUE)
-+     dlbcl_maf = get_coding_ssm(these_samples_metadata = dlbcl_genome_meta)
-+ }))
-
-> genes = c("KMT2D", "BCL2", "CREBBP", "EZH2", "MYD88", 
-+     "CD79B", "TP53", "PIM1", "CARD11", "SGK1", "SOCS1", "TET2", 
-+     "SPEN", "ETV6", "CD83", "B2M", "S1PR2", "GNA13", "BTG1", 
-+     "BTG2", "DDX3X", "KLHL6", "HIST1H1E", "TBL1XR1", "SMARCA4")
-
-> sortGenes = c("TP53", "KMT2D", "BCL2", "EZH2", "MYD88", 
-+     "CD79B")
-
-> CN_thresh = c(REL = 4, CDKN2A = 1, MIR17HG = 4, TP53 = 1, 
-+     TNFRSF14 = 1, TNFAIP3 = 1)
-
-> suppressMessages(suppressWarnings({
-+     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
-+         maf_data = dlbcl_maf, metadataColumns = c("pathology", 
-+             "lymphgen"), sortByMetadataColumns = c("pathology", 
-+             "lymphgen"), cn_state_matrix = cn_mat, genes_CN_thresh = CN_thresh, 
-+         genes = genes, sortByGenes = sortGenes)
-+ }))
-
-> suppressMessages(suppressWarnings({
-+     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
-+         maf_data = dlbcl_maf, metadataColumns = c("pathology", 
-+             "lymphgen"), cluster_samples = TRUE, cn_state_matrix = cn_mat, 
-+         genes_CN_thresh = CN_thresh, genes = genes)
-+ }))
-
-> CN_args = list(keep_these_chromosomes = c("2"), scale_by_sample = TRUE)
-
-> suppressMessages(suppressWarnings({
-+     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
-+         maf_data = dlbcl_maf, sortByGenes = "REL", metadataColumns = c("pathology", 
-+             "lymphgen"), oncoplot_location = "bottom", secondPlotArgs = CN_args, 
-+         cn_state_matrix = cn_mat, genes_CN_thresh = CN_thresh, 
-+         genes = genes, oncoplotHeight = 8, secondPlotHeight = 3)
-+ }))
-
-> CN_args = list(scale_by_sample = TRUE, hide_these_chromosomes = "X")
-
-> suppressMessages(suppressWarnings({
-+     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
-+         maf_data = dlbcl_maf, sortByGenes = "TP53", metadataColumns = c("pathology", 
-+             "lymphgen"), oncoplot_location = "bottom", secondPlotArgs = CN_args, 
-+         cn_state_matrix = cn_mat, genes_CN_thresh = CN_thresh, 
-+         genes = genes, secondPlotHeight = 9)
-+ }))
-
-> some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
-+     fix_names = "concat", concat_cols = c("gene", "region"), 
-+     sep = "-")
-
-> suppressMessages(suppressWarnings({
-+     simple_ashm_mat <- get_ashm_count_matrix(some_regions, these_samples_metadata = dlbcl_genome_meta)
-+     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
-+         maf_data = dlbcl_maf, regions_bed = some_regions, metadataColumns = c("pathology", 
-+             "lymphgen"), oncoplot_location = "bottom", ashm_matrix = simple_ashm_mat, 
-+         secondPlotType = "prettyMutationDensity", secondPlotArgs = list(merge_genes = TRUE, 
-+             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
-+         secondPlotHeight = 9)
-+ }))
-[1] "=== COMPLETED AT 2026-07-29 10:15:58 ==="
+[1] "=== ERROR TRACEBACK ==="
+12: (function (maf_df, these_samples_metadata = NULL, gene, plot_title, 
+        refseq_id = NULL, by_allele = TRUE, max_count = 10, include_silent = FALSE, 
+        label_threshold = 5, labelPos = NULL, labelHGVSp = NULL, 
+        mirror = FALSE, font_size = 11, font = "sans", show_rate = FALSE, 
+        title_size = 14, x_axis_size = 10, domain_label_size = 4, 
+        domain_label_orientation = "auto", aa_label_size = 3, point_alpha = 1, 
+        point_size_range = c(2, 8), highlight_driver_regions = FALSE, 
+        driver_region_alpha = 0.15, driver_region_padding = 5, limit_driver_regions = NULL, 
+        region_df = NULL, coef_limits = NULL, protein_length_min = NULL) 
+    {
+        if (missing(gene)) {
+            stop("Please provide a gene...")
+        }
+        if (missing(plot_title)) {
+            plot_title = gene
+        }
+        no_domain_mode <- !"RefSeq" %in% colnames(maf_df) || !"Protein_position" %in% 
+            colnames(maf_df)
+        if (no_domain_mode) {
+            warning("maf_df is missing 'RefSeq' and/or 'Protein_position'; plotting without protein domain information.")
+        }
+        if (!is.null(labelPos) & !is.null(labelHGVSp)) {
+            stop("Please provide either labelPos or labelHGVSp, not both.")
+        }
+        if (!is.null(labelHGVSp) & !by_allele) {
+            stop("Please set by_allele = TRUE when using labelHGVSp.\n        When by_allele = FALSE, all alleles at the same position are counted together and HGVSp information is lost. ")
+        }
+        if (include_silent) {
+            variants <- coding_class
+        }
+        else {
+            variants <- coding_class[!coding_class %in% c("Silent", 
+                "Splice_Region")]
+        }
+        maf_df <- as.data.frame(maf_df) %>% filter(Hugo_Symbol == 
+            gene, Variant_Classification %in% variants)
+        if (!no_domain_mode) {
+            maf_df <- maf_df %>% separate_longer_delim(RefSeq, delim = ",") %>% 
+                mutate(RefSeq = str_remove(RefSeq, "[.].*"), aa.length = str_remove(Protein_position, 
+                    ".*/"))
+            if (length(unique(maf_df$aa.length)) > 1) {
+                maf_df %>% count(Hugo_Symbol, Transcript_ID, RefSeq, 
+                    aa.length) %>% print()
+                warning("The provided maf_df has more than one gene model for the specified gene.\n            Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
+                maf_df <- maf_df %>% group_by(RefSeq) %>% filter(n() == 
+                    max(n())) %>% ungroup()
+            }
+            if (!is.null(refseq_id)) {
+                refseq_id <- str_remove(refseq_id, "[.].*")
+                protein_domain_subset <- protein_domains %>% filter(HGNC == 
+                    gene, refseq.ID == refseq_id)
+                if (length(unique(protein_domain_subset$refseq.ID)) == 
+                    0) {
+                    warning(paste("The provided refseq_id", refseq_id, 
+                      "does not match any RefSeq IDs for the specified gene."))
+                    protein_domain_subset <- data.frame()
+                }
+            }
+            else {
+                protein_domain_subset <- protein_domains %>% filter(HGNC == 
+                    gene)
+                if (!unique(maf_df$RefSeq) %in% protein_domain_subset$refseq.ID) {
+                    warning(paste("The RefSeq of the protein for the specified gene differs from the RefSeq of the protein in database.\n", 
+                      "The RefSeq for the gene", gene, "in your maf data is ", 
+                      unique(maf_df$RefSeq), ".\n", "The RefSeq(s) for the gene", 
+                      gene, "in the protein database: ", paste(unique(protein_domain_subset$refseq.ID), 
+                        collapse = ", "), ".\n"))
+                }
+                else {
+                    protein_domain_subset <- protein_domain_subset %>% 
+                      filter(refseq.ID %in% unique(maf_df$RefSeq))
+                }
+                if (!unique(maf_df$aa.length) %in% protein_domain_subset$aa.length) {
+                    protein_domain_subset <- protein_domain_subset %>% 
+                      mutate(difference = as.numeric(aa.length) - 
+                        as.numeric(unique(maf_df$aa.length))) %>% 
+                      filter(difference == min(abs(difference)))
+                    difference <- abs(protein_domain_subset$difference)
+                    warning(paste("The length of the protein for the specified RefSeq differs from the length of the protein in database.\n", 
+                      "They are different by", difference, "aminoacid(s)."))
+                }
+                else {
+                    protein_domain_subset <- protein_domain_subset %>% 
+                      filter(aa.length == unique(maf_df$aa.length))
+                }
+            }
+            if (length(unique(protein_domain_subset$refseq.ID)) > 
+                1) {
+                print(protein_domain_subset)
+                protein_domain_subset <- protein_domain_subset %>% 
+                    filter(refseq.ID == unique(protein_domain_subset$refseq.ID[1]))
+                message(paste("There is more than one RefSeq model matching the maf_df for the specified gene.\n        Arbitrarily selecting", 
+                    unique(protein_domain_subset$refseq.ID), "to plot. Some variants may be dropped. "))
+            }
+            else if (length(unique(protein_domain_subset$refseq.ID)) == 
+                0) {
+                warning("None of the protein models matches the provided maf_df. Check the Protein_position and RefSeq columns. ")
+                protein_domain_subset <- data.frame(HGNC = gene, 
+                    Start = -1, End = -1, Label = "", refseq.ID = NA_character_, 
+                    aa.length = as.numeric(unique(maf_df$aa.length)))
+            }
+        }
+        gene_df <- maf_df
+        if (!no_domain_mode && !is.na(protein_domain_subset$refseq.ID[1])) {
+            gene_df <- gene_df %>% filter(RefSeq == unique(protein_domain_subset$refseq.ID))
+        }
+        gene_df <- gene_df %>% mutate(AA = as.numeric(gsub("[^0-9]+", 
+            "", gsub("([0-9]+).*", "\\1", HGVSp_Short)))) %>% mutate(AA_position = gsub("^p\\.", 
+            "", HGVSp_Short)) %>% arrange(AA)
+        if (by_allele) {
+            gene_counts <- gene_df %>% group_by(HGVSp_Short, AA, 
+                AA_position, Variant_Classification) %>% arrange(AA) %>% 
+                summarise(mutation_count = n()) %>% ungroup() %>% 
+                mutate(size = ifelse(mutation_count > max_count, 
+                    max_count, mutation_count))
+        }
+        else {
+            gene_counts <- gene_df %>% group_by(AA, Variant_Classification) %>% 
+                arrange(AA) %>% summarise(mutation_count = n()) %>% 
+                mutate(size = ifelse(mutation_count > max_count, 
+                    max_count, mutation_count))
+        }
+        if (!is.null(labelHGVSp)) {
+            gene_counts <- gene_counts %>% mutate(label = ifelse(HGVSp_Short %in% 
+                labelHGVSp, AA_position, ""), size = ifelse(mutation_count > 
+                max_count, max_count, mutation_count))
+        }
+        else if (!is.null(labelPos)) {
+            gene_counts <- gene_counts %>% mutate(label = ifelse(AA %in% 
+                labelPos, as.character(AA), ""), size = ifelse(mutation_count > 
+                max_count, max_count, mutation_count))
+        }
+        else {
+            gene_counts <- gene_counts %>% mutate(label = ifelse(mutation_count >= 
+                label_threshold, str_remove(HGVSp_Short, "p[.]"), 
+                ""), size = ifelse(mutation_count > max_count, max_count, 
+                mutation_count))
+        }
+        if (!no_domain_mode) {
+            domain_data <- protein_domain_subset %>% data.frame(start.points = protein_domain_subset$Start, 
+                end.points = protein_domain_subset$End, text.label = protein_domain_subset$Label, 
+                color = protein_domain_subset$Label)
+            domain_data$text.position <- (domain_data$start.points + 
+                domain_data$end.points)/2
+            domain_plot <- draw_domain_plot(domain_data, font = font, 
+                domain_label_size = domain_label_size, domain_label_orientation = domain_label_orientation, 
+                x_axis_size = x_axis_size)
+            protein_length <- domain_data$aa.length[1]
+        }
+        else {
+            domain_data <- NULL
+            domain_plot <- NULL
+            protein_length <- max(gene_counts$AA, na.rm = TRUE)
+            if (!is.null(protein_length_min)) {
+                protein_length <- max(protein_length, protein_length_min, 
+                    na.rm = TRUE)
+            }
+        }
+        final_region_df <- NULL
+        if (!is.null(region_df)) {
+            final_region_df <- region_df
+        }
+        else if (highlight_driver_regions) {
+            if ("mutation_alias" %in% colnames(gene_df)) {
+                final_region_df <- compute_driver_regions(gene_df, 
+                    gene, driver_region_padding)
+                if (nrow(final_region_df) == 0) 
+                    final_region_df <- NULL
+            }
+            else {
+                warning("highlight_driver_regions = TRUE but 'mutation_alias' column ", 
+                    "not found in maf_df. Run annotate_curated_drivers() first.")
+            }
+        }
+        if (!is.null(final_region_df) && !is.null(limit_driver_regions)) {
+            final_region_df <- dplyr::filter(final_region_df, label %in% 
+                limit_driver_regions)
+            if (nrow(final_region_df) == 0) 
+                final_region_df <- NULL
+        }
+        mutation_plot <- draw_mutation_plot(gene_counts = gene_counts, 
+            plot_title = plot_title, protein_length = protein_length, 
+            colours_manual = get_gambl_colours("mutation"), font = font, 
+            mirror = mirror, aa_label_size = aa_label_size, title_size = title_size, 
+            max_count = max_count, point_size_range = point_size_range, 
+            point_alpha = point_alpha, region_df = final_region_df, 
+            region_alpha = driver_region_alpha, coef_limits = coef_limits)
+        if (show_rate) {
+            if (is.null(these_samples_metadata)) {
+                stop("these_samples_metadata is required when show_rate = TRUE.")
+            }
+            denominator <- length(unique(these_samples_metadata$sample_id))
+            if (!no_domain_mode) {
+                numerator <- length(unique(gene_df[gene_df$RefSeq == 
+                    protein_domain_subset$refseq.ID[1], ]$Tumor_Sample_Barcode))
+            }
+            else {
+                numerator <- length(unique(gene_df$Tumor_Sample_Barcode))
+            }
+            somatic_mutation_rate <- round((numerator/denominator) * 
+                100, 1)
+            mutation_plot <- mutation_plot + ggtitle(plot_title, 
+                subtitle = paste0("Somatic mutation rate: ", somatic_mutation_rate, 
+                    "%")) + theme(text = element_text(family = font), 
+                plot.subtitle = element_text(hjust = 0.5))
+        }
+        if (!no_domain_mode) {
+            combined_plot <- ggpubr::ggarrange(mutation_plot, domain_plot, 
+                ncol = 1, align = "v", heights = c(3, 1), common.legend = TRUE, 
+                legend = "right")
+        }
+        else {
+            combined_plot <- mutation_plot
+        }
+        to_return <- list(plot = combined_plot, domain_plot = domain_plot, 
+            mutation_plot = mutation_plot, gene_counts = gene_counts, 
+            domain_data = domain_data)
+        return(to_return)
+    })(maf_df = list(Hugo_Symbol = c("PIM1", "PIM1", "PIM1", "PIM1", 
+    "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", 
+    "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", 
+    "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", "PIM1", 
+    "PIM1", "PIM1", "PIM1"), Entrez_Gene_Id = c(0L, 0L, 0L, 0L, 0L, 
+    0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+    0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), Center = c(".", ".", 
+    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", 
+    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", 
+    ".", ".", "."), NCBI_Build = c("GRCh37", "GRCh37", "GRCh37", 
+    "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", 
+    "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", 
+    "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", 
+    "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37", "GRCh37"
+    ), Chromosome = c("6", "6", "6", "6", "6", "6", "6", "6", "6", 
+    "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", 
+    "6", "6", "6", "6", "6", "6", "6", "6", "6"), Start_Position = c(37138549L, 
+    37138554L, 37138987L, 37139063L, 37139223L, 37138401L, 37138987L, 
+    37139045L, 37139210L, 37140858L, 37138355L, 37138563L, 37138596L, 
+    37138945L, 37138976L, 37139045L, 37139078L, 37139150L, 37139229L, 
+    37140879L, 37139087L, 37138397L, 37139039L, 37138372L, 37138380L, 
+    37138576L, 37138604L, 37138655L, 37139039L, 37138901L, 37138950L
+    ), End_Position = c(37138549L, 37138554L, 37138987L, 37139063L, 
+    37139223L, 37138401L, 37138987L, 37139045L, 37139210L, 37140858L, 
+    37138355L, 37138563L, 37138596L, 37138946L, 37138976L, 37139045L, 
+    37139078L, 37139150L, 37139229L, 37140879L, 37139087L, 37138397L, 
+    37139039L, 37138372L, 37138380L, 37138577L, 37138604L, 37138662L, 
+    37139039L, 37138901L, 37138950L), Strand = c("+", "+", "+", "+", 
+    "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", 
+    "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", "+", 
+    "+"), Variant_Classification = c("Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Nonsense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Nonsense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Nonsense_Mutation", 
+    "Missense_Mutation", "Missense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation", "Splice_Site", "Nonsense_Mutation", "Missense_Mutation", 
+    "Missense_Mutation"), Variant_Type = c("SNP", "SNP", "SNP", "SNP", 
+    "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", 
+    "DNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", "SNP", 
+    "SNP", "SNP", "SNP", "DNP", "SNP", "DEL", "SNP", "SNP", "SNP"
+    ), Reference_Allele = c("G", "G", "G", "G", "G", "G", "G", "C", 
+    "C", "C", "C", "C", "C", "GG", "C", "C", "C", "C", "G", "G", 
+    "C", "C", "C", "C", "C", "AG", "C", "GGTGAGTG", "C", "C", "G"
+    ), Tumor_Seq_Allele1 = c("G", "G", "G", "G", "G", "G", "G", "C", 
+    "C", "C", "C", "C", "C", "GG", "C", "C", "C", "C", "G", "G", 
+    "C", "C", "C", "C", "C", "AG", "C", "GGTGAGTG", "C", "C", "G"
+    ), Tumor_Seq_Allele2 = c("A", "A", "C", "A", "C", "C", "A", "G", 
+    "T", "A", "T", "T", "A", "AA", "T", "G", "T", "T", "A", "A", 
+    "G", "T", "T", "G", "T", "TA", "A", "-", "T", "T", "A"), dbSNP_RS = c("rs377274719", 
+    "novel", "novel", "rs200523275", "novel", "rs532972131", "novel", 
+    "novel", NA, "novel", "rs774518045", "rs775870535", "novel", 
+    "novel", "novel", "novel", "novel", NA, "novel", "novel", "novel", 
+    "novel", NA, "novel", "novel", "novel", "novel", "novel", NA, 
+    "novel", "rs562319987"), dbSNP_Val_Status = c(NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_
+    ), Tumor_Sample_Barcode = c("04-24937T", "04-24937T", "04-24937T", 
+    "04-24937T", "04-24937T", "14-25466T", "14-25466T", "14-25466T", 
+    "14-25466T", "14-25466T", "14-27873T", "14-27873T", "14-27873T", 
+    "14-27873T", "14-27873T", "14-27873T", "14-27873T", "14-27873T", 
+    "14-27873T", "14-27873T", "15-34472T", "16-11636T", "16-11636T", 
+    "16-18029T", "16-18029T", "16-18029T", "16-18029T", "16-18029T", 
+    "16-18029T", "17-23504T", "17-23504T"), Matched_Norm_Sample_Barcode = c("04-24937N", 
+    "04-24937N", "04-24937N", "04-24937N", "04-24937N", "14-25466N", 
+    "14-25466N", "14-25466N", "14-25466N", "14-25466N", "14-27873N", 
+    "14-27873N", "14-27873N", "14-27873N", "14-27873N", "14-27873N", 
+    "14-27873N", "14-27873N", "14-27873N", "14-27873N", "15-34472N", 
+    "16-11636N", "16-11636N", "16-18029N", "16-18029N", "16-18029N", 
+    "16-18029N", "16-18029N", "16-18029N", "17-23504N", "17-23504N"
+    ), Match_Norm_Seq_Allele1 = c("G", "G", "G", "G", "G", "G", "G", 
+    "C", "C", "C", "C", "C", "C", "GG", "C", "C", "C", "C", "G", 
+    "G", "C", "C", "C", "C", "C", "AG", "C", "GGTGAGTG", "C", "C", 
+    "G"), Match_Norm_Seq_Allele2 = c("G", "G", "G", "G", "G", "G", 
+    "G", "C", "C", "C", "C", "C", "C", "GG", "C", "C", "C", "C", 
+    "G", "G", "C", "C", "C", "C", "C", "AG", "C", "GGTGAGTG", "C", 
+    "C", "G"), Tumor_Validation_Allele1 = c(NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_), 
+        Tumor_Validation_Allele2 = c(NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), Match_Norm_Validation_Allele1 = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Match_Norm_Validation_Allele2 = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Verification_Status = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Validation_Status = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Mutation_Status = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Sequencing_Phase = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Sequence_Source = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Validation_Method = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), Score = c(NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), BAM_File = c(NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), Sequencer = c(NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), Tumor_Sample_UUID = c(NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), Matched_Norm_Sample_UUID = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_), HGVSc = c("c.83G>A", "c.88G>A", 
+        "c.327G>C", "c.403G>A", "c.563G>C", "c.50G>C", "c.327G>A", 
+        "c.385C>G", "c.550C>T", "c.694C>A", "c.4C>T", "c.97C>T", 
+        "c.130C>A", "c.285_286delGGinsAA", "c.316C>T", "c.385C>G", 
+        "c.418C>T", "c.490C>T", "c.569G>A", "c.715G>A", "c.427C>G", 
+        "c.46C>T", "c.379C>T", "c.21C>G", "c.29C>T", "c.110_111delAGinsTA", 
+        "c.138C>A", "c.189+2_189+9delTGAGTGGG", "c.379C>T", "c.241C>T", 
+        "c.290G>A"), HGVSp = c("p.Gly28Asp", "p.Glu30Lys", "p.Trp109Cys", 
+        "p.Glu135Lys", "p.Gly188Ala", "p.Cys17Ser", "p.Trp109Ter", 
+        "p.Leu129Val", "p.Leu184Phe", "p.Leu232Met", "p.Leu2Phe", 
+        "p.Pro33Ser", "p.Leu44Met", "p.Val96Met", "p.Leu106Phe", 
+        "p.Leu129Val", "p.Gln140Ter", "p.Leu164Phe", "p.Gly190Glu", 
+        "p.Asp239Asn", "p.Leu143Val", "p.Pro16Ser", "p.Gln127Ter", 
+        "p.Asn7Lys", "p.Ala10Val", "p.Gln37Leu", "p.Ser46Arg", NA, 
+        "p.Gln127Ter", "p.Pro81Ser", "p.Ser97Asn"), HGVSp_Short = c("p.G28D", 
+        "p.E30K", "p.W109C", "p.E135K", "p.G188A", "p.C17S", "p.W109*", 
+        "p.L129V", "p.L184F", "p.L232M", "p.L2F", "p.P33S", "p.L44M", 
+        "p.V96M", "p.L106F", "p.L129V", "p.Q140*", "p.L164F", "p.G190E", 
+        "p.D239N", "p.L143V", "p.P16S", "p.Q127*", "p.N7K", "p.A10V", 
+        "p.Q37L", "p.S46R", "p.X63_splice", "p.Q127*", "p.P81S", 
+        "p.S97N"), Transcript_ID = c("ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509", "ENST00000373509", 
+        "ENST00000373509", "ENST00000373509"), Exon_Number = c("2/6", 
+        "2/6", "4/6", "4/6", "4/6", "1/6", "4/6", "4/6", "4/6", "5/6", 
+        "1/6", "2/6", "2/6", "4/6", "4/6", "4/6", "4/6", "4/6", "4/6", 
+        "5/6", "4/6", "1/6", "4/6", "1/6", "1/6", "2/6", "2/6", "2/6", 
+        "4/6", "4/6", "4/6"), t_depth = c(103L, 105L, 101L, 122L, 
+        94L, 28L, 38L, 42L, 51L, 50L, 41L, 49L, 44L, 41L, 33L, 44L, 
+        50L, 54L, 40L, 63L, 116L, 99L, 72L, 86L, 85L, 98L, 89L, 85L, 
+        83L, 123L, 119L), t_ref_count = c(25L, 50L, 74L, 88L, 74L, 
+        18L, 21L, 25L, 9L, 37L, 25L, 30L, 27L, 25L, 23L, 27L, 27L, 
+        31L, 22L, 32L, 90L, 86L, 54L, 6L, 6L, 3L, 2L, 2L, 6L, 75L, 
+        96L), t_alt_count = c(78L, 55L, 27L, 34L, 20L, 10L, 17L, 
+        17L, 42L, 13L, 16L, 19L, 17L, 16L, 10L, 17L, 23L, 23L, 18L, 
+        31L, 26L, 13L, 18L, 80L, 79L, 95L, 87L, 83L, 77L, 48L, 23L
+        ), n_depth = c(42L, 45L, 45L, 42L, 49L, 13L, 18L, 18L, 25L, 
+        23L, 22L, 23L, 27L, 25L, 25L, 37L, 25L, 30L, 37L, 31L, 61L, 
+        52L, 45L, 34L, 39L, 35L, 33L, 31L, 31L, 49L, 45L), n_ref_count = c(42L, 
+        45L, 45L, 42L, 49L, 13L, 18L, 18L, 25L, 23L, 22L, 23L, 27L, 
+        25L, 25L, 37L, 25L, 30L, 37L, 31L, 60L, 52L, 45L, 34L, 39L, 
+        35L, 33L, 31L, 31L, 49L, 45L), n_alt_count = c(0L, 0L, 0L, 
+        0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+        0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), RefSeq = c("NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1", 
+        "NM_002648.3,NM_001243186.1", "NM_002648.3,NM_001243186.1"
+        ), Protein_position = c("28/313", "30/313", "109/313", "135/313", 
+        "188/313", "17/313", "109/313", "129/313", "184/313", "232/313", 
+        "2/313", "33/313", "44/313", "95-96/313", "106/313", "129/313", 
+        "140/313", "164/313", "190/313", "239/313", "143/313", "16/313", 
+        "127/313", "7/313", "10/313", "37/313", "46/313", "63-?/313", 
+        "127/313", "81/313", "97/313"), Pipeline = c("slms-3", "slms-3", 
+        "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", 
+        "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", 
+        "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", 
+        "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", "slms-3", 
+        "slms-3", "slms-3", "slms-3", "slms-3", "slms-3"), maf_seq_type = c("genome", 
+        "genome", "genome", "genome", "genome", "genome", "genome", 
+        "genome", "genome", "genome", "genome", "genome", "genome", 
+        "genome", "genome", "genome", "genome", "genome", "genome", 
+        "genome", "genome", "genome", "genome", "genome", "genome", 
+        "genome", "genome", "genome", "genome", "genome", "genome"
+        )), these_samples_metadata = list(sample_id = c("04-24937T", 
+    "09-31233T", "09-37629T", "10-10826T", "10-31625T", "10-40676T", 
+    "11-35935T", "13-22818T", "13-26601T", "13-30451T", "13-31210T", 
+    "14-11247T", "14-13959T", "14-16281T", "14-16707T", "14-20962T", 
+    "14-23891T", "14-25466T", "14-27873T", "14-32442T", "14-33262T", 
+    "14-33436T", "14-35026T", "14-35632T", "14-36022T", "14-37722T", 
+    "14-41461T", "15-10535T", "15-11617T", "15-13365T", "15-13383T", 
+    "15-15757T", "15-21654T", "15-24058T", "15-24306T", "15-26538T", 
+    "15-29858T", "15-31924T", "15-34472T", "15-38154T", "15-43657T", 
+    "15-43891T", "16-11636T", "16-13732T", "16-16192T", "16-16723T", 
+    "16-17861T", "16-18029T", "16-18623T", "16-23208T", "16-27413T", 
+    "16-29329T", "16-31791T", "17-12136T", "17-23504T", "17-36275T", 
+    "96-31596T", "04-24937T", "09-31233T", "09-37629T", "10-10826T", 
+    "10-31625T", "10-40676T", "11-35935T", "13-22818T", "13-26601T", 
+    "13-30451T", "13-31210T", "14-11247T", "14-13959T", "14-16281T", 
+    "14-16707T", "14-20962T", "14-23891T", "14-25466T", "14-27873T", 
+    "14-32442T", "14-33262T", "14-33436T", "14-35026T", "14-35632T", 
+    "14-36022T", "14-37722T", "14-41461T", "15-10535T", "15-11617T", 
+    "15-13365T", "15-13383T", "15-15757T", "15-21654T", "15-24058T", 
+    "15-24306T", "15-29858T", "15-31924T", "15-34472T", "15-38154T", 
+    "15-43657T", "15-43891T", "16-11636T", "16-13732T", "16-16192T", 
+    "16-16723T", "16-17861T", "16-18029T", "16-18623T", "16-27413T", 
+    "16-29329T", "96-31596T", "15-13383T", "17-36275T"), seq_type = c("genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome", "genome", "genome", "genome", 
+    "genome", "genome", "genome", "genome"), study = c("FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", "FL_Dreval", 
+    "FL_Dreval", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", "DLBCL_Arthur", 
+    "DLBCL_Hilton", "DLBCL_Hilton"), patient_id = c("04-24937", "09-31233", 
+    "09-37629", "10-10826", "10-31625", "10-40676", "11-35935", "13-22818", 
+    "13-26601", "13-30451", "13-31210", "14-11247", "14-13959", "14-16281", 
+    "14-16707", "14-20962", "14-23891", "14-25466", "14-27873", "14-32442", 
+    "14-33262", "14-33436", "14-35026", "14-35632", "14-36022", "14-37722", 
+    "14-41461", "15-10535", "15-11617", "15-13365", "15-13383", "15-15757", 
+    "15-21654", "15-24058", "15-24306", "15-26538", "15-29858", "15-31924", 
+    "15-34472", "15-38154", "15-43657", "15-43891", "16-11636", "16-13732", 
+    "16-16192", "16-16723", "16-17861", "16-18029", "16-18623", "16-23208", 
+    "16-27413", "16-29329", "16-31791", "17-12136", "17-23504", "17-36275", 
+    "96-31596", "04-24937", "09-31233", "09-37629", "10-10826", "10-31625", 
+    "10-40676", "11-35935", "13-22818", "13-26601", "13-30451", "13-31210", 
+    "14-11247", "14-13959", "14-16281", "14-16707", "14-20962", "14-23891", 
+    "14-25466", "14-27873", "14-32442", "14-33262", "14-33436", "14-35026", 
+    "14-35632", "14-36022", "14-37722", "14-41461", "15-10535", "15-11617", 
+    "15-13365", "15-13383", "15-15757", "15-21654", "15-24058", "15-24306", 
+    "15-29858", "15-31924", "15-34472", "15-38154", "15-43657", "15-43891", 
+    "16-11636", "16-13732", "16-16192", "16-16723", "16-17861", "16-18029", 
+    "16-18623", "16-27413", "16-29329", "96-31596", "15-13383", "17-36275"
+    ), pathology = c("DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", 
+    "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL", "DLBCL"
+    ), biopsy_res = c("Bx_8208", "Bx_19786", "Bx_20256", "Bx_20572", 
+    "Bx_22139", "Bx_22704", "Bx_24621", "Bx_27936", "Bx_28167", "Bx_28420", 
+    "Bx_28481", "Bx_29481", "Bx_29656", "Bx_29834", "Bx_29865", "Bx_30097", 
+    "Bx_30254", "Bx_30369", "Bx_30519", "Bx_30875", "Bx_30939", "Bx_30954", 
+    "Bx_31073", "Bx_31120", "Bx_31152", "Bx_31292", "Bx_31590", "Bx_31618", 
+    "Bx_31705", "Bx_31837", "Bx_31840", "Bx_31998", "Bx_32403", "Bx_32559", 
+    "Bx_32565", "Bx_32706", "Bx_32925", "Bx_33083", "Bx_33261", "Bx_33477", 
+    "Bx_33837", "Bx_33861", "Bx_33971", "Bx_34107", "Bx_34280", "Bx_34313", 
+    "Bx_34359", "Bx_34369", "Bx_34425", "Bx_34679", "Bx_34871", "Bx_34980", 
+    "Bx_35117", "Bx_36002", "Bx_36217", "Bx_36403", "Bx_48458", "Bx_8208", 
+    "Bx_19786", "Bx_20256", "Bx_20572", "Bx_22139", "Bx_22704", "Bx_24621", 
+    "Bx_27936", "Bx_28167", "Bx_28420", "Bx_28481", "Bx_29481", "Bx_29656", 
+    "Bx_29834", "Bx_29865", "Bx_30097", "Bx_30254", "Bx_30369", "Bx_30519", 
+    "Bx_30875", "Bx_30939", "Bx_30954", "Bx_31073", "Bx_31120", "Bx_31152", 
+    "Bx_31292", "Bx_31590", "Bx_31618", "Bx_31705", "Bx_31837", "Bx_31840", 
+    "Bx_31998", "Bx_32403", "Bx_32559", "Bx_32565", "Bx_32925", "Bx_33083", 
+    "Bx_33261", "Bx_33477", "Bx_33837", "Bx_33861", "Bx_33971", "Bx_34107", 
+    "Bx_34280", "Bx_34313", "Bx_34359", "Bx_34369", "Bx_34425", "Bx_34871", 
+    "Bx_34980", "Bx_48458", "Bx_31840", "Bx_36403"), genome_build = c("grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", "grch37", 
+    "grch37", "grch37", "grch37", "grch37"), pairing_status = c("matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched", "matched", "matched", "matched", "matched", "matched", 
+    "matched"), Tumor_Sample_Barcode = c("04-24937T", "09-31233T", 
+    "09-37629T", "10-10826T", "10-31625T", "10-40676T", "11-35935T", 
+    "13-22818T", "13-26601T", "13-30451T", "13-31210T", "14-11247T", 
+    "14-13959T", "14-16281T", "14-16707T", "14-20962T", "14-23891T", 
+    "14-25466T", "14-27873T", "14-32442T", "14-33262T", "14-33436T", 
+    "14-35026T", "14-35632T", "14-36022T", "14-37722T", "14-41461T", 
+    "15-10535T", "15-11617T", "15-13365T", "15-13383T", "15-15757T", 
+    "15-21654T", "15-24058T", "15-24306T", "15-26538T", "15-29858T", 
+    "15-31924T", "15-34472T", "15-38154T", "15-43657T", "15-43891T", 
+    "16-11636T", "16-13732T", "16-16192T", "16-16723T", "16-17861T", 
+    "16-18029T", "16-18623T", "16-23208T", "16-27413T", "16-29329T", 
+    "16-31791T", "17-12136T", "17-23504T", "17-36275T", "96-31596T", 
+    "04-24937T", "09-31233T", "09-37629T", "10-10826T", "10-31625T", 
+    "10-40676T", "11-35935T", "13-22818T", "13-26601T", "13-30451T", 
+    "13-31210T", "14-11247T", "14-13959T", "14-16281T", "14-16707T", 
+    "14-20962T", "14-23891T", "14-25466T", "14-27873T", "14-32442T", 
+    "14-33262T", "14-33436T", "14-35026T", "14-35632T", "14-36022T", 
+    "14-37722T", "14-41461T", "15-10535T", "15-11617T", "15-13365T", 
+    "15-13383T", "15-15757T", "15-21654T", "15-24058T", "15-24306T", 
+    "15-29858T", "15-31924T", "15-34472T", "15-38154T", "15-43657T", 
+    "15-43891T", "16-11636T", "16-13732T", "16-16192T", "16-16723T", 
+    "16-17861T", "16-18029T", "16-18623T", "16-27413T", "16-29329T", 
+    "96-31596T", "15-13383T", "17-36275T"), cohort = c("DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", "DLBCL_GenomeCanada", 
+    "DLBCL_GenomeCanada"), COO_consensus = c("ABC", "ABC", "GCB", 
+    "UNCLASS", "GCB", "ABC", "ABC", "UNCLASS", "GCB", "ABC", "GCB", 
+    "GCB", "GCB", "GCB", "GCB", "GCB", "ABC", "ABC", "ABC", "GCB", 
+    "UNCLASS", "GCB", "GCB", "ABC", "ABC", "ABC", "GCB", "GCB", "GCB", 
+    "ABC", "ABC", "UNCLASS", "GCB", "ABC", "GCB", "ABC", "ABC", "GCB", 
+    "ABC", "ABC", "GCB", "UNCLASS", "ABC", "GCB", "GCB", "GCB", "ABC", 
+    "ABC", "UNCLASS", "GCB", "GCB", "GCB", "UNCLASS", "GCB", "ABC", 
+    "GCB", "UNCLASS", "ABC", "ABC", "GCB", "UNCLASS", "GCB", "ABC", 
+    "ABC", "UNCLASS", "GCB", "ABC", "GCB", "GCB", "GCB", "GCB", "GCB", 
+    "GCB", "ABC", "ABC", "ABC", "GCB", "UNCLASS", "GCB", "GCB", "ABC", 
+    "ABC", "ABC", "GCB", "GCB", "GCB", "ABC", "ABC", "UNCLASS", "GCB", 
+    "ABC", "GCB", "ABC", "GCB", "ABC", "ABC", "GCB", "UNCLASS", "ABC", 
+    "GCB", "GCB", "GCB", "ABC", "ABC", "UNCLASS", "GCB", "GCB", "UNCLASS", 
+    "ABC", "GCB"), DHITsig_consensus = c("NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "POS", "NEG", "UNCLASS", 
+    "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "UNCLASS", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "NEG", 
+    "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "UNCLASS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", 
+    "POS", "NEG", "UNCLASS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "NEG", "UNCLASS", "NEG", "NEG", "NEG", "POS", "NEG", 
+    "NEG", "NEG", "NEG", "POS", "POS", "NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "UNCLASS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+    "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG"), EBV_status_inf = c(NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_, NA_character_, 
+    NA_character_, NA_character_, NA_character_, NA_character_), 
+        ffpe_or_frozen = c("frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen", "frozen", "frozen", 
+        "frozen", "frozen", "frozen", "frozen"), fl_grade = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), bcl2_ba = c("NEG", "NEG", "POS", "POS", "NEG", 
+        "NEG", "POS", "NEG", "POS", "NEG", "POS", "NEG", "POS", "NEG", 
+        "NEG", "POS", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "NEG", "POS", 
+        "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", 
+        "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", 
+        "POS", "POS", "NEG", "NEG", "POS", "NEG", "POS", "NEG", "POS", 
+        "NEG", "POS", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "POS", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", 
+        "NEG", "NEG", "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "POS", "NEG", "NEG"), bcl2_cn = c("GAIN", 
+        "NORMAL", "GAIN", "AMP", "NORMAL", "AMP", "GAIN", "GAIN", 
+        "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "GAIN", "NORMAL", 
+        "GAIN", "NORMAL", "NORMAL", "AMP", "GAIN", "GAIN", "GAIN", 
+        "GAIN", "GAIN", "AMP", "GAIN", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "GAIN", "GAIN", "NORMAL", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "GAIN", "GAIN", "GAIN", "AMP", "GAIN", 
+        "GAIN", "NORMAL", "NORMAL", "AMP", "NORMAL", "AMP", "GAIN", 
+        "NORMAL", "NORMAL", "NORMAL", "AMP", "GAIN", "AMP", "NORMAL", 
+        "GAIN", "NORMAL", "GAIN", "AMP", "NORMAL", "AMP", "GAIN", 
+        "GAIN", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "GAIN", 
+        "NORMAL", "GAIN", "NORMAL", "NORMAL", "AMP", "GAIN", "GAIN", 
+        "GAIN", "GAIN", "GAIN", "AMP", "GAIN", "NORMAL", "NORMAL", 
+        "NORMAL", "GAIN", "GAIN", "GAIN", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "GAIN", "GAIN", "GAIN", "AMP", "GAIN", 
+        "GAIN", "NORMAL", "NORMAL", "AMP", "NORMAL", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "GAIN", "AMP"), bcl6_ba = c("NEG", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "POS", "POS", "POS", 
+        "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", 
+        "POS", "POS", "NEG", "POS", "NEG", "NEG", "POS", "NEG", "NEG", 
+        "NEG", "POS", "NEG", "NEG", "NEG", "POS", "POS", "NEG", "POS", 
+        "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "POS", "POS", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", 
+        "POS", "POS", "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "POS", "NEG", "POS", "POS", "NEG", "POS", "NEG", "NEG", 
+        "POS", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "POS", 
+        "NEG", "POS", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", 
+        "POS", "POS", "NEG", "NEG", "NEG", "NEG", "POS", "POS", "NEG"
+        ), bcl6_cn = c("NORMAL", "GAIN", "GAIN", "NORMAL", "NORMAL", 
+        "AMP", "NORMAL", "GAIN", "AMP", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "GAIN", "GAIN", "NORMAL", "GAIN", "NORMAL", "GAIN", 
+        "NORMAL", "NORMAL", "NORMAL", "GAIN", "GAIN", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "NORMAL", "GAIN", "NORMAL", "NORMAL", 
+        "NORMAL", "GAIN", "NORMAL", "GAIN", "AMP", "GAIN", "GAIN", 
+        "NORMAL", "GAIN", "GAIN", "AMP", "GAIN", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "GAIN", "NORMAL", "NORMAL", "NORMAL", "AMP", 
+        "AMP", "GAIN", "GAIN", "GAIN", "NORMAL", "GAIN", "GAIN", 
+        "NORMAL", "NORMAL", "AMP", "NORMAL", "GAIN", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "GAIN", "GAIN", "GAIN", "NORMAL", "GAIN", 
+        "NORMAL", "GAIN", "NORMAL", "NORMAL", "NORMAL", "GAIN", "GAIN", 
+        "AMP", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "NORMAL", 
+        "NORMAL", "NORMAL", "GAIN", "NORMAL", "AMP", "GAIN", "GAIN", 
+        "NORMAL", "GAIN", "GAIN", "AMP", "GAIN", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "GAIN", "NORMAL", "NORMAL", "GAIN", "NORMAL", 
+        "GAIN"), myc_ba = c("NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "POS", "NEG", "POS", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", 
+        "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "NEG", "POS", "POS", 
+        "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "POS", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "POS", "NEG", "POS", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "POS", "NEG", "NEG", "NEG", "POS", "NEG", "NEG", "NEG", 
+        "NEG", "POS", "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "POS", "POS", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", "NEG", 
+        "NEG", "NEG", "NEG", "NEG", "POS"), myc_cn = c("NORMAL", 
+        "NORMAL", "GAIN", "AMP", "NORMAL", "AMP", "GAIN", "NORMAL", 
+        "AMP", "NORMAL", "NORMAL", "NORMAL", "AMP", "GAIN", "NORMAL", 
+        "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "NORMAL", 
+        "NORMAL", "GAIN", "GAIN", "GAIN", "NORMAL", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "NORMAL", 
+        "NORMAL", "NORMAL", "GAIN", "GAIN", "AMP", "NORMAL", "AMP", 
+        "GAIN", "GAIN", "GAIN", "GAIN", "GAIN", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN", "AMP", "NORMAL", 
+        "GAIN", "NORMAL", "NORMAL", "NORMAL", "GAIN", "AMP", "NORMAL", 
+        "AMP", "GAIN", "NORMAL", "AMP", "NORMAL", "NORMAL", "NORMAL", 
+        "AMP", "GAIN", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "NORMAL", "GAIN", "GAIN", "GAIN", "NORMAL", 
+        "AMP", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", 
+        "GAIN", "NORMAL", "NORMAL", "GAIN", "GAIN", "AMP", "NORMAL", 
+        "AMP", "GAIN", "GAIN", "GAIN", "GAIN", "GAIN", "AMP", "NORMAL", 
+        "NORMAL", "NORMAL", "NORMAL", "NORMAL", "NORMAL", "GAIN"), 
+        lymphgen = c("MCD", "Other", "EZB-COMP", "EZB", "BN2", "Other", 
+        "BN2", "Other", "EZB", "BN2", "EZB", "Other", "EZB", "EZB", 
+        "Other", "EZB", "Other", "MCD", "MCD", "EZB", "BN2", "BN2", 
+        "Other", "BN2", "MCD", "ST2", "EZB-COMP", "Other", "ST2", 
+        "Other", "BN2", "EZB", "EZB", "Other", "BN2", "BN2", "Other", 
+        "BN2", "MCD", "BN2", "EZB", "EZB", "MCD-COMP", "EZB", "ST2", 
+        "BN2", "BN2", "MCD", "Other", "EZB", "Other", "Other", "Other", 
+        "Other", "Other", "Other", "EZB", "MCD", "Other", "EZB-COMP", 
+        "EZB", "BN2", "Other", "BN2", "Other", "EZB", "BN2", "EZB", 
+        "Other", "EZB", "EZB", "Other", "EZB", "Other", "MCD", "MCD", 
+        "EZB", "BN2", "BN2", "Other", "BN2", "MCD", "ST2", "EZB-COMP", 
+        "Other", "ST2", "Other", "BN2", "EZB", "EZB", "Other", "BN2", 
+        "Other", "BN2", "MCD", "BN2", "EZB", "EZB", "MCD-COMP", "EZB", 
+        "ST2", "BN2", "BN2", "MCD", "Other", "Other", "Other", "EZB", 
+        "BN2", "Other"), lymphgen_cnv_noA53 = c("MCD", "Other", "EZB/ST2", 
+        "EZB", "BN2", "Other", "BN2", "Other", "EZB", "BN2", "EZB", 
+        "Other", "EZB", "EZB", "Other", "EZB", "Other", "MCD", "MCD", 
+        "EZB", "BN2", "BN2", "Other", "BN2", "MCD", "ST2", "BN2/EZB", 
+        "Other", "ST2", "Other", "BN2", "EZB", "EZB", "Other", "BN2", 
+        "BN2", "Other", "BN2", "MCD", "BN2", "EZB", "EZB", "BN2/MCD", 
+        "EZB", "ST2", "BN2", "BN2", "MCD", "Other", "EZB", "Other", 
+        "Other", "Other", "Other", "Other", "Other", "EZB", "MCD", 
+        "Other", "EZB/ST2", "EZB", "BN2", "Other", "BN2", "Other", 
+        "EZB", "BN2", "EZB", "Other", "EZB", "EZB", "Other", "EZB", 
+        "Other", "MCD", "MCD", "EZB", "BN2", "BN2", "Other", "BN2", 
+        "MCD", "ST2", "BN2/EZB", "Other", "ST2", "Other", "BN2", 
+        "EZB", "EZB", "Other", "BN2", "Other", "BN2", "MCD", "BN2", 
+        "EZB", "EZB", "BN2/MCD", "EZB", "ST2", "BN2", "BN2", "MCD", 
+        "Other", "Other", "Other", "EZB", "BN2", "Other"), lymphgen_no_cnv = c("MCD", 
+        "Other", "ST2", "EZB", "ST2", "Other", "BN2", "Other", "EZB", 
+        "BN2", "EZB", "Other", "EZB", "EZB", "ST2", "EZB", "Other", 
+        "MCD", "MCD", "EZB", "BN2", "BN2", "Other", "BN2", "MCD", 
+        "ST2", "BN2/EZB", "Other", "Other", "Other", "Other", "EZB", 
+        "EZB", "Other", "BN2", "BN2", "Other", "BN2", "MCD", "BN2", 
+        "EZB", "EZB", "BN2/MCD", "Other", "ST2", "BN2", "BN2", "MCD", 
+        "Other", "EZB", "Other", "Other", "Other", "Other", "Other", 
+        "Other", "EZB", "MCD", "Other", "ST2", "EZB", "ST2", "Other", 
+        "BN2", "Other", "EZB", "BN2", "EZB", "Other", "EZB", "EZB", 
+        "ST2", "EZB", "Other", "MCD", "MCD", "EZB", "BN2", "BN2", 
+        "Other", "BN2", "MCD", "ST2", "BN2/EZB", "Other", "Other", 
+        "Other", "Other", "EZB", "EZB", "Other", "BN2", "Other", 
+        "BN2", "MCD", "BN2", "EZB", "EZB", "BN2/MCD", "Other", "ST2", 
+        "BN2", "BN2", "MCD", "Other", "Other", "Other", "EZB", "Other", 
+        "Other"), lymphgen_with_cnv = c("MCD", "Other", "EZB/ST2/A53", 
+        "EZB", "BN2", "Other", "BN2", "Other", "EZB", "BN2", "EZB", 
+        "Other", "EZB", "EZB", "Other", "EZB", "Other", "MCD", "MCD", 
+        "EZB", "BN2", "BN2", "Other", "BN2", "MCD", "ST2", "BN2/EZB", 
+        "Other", "ST2", "Other", "BN2", "EZB", "EZB", "Other", "BN2", 
+        "BN2", "Other", "BN2", "MCD", "BN2", "EZB", "EZB", "BN2/MCD", 
+        "EZB", "ST2", "BN2", "BN2", "MCD", "Other", "EZB", "Other", 
+        "Other", "Other", "Other", "Other", "Other", "EZB", "MCD", 
+        "Other", "EZB/ST2/A53", "EZB", "BN2", "Other", "BN2", "Other", 
+        "EZB", "BN2", "EZB", "Other", "EZB", "EZB", "Other", "EZB", 
+        "Other", "MCD", "MCD", "EZB", "BN2", "BN2", "Other", "BN2", 
+        "MCD", "ST2", "BN2/EZB", "Other", "ST2", "Other", "BN2", 
+        "EZB", "EZB", "Other", "BN2", "Other", "BN2", "MCD", "BN2", 
+        "EZB", "EZB", "BN2/MCD", "EZB", "ST2", "BN2", "BN2", "MCD", 
+        "Other", "Other", "Other", "EZB", "BN2", "Other"), lymphgen_wright = c(NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_, NA_character_, NA_character_, NA_character_, 
+        NA_character_), normal_sample_id = c("04-24937N", "09-31233N", 
+        "09-37629N", "10-10826N", "10-31625N", "10-40676N", "11-35935N", 
+        "13-22818N", "13-26601N", "13-30451N", "13-31210N", "14-11247N", 
+        "14-13959N", "14-16281N", "14-16707N", "14-20962N", "14-23891N", 
+        "14-25466N", "14-27873N", "14-32442N", "14-33262N", "14-33436N", 
+        "14-35026N", "14-35632N", "14-36022N", "14-37722N", "14-41461N", 
+        "15-10535N", "15-11617N", "15-13365N", "15-13383N", "15-15757N", 
+        "15-21654N", "15-24058N", "15-24306N", "15-26538N", "15-29858N", 
+        "15-31924N", "15-34472N", "15-38154N", "15-43657N", "15-43891N", 
+        "16-11636N", "16-13732N", "16-16192N", "16-16723N", "16-17861N", 
+        "16-18029N", "16-18623N", "16-23208N", "16-27413N", "16-29329N", 
+        "16-31791N", "17-12136N", "17-23504N", "17-36275_normal", 
+        "96-31596N", "04-24937N", "09-31233N", "09-37629N", "10-10826N", 
+        "10-31625N", "10-40676N", "11-35935N", "13-22818N", "13-26601N", 
+        "13-30451N", "13-31210N", "14-11247N", "14-13959N", "14-16281N", 
+        "14-16707N", "14-20962N", "14-23891N", "14-25466N", "14-27873N", 
+        "14-32442N", "14-33262N", "14-33436N", "14-35026N", "14-35632N", 
+        "14-36022N", "14-37722N", "14-41461N", "15-10535N", "15-11617N", 
+        "15-13365N", "15-13383N", "15-15757N", "15-21654N", "15-24058N", 
+        "15-24306N", "15-29858N", "15-31924N", "15-34472N", "15-38154N", 
+        "15-43657N", "15-43891N", "16-11636N", "16-13732N", "16-16192N", 
+        "16-16723N", "16-17861N", "16-18029N", "16-18623N", "16-27413N", 
+        "16-29329N", "96-31596N", "15-13383N", "17-36275_normal"), 
+        sex = c("F", "M", "M", "F", "F", "M", "M", "F", "M", "M", 
+        "M", "M", "F", "F", "F", "M", "M", "M", "M", "M", "F", "M", 
+        "M", "M", "F", "M", "F", "M", "F", "F", "F", "M", "M", "M", 
+        "F", "M", "F", "M", "F", "M", "M", "M", "F", "M", "F", "F", 
+        "F", "M", "F", "F", "F", "M", "M", "F", "M", "M", "M", "F", 
+        "M", "M", "F", "F", "M", "M", "F", "M", "M", "M", "M", "F", 
+        "F", "F", "M", "M", "M", "M", "M", "F", "M", "M", "M", "F", 
+        "M", "F", "M", "F", "F", "F", "M", "M", "M", "F", "F", "M", 
+        "F", "M", "M", "M", "F", "M", "F", "F", "F", "M", "F", "F", 
+        "M", "M", "F", "M"), time_point = c("A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", 
+        "A", "A", "A", "A", "A", "A", "A", "A", "A"), TotalDuplicatedreads = c(725803821, 
+        48642644, 551129653, 709244112, 473452899, 606716066, 596649493, 
+        49974332, 58241095, 59687896, 69636335, 42061452, 47629739, 
+        52505477, 56712506, 43371375, 51809205, 53747067, 45430961, 
+        40689673, 38541305, 708587147, 41663004, 57738020, 37592671, 
+        39287147, 48602748, 42406176, 37558520, 40566192, 40036704, 
+        45460560, 623305457, 46332075, 38848177, 360658360, 678336764, 
+        633534781, 716424798, 673515125, 470455504, 742011539, 564587644, 
+        546410438, 837430681, 623496630, 558772156, 593362929, 525374074, 
+        319700871, 500521342, 565018470, 357261579, 366808184, 340325583, 
+        381848132, 58748633, 725803821, 48642644, 551129653, 709244112, 
+        473452899, 606716066, 596649493, 49974332, 58241095, 59687896, 
+        69636335, 42061452, 47629739, 52505477, 56712506, 43371375, 
+        51809205, 53747067, 45430961, 40689673, 38541305, 708587147, 
+        41663004, 57738020, 37592671, 39287147, 48602748, 42406176, 
+        37558520, 40566192, 40036704, 45460560, 623305457, 46332075, 
+        38848177, 678336764, 633534781, 716424798, 673515125, 470455504, 
+        742011539, 564587644, 546410438, 837430681, 623496630, 558772156, 
+        593362929, 525374074, 500521342, 565018470, 58748633, 40036704, 
+        381848132), TotalReads = c(2169351286, 2207211118, 2010849972, 
+        2226263822, 1909623072, 2042150434, 2032668370, 2344295988, 
+        2147391506, 2487030422, 2267884466, 2206840456, 2409788520, 
+        2333294640, 2338007864, 2099373884, 2194547336, 2145001042, 
+        2275073946, 2171848090, 2254638160, 2158473400, 2211172760, 
+        2404525948, 2112968694, 1927444730, 2344145616, 2237201082, 
+        2115900478, 2099258036, 2267782712, 2241967306, 2061412616, 
+        2329216350, 2205592164, 1868142314, 2136002158, 2124119124, 
+        2184138488, 2108157840, 1968866626, 2181169788, 2002831308, 
+        2048930954, 2278373640, 2057898138, 1994118484, 2030870356, 
+        1996714818, 1802348690, 1963433572, 2013224644, 1869443468, 
+        1868891366, 1854756128, 1996728954, 2315235324, 2169351286, 
+        2207211118, 2010849972, 2226263822, 1909623072, 2042150434, 
+        2032668370, 2344295988, 2147391506, 2487030422, 2267884466, 
+        2206840456, 2409788520, 2333294640, 2338007864, 2099373884, 
+        2194547336, 2145001042, 2275073946, 2171848090, 2254638160, 
+        2158473400, 2211172760, 2404525948, 2112968694, 1927444730, 
+        2344145616, 2237201082, 2115900478, 2099258036, 2267782712, 
+        2241967306, 2061412616, 2329216350, 2205592164, 2136002158, 
+        2124119124, 2184138488, 2108157840, 1968866626, 2181169788, 
+        2002831308, 2048930954, 2278373640, 2057898138, 1994118484, 
+        2030870356, 1996714818, 1963433572, 2013224644, 2315235324, 
+        2267782712, 1996728954), TotalUniquelyMapped = c(2160346845, 
+        2077030882, 2003913303, 2219601058, 1904180397, 2034681503, 
+        2025455900, 2191092181, 2008023042, 2291613461, 2098222188, 
+        2057169000, 2250815812, 2152728354, 2178429121, 1975719034, 
+        2029401640, 1991706885, 2135799674, 2045628061, 2123719588, 
+        2151839294, 2079451894, 2224396298, 1983041316, 1822598133, 
+        2183011959, 2087876390, 1997111977, 1978647564, 2121767824, 
+        2101038250, 2055264907, 2188222272, 2078137860, 1862286275, 
+        2129593246, 2117703228, 2176062304, 2101493085, 1960658251, 
+        2173157009, 1995185247, 2042705690, 2267505380, 2051733083, 
+        1987295022, 2025081179, 1989813271, 1796632503, 1955891245, 
+        2006692324, 1863565850, 1863326566, 1849895610, 1990972981, 
+        2157074514, 2160346845, 2077030882, 2003913303, 2219601058, 
+        1904180397, 2034681503, 2025455900, 2191092181, 2008023042, 
+        2291613461, 2098222188, 2057169000, 2250815812, 2152728354, 
+        2178429121, 1975719034, 2029401640, 1991706885, 2135799674, 
+        2045628061, 2123719588, 2151839294, 2079451894, 2224396298, 
+        1983041316, 1822598133, 2183011959, 2087876390, 1997111977, 
+        1978647564, 2121767824, 2101038250, 2055264907, 2188222272, 
+        2078137860, 2129593246, 2117703228, 2176062304, 2101493085, 
+        1960658251, 2173157009, 1995185247, 2042705690, 2267505380, 
+        2051733083, 1987295022, 2025081179, 1989813271, 1955891245, 
+        2006692324, 2157074514, 2121767824, 1990972981), TotalUnmappedreads = c(9004441, 
+        130180236, 6936669, 6662764, 5442675, 7468931, 7212470, 153203807, 
+        139368464, 195416961, 169662278, 149671456, 158972708, 180566286, 
+        159578743, 123654850, 165145696, 153294157, 139274272, 126220029, 
+        130918572, 6634106, 131720866, 180129650, 129927378, 104846597, 
+        161133657, 149324692, 118788501, 120610472, 146014888, 140929056, 
+        6147709, 140994078, 127454304, 5856039, 6408912, 6415896, 
+        8076184, 6664755, 8208375, 8012779, 7646061, 6225264, 10868260, 
+        6165055, 6823462, 5789177, 6901547, 5716187, 7542327, 6532320, 
+        5877618, 5564800, 4860518, 5755973, 158160810, 9004441, 130180236, 
+        6936669, 6662764, 5442675, 7468931, 7212470, 153203807, 139368464, 
+        195416961, 169662278, 149671456, 158972708, 180566286, 159578743, 
+        123654850, 165145696, 153294157, 139274272, 126220029, 130918572, 
+        6634106, 131720866, 180129650, 129927378, 104846597, 161133657, 
+        149324692, 118788501, 120610472, 146014888, 140929056, 6147709, 
+        140994078, 127454304, 6408912, 6415896, 8076184, 6664755, 
+        8208375, 8012779, 7646061, 6225264, 10868260, 6165055, 6823462, 
+        5789177, 6901547, 7542327, 6532320, 158160810, 146014888, 
+        5755973), transformation = c(NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_, NA_integer_, NA_integer_, NA_integer_, 
+        NA_integer_, NA_integer_)), gene = "PIM1", plot_title = "PIM1 in ABC", 
+        region_df = NULL, driver_region_alpha = 0.15, coef_limits = NULL, 
+        protein_length_min = 239)
+11: do.call(pretty_lollipop_plot, c(list(maf_df = ssm1, these_samples_metadata = these_samples_metadata, 
+        gene = gene, plot_title = paste0(gene, " in ", comparison_values[1]), 
+        region_df = region_df_top, driver_region_alpha = driver_region_alpha, 
+        coef_limits = shared_coef_lim, protein_length_min = protein_length_min), 
+        lollipopplot_args)) at pretty_colollipop_plot.R#347
+10: pretty_colollipop_plot(maf_df = maf_df, these_samples_metadata = metadata, 
+        comparison_column = "COO_consensus", comparison_values = c("ABC", 
+            "GCB"), gene = "PIM1", label_threshold = 2, forestarg = TRUE, 
+        show_rate = TRUE, compare_distributions = TRUE)
+9: eval(ei, envir)
+8: eval(ei, envir)
+7: withVisible(eval(ei, envir))
+6: source(tmp, echo = !quiet, local = env, max.deparse.length = Inf)
+5: FUN(X[[i]], ...)
+4: lapply(.x, .f, ...)
+3: map(.x, .f, ...)
+2: walk(files, pkgload::run_example, run_donttest = run_donttest, 
+       run_dontrun = run_dontrun)
+1: devtools::run_examples()
+[1] "=== RLANGE TRACE ==="
+[1] "=== COMPLETED AT 2026-10-28 11:26:31.309591 ==="
