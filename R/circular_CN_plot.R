@@ -335,10 +335,10 @@ circular_CN_plot = function(pretty_CN_heatmap_output,
 #'                                  seg_data = all_segments,
 #'                                  strategy="auto_split",
 #'                                  n_bins_split=500,
+#'                                  adjust_for_ploidy = TRUE,
 #'                                  these_samples_metadata = meta)
 #' labelTheseGenes = c("REL","TP53")
 #' cn_out = pretty_CN_heatmap(cn_state_matrix=all_states_binned,
-#'     scale_by_sample = TRUE,
 #'     these_samples_metadata = meta,
 #'     metadataColumns = c("pathology","seq_type"),
 #'     return_data = TRUE)

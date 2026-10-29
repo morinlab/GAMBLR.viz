@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-07-29 10:09:13 ==="
+[1] "=== STARTED AT 2026-10-29 10:16:23.790243 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 40 example files ────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
+── Running 56 example files ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.viz ──
 
 > cat("Running example for function: ashm_multi_rainbow_plot\n")
 Running example for function: ashm_multi_rainbow_plot
@@ -40,32 +40,32 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-      start sample_id region_name
-1 187461989  FL1015T2    BCL6-TSS
-2 187463885  FL1015T2    BCL6-TSS
-3 187462199  FL1002T2    BCL6-TSS
-4 187462508  FL1002T2    BCL6-TSS
-5 187462612  FL1002T2    BCL6-TSS
-6 187462966  FL1002T2    BCL6-TSS
+      start                 sample_id region_name
+1 187458574           03-23488_tumorA    BCL6-TSS
+2 187458581                  SP116670    BCL6-TSS
+3 187458601                 06-34043T    BCL6-TSS
+4 187458609           19-16466_tumorA    BCL6-TSS
+5 187458611                 17-12136T    BCL6-TSS
+6 187458611 HTMCP-01-06-00146-01A-01D    BCL6-TSS
 # A tibble: 6 × 8
-  age_group bam_available cohort            compression COO_consensus DHITsig_consensus EBV_status_inf ffpe_or_frozen
-  <chr>     <lgl>         <chr>             <chr>       <chr>         <chr>             <chr>          <chr>         
-1 Other     TRUE          DLBCL_LSARP_Trios bam         UNCLASS       NEG               <NA>           FFPE          
-2 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           UNCLASS           <NA>           FFPE          
-3 Other     TRUE          DLBCL_LSARP_Trios cram        ABC           NEG               <NA>           FFPE          
-4 Other     TRUE          DLBCL_LSARP_Trios cram        UNCLASS       NEG               <NA>           FFPE          
-5 Other     TRUE          <NA>              bam         UNCLASS       DHITsigPos        <NA>           frozen        
-6 Other     TRUE          DLBCL_Gascoyne    bam         UNCLASS       DHITsigPos        <NA>           frozen        
+  sample_id       seq_type study        patient_id pathology biopsy_res genome_build pairing_status
+  <chr>           <chr>    <chr>        <chr>      <chr>     <chr>      <chr>        <chr>         
+1 01-14774_tumorB genome   DLBCL_Hilton 01-14774   DLBCL     Bx_2634    grch37       matched       
+2 01-23117_tumorB genome   DLBCL_Hilton 01-23117   DLBCL     Bx_3273    grch37       matched       
+3 04-14093_tumorB genome   DLBCL_Hilton 04-14093   DLBCL     Bx_7724    grch37       matched       
+4 04-24061_tumorB genome   DLBCL_Hilton 04-24061   DLBCL     Bx_8150    grch37       matched       
+5 05-22052T       genome   FL_Dreval    05-22052   DLBCL     Bx_10683   grch37       matched       
+6 06-11677_tumorA genome   DLBCL_Hilton 06-11677   DLBCL     Bx_12093   grch37       matched       
 genomic_data Object
 Genome Build: 
 Showing first 10 rows:
-      start sample_id region_name age_group bam_available    cohort compression COO_consensus DHITsig_consensus EBV_status_inf
-1 187461989  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-2 187463885  FL1015T2    BCL6-TSS     Other          TRUE FL_Kridel        cram       UNCLASS       DHITsig-IND           <NA>
-3 187462199  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-4 187462508  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-5 187462612  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
-6 187462966  FL1002T2    BCL6-TSS     Other          TRUE FL_Kridel        cram           GCB       DHITsig-IND           <NA>
+      start                 sample_id region_name seq_type        study        patient_id pathology biopsy_res genome_build pairing_status
+1 187458574           03-23488_tumorA    BCL6-TSS   genome DLBCL_Hilton          03-23488     DLBCL    Bx_6615       grch37        matched
+2 187458581                  SP116670    BCL6-TSS   genome    FL_Dreval           DO52675     DLBCL       <NA>       hs37d5        matched
+3 187458601                 06-34043T    BCL6-TSS   genome    FL_Dreval          06-34043     DLBCL   Bx_14093       grch37        matched
+4 187458609           19-16466_tumorA    BCL6-TSS   genome DLBCL_Hilton          19-16466     DLBCL   Bx_53599       grch37        matched
+5 187458611                 17-12136T    BCL6-TSS   genome    FL_Dreval          17-12136     DLBCL   Bx_36002       grch37        matched
+6 187458611 HTMCP-01-06-00146-01A-01D    BCL6-TSS   genome DLBCL_Thomas HTMCP-01-06-00146     DLBCL       <NA>       grch37        matched
 [1] "plotting"
 [1] "done"
 
@@ -177,7 +177,8 @@ Running example for function: pretty_CN_heatmap
 > all_segments = get_cn_segments(these = meta_clean)
 
 > dlbcl_cn_binned = segmented_data_to_cn_matrix(seg_data = all_segments, 
-+     strategy = "auto_split", n_bins_split = 1300, these_samples_metadata = meta_clean)
++     strategy = "auto_split", n_bins_split = 1300, adjust_for_ploidy = TRUE, 
++     these_samples_metadata = meta_clean)
 
 > pretty_CN_heatmap(cn_state_matrix = dlbcl_cn_binned, 
 +     these_samples_metadata = meta_clean, hide_annotations = "chromosome")
@@ -199,6 +200,12 @@ Running example for function: pretty_CN_heatmap
 +     these_samples_metadata = metadata, comparison_column = "COO_consensus", 
 +     comparison_values = c("ABC", "GCB"), gene = "PIM1", label_threshold = 2, 
 +     forestarg = TRUE, show_rate = TRUE, compare_distributions = TRUE)
+  Hugo_Symbol   Transcript_ID       RefSeq aa.length  n
+1        PIM1 ENST00000373509 NM_001243186       313 31
+2        PIM1 ENST00000373509    NM_002648       313 31
+  Hugo_Symbol   Transcript_ID       RefSeq aa.length n
+1        PIM1 ENST00000373509 NM_001243186       313 5
+2        PIM1 ENST00000373509    NM_002648       313 5
 
 > pretty_colollipop_plot_result$plot
 
@@ -228,6 +235,10 @@ Running example for function: pretty_CN_heatmap
 +         label_threshold = 3)
 +     lollipop_result$plot
 + }))
+  Hugo_Symbol   Transcript_ID       RefSeq aa.length   n
+1       DDX3X ENST00000399959 NM_001193416       662 108
+2       DDX3X ENST00000399959 NM_001193417       662 108
+3       DDX3X ENST00000399959    NM_001356       662 108
 
 > suppressPackageStartupMessages(library(GAMBLR.open))
 
@@ -336,6 +347,22 @@ Running example for function: prettyCoOncoplot
 +     label1 = "DLBCL", label2 = "FL", simplify_annotation = TRUE, 
 +     minMutationPercent = 5)
 
+> meta <- get_gambl_metadata()
+
+> meta <- meta %>% dplyr::filter(pathology %in% c("DLBCL", 
++     "FL", "BL"))
+
+> ssm <- get_all_coding_ssm(these_samples_metadata = meta)
+
+> lymphomagenes <- dplyr::filter(lymphoma_genes, FL_Tier == 
++     1 | DLBCL_Tier == 1 | BL_Tier == 1) %>% dplyr::pull(Gene)
+
+> prettyCoOncoplot(maf = ssm, metadata = meta, comparison_column = "pathology", 
++     genes = lymphomagenes, metadataColumns = c("pathology", "lymphgen", 
++         "pairing_status"), metadataBarHeight = 7, fontSizeGene = 12, 
++     metadataBarFontsize = 9, legend_row = 2, simplify_annotation = TRUE, 
++     minMutationPercent = 5)
+
 > cat("Running example for function: prettyForestPlot\n")
 Running example for function: prettyForestPlot
 
@@ -386,7 +413,10 @@ Running example for function: prettyForestPlot
 > cat("Running example for function: prettyGeneCloud\n")
 Running example for function: prettyGeneCloud
 
-> maf = GAMBLR.data::sample_data$grch37$maf
+> cell_line_meta <- GAMBLR.open::get_gambl_metadata() %>% 
++     dplyr::filter(cohort == "DLBCL_cell_lines")
+
+> maf = GAMBLR.open::get_coding_ssm(these_samples_metadata = cell_line_meta)
 
 > prettyGeneCloud(maf_df = maf, wordcloud_version = 2, 
 +     zoomout = 0.3)
@@ -471,6 +501,16 @@ running examples for prettyOncoplot
 +     include_noncoding = list(BCL2 = c("3'UTR", "5'Flank", "Intron")), 
 +     simplify_annotation = TRUE)
 
+> neoepitope_maf <- data.frame(Hugo_Symbol = c("BCL2", 
++     "MYC"), Tumor_Sample_Barcode = c("S1", "S2"), Variant_Classification = c("Missense_Mutation", 
++     "Missense_Mutation"), Chromosome = "18", Start_Position = 1:2, 
++     End_Position = 1:2, neoepitope_allele = c("HLA-A*02:01", 
++         NA), stringsAsFactors = FALSE)
+
+> prettyOncoplot(maf_df = neoepitope_maf, these_samples_metadata = noncoding_metadata, 
++     genes = c("BCL2", "MYC"), keepGeneOrder = TRUE, minMutationPercent = 0, 
++     overlayColumn = "neoepitope_allele")
+
 > gene_regions <- data.frame(gene_id = c("REL", "CDKN2A", 
 +     "MIR17HG", "TP53", "ATM", "FAS", "SMARCA4", "B2M", "TNFRSF14", 
 +     "TMEM30A", "TNFAIP3", "BCL2"), cn_thresh = c(4, 1, 4, 1, 
@@ -509,9 +549,12 @@ running examples for prettyRainfallPlot
 
 > suppressPackageStartupMessages(library(GAMBLR.open))
 
-> maf = GAMBLR.data::sample_data$grch37$maf
+> cell_line_meta <- get_gambl_metadata() %>% dplyr::filter(cohort == 
++     "DLBCL_cell_lines")
 
-> prettyRainfallPlot(this_sample_id = "14-35026", this_maf = maf, 
+> maf = get_ssm_by_samples(these_samples_metadata = cell_line_meta)
+
+> prettyRainfallPlot(this_sample_id = "DOHH-2", this_maf = maf, 
 +     label_sv = FALSE, chromosome = "3")
 
 > cat("Running example for function: prettyStackedOncoplot\n")
@@ -554,7 +597,7 @@ Running example for function: prettyStackedOncoplot
 +         genes_CN_thresh = CN_thresh, genes = genes)
 + }))
 
-> CN_args = list(keep_these_chromosomes = c("2"), scale_by_sample = TRUE)
+> CN_args = list(keep_these_chromosomes = c("2"))
 
 > suppressMessages(suppressWarnings({
 +     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
@@ -564,7 +607,7 @@ Running example for function: prettyStackedOncoplot
 +         genes = genes, oncoplotHeight = 8, secondPlotHeight = 3)
 + }))
 
-> CN_args = list(scale_by_sample = TRUE, hide_these_chromosomes = "X")
+> CN_args = list(hide_these_chromosomes = "X")
 
 > suppressMessages(suppressWarnings({
 +     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
@@ -572,6 +615,19 @@ Running example for function: prettyStackedOncoplot
 +             "lymphgen"), oncoplot_location = "bottom", secondPlotArgs = CN_args, 
 +         cn_state_matrix = cn_mat, genes_CN_thresh = CN_thresh, 
 +         genes = genes, secondPlotHeight = 9)
++ }))
+
+> suppressMessages(suppressWarnings({
++     set.seed(123)
++     cn_genes = c("TP53", "CDKN2A", "MYC")
++     gene_cn_states = matrix(sample(c(-2, -1, 0, 1, 2), size = nrow(dlbcl_genome_meta) * 
++         length(cn_genes), replace = TRUE, prob = c(0.05, 0.15, 
++         0.6, 0.15, 0.05)), nrow = nrow(dlbcl_genome_meta), dimnames = list(dlbcl_genome_meta$sample_id, 
++         cn_genes))
++     prettyStackedOncoplot(these_samples_metadata = dlbcl_genome_meta, 
++         maf_data = dlbcl_maf, metadataColumns = c("pathology", 
++             "lymphgen"), sortByGenes = c("TP53", "CDKN2A"), cn_state_matrix = cn_mat, 
++         gene_cn_states = gene_cn_states, genes = genes)
 + }))
 
 > some_regions = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
@@ -587,4 +643,4 @@ Running example for function: prettyStackedOncoplot
 +             region_fontsize = 3), genes = genes, cluster_samples = TRUE, 
 +         secondPlotHeight = 9)
 + }))
-[1] "=== COMPLETED AT 2026-07-29 10:15:58 ==="
+[1] "=== COMPLETED AT 2026-10-29 10:27:15.539118 ==="

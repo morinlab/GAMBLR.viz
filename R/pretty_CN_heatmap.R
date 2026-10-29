@@ -3,9 +3,31 @@
 
 #' Pretty Copy Number Heatmap
 #'
-#' @param cn_state_matrix The output of get_cn_states
-#' @param scale_by_sample Set to TRUE to scale CN values within each sample_id
-#' @param these_samples_metadata The output of get_gambl_metadata
+#' @details
+#' **Correcting for ploidy.** To show copy number relative to each sample's
+#' own ploidy, build the matrix with
+#' `GAMBLR.utils::segmented_data_to_cn_matrix(..., adjust_for_ploidy = TRUE)`
+#' and leave `scale_by_sample = FALSE` (the default). That adjustment
+#' recentres each sample's segments on its dominant CN level *before* the
+#' bins are made, so bins with no data are filled after the adjustment and
+#' stay neutral.
+#'
+#' Avoid `scale_by_sample = TRUE` on a matrix built with
+#' `fill_missing_with = "diploid"` (the default fill): the filled bins are a
+#' fixed CN of 2, so after subtracting a high-ploidy sample's mean they
+#' appear as deletions in that sample only (commonly on chrY, pericentromeric
+#' 9q and the acrocentric p arms). The mean is also pulled around by large
+#' gains and losses. Don't combine the two approaches either, as that shifts
+#' samples twice.
+#'
+#' @param cn_state_matrix Copy number matrix with samples as rows and bins as
+#' columns, e.g. from [GAMBLR.utils::segmented_data_to_cn_matrix]. Build it
+#' with `adjust_for_ploidy = TRUE` to correct for sample ploidy (see Details).
+#' @param scale_by_sample Set to TRUE to recentre each sample on 2 by
+#' subtracting its mean CN. Not recommended: use
+#' `adjust_for_ploidy = TRUE` when building the matrix instead, and don't
+#' combine the two (see Details). Default FALSE.
+#' @param these_samples_metadata Sample metadata, e.g. from get_gambl_metadata, with one row per sample_id. Only samples present in both this and cn_state_matrix are shown; samples in the matrix but not here are left out (with a message).
 #' @param keep_sample_order FALSE. Set to TRUE to ensure samples are in the same
 #' order as in the metadata
 #' @param metadataColumns One or more columns from the metadata you want to
@@ -24,13 +46,45 @@
 #' @param cluster_regions More intuitive alias for cluster_columns
 #' @param cluster_samples More intuitive alias for cluster_rows, especially when combining with rotate = TRUE
 #' @param cluster_rows Set to TRUE to enable clustering of genomic regions (columns) based on their CN value across all regions in the heatmap
+#' @param clusterRowsByGenes Optional: A vector of Hugo gene symbols. When provided (and cluster_rows is TRUE), the rows (samples) are clustered using only the bins that contain these genes rather than all bins. Genes are mapped to bins the same way as for labelTheseGenes. Bins outside keep_these_chromosomes can still be used for clustering.
+#' Alternatively, a data frame with columns "gene_id" and "cn_thresh" (the same format as genes_and_cn_threshs in get_cnv_and_ssm_status) restricts each gene to its relevant direction of CN change.
+#' A cn_thresh below 2 is the maximum CN considered a loss for that gene (tumour suppressor) and above 2 is the minimum CN considered a gain (oncogene).
+#' Any value in that gene's bin not passing its threshold is set to 2 (neutral) before clustering. A cn_thresh of 2 uses the bin without any direction filter. The displayed heatmap values are not altered.
+#' @param sortByGenes Optional: genes whose bins (mapped as for labelTheseGenes) order the rows by their CN value, highest first, so gains sort first and losses last. Row clustering is turned off. For direction-aware sorting use sortByFeatures.
+#' @param sortByFeatures Optional: names of CN features (columns of `cnv_status`) to order the rows by, in priority order. Samples are sorted by the level of each feature (strongest first: 2, then 1, then 0, using the absolute value so gains and losses both sort ahead of unaltered samples), then by the next feature, and so on. Remaining ties keep the clustering order (or the input order if cluster_rows = FALSE). Row clustering is turned off.
+#' @param cnv_status Sample-by-feature CN calls used by sortByFeatures and clusterRowsByFeatures, with sample IDs as row names, e.g. from `GAMBLR.utils::segmented_data_to_cnv_status()`. Samples missing from it count as unaltered.
+#' @param clusterRowsByFeatures Optional: cluster the samples on CN feature calls from `cnv_status` instead of on the CN bins. Either a vector of feature names (columns of `cnv_status`) or a table from `GAMBLR.utils::pairwise_event_association()`, in which case the events in pairs with q below `cluster_feature_q` are used (events that aren't columns of `cnv_status`, e.g. mutations, are skipped). By default each feature counts as present or absent and samples are clustered with binary (Jaccard) distance, so samples are similar when they share events; samples with none of the events are grouped together. Works with split_by (each group is clustered separately). Can't be combined with clusterRowsByGenes.
+#' @param cluster_feature_q q value threshold used when clusterRowsByFeatures is an association table. Default 0.05.
+#' @param cluster_feature_method Linkage method for clusterRowsByFeatures, passed to [stats::hclust]. Default "ward.D2", which gives groups of usable size with binary event data; "complete" tends to put most samples in one group because many pairs of samples share no events (distance 1).
+#' @param cluster_feature_levels Set to TRUE to cluster on event levels (0/1/2) with Euclidean distance instead, so high-level events weigh more. Default FALSE.
+#' @param cluster_k Optional number of sample clusters to cut the clusterRowsByFeatures dendrogram into. The heatmap is split into blocks labelled C1, C2, ... (top to bottom) and each sample's cluster is returned (as the value of the function, invisibly, or as sample_clusters with return_data = TRUE), e.g. for testing against COO or LymphGen. Can't be combined with split_by.
 #' @param sortByBins Optional: A vector containing one or more names of genomic bins that will be used to order the heatmap rows.
 #' @param sortByPGA Optional: Sort the rows based on percent genome altered (PGA) instead of the other options
+#' @param split_by Optional: name of a metadata column used to split the samples into groups (slices), each clustered or sorted separately, with one gain/loss summary across all samples. Samples with no value are left out. With rotate = TRUE the groups are columns. Can't be combined with splitByBinState or geneBoxPlot. For a separate summary per group, see [stacked_CN_heatmap].
+#' @param split_order Optional vector giving the groups to show, in order. Samples in other groups are left out. Defaults to the factor levels of split_by, or its sorted values.
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
 #' @param sortByMetadataColumns A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
+#' @param labelTheseFeatures Optional data frame of CNV features to label, in the format returned by [GAMBLR.utils::get_cnv_features] (subset it to the features you want). Each feature is labelled at the bin containing its midpoint; features sharing a bin are joined with "/". Can be combined with labelTheseGenes.
+#' @param feature_label What to show for each feature in labelTheseFeatures: "gene" (default; representative_gene, or region_name where there is none), "name" (e.g. "2p16.1_gain") or "region" (e.g. "2p16.1").
+#' @param colour_feature_labels Colour feature labels by direction (gains red, losses blue; black where features of both directions share a bin). Default TRUE.
+#' @param heatmap_name Name of the ComplexHeatmap object (default "CN"). Heatmaps combined into one figure need distinct names.
+#' @param heatmap_row_title Optional title shown to the left of the heatmap rows (not used with rotate = TRUE).
+#' @param cumulative_as_fraction Plot the gain/loss tracks as the fraction of samples shown instead of counts. Default FALSE.
+#' @param cumulative_ylim Optional y-axis limits for the gain/loss tracks, e.g. to share one scale across several heatmaps.
+#' @param cumulative_position Where to put the gain/loss tracks: "bottom" (default, below the heatmap with the chromosome strip) or "top" (above the heatmap, under any labels, so labels point at the peaks). "top" isn't supported with rotate = TRUE.
+#' @param show_mean_cn Show the mean CN strip above the heatmap. Default TRUE.
+#' @param cumulative_axis Axis on the gain/loss tracks: "full" (default), "minimal" (only 0 and the top of the scale, legible on short tracks) or "none".
+#' @param show_chromosome_strip Show the chromosome colour strip below the heatmap. Default TRUE.
+#' @param chromosome_labels Write each chromosome's name on its block of the chromosome strip, which replaces the Chromosome legend. Default TRUE. Set to FALSE for the legend instead.
+#' @param chromosome_label_fontsize Font size of the chromosome labels (default 7). Lower it if the small chromosomes' labels crowd each other.
+#' @param heatmap_row_title_fontsize,heatmap_row_title_rot Font size (default 13) and rotation (default 90) of heatmap_row_title.
+#' @param cumulative_track_height Height in cm of each of the gain and loss tracks (their width with rotate = TRUE). Default 1, ComplexHeatmap's default.
+#' @param annotation_colours Optional named list of colour mappings for the sample annotations (named vectors for categorical columns, circlize::colorRamp2 functions for numeric ones such as PGA). These replace the automatically chosen colours for those annotations.
+#' @param show_legends Set to FALSE to omit all legends. Default TRUE.
+#' @param label_style How gene, feature and bin labels are drawn. "mark" (default) uses a ComplexHeatmap anno_mark annotation: labels are aligned along one line, spread apart where crowded with connector lines to their bins, and given their own space above the heatmap (or to the left with rotate = TRUE). "classic" draws them on the heatmap body as before, positioned with bin_label_nudge.
 #' @param bin_label_fontsize Font size for the gene labels (default 5)
-#' @param bin_label_nudge Increase or decrease this value to shift the gene labels up/down (default 1.03)
+#' @param bin_label_nudge Increase or decrease this value to shift the gene labels up/down (default 1.03). Only used with label_style = "classic".
 #' @param bin_label_rotation Rotate the direction of the bin label. Default is 45.
 #' @param drop_if_PGA_below Lower limit for proportion of genome altered (PGA). Samples below this value will be dropped (default 0)
 #' @param drop_if_PGA_above Upper limit for proportion of genome altered (PGA). Samples above this value will be dropped (default 1)
@@ -44,10 +98,11 @@
 #' @param legend_col How many columns for the legend layout
 #' @param boxplot_orientation Either "horizontal" or "vertical" (default: horizontal)
 #' @param left_annotation_name_side Which side to put the name of the metadata annotations (top or bottom)
-#' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded
+#' @param drop_bin_if_sd_below Force bins with standard deviation below this value to be excluded. Set to -Inf to keep all bins.
 #' @param return_data Specify TRUE to get some of the internal data back including the heatmap object
 #' @param rotate Optionally, flip the rows/columns of resulting heatmap. Default is FALSE.
-#' @param width Set the width of the heatmap. Default is 10.
+#' @param width Width of the heatmap in cm when rotate = TRUE. Default 15; NULL fills the available space.
+#' @param height Height of the heatmap in cm when rotate = TRUE. Default 6; NULL fills the available space.
 #' @param verbose Control verbosity of the console output. Default is FALSE.
 #'
 #' @return list (when return_data = TRUE)
@@ -67,12 +122,15 @@
 #' meta_clean = check_and_clean_metadata(dlbcl_genome_meta,
 #'                                       duplicate_action = "keep_first")
 #' 
-#' # Create the copy number matrix using the helper functions
+#' # Create the copy number matrix using the helper functions.
+#' # adjust_for_ploidy = TRUE shows CN relative to each sample's own ploidy;
+#' # use it instead of scale_by_sample (see Details).
 #' all_segments = get_cn_segments(these = meta_clean)
 #' dlbcl_cn_binned = segmented_data_to_cn_matrix(
 #'                                   seg_data = all_segments,
 #'                                   strategy="auto_split",
 #'                                   n_bins_split=1300,
+#'                                   adjust_for_ploidy = TRUE,
 #'                                   these_samples_metadata = meta_clean)
 #'
 #' # Generate a basic genome-wide CN heatmap
@@ -126,6 +184,12 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              genome_build = "grch37",
                              cluster_columns=FALSE,
                              cluster_rows=TRUE,
+                             clusterRowsByGenes,
+                             clusterRowsByFeatures,
+                             cluster_feature_q = 0.05,
+                             cluster_feature_levels = FALSE,
+                             cluster_feature_method = "ward.D2",
+                             cluster_k = NULL,
                              show_row_names=FALSE,
                              show_column_names=FALSE,
                              keep_these_chromosomes,
@@ -135,11 +199,34 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              hide_cumulative_plot = FALSE,
                              sortByBins,
                              sortByGenes,
+                             sortByFeatures,
+                             cnv_status,
                              splitByBinState,
+                             split_by,
+                             split_order,
                              sortByPGA=FALSE,
                              sortByMetadataColumns,
                              labelTheseGenes,
                              labelTheseCytobands,
+                             labelTheseFeatures,
+                             feature_label = "gene",
+                             colour_feature_labels = TRUE,
+                             label_style = "mark",
+                             heatmap_name = "CN",
+                             heatmap_row_title = NULL,
+                             cumulative_as_fraction = FALSE,
+                             cumulative_ylim = NULL,
+                             cumulative_track_height = 1,
+                             cumulative_position = "bottom",
+                             show_mean_cn = TRUE,
+                             cumulative_axis = "full",
+                             show_chromosome_strip = TRUE,
+                             chromosome_labels = TRUE,
+                             chromosome_label_fontsize = 7,
+                             heatmap_row_title_fontsize = 13,
+                             heatmap_row_title_rot = 90,
+                             annotation_colours = NULL,
+                             show_legends = TRUE,
                              highlightTheseRegions,
                              bin_label_fontsize=5,
                              bin_label_nudge = 1.03,
@@ -170,6 +257,25 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              height = 6,
                              cluster_samples,
                              cluster_regions){
+  if(!cumulative_position %in% c("bottom", "top")){
+    stop("cumulative_position must be \"bottom\" or \"top\"")
+  }
+  if(!cumulative_axis %in% c("full", "minimal", "none")){
+    stop("cumulative_axis must be \"full\", \"minimal\" or \"none\"")
+  }
+  if(cumulative_position == "top" && rotate){
+    stop("cumulative_position = \"top\" isn't supported with rotate = TRUE")
+  }
+  if(!label_style %in% c("mark", "classic")){
+    stop("label_style must be \"mark\" or \"classic\"")
+  }
+  # distances can't use missing bins (e.g. from fill_missing_with = "nothing"),
+  # so cluster with them treated as neutral; they are still drawn as missing
+  neutral_for_clustering = function(m){
+    m = as.matrix(m)
+    m[is.na(m)] = 2
+    m
+  }
   #aliases
   if(!missing(cluster_samples)){
     cluster_rows = cluster_samples
@@ -184,7 +290,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
   
   #bin_vars = apply(mat1,2,sd)
   old_col = ncol(cn_state_matrix)
-  cn_state_matrix = cn_state_matrix[,which(bin_vars > drop_bin_if_sd_below)]
+  # -Inf switches the filter off (e.g. when bins were chosen for a whole
+  # cohort before splitting it, or for groups of one sample, whose sd is NA)
+  if(is.finite(drop_bin_if_sd_below)){
+    cn_state_matrix = cn_state_matrix[,which(bin_vars > drop_bin_if_sd_below)]
+  }
   new_col = ncol(cn_state_matrix)
   if(verbose){
     print(paste("original:",old_col,"new:",new_col))
@@ -254,6 +364,44 @@ pretty_CN_heatmap = function(cn_state_matrix,
     }
   }
   gene_bins = list()
+  cluster_gene_df = NULL
+  if(!missing(clusterRowsByGenes)){
+    if(is.data.frame(clusterRowsByGenes)){
+      stopifnot('clusterRowsByGenes data frame must have columns "gene_id" (characters) and "cn_thresh" (numeric)' = {
+        all(c("gene_id","cn_thresh") %in% names(clusterRowsByGenes)) &&
+          is.character(clusterRowsByGenes$gene_id) &&
+          is.numeric(clusterRowsByGenes$cn_thresh)
+      })
+      cluster_genes = clusterRowsByGenes$gene_id
+      cluster_threshs = clusterRowsByGenes$cn_thresh
+    }else{
+      cluster_genes = clusterRowsByGenes
+      cluster_threshs = rep(2,length(clusterRowsByGenes))
+    }
+    message("mapping clustering genes to bins")
+    for(j in seq_along(cluster_genes)){
+      g = cluster_genes[j]
+      gene_region = suppressMessages(gene_to_region(g))
+      if(length(gene_region)==0){
+        message(paste("no region for",g))
+        next
+      }
+      this_gene_region = map_bin_to_bin(gene_region)
+      if (is.na(this_gene_region)){
+        message(paste("no region for",g))
+        next
+      }
+      cluster_gene_df = rbind(cluster_gene_df,
+                              data.frame(gene_id=g,
+                                         bin=this_gene_region,
+                                         cn_thresh=cluster_threshs[j]))
+    }
+    #genes sharing a bin and threshold would otherwise double that bin's weight
+    cluster_gene_df = cluster_gene_df[!duplicated(cluster_gene_df[,c("bin","cn_thresh")]),,drop=FALSE]
+    if(is.null(cluster_gene_df)||nrow(cluster_gene_df)==0){
+      stop("None of the genes in clusterRowsByGenes could be mapped to a bin")
+    }
+  }
   if(!missing(labelTheseGenes) | !missing(labelTheseCytobands) | !missing(sortByGenes)){
 
     if(!missing(sortByGenes)){
@@ -358,19 +506,117 @@ pretty_CN_heatmap = function(cn_state_matrix,
       }
     }
   }
+  # label colours by bin; bins without an entry are drawn in black
+  bin_label_colours = list()
+  if(!missing(labelTheseFeatures)){
+    required_cols = c("name", "chrom", "start", "end", "direction")
+    if(!all(required_cols %in% colnames(labelTheseFeatures))){
+      stop(paste("labelTheseFeatures must have columns:",
+                 paste(required_cols, collapse = ", ")))
+    }
+    if(!feature_label %in% c("gene", "name", "region")){
+      stop("feature_label must be \"gene\", \"name\" or \"region\"")
+    }
+    features = as.data.frame(labelTheseFeatures)
+    blank = function(x){ is.null(x) || all(is.na(x)) }
+    fallback = if(!blank(features$region_name)) features$region_name else features$name
+    label_text = switch(
+      feature_label,
+      gene = if(blank(features$representative_gene)) fallback
+             else ifelse(is.na(features$representative_gene) |
+                           features$representative_gene == "",
+                         fallback, features$representative_gene),
+      name = features$name,
+      region = fallback
+    )
+    # place each feature at the bin containing its midpoint
+    bin_names = colnames(cn_state_matrix)
+    bin_chrom = gsub("^chr", "", sub(":.*", "", bin_names))
+    bin_start = as.numeric(sub(".*:([0-9]+)-.*", "\\1", bin_names))
+    bin_end = as.numeric(sub(".*-([0-9]+)$", "\\1", bin_names))
+    midpoint = (features$start + features$end) / 2
+    feature_chrom = gsub("^chr", "", as.character(features$chrom))
+    for(i in seq_len(nrow(features))){
+      hit = which(bin_chrom == feature_chrom[i] & bin_start <= midpoint[i] &
+                    bin_end >= midpoint[i])
+      if(length(hit) == 0){
+        message(paste("no bin for feature", features$name[i]))
+        next
+      }
+      bin = bin_names[hit[1]]
+      colour = if(colour_feature_labels){
+        ifelse(features$direction[i] == "gain", "red", "blue")
+      }else{
+        "black"
+      }
+      if(bin %in% names(bin_labels)){
+        # features sharing a bin are joined rather than overwritten, unless
+        # the bin already shows this label (e.g. the same gene from
+        # labelTheseGenes)
+        if(!label_text[i] %in% strsplit(bin_labels[[bin]], "/")[[1]]){
+          bin_labels[[bin]] = paste(bin_labels[[bin]], label_text[i], sep = "/")
+        }
+        if(!identical(bin_label_colours[[bin]], colour)){
+          bin_label_colours[[bin]] = "black"
+        }
+      }else{
+        bin_labels[[bin]] = label_text[i]
+        bin_label_colours[[bin]] = colour
+      }
+    }
+  }
 
 
 
   if(!missing(these_samples_metadata)){
+    # only samples in both the matrix and the metadata are shown
     keep_samples = pull(these_samples_metadata, sample_id)
     all_samples = rownames(cn_state_matrix)
-    overlap_samples = all_samples[all_samples %in% keep_samples]
-    if(keep_sample_order){
-      cn_state_matrix = cn_state_matrix[keep_samples,]
+    not_in_metadata = setdiff(all_samples, keep_samples)
+    if(length(not_in_metadata) > 0){
+      message(paste(length(not_in_metadata),
+                    "sample(s) in cn_state_matrix but not in these_samples_metadata are left out"))
     }
-
-    
-
+    overlap_samples = all_samples[all_samples %in% keep_samples]
+    if(length(overlap_samples) == 0){
+      stop("no samples in cn_state_matrix are in these_samples_metadata")
+    }
+    if(keep_sample_order){
+      # metadata order, skipping metadata samples the matrix doesn't have
+      overlap_samples = keep_samples[keep_samples %in% overlap_samples]
+    }
+    cn_state_matrix = cn_state_matrix[overlap_samples, , drop = FALSE]
+    these_samples_metadata = dplyr::filter(these_samples_metadata,
+                                           sample_id %in% overlap_samples)
+  }
+  has_split_by = !missing(split_by) && !is.null(split_by)
+  if(has_split_by){
+    if(!missing(splitByBinState) || !missing(geneBoxPlot)){
+      stop("split_by can't be combined with splitByBinState or geneBoxPlot")
+    }
+    if(missing(these_samples_metadata) ||
+       !split_by %in% colnames(these_samples_metadata)){
+      stop("split_by must name a column of these_samples_metadata")
+    }
+    group_values = as.character(these_samples_metadata[[split_by]])
+    in_group = !is.na(group_values)
+    if(!missing(split_order)){
+      in_group = in_group & group_values %in% split_order
+    }
+    if(any(!in_group)){
+      message(paste(sum(!in_group), "sample(s) with no", split_by,
+                    "value (or not in split_order) are left out"))
+    }
+    these_samples_metadata = these_samples_metadata[in_group, , drop = FALSE]
+    cn_state_matrix = cn_state_matrix[rownames(cn_state_matrix) %in%
+                                        these_samples_metadata$sample_id, , drop = FALSE]
+    if(nrow(cn_state_matrix) == 0){
+      stop("no samples left after removing those without a split_by group")
+    }
+    split_levels = if(!missing(split_order)) split_order
+                   else if(is.factor(these_samples_metadata[[split_by]]))
+                     levels(these_samples_metadata[[split_by]])
+                   else sort(unique(as.character(these_samples_metadata[[split_by]])))
   }
   if(!missing(numericMetadataColumns)){
   	not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
@@ -388,6 +634,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     for(exp in expressionColumns){
       colours[[exp]] = exp_col_fun
     }
+  }
+  # caller-supplied mappings win, e.g. to keep colours identical across the
+  # groups drawn by stacked_CN_heatmap
+  for(anno_name in names(annotation_colours)){
+    colours[[anno_name]] = annotation_colours[[anno_name]]
   }
 
   heatmap_args = list()
@@ -434,8 +685,36 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   
   splits = NULL
-  if(!missing(sortByGenes)){
-    cluster_columns = FALSE
+  if(!missing(sortByFeatures)){
+    if(missing(cnv_status)){
+      stop("sortByFeatures needs cnv_status, e.g. from GAMBLR.utils::segmented_data_to_cnv_status()")
+    }
+    unknown = setdiff(sortByFeatures, colnames(cnv_status))
+    if(length(unknown) > 0){
+      stop(paste("sortByFeatures not found in cnv_status:",
+                 paste(unknown, collapse = ", ")))
+    }
+    # ties keep the clustering order (or the input order if not clustering)
+    tie_order = seq_len(nrow(cn_state_matrix))
+    if(isTRUE(cluster_rows)){
+      tie_order = hclust(dist(neutral_for_clustering(cn_state_matrix)))$order
+    }
+    status = as.data.frame(cnv_status)[rownames(cn_state_matrix), sortByFeatures,
+                                        drop = FALSE]
+    # rank by the strength of the event in its feature's direction; samples
+    # with no status count as unaltered
+    status[] = lapply(status, function(x){
+      x = abs(as.numeric(x))
+      x[is.na(x)] = 0
+      x
+    })
+    keys = c(lapply(status, function(x) -x[tie_order]), list(seq_along(tie_order)))
+    new_order = tie_order[do.call(order, keys)]
+    cn_state_matrix = cn_state_matrix[new_order, , drop = FALSE]
+    cluster_rows = FALSE
+  }else if(!missing(sortByGenes)){
+    # the sort only survives if rows aren't clustered afterwards
+    cluster_rows = FALSE
     sortByBins = unlist(gene_bins)
     cn_state_matrix = arrange(cn_state_matrix,desc(across(sortByBins)))
 
@@ -482,6 +761,141 @@ pretty_CN_heatmap = function(cn_state_matrix,
     total_loss = colSums(loss_state, na.rm = TRUE)
     #sample_CN_anno = HeatmapAnnotation(PGA=sample_average,which="row")
 
+
+    if(!is.null(cluster_gene_df)){
+      #snapshot before chromosome/bin restriction so genes outside the
+      #displayed chromosomes can still drive the sample clustering
+      bin_present = cluster_gene_df$bin %in% colnames(cn_state_matrix)
+      if(any(!bin_present)){
+        message(paste("these clustering bins were removed by other filters:",
+                      paste(unique(cluster_gene_df$bin[!bin_present]),collapse=", ")))
+      }
+      cluster_gene_df = cluster_gene_df[bin_present,,drop=FALSE]
+      if(nrow(cluster_gene_df)==0){
+        stop("None of the bins for clusterRowsByGenes remain after filtering")
+      }
+      #one column per gene so a bin shared by genes with opposing
+      #thresholds contributes each relevant direction separately
+      cluster_gene_mat = as.matrix(cn_state_matrix[,cluster_gene_df$bin,drop=FALSE])
+      colnames(cluster_gene_mat) = cluster_gene_df$gene_id
+      for(j in seq_len(nrow(cluster_gene_df))){
+        thresh = cluster_gene_df$cn_thresh[j]
+        vals = cluster_gene_mat[,j]
+        if(thresh < 2){
+          vals[!is.na(vals) & vals > thresh] = 2
+        }else if(thresh > 2){
+          vals[!is.na(vals) & vals < thresh] = 2
+        }
+        cluster_gene_mat[,j] = vals
+      }
+      if(cluster_rows){
+        #A function (rather than a precomputed hclust) keeps this compatible
+        #with row_split, since ComplexHeatmap calls it on each slice
+        cluster_rows = function(m){
+          these_ids = rownames(m)
+          if(!all(these_ids %in% rownames(cluster_gene_mat))){
+            these_ids = colnames(m)
+          }
+          hclust(dist(neutral_for_clustering(cluster_gene_mat[these_ids,,drop=FALSE])))
+        }
+      }else{
+        message("clusterRowsByGenes is ignored because row clustering is disabled")
+      }
+    }
+
+    # cluster samples on CN feature calls (e.g. the events in significant
+    # pairs from pairwise_event_association)
+    sample_clusters = NULL
+    if(!missing(clusterRowsByFeatures)){
+      if(!missing(clusterRowsByGenes)){
+        stop("use either clusterRowsByGenes or clusterRowsByFeatures, not both")
+      }
+      # sorting turns row clustering off, which would silently undo this
+      sort_args = c("sortByFeatures", "sortByGenes", "sortByBins",
+                    "sortByMetadataColumns")[c(!missing(sortByFeatures),
+                                               !missing(sortByGenes),
+                                               !missing(sortByBins),
+                                               !missing(sortByMetadataColumns))]
+      if(length(sort_args) > 0){
+        stop(paste0("clusterRowsByFeatures can't be combined with ",
+                    paste(sort_args, collapse = " or "),
+                    ", which orders the rows instead of clustering them"))
+      }
+      if(isFALSE(cluster_rows)){
+        stop("clusterRowsByFeatures needs row clustering: remove cluster_rows = FALSE (or cluster_samples = FALSE)")
+      }
+      if(missing(cnv_status)){
+        stop("clusterRowsByFeatures needs cnv_status, e.g. from GAMBLR.utils::segmented_data_to_cnv_status()")
+      }
+      cluster_features = clusterRowsByFeatures
+      if(is.data.frame(cluster_features)){
+        if(!all(c("event_a", "event_b", "q_value") %in% colnames(cluster_features))){
+          stop("an association table for clusterRowsByFeatures needs event_a, event_b and q_value columns")
+        }
+        significant = cluster_features[!is.na(cluster_features$q_value) &
+                                         cluster_features$q_value < cluster_feature_q, ]
+        cluster_features = unique(c(significant$event_a, significant$event_b))
+        skipped = setdiff(cluster_features, colnames(cnv_status))
+        if(length(skipped) > 0){
+          message(length(skipped), " event(s) not in cnv_status are skipped: ",
+                  paste(utils::head(skipped, 10), collapse = ", "))
+        }
+        cluster_features = intersect(cluster_features, colnames(cnv_status))
+      }else{
+        unknown = setdiff(cluster_features, colnames(cnv_status))
+        if(length(unknown) > 0){
+          stop(paste("clusterRowsByFeatures not found in cnv_status:",
+                     paste(unknown, collapse = ", ")))
+        }
+      }
+      if(length(cluster_features) == 0){
+        stop("no features to cluster on")
+      }
+      message("clustering samples on ", length(cluster_features),
+              " CN feature(s)")
+      status_rows = match(rownames(cn_state_matrix), rownames(cnv_status))
+      if(anyNA(status_rows)){
+        message(sum(is.na(status_rows)),
+                " sample(s) not in cnv_status count as having no events")
+      }
+      feature_values = as.matrix(as.data.frame(cnv_status)[status_rows,
+                                                           cluster_features,
+                                                           drop = FALSE])
+      rownames(feature_values) = rownames(cn_state_matrix)
+      if(!is.null(cluster_k)){
+        if(has_split_by){
+          stop("cluster_k can't be combined with split_by")
+        }
+        sample_tree = .event_status_hclust(feature_values,
+                                           cluster_feature_levels,
+                                           cluster_feature_method)
+        raw_cluster = stats::cutree(sample_tree, k = cluster_k)
+        first_seen = unique(raw_cluster[sample_tree$order])
+        # numbered top to bottom; the heatmap is split by these clusters
+        # (rather than by cutting its own dendrogram, which can differ when
+        # many samples are tied) so the blocks match what is returned
+        sample_cluster = match(raw_cluster, first_seen)
+        names(sample_cluster) = rownames(feature_values)
+        sample_clusters = data.frame(
+          sample_id = rownames(feature_values)[sample_tree$order],
+          cluster = sample_cluster[sample_tree$order],
+          stringsAsFactors = FALSE)
+        rownames(sample_clusters) = NULL
+      }
+      #A function (rather than a precomputed hclust) keeps this compatible
+      #with row_split, since ComplexHeatmap calls it on each slice
+      cluster_rows = function(m){
+        these_ids = rownames(m)
+        if(!all(these_ids %in% rownames(feature_values))){
+          these_ids = colnames(m)
+        }
+        .event_status_hclust(feature_values[these_ids, , drop = FALSE],
+                             cluster_feature_levels,
+                             cluster_feature_method)
+      }
+    }else if(!is.null(cluster_k)){
+      stop("cluster_k needs clusterRowsByFeatures")
+    }
 
     if(!missing(keep_these_chromosomes)){
       keep_cols = which(column_chromosome %in% keep_these_chromosomes)
@@ -664,18 +1078,110 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                      show_legend=show_legend,
                                      col=list(Mean_CN=col_fun))
     }
+
+    # "mark" labels are an annotation laid out with the heatmap, so they are
+    # aligned, kept apart and given their own space (rows when rotated)
+    label_mark_anno = NULL
+    if(label_style == "mark" && length(bin_labels) > 0){
+      label_bins = names(bin_labels)
+      label_at = match(label_bins, colnames(cn_state_matrix))
+      present = !is.na(label_at)
+      if(any(present)){
+        label_cols = vapply(label_bins[present], function(b){
+          if(is.null(bin_label_colours[[b]])) "black" else bin_label_colours[[b]]
+        }, character(1))
+        label_text = unname(unlist(bin_labels[present]))
+        label_at = label_at[present]
+        # anno_mark orders labels by position but applies gpar values in the
+        # order given, so put everything in position order first
+        o = order(label_at)
+        label_at = label_at[o]
+        label_text = label_text[o]
+        label_cols = unname(label_cols)[o]
+        label_gp = gpar(fontsize = bin_label_fontsize, col = label_cols)
+        if(rotate){
+          label_mark_anno = rowAnnotation(
+            labels = anno_mark(at = label_at, labels = label_text,
+                               which = "row", side = "left",
+                               labels_gp = label_gp)
+          )
+        }else{
+          # column anno_mark applies per-label gpar values in reverse order
+          # (seen in ComplexHeatmap 2.23.1; the row version is unaffected)
+          label_mark_anno = HeatmapAnnotation(
+            labels = anno_mark(at = label_at, labels = label_text,
+                               which = "column", side = "top",
+                               labels_rot = bin_label_rotation,
+                               labels_gp = gpar(fontsize = bin_label_fontsize,
+                                                col = rev(label_cols))),
+            which = "column",
+            show_annotation_name = FALSE
+          )
+        }
+      }
+    }
     
 
+    # bar heights: counts, or the fraction of samples shown, so groups of
+    # different sizes are comparable
+    gain_bars = total_gain
+    loss_bars = total_loss
+    if(cumulative_as_fraction){
+      # per bin, out of the samples with data there (NA = no segments)
+      n_with_data = pmax(colSums(!is.na(cn_state_matrix)), 1)
+      gain_bars = total_gain / n_with_data
+      loss_bars = total_loss / n_with_data
+    }
+    # "minimal" axes label only 0 and the top of the scale, which stays
+    # legible when the tracks are short
+    show_bar_axis = cumulative_axis != "none"
+    bar_axis_param = function(base, bars){
+      if(cumulative_axis != "minimal"){
+        return(base)
+      }
+      top = if(!is.null(cumulative_ylim)) cumulative_ylim[2] else max(bars, na.rm = TRUE)
+      if(!is.finite(top) || top <= 0){
+        return(base)
+      }
+      c(base, list(at = c(0, top), labels = c("0", format(signif(top, 2)))))
+    }
     #need to create a data frame with the bin names as rownames and a different value depending on whether
     # the bin is in regions_highlight
+    # chromosome strip: either a plain colour strip identified by its legend or,
+    # with chromosome_labels, an anno_simple with each name written (as a text
+    # "pch") at the middle bin of its chromosome, in black or white by contrast
+    chrom_strip = column_chromosome
+    chrom_strip_col = list(chromosome = chrom_col)
+    if(chromosome_labels){
+      runs = rle(column_chromosome)
+      run_end = cumsum(runs$lengths)
+      run_mid = floor((run_end - runs$lengths + 1 + run_end) / 2)
+      label_at = rep(NA_character_, length(column_chromosome))
+      label_at[run_mid] = gsub("^chr", "", runs$values)
+      fill_rgb = grDevices::col2rgb(chrom_col[column_chromosome])
+      luminance = (0.299 * fill_rgb[1, ] + 0.587 * fill_rgb[2, ] + 0.114 * fill_rgb[3, ]) / 255
+      chrom_strip = anno_simple(column_chromosome,
+                                col = chrom_col,
+                                pch = label_at,
+                                pt_gp = gpar(fontsize = chromosome_label_fontsize,
+                                             col = ifelse(luminance > 0.6, "black", "white")),
+                                which = ifelse(rotate, "row", "column"))
+      chrom_strip_col = list()
+    }
     if(rotate){
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
-                                        Gain = anno_barplot(total_gain,
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
+                                        Gain = anno_barplot(gain_bars,
+                                                            ylim = cumulative_ylim,
+                                                            width = unit(cumulative_track_height, "cm"),
                                                             gp=gpar(fill="red",col="red"),
-                                                            axis_param = list(direction = "reverse",side="top")),
-                                        loss=anno_barplot(total_loss,
+                                                            axis = show_bar_axis,
+                                                            axis_param = bar_axis_param(list(direction = "reverse",side="top"), gain_bars)),
+                                        loss=anno_barplot(loss_bars,
+                                                          ylim = cumulative_ylim,
+                                                          width = unit(cumulative_track_height, "cm"),
                                                           gp=gpar(fill="blue",col="blue"),
-                                                          axis_param = list(side = "top")),
+                                                          axis = show_bar_axis,
+                                                          axis_param = bar_axis_param(list(side = "top"), loss_bars)),
                                         
                                                           #),
                                         annotation_legend_param =
@@ -689,16 +1195,23 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
     }else{
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
                                         #annotation_name_gp = gpar(fontsize = metadataBarFontsize),
-                                        Gain = anno_barplot(total_gain,
-                                                            gp=gpar(fill="red",col="red")),
-                                        loss=anno_barplot(total_loss,
+                                        Gain = anno_barplot(gain_bars,
+                                                            ylim = cumulative_ylim,
+                                                            height = unit(cumulative_track_height, "cm"),
+                                                            gp=gpar(fill="red",col="red"),
+                                                            axis = show_bar_axis,
+                                                            axis_param = bar_axis_param(list(), gain_bars)),
+                                        loss=anno_barplot(loss_bars,
+                                                          ylim = cumulative_ylim,
+                                                          height = unit(cumulative_track_height, "cm"),
                                                           gp=gpar(fill="blue",col="blue"),
-                                                          axis_param = list(direction = "reverse")),
+                                                          axis = show_bar_axis,
+                                                          axis_param = bar_axis_param(list(direction = "reverse"), loss_bars)),
                                         annotation_legend_param =
                                           list(title = "Chromosome",
                                                nrow=legend_row,
@@ -710,12 +1223,13 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
     }
     
-    if(hide_cumulative_plot){
-      cumulative_anno = HeatmapAnnotation(chromosome=column_chromosome,
+    bars_on_top = !rotate && cumulative_position == "top" && !hide_cumulative_plot
+    if(hide_cumulative_plot || bars_on_top){
+      cumulative_anno = HeatmapAnnotation(chromosome=chrom_strip,
         annotation_legend_param = list(title = "Chromosome",
                                                nrow=legend_row,
                                                ncol = legend_col,
@@ -726,8 +1240,72 @@ pretty_CN_heatmap = function(cn_state_matrix,
                                  #annotation_name_side = "right",
                                  annotation_name_gp = gpar(fontsize = metadataBarFontsize),
                                  show_legend=show_legend,
-                                 col=list(chromosome=chrom_col))
+                                 col=chrom_strip_col)
 
+    }
+    if(!show_chromosome_strip){
+      remaining = setdiff(names(cumulative_anno@anno_list), "chromosome")
+      cumulative_anno = if(length(remaining) > 0) cumulative_anno[, remaining] else NULL
+    }
+    # top annotation, top to bottom: labels, gain/loss tracks (when placed on
+    # top, so labels point at the peaks), then the mean CN strip
+    top_parts = list()
+    if(!rotate){
+      if(!is.null(label_mark_anno)){
+        top_parts = c(top_parts, list(label_mark_anno))
+      }
+      if(bars_on_top){
+        top_parts = c(top_parts, list(HeatmapAnnotation(
+          Gain = anno_barplot(gain_bars,
+                              ylim = cumulative_ylim,
+                              height = unit(cumulative_track_height, "cm"),
+                              gp = gpar(fill = "red", col = "red"),
+                              axis = show_bar_axis,
+                              # right side: the left is taken by the sample
+                              # annotation names drawn above the heatmap
+                              axis_param = bar_axis_param(list(side = "right"), gain_bars)),
+          loss = anno_barplot(loss_bars,
+                              ylim = cumulative_ylim,
+                              height = unit(cumulative_track_height, "cm"),
+                              gp = gpar(fill = "blue", col = "blue"),
+                              axis = show_bar_axis,
+                              axis_param = bar_axis_param(list(direction = "reverse", side = "right"), loss_bars)),
+          which = "column",
+          show_annotation_name = show_bottom_annotation_name,
+          annotation_name_gp = gpar(fontsize = metadataBarFontsize)
+        )))
+      }
+      if(show_mean_cn){
+        top_parts = c(top_parts, list(average_anno))
+      }
+    }
+    top_anno = if(length(top_parts) > 0) Reduce(c, top_parts) else NULL
+    slice_title = heatmap_row_title
+    if(has_split_by){
+      sample_groups = as.character(these_samples_metadata[[split_by]])[
+        match(rownames(cn_state_matrix), these_samples_metadata$sample_id)]
+      splits = factor(sample_groups,
+                      levels = split_levels[split_levels %in% sample_groups])
+      # name each slice after its group unless a title was given
+      if(is.null(slice_title)){
+        slice_title = "%s"
+      }
+    }
+    if(!is.null(sample_clusters)){
+      splits = factor(sample_cluster[rownames(cn_state_matrix)],
+                      levels = seq_len(cluster_k))
+      if(is.null(slice_title)){
+        slice_title = "C%s"
+      }
+    }
+    if(anyNA(cn_state_matrix)){
+      na_safe_clustering = function(m) hclust(dist(neutral_for_clustering(m)))
+      if(isTRUE(cluster_rows)){
+        cluster_rows = na_safe_clustering
+      }
+      if(isTRUE(cluster_columns)){
+        cluster_columns = na_safe_clustering
+      }
     }
     heatmap_legend_param = list(title = "Copy Number",
 
@@ -736,7 +1314,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
     #bottom_anno = HeatmapAnnotation()
     if(!missing(geneBoxPlot)){
       ho = Heatmap(cn_state_matrix,
-                   name="CN",
+                   name=heatmap_name,
                    column_title=" ",
                    row_title = NULL,
                    cluster_columns=cluster_columns,
@@ -745,7 +1323,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    show_column_names = show_column_names,
                    col = col_fun,
                    bottom_annotation = cumulative_anno,
-                   top_annotation = average_anno,
+                   top_annotation = top_anno,
                    left_annotation=left_anno,
                    row_split=splits,
                    right_annotation = rowAnnotation(Expression=anno),
@@ -766,8 +1344,14 @@ pretty_CN_heatmap = function(cn_state_matrix,
           h = NULL
         }
         ho = Heatmap(t(cn_state_matrix),
-                   name="CN",
-                   column_title=" ",
+                   name=heatmap_name,
+                   column_title = if(has_split_by) "%s" else
+                     if(!is.null(sample_clusters)) "C%s" else " ",
+                   column_split = splits,
+                   # keep the groups in split_order rather than reordering
+                   # them by similarity
+                   cluster_column_slices = !has_split_by &&
+                     is.null(sample_clusters),
                    cluster_columns=cluster_rows,
                    cluster_rows=cluster_columns,
                    show_row_names = show_row_names,
@@ -775,7 +1359,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    col = col_fun,
                    bottom_annotation = bottom_annotation,
                    #top_annotation = average_anno,
-                   #left_annotation=left_anno,
+                   left_annotation = label_mark_anno,
                    #row_split=splits,
                    width = w,
                    height = h,
@@ -785,7 +1369,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
 
       }else{
 
-        ho = Heatmap(cn_state_matrix,name="CN",
+        ho = Heatmap(cn_state_matrix,name=heatmap_name,
                    column_title=" ",
                    cluster_columns=cluster_columns,
                    cluster_rows=cluster_rows,
@@ -793,19 +1377,28 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    show_column_names = show_column_names,
                    col = col_fun,
                    bottom_annotation = cumulative_anno,
-                   top_annotation = average_anno,
+                   top_annotation = top_anno,
                    left_annotation=left_anno,
                    row_split=splits,
+                   cluster_row_slices = !has_split_by &&
+                     is.null(sample_clusters),
+                   row_title = slice_title,
+                   row_title_gp = gpar(fontsize = heatmap_row_title_fontsize),
+                   row_title_rot = heatmap_row_title_rot,
                    #right_annotation = sample_CN_anno,
                    #column_split  = column_chromosome,
                    heatmap_legend_param = heatmap_legend_param)
       }
   }
   if(!return_data){
-    draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position)
+    draw(ho,heatmap_legend_side=legend_position,annotation_legend_side=legend_position,
+         show_heatmap_legend = show_legends,
+         show_annotation_legend = show_legends)
   }
-  if(!missing(labelTheseGenes)|!missing(labelTheseCytobands)|length(bin_labels)>0){
-    if(!missing(labelTheseGenes)){
+  # labels decorate the drawn heatmap, so skip them when it isn't drawn
+  if(!return_data &&
+     (!missing(labelTheseGenes)|!missing(labelTheseCytobands)|length(bin_labels)>0)){
+    if(length(bin_labels) > 0 && label_style == "classic"){
       if(verbose){
         print("gene labeling")
       }
@@ -813,24 +1406,34 @@ pretty_CN_heatmap = function(cn_state_matrix,
       for(i in c(1:length(bin_labels))){
           gene_region = names(bin_labels)[i]
           gene_name = unname(bin_labels[[i]])
+          label_colour = bin_label_colours[[gene_region]]
+          if(is.null(label_colour)){
+            label_colour = "black"
+          }
+          # the bin may have been removed by filtering after labels were mapped
+          if(!gene_region %in% colnames(cn_state_matrix)){
+            next
+          }
           region_chunks = region_to_chunks(gene_region)
-          if(region_chunks$chromosome %in% column_chromosome){           
+          if(region_chunks$chromosome %in% column_chromosome){
             if(rotate){
-              decorate_heatmap_body("CN",
+              decorate_heatmap_body(heatmap_name,
               {
                 i=which(rownames(tmat)==gene_region)
                 y=1-i/nrow(tmat)
-                grid.text(gene_name,y=y,gp=gpar(fontsize=bin_label_fontsize),
+                grid.text(gene_name,y=y,gp=gpar(fontsize=bin_label_fontsize,
+                                                col=label_colour),
                   unit(bin_label_nudge,"npc"),
                       rot=bin_label_rotation,just="top")
                 grid.lines(c(1.01, 1), c(y,y), gp = gpar(lwd = 1))
               })
               }else{
-              decorate_heatmap_body("CN",
+              decorate_heatmap_body(heatmap_name,
               {
                 i=which(colnames(cn_state_matrix)==gene_region)
                 x=i/ncol(cn_state_matrix)
-                grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize),
+                grid.text(gene_name,x,gp=gpar(fontsize=bin_label_fontsize,
+                                              col=label_colour),
                       unit(bin_label_nudge,"npc"),
                       rot=bin_label_rotation,just="top")
                 grid.lines(c(x, x), c(1.01, 1), gp = gpar(lwd = 1))
@@ -882,7 +1485,35 @@ pretty_CN_heatmap = function(cn_state_matrix,
                 chromosome_columns=column_chromosome,
                 bin_means=bin_average,
                 local_optima=cn_av_df,
-                row_anno = anno_rows))
+                row_anno = anno_rows,
+                sample_clusters = sample_clusters))
+  }
+  if(!is.null(sample_clusters)){
+    return(invisible(sample_clusters))
   }
 
+}
+
+# Sample clustering on event status (CN feature calls and/or mutations),
+# shared by pretty_CN_heatmap (clusterRowsByFeatures) and linked_CN_oncoplot
+# (cluster_by). values: samples x events, any value > 0 (by absolute value)
+# is an event. Binary (Jaccard) distance by default; two samples without any
+# of the events have no defined Jaccard distance, so they count as identical.
+# Ward linkage by default: with complete linkage most samples end up in one
+# group, because many pairs share no events (distance 1).
+.event_status_hclust = function(values, cluster_levels = FALSE,
+                                method = "ward.D2"){
+  values = abs(as.matrix(values))
+  storage.mode(values) = "double"
+  values[is.na(values)] = 0
+  if(!cluster_levels){
+    values = (values > 0) * 1
+  }
+  if(nrow(values) < 2){
+    return(NULL)
+  }
+  distances = if(cluster_levels) stats::dist(values) else
+    stats::dist(values, method = "binary")
+  distances[is.na(distances)] = 0
+  stats::hclust(distances, method = method)
 }

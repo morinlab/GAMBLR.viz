@@ -32,6 +32,25 @@
 #' ordering.
 #' @param highlightHotspots Set to TRUE to highlight hot spots.
 #' Default is FALSE.
+#' @param prioritizeCNV Set to TRUE to have CN alterations (from `gene_cnv_df`
+#' /`binned_cnv_df`+`genes_CN_thresh`) outrank other mutation types (SNV,
+#' truncating, splice, silent) when ordering samples via `sortByGenes` or the
+#' default frequency-based sort. By default (FALSE), sorting only considers
+#' whether a gene is altered at all, treating a CN alteration and a point
+#' mutation as equivalent. Has no effect without CN data or when
+#' `keepSampleOrder`/`sortByColumns` is used, since neither of those perform
+#' the alteration-based memoSort.
+#' @param overlayColumn Optional column name in `maf_df` (like `hot_spot`,
+#' but categorical instead of boolean) whose non-NA values are drawn as a
+#' small colour overlay on top of each mutated cell -- one colour per
+#' distinct value, e.g. the HLA allele associated with a predicted
+#' neoepitope. NA (the default for any row) draws no overlay. Independent
+#' of `highlightHotspots`/`hot_spot` -- both can be used at once.
+#' @param overlayColours Optional named vector mapping `overlayColumn`
+#' values to colours (e.g. `c("HLA-A*02:01"="red", "HLA-B*07:02"="blue")`).
+#' Any value present in the data but missing from this vector (or all
+#' values, if this argument is omitted entirely) gets a colour assigned
+#' automatically from a qualitative palette.
 #' @param these_samples_metadata Data frame containing metadata for your
 #' samples.
 #' @param genes_CN_thresh A named vector specifying the genes whose copy
@@ -64,7 +83,7 @@
 #' reuse the oncomatrix saved by maftools.
 #' @param sample_gene_coverage Optional data frame specifying which samples
 #' had insufficient coverage for which genes. Two columns: sample_id Hugo_Symbol
-#' 
+#'
 #' @param box_col Colour of boxes for outlining mutations (can be
 #' problematic with larger oncoprints).
 #' @param metadataBarHeight Optional argument to adjust the height of
@@ -130,16 +149,18 @@
 #' @param simplify_bg_colour When simplify_annotation is called, adjust
 #' the color of the background by passign a value to this argument.
 #' Options are: "transparent" (default), "white", or any other color name or hex code.
-#' Overloaded to accept "pathology" or "background". When "background" 
+#' Overloaded to accept "pathology" or "background". When "background"
 #' is specified, the background of the oncoplot will be coloured grey
-#' for all gene-sample combinations specified in the gene_sample_coverage data frame. 
-#' This is useful for visually distinguishing gene-sample combinations with 
+#' for all gene-sample combinations specified in the gene_sample_coverage data frame.
+#' This is useful for visually distinguishing gene-sample combinations with
 #' insufficient coverage from those with sufficient coverage but no mutations.
 #' Default is NA.
 #' @param gap Size of gap between columns represented as a proportion
 #' of the full width of the column. Default 0 (no gap).
 #' @param return_inputs Optional flag to return the plot and various
-#' other internal objects such as the underlying mutation matrix.
+#' other internal objects such as the underlying mutation matrix, and
+#' `oncoprint_args`: the arguments passed to `ComplexHeatmap::oncoPrint()`
+#' (alteration matrices, `alter_fun` and colours).
 #' @param use_raster Whether to rasterize image
 #' @param show_pct TRUE by default. Set to FALSE to hide percentage.
 #' @param hide_annotation_name Default: FALSE
@@ -296,6 +317,31 @@
 #'   simplify_annotation = TRUE
 #' )
 #'
+#' # Overlay a categorical marker on individual mutations, e.g. the HLA
+#' # allele associated with a predicted neoepitope. Any column in maf_df
+#' # works: each distinct non-NA value gets its own colour (auto-assigned
+#' # unless you supply overlayColours), NA draws no overlay. Independent of
+#' # highlightHotspots -- both can be used together.
+#' neoepitope_maf <- data.frame(
+#'   Hugo_Symbol = c("BCL2", "MYC"),
+#'   Tumor_Sample_Barcode = c("S1", "S2"),
+#'   Variant_Classification = c("Missense_Mutation", "Missense_Mutation"),
+#'   Chromosome = "18",
+#'   Start_Position = 1:2,
+#'   End_Position = 1:2,
+#'   neoepitope_allele = c("HLA-A*02:01", NA),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' prettyOncoplot(
+#'   maf_df = neoepitope_maf,
+#'   these_samples_metadata = noncoding_metadata,
+#'   genes = c("BCL2", "MYC"),
+#'   keepGeneOrder = TRUE,
+#'   minMutationPercent = 0,
+#'   overlayColumn = "neoepitope_allele"
+#' )
+#'
 #' # Want to include copy number? You have two options.
 #' # Option 1:
 #' # Incorporate CN status of specific genes into your oncoplot
@@ -417,6 +463,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            keepGeneOrder = FALSE,
                            keepSampleOrder = FALSE,
                            highlightHotspots = FALSE,
+                           prioritizeCNV = FALSE,
+                           overlayColumn,
+                           overlayColours,
                            these_samples_metadata,
                            genes_CN_thresh,
                            metadataColumns,
@@ -515,6 +564,20 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       !seq_type %in% c("mrna", "promethION")
     )
   }
+  if (any(is.na(these_samples_metadata$sample_id))) {
+    # a NA sample_id propagates into patients, then (via supplement_maf, if
+    # that sample has no maf rows) into a matrix column literally named NA,
+    # which later throws "subscript out of bounds" when subset by name --
+    # far from this root cause, so catch it here instead
+    warning(
+      "these_samples_metadata contains row(s) with NA sample_id. ",
+      "Dropping these for you."
+    )
+    these_samples_metadata <- dplyr::filter(
+      these_samples_metadata,
+      !is.na(sample_id)
+    )
+  }
   if (!missing(split_columns_kmeans) && !missing(splitColumnName)) {
     stop("split_columns_kmeans and splitColumnName are incompatible. Use one or the other")
   }
@@ -550,6 +613,39 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "Targeted_Region"
     )
   ]
+  if (!missing(overlayColumn)) {
+    if (!overlayColumn %in% colnames(maf_df)) {
+      stop(paste0(
+        "maf_df has no column named '", overlayColumn,
+        "' (overlayColumn)"
+      ))
+    }
+  }
+  # shared by both rendering paths: auto-assign a colour to any overlayColumn
+  # value not already covered by the user-supplied overlayColours
+  overlay_colours_supplied <- !missing(overlayColours)
+  get_overlay_colours <- function(values) {
+    values <- sort(unique(values))
+    if (!overlay_colours_supplied) {
+      return(stats::setNames(grDevices::rainbow(length(values)), values))
+    }
+    known <- overlayColours
+    new_vals <- setdiff(values, names(known))
+    if (length(new_vals) > 0) {
+      known <- c(known, stats::setNames(grDevices::rainbow(length(new_vals)), new_vals))
+    }
+    known
+  }
+  # oncoPrint's non-simplify mat cells encode multiple alterations by
+  # splitting on ",", ":" and ";" -- sanitize overlay values (e.g. HLA
+  # alleles like "HLA-A*02:01") before embedding them in a cell string, so
+  # they survive intact as a single composite alteration key instead of
+  # being torn apart.
+  sanitize_overlay_value <- function(x) gsub("[,:;]", "_", x)
+  # composite key -> original (unsanitized) overlay value, so
+  # make_prettyoncoplot() -- a separate function that never receives
+  # overlayColumn -- can label the non-simplify legend correctly
+  overlay_legend <- character(0)
   if (length(include_noncoding) > 0) {
     if (verbose) {
       print("Generating maf_df_noncoding")
@@ -644,7 +740,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       ) %>%
       filter(
         Tumor_Sample_Barcode %in% patients,
-        Variant_Classification %in% onco_matrix_coding
+        Variant_Classification %in% onco_matrix_coding,
+        # exclude the placeholder rows supplement_maf() adds (and
+        # uniquifies to GARBAGE<row number>) for metadata samples with no
+        # real mutations -- these exist only so the sample survives as a
+        # column and are not real genes
+        !grepl("^GARBAGE[0-9]*$", Hugo_Symbol)
       ) %>%
       distinct(Tumor_Sample_Barcode, Hugo_Symbol) %>%
       group_by(Hugo_Symbol) %>%
@@ -812,7 +913,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(gene_cnv_df)) {
     if (verbose) {
       print("BEFORE:")
-      print(dim(cnv_df))
+      print(dim(gene_cnv_df))
     }
     cnv_df <- gene_cnv_df[rownames(gene_cnv_df) %in% patients, ,
       drop = FALSE
@@ -836,7 +937,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (missing(genes)) {
     genes <- rownames(mat)
   }
-   
+
   col <- GAMBLR.helpers::get_gambl_colours("mutation", alpha = mutAlpha)
   patients_dropped <- patients[which(!patients %in% colnames(mat))]
   if (verbose) {
@@ -898,18 +999,31 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       print(genes_kept)
       print("CNV MAT:")
       print(dim(mat))
+      print("COL SUMS")
+      print(colSums(cnv_df))
     }
     mat1 <- matrix(nrow = length(extra_cnv_genes), ncol = ncol(mat))
     colnames(mat1) <- colnames(mat)
     rownames(mat1) <- extra_cnv_genes
     mat1[] <- 0
     mat <- rbind(mat1, mat)
-    for (pat in extra_cnv_patients) {
-      mat[, pat] <- 0
+    if (length(extra_cnv_patients) > 0) {
+      # mat is a plain matrix here, so new patient columns (e.g. samples
+      # with a CN alteration but no point mutation, which removeNonMutated
+      # would otherwise have excluded from mat entirely) must be added via
+      # cbind rather than assigned in place -- matrices can't grow a column
+      # that doesn't exist yet the way a data frame can.
+      mat2 <- matrix(0, nrow = nrow(mat), ncol = length(extra_cnv_patients))
+      rownames(mat2) <- rownames(mat)
+      colnames(mat2) <- extra_cnv_patients
+      mat <- cbind(mat, mat2)
     }
     if (verbose) {
-      print("MAT:")
-      print(dim(mat))
+      print("unique MAT:")
+      print(unique(mat[1,]))
+      print("dim mat1")
+
+      print(dim(mat1))
     }
   }
   spacing <- 0
@@ -936,7 +1050,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
           snv_maf = bind_rows(snv_maf,these_snv)
           #print("879")
         }
-        
+
       } else if ("hot_spot" %in% mutation_set) {
         snv_maf <- filter(maf_df, hot_spot == TRUE) %>%
           filter(Hugo_Symbol %in% rownames(mat)) %>%
@@ -1077,7 +1191,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "In_Frame_Del", "In_Frame_Ins", "Translation_Start_Site"
     ))
     #if(!missing(include_noncoding)){
-    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {  
+    if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       message("summarize noncoding mutation status")
       silent_df = summarize_mutation_by_class(gene_silent = include_noncoding)
 
@@ -1092,7 +1206,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       "Nonsense_Mutation",
       "Frame_Shift_Del", "Frame_Shift_Ins", "Nonstop_Mutation"
     ))
-    splice_df <- summarize_mutation_by_class(mutation_set = "Splice_Site")
+    splice_df <- summarize_mutation_by_class(mutation_set = c("Splice_Site","Splice_Region"))
     if (highlightHotspots) {
       if (verbose) {
         print("summarize hot spots")
@@ -1110,6 +1224,46 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       splice_df[trunc_df == TRUE] <- FALSE
       snv_df[trunc_df == TRUE | splice_df == TRUE] <- FALSE
       splice_df[trunc_df == TRUE] <- FALSE
+    }
+
+    if (!missing(overlayColumn)) {
+      if (verbose) {
+        print("summarizing overlay values")
+      }
+      overlay_maf <- maf_df %>%
+        dplyr::filter(
+          !is.na(.data[[overlayColumn]]),
+          Hugo_Symbol %in% rownames(mat)
+        ) %>%
+        dplyr::select(
+          Hugo_Symbol,
+          Tumor_Sample_Barcode,
+          .ov_value = dplyr::all_of(overlayColumn)
+        ) %>%
+        dplyr::distinct(Hugo_Symbol, Tumor_Sample_Barcode, .keep_all = TRUE)
+      if (nrow(overlay_maf) == 0) {
+        overlay_df <- as.data.frame(matrix(
+          NA_character_,
+          nrow = nrow(mat), ncol = ncol(mat),
+          dimnames = list(rownames(mat), colnames(mat))
+        ))
+      } else {
+        overlay_wide <- tidyr::pivot_wider(
+          overlay_maf,
+          names_from = "Tumor_Sample_Barcode",
+          values_from = ".ov_value"
+        ) %>%
+          tibble::column_to_rownames("Hugo_Symbol")
+        missing_g <- rownames(mat)[!rownames(mat) %in% rownames(overlay_wide)]
+        for (g in missing_g) {
+          overlay_wide[g, ] <- NA_character_
+        }
+        missing_s <- colnames(mat)[!colnames(mat) %in% colnames(overlay_wide)]
+        for (s in missing_s) {
+          overlay_wide[, s] <- NA_character_
+        }
+        overlay_df <- overlay_wide[rownames(mat), colnames(mat)]
+      }
     }
 
     #currently only supports pathology
@@ -1148,9 +1302,9 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         s = sample_gene_coverage[i,1]
         g = sample_gene_coverage[i,2]
         if(s %in% colnames(bg_df) && g %in% rownames(bg_df)){
-          bg_df[g,s] = TRUE 
+          bg_df[g,s] = TRUE
         }
-      }       
+      }
     }
     if (!missing(cnv_df)) {
       transposed_cnv_df <- t(cnv_df)
@@ -1201,6 +1355,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         print("ROWNAMES cn_df:")
         print(rownames(cn_df))
         print(table(unlist(cn_df[1, ])))
+
       }
     }
   } else { # end simplifyAnnotation
@@ -1368,6 +1523,77 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       print("done annotating hot spots")
     }
   }
+  if (!missing(overlayColumn) && !simplify_annotation) {
+    if (verbose) {
+      print("annotating overlay values")
+    }
+    overlay_samples <- dplyr::filter(
+      maf_df,
+      !is.na(.data[[overlayColumn]]) & Hugo_Symbol %in% genes_kept
+    ) %>%
+      dplyr::select(
+        Hugo_Symbol,
+        Tumor_Sample_Barcode,
+        .ov_value = dplyr::all_of(overlayColumn)
+      ) %>%
+      dplyr::distinct(Hugo_Symbol, Tumor_Sample_Barcode, .keep_all = TRUE)
+
+    all_genes_df <- data.frame(Hugo_Symbol = rownames(mat))
+    all_samples_df <- data.frame(Tumor_Sample_Barcode = colnames(mat))
+    ov <- left_join(all_samples_df, overlay_samples)
+    overlay_mat <- ov %>%
+      pivot_wider(
+        names_from = "Tumor_Sample_Barcode",
+        values_from = ".ov_value"
+      ) %>%
+      left_join(all_genes_df, .) %>%
+      column_to_rownames("Hugo_Symbol") %>%
+      as.matrix()
+
+    overlay_values <- sort(unique(stats::na.omit(
+      as.vector(overlay_mat[genes_kept, , drop = FALSE])
+    )))
+    if (length(overlay_values) > 0) {
+      overlay_col_map <- get_overlay_colours(overlay_values)
+      # composite keys ("<base type>__ov__<sanitized value>") so a
+      # hotspot-tagged cell (already possibly suffixed "_hs" above) still
+      # gets its own distinct overlay colour on top, without touching cells
+      # that have no overlay. The value is sanitized because oncoPrint
+      # splits cell strings on ",", ":" and ";" -- all of which can appear
+      # in identifiers like HLA allele names ("HLA-A*02:01").
+      for (i in colnames(mat)) {
+        ov_mask <- !is.na(overlay_mat[genes_kept, i]) &
+          nzchar(mat[genes_kept, i])
+        if (any(ov_mask)) {
+          vals <- overlay_mat[genes_kept, i][ov_mask]
+          base_types <- mat[genes_kept, i][ov_mask]
+          composite <- paste0(base_types, "__ov__", sanitize_overlay_value(vals))
+          mat[genes_kept, i][ov_mask] <- composite
+          for (k in seq_along(composite)) {
+            key <- composite[k]
+            if (is.null(alter_fun[[key]])) {
+              base_fun <- alter_fun[[base_types[k]]]
+              overlay_fill <- unname(overlay_col_map[[vals[k]]])
+              col[[key]] <- overlay_fill
+              overlay_legend[key] <- vals[k]
+              local({
+                this_base_fun <- base_fun
+                this_fill <- overlay_fill
+                alter_fun[[key]] <<- function(x, y, w, h) {
+                  this_base_fun(x, y, w, h)
+                  grid.rect(
+                    x, y, w - unit(spacing, "pt"),
+                    (height_scaling / 5) * h,
+                    gp = gpar(fill = this_fill, col = box_col)
+                  )
+                }
+              })
+            }
+          }
+        }
+      }
+    }
+  }
   if (verbose) {
     print(colours)
     print("KEPT:")
@@ -1386,6 +1612,11 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   if (!missing(numericMetadataColumns)) {
     metadata_df <- dplyr::filter(these_samples_metadata, sample_id %in%
       patients_kept) %>%
+      # a sample can legitimately have more than one row here (e.g. both a
+      # genome and a capture seq_type row), which column_to_rownames() below
+      # can't tolerate -- annotation columns don't vary by seq_type, so
+      # keeping the first row per sample_id is safe.
+      dplyr::distinct(sample_id, .keep_all = TRUE) %>%
       column_to_rownames("sample_id") %>%
       dplyr::select(all_of(c(
         metadataColumns, numericMetadataColumns,
@@ -1427,6 +1658,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   } else {
     metadata_df <- dplyr::filter(these_samples_metadata, sample_id %in%
       patients_kept) %>%
+      # see comment in the numericMetadataColumns branch above
+      dplyr::distinct(sample_id, .keep_all = TRUE) %>%
       column_to_rownames("sample_id") %>%
       dplyr::select(all_of(c(metadataColumns, expressionColumns)))
   }
@@ -1476,7 +1709,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
       print(names(colours))
     }
   }
-  col_fun <- circlize::colorRamp2(c(1, 2, 5), c(
+  col_fun <- circlize::colorRamp2(c(0, 0.5, 1), c(
     "blue", "white",
     "red"
   ))
@@ -1674,6 +1907,15 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (!is.null(include_noncoding) && length(include_noncoding) > 0) {
       silent_df <- silent_df[genes_kept, patients_kept]
     }
+    if (highlightHotspots) {
+      # hotspot_df was built against the full mat dimensions and, unlike
+      # its siblings above, was never trimmed to genes_kept/patients_kept
+      # before being used to build any_hit below. Indexing any_hit (already
+      # trimmed) with a differently-shaped/ordered hotspot_df applies the
+      # TRUE flags positionally instead of by gene/sample identity, which
+      # silently corrupts any_hit and therefore the sortByGenes ordering.
+      hotspot_df <- hotspot_df[genes_kept, patients_kept]
+    }
     if (verbose) {
       print("Simplify Annotations")
     }
@@ -1698,11 +1940,26 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     if (highlightHotspots) {
       any_hit[hotspot_df == TRUE] <- TRUE
     }
+    # any_hit only records whether a gene is altered at all, so by default
+    # a CN alteration and a point mutation are indistinguishable for sorting
+    # purposes. When prioritizeCNV is TRUE, build a weighted version of the
+    # sort key so CN alterations outrank other alteration types within the
+    # same gene/sample (any_hit itself stays boolean for everything else,
+    # e.g. removeNonMutated and the default gene-frequency ordering below).
+    if (prioritizeCNV && !missing(cnv_df)) {
+      sort_hit <- any_hit
+      sort_hit[] <- 0
+      sort_hit[any_hit == TRUE] <- 1
+      sort_hit[cn_df == TRUE] <- 2
+    } else {
+      sort_hit <- any_hit
+    }
     if (!missing(sortByGenes) && !keepSampleOrder) {
-      tany_hit <- t(any_hit) %>% as.data.frame()
+      tany_hit <- t(sort_hit) %>% as.data.frame()
       tany_hit <- arrange(tany_hit, desc(across(sortByGenes)))
-      any_hit <- t(tany_hit) %>% as.data.frame()
-      patients_kept <- colnames(any_hit)
+      sort_hit <- t(tany_hit) %>% as.data.frame()
+      patients_kept <- colnames(sort_hit)
+      any_hit <- any_hit[, patients_kept]
       col_order <- patients_kept
     } else if (keepSampleOrder) {
       patients_kept <- colnames(any_hit)
@@ -1737,10 +1994,12 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         print(genes_sorted)
       }
       any_hit <- any_hit[genes_sorted, ]
-      tany_hit <- t(any_hit) %>% as.data.frame()
+      sort_hit <- sort_hit[genes_sorted, ]
+      tany_hit <- t(sort_hit) %>% as.data.frame()
       tany_hit <- arrange(tany_hit, desc(across(genes_sorted)))
-      any_hit <- t(tany_hit) %>% as.data.frame()
-      patients_kept <- colnames(any_hit)
+      sort_hit <- t(tany_hit) %>% as.data.frame()
+      patients_kept <- colnames(sort_hit)
+      any_hit <- any_hit[, patients_kept]
       col_order <- patients_kept
     }
     if (removeNonMutated) {
@@ -1809,6 +2068,36 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
         patients_kept
       ])
     }
+    if (!missing(overlayColumn)) {
+      # resized here (rather than earlier, alongside trunc_df/hotspot_df)
+      # because overlay_df doesn't participate in any_hit/sortByGenes -- by
+      # this point genes_kept/patients_kept already reflect the final
+      # sorting/removeNonMutated result, so one resize suffices
+      overlay_df <- overlay_df[genes_kept, patients_kept]
+      overlay_values <- sort(unique(stats::na.omit(unlist(
+        overlay_df,
+        use.names = FALSE
+      ))))
+      if (length(overlay_values) > 0) {
+        overlay_col_map <- get_overlay_colours(overlay_values)
+        for (val in overlay_values) {
+          layer_key <- paste0("Overlay_", val)
+          col[[val]] <- unname(overlay_col_map[[val]]) # for the legend
+          col[[layer_key]] <- unname(overlay_col_map[[val]]) # for alter_fun
+          layer_mat <- overlay_df == val
+          layer_mat[is.na(layer_mat)] <- FALSE
+          mat_list[[layer_key]] <- as.matrix(layer_mat)
+          local({
+            this_key <- layer_key
+            alter_fun[[this_key]] <<- function(x, y, w, h) {
+              grid.rect(x, y, w * width_adj, h * 0.3, gp = gpar(
+                fill = col[this_key], col = NA
+              ))
+            }
+          })
+        }
+      }
+    }
     if(simplify_bg_colour == "pathology"){
       path_mat <- as.matrix(bg_df[genes_kept,patients_kept])
       mat_list[["BL"]] = path_mat
@@ -1823,7 +2112,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     }else if(simplify_bg_colour == "coverage"){
       path_mat <- as.matrix(bg_df[genes_kept,patients_kept])
       mat_list[["coverage"]] = path_mat
-    } 
+    }
     if (verbose) {
       message("done")
     }
@@ -2028,7 +2317,8 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     right_anno_width = right_anno_width,
     genesForClustering = genesForClustering,
     annotation_name_fontsize = annotation_name_fontsize,
-    include_noncoding = include_noncoding
+    include_noncoding = include_noncoding,
+    overlay_legend = overlay_legend
   )
   if (return_inputs) {
     if (simplify_annotation) {
@@ -2091,7 +2381,8 @@ make_prettyoncoplot <- function(
     right_anno_width,
     genesForClustering,
     annotation_name_fontsize,
-    include_noncoding) {
+    include_noncoding,
+    overlay_legend = character(0)) {
   validate_mutation_colours <- function(mat_input, col, plot_type) {
     classes_without_colours <- c("coverage", "BL", "FL", "DLBCL")
     if (plot_type == "simplify") {
@@ -2133,11 +2424,14 @@ make_prettyoncoplot <- function(
     if (!missing(cnv_df)) at <- c(at, "CNV")
     if ("Silent" %in% names(mat_input)) at <- c(at, "Silent")
     if ("coverage" %in% names(mat_input)) at <- c(at, "coverage")
+    overlay_at <- grep("^Overlay_", names(mat_input), value = TRUE)
+    at_labels <- c(at, sub("^Overlay_", "", overlay_at))
+    at <- c(at, overlay_at)
 
     heatmap_legend_param <- list(
       title = "Alterations",
       at = at,
-      labels = at,
+      labels = at_labels,
       nrow = annotation_row,
       ncol = annotation_col,
       legend_direction = legend_direction,
@@ -2165,6 +2459,14 @@ make_prettyoncoplot <- function(
       Silent = "Silent",
       hot_spot = "HotSpot"
     )
+    # overlay_legend maps each composite cell key (e.g.
+    # "Missense_Mutation__ov__HLA-A*02_01", the sanitized value actually
+    # embedded in mat_input) to the original, unsanitized overlay value --
+    # used as both the "at" match (must equal the real cell content) and
+    # the displayed label (so the sanitization is invisible to the viewer)
+    if (length(overlay_legend) > 0) {
+      legend_labels <- c(legend_labels, overlay_legend)
+    }
     legend_at <- names(legend_labels)[names(legend_labels) %in% names(col)]
     heatmap_legend_param <- list(
       title = "Alterations",
@@ -2188,8 +2490,11 @@ make_prettyoncoplot <- function(
     right_annotation = NULL
   }
   show_row_names = !hide_gene_names
-  if("CNV" %in% names(mat_input) || "coverage" %in% names(mat_input) | "BL" %in% names(mat_input) | "FL" %in% names(mat_input) | "DLBCL" %in% names(mat_input) ){
-    pct_include = setdiff(names(mat_input) ,c("CNV","coverage","BL","FL","DLBCL"))
+  if("coverage" %in% names(mat_input) | "BL" %in% names(mat_input) | "FL" %in% names(mat_input) | "DLBCL" %in% names(mat_input) ){
+    # CNV is a genuine alteration type (unlike the background-shading
+    # matrices below) so it stays in pct_include and counts toward the
+    # percentage shown next to each gene.
+    pct_include = setdiff(names(mat_input) ,c("coverage","BL","FL","DLBCL"))
   }else{
     pct_include = NULL
   }
@@ -2508,6 +2813,10 @@ make_prettyoncoplot <- function(
     } else {
       to_return <- list("gene_order" = gene_order)
     }
+    # the arguments given to oncoPrint (alteration matrices, alter_fun,
+    # colours), so the same cells can be redrawn in another layout
+    # (e.g. sideways in linked_CN_oncoplot)
+    to_return[["oncoprint_args"]] <- oncoprint_args
     if (plot_type == "simplify") {
       metadata_df <- bind_cols(metadata_df, mut_status)
       return(c(

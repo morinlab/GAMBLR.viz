@@ -33,7 +33,13 @@
 #'   mode; do not provide `cn_mat` simultaneously.
 #' @param cn_mat Optional matrix or data frame of copy-number features with
 #'   **samples in rows** (row names as sample IDs). Provide this for CNV mode;
-#'   do not provide `all_exp` simultaneously.
+#'   do not provide `all_exp` simultaneously. To correct for sample ploidy,
+#'   build it with `GAMBLR.utils::segmented_data_to_cn_matrix(...,
+#'   adjust_for_ploidy = TRUE)`; see the Details of [pretty_CN_heatmap].
+#' @param cn_args Optional named list of arguments passed to
+#'   [pretty_CN_heatmap] in CNV mode, overriding the defaults used here
+#'   (e.g. `list(keep_these_chromosomes = "9")`). `scale_by_sample` defaults
+#'   to FALSE; setting it to TRUE isn't recommended (see [pretty_CN_heatmap]).
 #' @param genes Character vector of gene symbols/feature names to extract from
 #'   `all_exp` (ignored in CNV mode).
 #' @param existing_heatmaps A list of `ComplexHeatmap` objects that will be
@@ -79,7 +85,10 @@
 #'   returnEverything = FALSE
 #' )
 #'
-#' # CNV mode:
+#' # CNV mode, with ploidy corrected when the matrix is built:
+#' cn_matrix <- GAMBLR.utils::segmented_data_to_cn_matrix(segs,
+#'                                                        these_samples_metadata = md,
+#'                                                        adjust_for_ploidy = TRUE)
 #' out <- prettyJackedOncoplot(
 #'   these_samples_metadata = md,
 #'   all_exp = NULL,
@@ -154,7 +163,9 @@ prettyJackedOncoplot = function(these_samples_metadata,
     # defaults for pretty_CN_heatmap; user can override via cn_args
     cn_defaults <- list(
       cn_state_matrix = cn_mat[metadata_df$sample_id, ],
-      scale_by_sample = TRUE,
+      # correct for ploidy when building cn_mat (adjust_for_ploidy = TRUE),
+      # not here: scaling after binning turns filled bins into fake losses
+      scale_by_sample = FALSE,
       these_samples_metadata = metadata_df,
       legend_position = "top",
       rotate = TRUE,
@@ -254,7 +265,7 @@ og_prettyJackedOncoplot = function(these_samples_metadata,
                                                       samp_order)), , drop = FALSE]
     
     cout = pretty_CN_heatmap(cn_mat[metadata_df$sample_id,],
-                            scale_by_sample = T,
+                            scale_by_sample = FALSE,
                             these_samples_metadata = metadata_df,
                             legend_position = "top",
                             rotate = T,

@@ -9,83 +9,212 @@ plot_sample_circos(
   sv_df,
   cnv_df,
   ssm_df,
-  include_sv = TRUE,
-  include_ssm = FALSE,
+  include_sv,
+  include_cnv,
+  include_ssm,
+  these_samples_metadata = NULL,
   legend_metadata_columns,
   legend_metadata_names = c(),
-  include_cnv = TRUE,
   genome_build,
   this_seq_type = "genome",
   chrom_list,
   label_genes,
-  auto_label_sv = FALSE,
+  colour_labels_by_cn = FALSE,
+  highlight_oncogene_sv = TRUE,
+  label_oncogene_sv = TRUE,
+  oncogenes = NULL,
+  auto_label_sv = NULL,
+  cnv_features = NULL,
+  cnv_feature_args = list(),
   link_colour_column = NULL,
+  cn_value = "CN",
+  show_loh = NULL,
+  loh_types = "copy-neutral",
+  loh_track_height = 0.03,
+  label_cnloh_features = FALSE,
+  cn_colour_range,
+  sample_id_position = "topleft",
   hide_legend = FALSE,
+  return_data = FALSE,
   verbose = FALSE
 )
 }
 \arguments{
 \item{this_sample_id}{Sample ID for the sample to plot.}
 
-\item{sv_df}{Optional data frame of SVs. If not provided this function will run `get_manta_sv` to retrieve SVs.}
+\item{sv_df}{Optional data frame of SVs (e.g. from `get_combined_sv()`
+or `get_manta_sv()`), with `tumour_sample_id`, `CHROM_A`, `START_A`,
+`END_A`, `CHROM_B`, `START_B`, `END_B` (and `STRAND_A`, `STRAND_B` for
+oncogene annotation).}
 
-\item{cnv_df}{Optional data frame of CNVs. If not provided, this function will run `get_sample_cn_segments` to retrieve CNVs.}
+\item{cnv_df}{Optional data frame of CN segments (e.g. from
+`get_cn_segments()`), with `chrom`, `start`, `end`, `CN` and/or
+`log.ratio` (see `cn_value`), and `ID` if it holds more than one sample.}
 
-\item{ssm_df}{This parameter does not do anything yet. Maybe it was meant to be implemented.}
+\item{ssm_df}{Optional data frame of SSMs in MAF-like format (e.g. from
+`get_ssm_by_samples()`), with `Tumor_Sample_Barcode`, `Chromosome`,
+`Start_Position`, `Variant_Classification`.}
 
-\item{include_sv}{Default TRUE. (does not do anything yet).}
+\item{include_sv}{Whether to draw the SV link ring. Defaults to `TRUE`
+when `sv_df` is supplied and `FALSE` otherwise. Set explicitly to `TRUE`
+to get a clear error if `sv_df` was left out by mistake.}
 
-\item{include_ssm}{Defaul FALSE. (does not do anything yet).}
+\item{include_cnv}{Whether to draw the CNV ring. Defaults to `TRUE` when
+`cnv_df` is supplied and `FALSE` otherwise. Set explicitly to `TRUE` to
+get a clear error if `cnv_df` was left out by mistake.}
 
-\item{legend_metadata_columns}{Column names from metadata}
+\item{include_ssm}{Whether to draw the SSM point-mutation ring. Defaults
+to `TRUE` when `ssm_df` is supplied and `FALSE` otherwise. Set explicitly
+to `TRUE` to get a clear error if `ssm_df` was left out by mistake.}
 
-\item{legend_metadata_names}{List of metadata names to be plotted.}
+\item{these_samples_metadata}{Optional metadata containing this sample,
+for the legend (`legend_metadata_columns`).}
 
-\item{include_cnv}{Default TRUE. (does not do anything yet).}
+\item{legend_metadata_columns}{Columns of `these_samples_metadata` to
+show in the legend.}
 
-\item{genome_build}{genome_build to use (this is usually inferred automatically from your data)}
+\item{legend_metadata_names}{Optional names for those columns in the
+legend.}
 
-\item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
+\item{genome_build}{genome_build to use (this is usually inferred
+automatically from your data).}
 
-\item{chrom_list}{List of chromosomes to be plotted. If not stated, chr1-22+X will be used.}
+\item{this_seq_type}{When `these_samples_metadata` has more than one row
+for this sample, the seq_type of the row to use. Default "genome".}
 
-\item{label_genes}{Gene labels (df, list or what type?)}
+\item{chrom_list}{Chromosomes to plot. Default chr1-22 and X.}
 
-\item{auto_label_sv}{Default is FALSE}
+\item{label_genes}{Optional gene symbols to label at their locations.}
 
-\item{link_colour_column}{Which column from sv_df to use for link colouring (default: NULL)}
+\item{colour_labels_by_cn}{Set to TRUE to colour each `label_genes`
+entry's connector line (not the text itself, which stays black and
+readable) by the copy number state at that gene's location: red if the
+overlapping `cnv_df` segment's value (`cn_value`) is above neutral (2
+for CN, 0 for log.ratio), blue if below. Requires `cnv_df`. Genes with no overlapping segment get
+a black connector line. Default FALSE.}
 
-\item{hide_legend}{Set to TRUE if you want to suppress the legend. Particularly useful if you are not using GAMBL data/metadata}
+\item{highlight_oncogene_sv}{Colour SVs involving oncogenes, one colour
+per oncogene, on top of the other SVs, with a legend. Default TRUE (with
+`sv_df`).}
+
+\item{label_oncogene_sv}{Label oncogene SVs at their breakpoints: the
+oncogene and its partner. Default TRUE (with `sv_df`).}
+
+\item{oncogenes}{Optional oncogene symbols to limit the highlighting and
+labels to (e.g. c("MYC", "BCL2", "BCL6")). Default: all found.}
+
+\item{auto_label_sv}{Deprecated: the same as `highlight_oncogene_sv` and
+`label_oncogene_sv`.}
+
+\item{cnv_features}{Optional CNV features to call in this sample and
+label: a feature table (e.g. from `GAMBLR.utils::get_cnv_features()`) or
+TRUE for the default curated set. The sample's segments are called with
+`GAMBLR.utils::segmented_data_to_cnv_status()` on the values plotted
+(`cn_value`'s scale, with `centering = "none"`, so a feature is called
+against the ring's neutral level: centre the segments first, e.g. with
+`GAMBLR.utils::center_segments()`, for a sample-specific baseline) and
+each feature called in its direction is labelled with its name, its
+connector red for gains and blue for losses (darker for high-level
+calls). Requires `cnv_df`.}
+
+\item{cnv_feature_args}{Optional list of further arguments for
+`segmented_data_to_cnv_status()` (e.g. thresholds, centering or a
+blacklist).}
+
+\item{link_colour_column}{Which column from sv_df to use for colouring
+the other SV links: "CHROM_A" or "CHROM_B" (by chromosome) or a column of
+colours. Default: grey.}
+
+\item{cn_value}{The `cnv_df` column the CNV ring (and `colour_labels_by_cn`)
+shows: "CN" (default; absolute copy number, e.g. centred with
+`GAMBLR.utils::center_segments` so a sample's neutral level is 2) or
+"log.ratio".}
+
+\item{show_loh}{Draw regions with LOH (`LOH_flag` of 1 in `cnv_df`, as
+reported for Battenberg and controlfreec segments) as a thin ring just
+inside the CN ring, coloured by the copy number change with the LOH:
+copy-neutral LOH, deletion with LOH or gain with LOH (see `loh_types`;
+copy number against
+2, so centre high-ploidy samples first; see `cn_value`). Default: when
+`cnv_df` has LOH_flag values for this sample. Samples without (e.g.
+capture data) are noted as "not assessed".}
+
+\item{loh_types}{The kinds of LOH drawn: any of "copy-neutral"
+(default; grey), "deletion" (deletion with LOH) and "gain" (gain with
+LOH).}
+
+\item{loh_track_height}{Height of the LOH ring, as a fraction of the
+circle's radius. Default 0.03.}
+
+\item{label_cnloh_features}{Label recurrently deleted regions (the loss
+features of `cnv_features`, or of the core set from
+`GAMBLR.utils::get_cnv_features()` without it) covered by copy-neutral
+LOH in this sample, by at least the feature's `min_fraction`: e.g. "TP73
+cnLOH" (the representative gene, or the region without one), with grey
+connectors. Default FALSE.}
+
+\item{cn_colour_range}{Numeric vector of length 3, `c(low, mid, high)`
+breakpoints for the blue-white-red CNV colour scale (values beyond them
+take the end colours), shared by the plot and its legend. Default:
+`c(0, 2, 6)` for CN; for log.ratio a symmetric range covering the
+largest absolute log ratio in this sample's `cnv_df`.}
+
+\item{sample_id_position}{Where to write the sample ID: "topleft"
+(default; above the metadata legend), "centre" (inside the ring, where
+SV links can make it hard to read) or "none".}
+
+\item{hide_legend}{Set to TRUE to suppress the legends.}
+
+\item{return_data}{Set to TRUE to return (invisibly) the data plotted.}
 
 \item{verbose}{Set to TRUE for a chattier experience}
 }
 \value{
-Nothing
+Nothing, or with `return_data = TRUE` (invisibly) a list:
+`cnv`, `sv` and `ssm` (this sample's rows plotted), `oncogene_sv`
+(the annotated oncogene SVs, with which end is the oncogene),
+`cnv_features` (the CNV features called and labelled), `loh` (the LOH
+segments drawn, with `loh_type`) and `cnloh_features` (the loss features
+labelled as under copy-neutral LOH, with the fraction covered).
 }
 \description{
 Plot a sample-centric circos overview.
 }
 \details{
-This function takes a sample ID in the `this_sample_id` parameter.
-Optionally, the user can supply already loaded data frames (SV, CNV, SSM) with the `sv_df`, `cnv_df` and `ssm_df` parameters.
-Convenient Boolean parameteers are also avaialble for restricting the plot to specific mutation types (`include_sv`, `include_cnv`, and `include_ssm`).
+This function takes a sample ID in the `this_sample_id` parameter
+and draws one ring per genomic data type you provide: CNV segments
+(`cnv_df`), SV breakpoint links (`sv_df`) and/or SSM point mutations
+(`ssm_df`). This function does not fetch any of these on your behalf --
+retrieve them yourself (e.g. with `get_cn_segments()`, `get_combined_sv()`
+or `get_manta_sv()`, `get_ssm_by_samples()` or equivalent) and pass in
+whichever data types you want plotted. A ring is included automatically
+when its data frame is supplied; set the corresponding `include_*`
+argument to `FALSE` to suppress a ring even when data was provided, or
+to `TRUE` to get an explicit error if you forgot to pass it.
+
+Only this sample's data, on the chromosomes in `chrom_list`, are used:
+rows of `cnv_df` (by ID), `sv_df` (by tumour_sample_id) and `ssm_df` (by
+Tumor_Sample_Barcode) for other samples or chromosomes are dropped, with a
+message. Chromosome names may have a "chr" prefix or not.
+
+\strong{Oncogene SVs.} With `sv_df`, SVs involving known lymphoma
+oncogenes are found with `GAMBLR.utils::annotate_sv()`. By default each
+oncogene's SV links are drawn in their own colour on top of the other SVs
+(grey), with a legend (`highlight_oncogene_sv`), and labelled at their
+breakpoints: the oncogene at its end and the partner (e.g. IGH, or a
+partner gene; when known) at the other (`label_oncogene_sv`). `oncogenes`
+limits this to some genes.
 }
 \examples{
 \dontrun{
-suppressPackageStartupMessages(library(GAMBLR.open))
-
-plot_sample_circos(this_sample_id = "02-13135T",
-                   legend_metadata_columns = c("pathology",
-                                               "lymphgen",
-                                               "COO_consensus",
-                                               "DHITsig_consensus"),
-                   legend_metadata_names = c("pathology",
-                                             "LymphGen",
-                                             "COO",
-                                             "DHITsig"),
-                   chrom_list = c("chr3",
-                                  "chr8",
-                                  "chr14",
-                                  "chr18"))
+meta = get_gambl_metadata() \%>\% dplyr::filter(sample_id == "00-14595_tumorC",
+                                              seq_type == "genome")
+plot_sample_circos(this_sample_id = "00-14595_tumorC",
+                   cnv_df = get_cn_segments(meta),
+                   sv_df = get_combined_sv(these_samples_metadata = meta),
+                   these_samples_metadata = meta,
+                   legend_metadata_columns = c("pathology", "lymphgen",
+                                               "COO_consensus"),
+                   legend_metadata_names = c("pathology", "LymphGen", "COO"))
 }
 }
