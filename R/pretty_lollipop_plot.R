@@ -190,16 +190,19 @@ pretty_lollipop_plot <- function(
             )
 
         # Verify that all variants belong to a single gene model
-        if (length(unique(maf_df$aa.length)) > 1) {
+        if (length(unique(maf_df$RefSeq)) > 1) {
             maf_df %>%
                 count(Hugo_Symbol, Transcript_ID, RefSeq, aa.length) %>%
                 print()
             warning("The provided maf_df has more than one gene model for the specified gene.
             Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
+            most_common <- maf_df %>%
+                count(RefSeq, sort = TRUE) %>%
+                slice(1) %>%
+                pull(RefSeq)
+
             maf_df <- maf_df %>%
-                group_by(RefSeq) %>%
-                filter(n() == max(n())) %>%
-                ungroup()
+                filter(RefSeq == most_common)
         }
 
         ##### Load the protein domain table for the current gene #####
