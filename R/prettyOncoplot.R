@@ -184,8 +184,9 @@
 #' column name that will replace the default bar plot. The incidence
 #' of mutations in patients will be shown as a grouped bar chart
 #' with a bar for each different value of right_anno_column e.g. "pathology"
-#' @param coloured_genes Specify any genes whose labels you
-#' want to be coloured red instead of the default black.
+#' @param coloured_genes Genes whose labels are coloured instead of the default
+#' black: an unnamed vector of genes (red), or a named vector of colours with
+#' genes as names (e.g. each gene in the colour of the class it belongs to).
 #' @param hide_right_annotations Set to TRUE to hide the right
 #' annotations.
 #' @param genesForClustering Optionally specify a subset of genes
@@ -194,6 +195,44 @@
 #' @param right_anno_width Width of the right annotation column.
 #' (optional)
 #' @param hide_gene_names Set to TRUE to hide gene names.
+#' @param alluvial_columns Optional: two or more columns of
+#' `these_samples_metadata` holding sample classifications (e.g.
+#' `c("LymphGen", "DLBCLone", "DLBClass")`), listed top to bottom. A stacked
+#' alluvial of them is drawn above the oncoplot as part of its top annotation:
+#' one bar per column, with each sample's class, and ribbons joining each
+#' sample's place on neighbouring bars. The samples follow the alluvial: sorted
+#' by the class of the last column (the bar next to the oncoplot), then, within
+#' each class, by the other columns from the bottom up (see `alluvial_sort`).
+#' The last bar is in the oncoplot's column order; each bar above orders its
+#' samples by its own class, then by their class and place on the bar below, so
+#' that ribbons from one class run together. Sets `keepSampleOrder = TRUE`;
+#' can't be combined with `splitColumnName`, `sortByColumns`, `sortByGenes` or
+#' `cluster_cols`. Class colours come from `custom_colours[[column]]`, then
+#' GAMBL colours.
+#' @param alluvial_class_order Order of the classes, on every bar (left to
+#' right) and for sorting. Default `c("BN2", "EZB", "ST2", "MCD", "N1", "A53",
+#' "C2", "Composite")`, then any other classes alphabetically, then "Other" and
+#' NA.
+#' @param alluvial_equivalents Optional named vector mapping class labels of
+#' different columns onto one class, for matching and ordering (e.g.
+#' `c(C1 = "BN2", C3 = "EZB", C4 = "ST2", C5 = "MCD")` when one column holds
+#' DLBClass clusters and another LymphGen classes). Labels and colours are
+#' unchanged.
+#' @param alluvial_sort How samples are ordered by each column above the last,
+#' within the classes of the columns below it: "class" (default; samples whose
+#' class matches the last column's first, then the other classes in order) or
+#' "frequency" (the classes shared by most samples within the block first). One
+#' value for all, or one per column above the last (top to bottom).
+#' @param alluvial_tiebreak Optional numeric column of `these_samples_metadata`
+#' that orders samples last, within the blocks set by `alluvial_columns`,
+#' highest first (e.g. an aneuploidy score). Missing values go last.
+#' @param alluvial_height Height of the alluvial in cm. Default 4.
+#' @param alluvial_consistency Set to TRUE to add a metadata track
+#' "alluvial_consistency": "consistent" when every other column has the same
+#' class as the last, "inconsistent" when none does, "semi-consistent"
+#' otherwise. Default FALSE.
+#' @param alluvial_ribbon_colour Colour each ribbon by the class on the bar
+#' above it ("upper", default) or below it ("lower").
 #' @return By default, nothing unless return_inputs is specified,
 #' in which case it returns a named list that contains different
 #' things depending on how the function was run
@@ -542,7 +581,15 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
                            annotation_name_fontsize = 1,
                            axis_font_size = 5,
                            right_anno_width = 2,
-                           hide_gene_names = FALSE) {
+                           hide_gene_names = FALSE,
+                           alluvial_columns = NULL,
+                           alluvial_class_order = NULL,
+                           alluvial_equivalents = NULL,
+                           alluvial_height = 4,
+                           alluvial_consistency = FALSE,
+                           alluvial_ribbon_colour = "upper",
+                           alluvial_sort = "class",
+                           alluvial_tiebreak = NULL) {
   all_args <- mget(names(formals()),             # the formal names
                    sys.frame(sys.nframe()),      # the current call frame
                    inherits = FALSE)             # don’t look up the stack
@@ -580,6 +627,33 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
   }
   if (!missing(split_columns_kmeans) && !missing(splitColumnName)) {
     stop("split_columns_kmeans and splitColumnName are incompatible. Use one or the other")
+  }
+  # alluvial_columns: order the samples to follow a stacked alluvial drawn above the oncoplot (see Details)
+  if (!is.null(alluvial_columns)) {
+    absent <- setdiff(c(alluvial_columns, alluvial_tiebreak), colnames(these_samples_metadata))
+    if (length(absent) > 0) {
+      stop("alluvial_columns not in these_samples_metadata: ", paste(absent, collapse = ", "))
+    }
+    if (!missing(splitColumnName) || !missing(sortByColumns) || !missing(sortByGenes) || isTRUE(cluster_cols)) {
+      stop("alluvial_columns sets the sample order itself, so it can't be combined with splitColumnName, ",
+           "sortByColumns, sortByGenes or cluster_cols")
+    }
+    these_samples_metadata <- these_samples_metadata[.alluvial_sample_order(
+      these_samples_metadata, alluvial_columns, alluvial_class_order, alluvial_equivalents, alluvial_sort,
+      alluvial_tiebreak
+    ), , drop = FALSE]
+    keepSampleOrder <- TRUE
+    if (alluvial_consistency) {
+      these_samples_metadata$alluvial_consistency <- .alluvial_consistency(
+        these_samples_metadata, alluvial_columns, alluvial_equivalents
+      )
+      metadataColumns <- c(if (missing(metadataColumns)) "pathology" else metadataColumns, "alluvial_consistency")
+      if (is.null(custom_colours)) custom_colours <- list()
+      if (is.null(custom_colours[["alluvial_consistency"]])) {
+        custom_colours[["alluvial_consistency"]] <- c(consistent = "#525252", `semi-consistent` = "#a3a3a3",
+                                                      inconsistent = "#e6e6e6")
+      }
+    }
   }
   if (missing(maf_df)) {
     stop("You must provide maf data frame.")
@@ -2255,6 +2329,23 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     message("calling make_prettyoncoplot()")
   }
 
+  alluvial_anno <- NULL
+  if (!is.null(alluvial_columns)) {
+    mat_cols <- if (is.list(mat_input) && !is.data.frame(mat_input)) colnames(mat_input[[1]]) else colnames(mat_input)
+    allu_meta <- as.data.frame(these_samples_metadata)
+    allu_values <- allu_meta[match(mat_cols, allu_meta$sample_id), alluvial_columns, drop = FALSE]
+    allu_pal <- GAMBLR.helpers::get_gambl_colours()
+    allu_pal <- allu_pal[!duplicated(names(allu_pal))]
+    allu_colours <- lapply(setNames(alluvial_columns, alluvial_columns), function(a) {
+      pal <- c(if (!is.null(custom_colours[[a]])) custom_colours[[a]], allu_pal)
+      pal[!duplicated(names(pal))]
+    })
+    alluvial_anno <- .alluvial_annotation(allu_values, allu_colours,
+      class_order = alluvial_class_order, equivalents = alluvial_equivalents,
+      height = alluvial_height, ribbon_colour = alluvial_ribbon_colour,
+      axis_label_fontsize = metadataBarFontsize + 1
+    )
+  }
   returned <- make_prettyoncoplot(
     mat_input,
     metadata_df,
@@ -2318,6 +2409,7 @@ prettyOncoplot <- function(maf_df, # nolint: object_name_linter.
     genesForClustering = genesForClustering,
     annotation_name_fontsize = annotation_name_fontsize,
     include_noncoding = include_noncoding,
+    alluvial_anno = alluvial_anno,
     overlay_legend = overlay_legend
   )
   if (return_inputs) {
@@ -2382,6 +2474,7 @@ make_prettyoncoplot <- function(
     genesForClustering,
     annotation_name_fontsize,
     include_noncoding,
+    alluvial_anno = NULL,
     overlay_legend = character(0)) {
   validate_mutation_colours <- function(mat_input, col, plot_type) {
     classes_without_colours <- c("coverage", "BL", "FL", "DLBCL")
@@ -2525,7 +2618,13 @@ make_prettyoncoplot <- function(
   row_labels = rownames(mat_input[[1]])
   gene_label_colour = setNames(rep("black",length(row_labels)),row_labels)
   if(!missing(coloured_genes)){
-    gene_label_colour[coloured_genes] = "red"
+    # a named vector gives each gene its own label colour (gene = colour); unnamed, the genes are red
+    if(!is.null(names(coloured_genes))){
+      cg = coloured_genes[names(coloured_genes) %in% names(gene_label_colour)]
+      gene_label_colour[names(cg)] = unname(cg)
+    }else{
+      gene_label_colour[coloured_genes] = "red"
+    }
     oncoprint_args[['row_names_gp']] =  gpar(fontsize = fontSizeGene, col = gene_label_colour)
   }else{
     oncoprint_args[['row_names_gp']] =  gpar(fontsize = fontSizeGene)
@@ -2784,6 +2883,11 @@ make_prettyoncoplot <- function(
     oncoprint_args[["bottom_annotation"]] <- colanno
   } else {
     oncoprint_args[["top_annotation"]] <- colanno
+  }
+  # the stacked alluvial (alluvial_columns) goes on top of everything else above the matrix
+  if (!is.null(alluvial_anno)) {
+    oncoprint_args[["top_annotation"]] <- if (is.null(oncoprint_args[["top_annotation"]])) alluvial_anno else
+      c(alluvial_anno, oncoprint_args[["top_annotation"]])
   }
   if (cluster_oncoplot_rows) {
     oncoprint_args[["cluster_rows"]] <- row_dend

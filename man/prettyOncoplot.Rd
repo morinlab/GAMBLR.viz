@@ -92,7 +92,15 @@ prettyOncoplot(
   annotation_name_fontsize = 1,
   axis_font_size = 5,
   right_anno_width = 2,
-  hide_gene_names = FALSE
+  hide_gene_names = FALSE,
+  alluvial_columns = NULL,
+  alluvial_class_order = NULL,
+  alluvial_equivalents = NULL,
+  alluvial_height = 4,
+  alluvial_consistency = FALSE,
+  alluvial_ribbon_colour = "upper",
+  alluvial_sort = "class",
+  alluvial_tiebreak = NULL
 )
 }
 \arguments{
@@ -334,8 +342,9 @@ with a bar for each different value of right_anno_column e.g. "pathology"}
 \item{hide_right_annotations}{Set to TRUE to hide the right
 annotations.}
 
-\item{coloured_genes}{Specify any genes whose labels you
-want to be coloured red instead of the default black.}
+\item{coloured_genes}{Genes whose labels are coloured instead of the default
+black: an unnamed vector of genes (red), or a named vector of colours with
+genes as names (e.g. each gene in the colour of the class it belongs to).}
 
 \item{genesForClustering}{Optionally specify a subset of genes
 to use for clustering (only useful if cluster_cols is TRUE).}
@@ -346,6 +355,52 @@ to use for clustering (only useful if cluster_cols is TRUE).}
 (optional)}
 
 \item{hide_gene_names}{Set to TRUE to hide gene names.}
+
+\item{alluvial_columns}{Optional: two or more columns of
+`these_samples_metadata` holding sample classifications (e.g.
+`c("LymphGen", "DLBCLone", "DLBClass")`), listed top to bottom. A stacked
+alluvial of them is drawn above the oncoplot as part of its top annotation:
+one bar per column, with each sample's class, and ribbons joining each
+sample's place on neighbouring bars. The samples follow the alluvial: sorted
+by the class of the last column (the bar next to the oncoplot), then, within
+each class, by the other columns from the bottom up (see `alluvial_sort`).
+The last bar is in the oncoplot's column order; each bar above orders its
+samples by its own class, then by their class and place on the bar below, so
+that ribbons from one class run together. Sets `keepSampleOrder = TRUE`;
+can't be combined with `splitColumnName`, `sortByColumns`, `sortByGenes` or
+`cluster_cols`. Class colours come from `custom_colours[[column]]`, then
+GAMBL colours.}
+
+\item{alluvial_class_order}{Order of the classes, on every bar (left to
+right) and for sorting. Default `c("BN2", "EZB", "ST2", "MCD", "N1", "A53",
+"C2", "Composite")`, then any other classes alphabetically, then "Other" and
+NA.}
+
+\item{alluvial_equivalents}{Optional named vector mapping class labels of
+different columns onto one class, for matching and ordering (e.g.
+`c(C1 = "BN2", C3 = "EZB", C4 = "ST2", C5 = "MCD")` when one column holds
+DLBClass clusters and another LymphGen classes). Labels and colours are
+unchanged.}
+
+\item{alluvial_height}{Height of the alluvial in cm. Default 4.}
+
+\item{alluvial_consistency}{Set to TRUE to add a metadata track
+"alluvial_consistency": "consistent" when every other column has the same
+class as the last, "inconsistent" when none does, "semi-consistent"
+otherwise. Default FALSE.}
+
+\item{alluvial_ribbon_colour}{Colour each ribbon by the class on the bar
+above it ("upper", default) or below it ("lower").}
+
+\item{alluvial_sort}{How samples are ordered by each column above the last,
+within the classes of the columns below it: "class" (default; samples whose
+class matches the last column's first, then the other classes in order) or
+"frequency" (the classes shared by most samples within the block first). One
+value for all, or one per column above the last (top to bottom).}
+
+\item{alluvial_tiebreak}{Optional numeric column of `these_samples_metadata`
+that orders samples last, within the blocks set by `alluvial_columns`,
+highest first (e.g. an aneuploidy score). Missing values go last.}
 
 \item{cluster_numeric_rows}{Deprecated.
 See [GAMBLR.viz::prettyStackedOncoplot] for this functionality.}

@@ -33,7 +33,8 @@
 #' @param metadataColumns One or more columns from the metadata you want to
 #' display beside the heatmap
 #' @param numericMetadataColumns One or more columns from the metadata that
-#' should be considered numeric
+#' should be considered numeric. They are shown beside the heatmap whether or
+#' not `metadataColumns` names them.
 #' @param expressionColumns Optional: One or more columns from the metadata that include gene expression values you want shown
 #' @param geneBoxPlot Optional: Specify the Hugo symbol of a single gene to embed box plots adjacent to the heatmap. Expression data for this gene must be present in the metadata in a column of the same name.
 #' @param show_column_names Set to TRUE to display the sample_id of every sample shown in the heatmap
@@ -65,6 +66,9 @@
 #' @param splitByBinState Optional: A single genomic bin that will be used to split the heatmap based on the CN state of that bin
 #' @param sortByMetadataColumns A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)
 #' @param labelTheseGenes A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap
+#' @param gene_label_colours Optional named vector of label colours for labelTheseGenes, with genes as names
+#' (e.g. each gene in the colour of the class it belongs to). Genes not named stay black; a bin whose label is
+#' shared with a feature label of another colour (labelTheseFeatures) is black.
 #' @param labelTheseFeatures Optional data frame of CNV features to label, in the format returned by [GAMBLR.utils::get_cnv_features] (subset it to the features you want). Each feature is labelled at the bin containing its midpoint; features sharing a bin are joined with "/". Can be combined with labelTheseGenes.
 #' @param feature_label What to show for each feature in labelTheseFeatures: "gene" (default; representative_gene, or region_name where there is none), "name" (e.g. "2p16.1_gain") or "region" (e.g. "2p16.1").
 #' @param colour_feature_labels Colour feature labels by direction (gains red, losses blue; black where features of both directions share a bin). Default TRUE.
@@ -207,6 +211,7 @@ pretty_CN_heatmap = function(cn_state_matrix,
                              sortByPGA=FALSE,
                              sortByMetadataColumns,
                              labelTheseGenes,
+                             gene_label_colours = NULL,
                              labelTheseCytobands,
                              labelTheseFeatures,
                              feature_label = "gene",
@@ -508,6 +513,15 @@ pretty_CN_heatmap = function(cn_state_matrix,
   }
   # label colours by bin; bins without an entry are drawn in black
   bin_label_colours = list()
+  # gene_label_colours: colours for the labelTheseGenes labels (bin_labels holds each bin's gene)
+  if(!is.null(gene_label_colours) && !missing(labelTheseGenes)){
+    for(b in names(bin_labels)){
+      g = bin_labels[[b]]
+      if(g %in% names(gene_label_colours)){
+        bin_label_colours[[b]] = unname(gene_label_colours[[g]])
+      }
+    }
+  }
   if(!missing(labelTheseFeatures)){
     required_cols = c("name", "chrom", "start", "end", "direction")
     if(!all(required_cols %in% colnames(labelTheseFeatures))){
@@ -617,6 +631,20 @@ pretty_CN_heatmap = function(cn_state_matrix,
                    else if(is.factor(these_samples_metadata[[split_by]]))
                      levels(these_samples_metadata[[split_by]])
                    else sort(unique(as.character(these_samples_metadata[[split_by]])))
+  }
+  # numeric columns are shown too, whether or not metadataColumns names them
+  if(!missing(numericMetadataColumns)){
+    metadataColumns = unique(c(metadataColumns, numericMetadataColumns))
+  }
+  if(!missing(these_samples_metadata)){
+    wanted = c(metadataColumns,
+               if(!missing(sortByMetadataColumns)) sortByMetadataColumns,
+               if(!missing(expressionColumns)) expressionColumns)
+    absent = setdiff(wanted, colnames(these_samples_metadata))
+    if(length(absent) > 0){
+      stop("these_samples_metadata has no column(s): ", paste(absent, collapse = ", "),
+           " (named in metadataColumns, numericMetadataColumns, sortByMetadataColumns or expressionColumns)")
+    }
   }
   if(!missing(numericMetadataColumns)){
   	not_numeric_cols = metadataColumns[!metadataColumns %in% numericMetadataColumns]
@@ -1163,6 +1191,8 @@ pretty_CN_heatmap = function(cn_state_matrix,
       chrom_strip = anno_simple(column_chromosome,
                                 col = chrom_col,
                                 pch = label_at,
+                                # text "points" are sized by pt_size (default 80% of the strip), not fontsize
+                                pt_size = unit(chromosome_label_fontsize, "points"),
                                 pt_gp = gpar(fontsize = chromosome_label_fontsize,
                                              col = ifelse(luminance > 0.6, "black", "white")),
                                 which = ifelse(rotate, "row", "column"))
