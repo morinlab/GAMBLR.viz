@@ -7,19 +7,19 @@
 #' The user can also to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 #' Mutations are coloured by `classification_column`, and certain classifications can be excluded with the parameter `exclude_classifications`.
 #' Samples will be plotted in the order they are arranged in `these_samples_metadata`. Otherwise they will be plotted by `classification_column` order.
-#' This function will try to obtain mutations internally if `maf_data` is not given.
+#' `these_samples_metadata` and `maf_data` are required; the function does not retrieve data itself.
 #' For more info, refer to the parameter descriptions of this function.
 #'
 #' @param regions_bed A data frame in BED format with chromosome coordinates, must contain columns chr, start, end, name (with these exact names) with maximum 10 regions to plot. Not required if specifying `regions_to_display`. with values from the `GAMBLR.data` ashm regions for the given projection, I.e values in `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.
-#' @param these_samples_metadata A optional metadata file already subsetted and arranged on the order you want the samples vertically displayed.
-#' @param maf_data An optional MAF-data data frame. If not provided, this function will call `get_ssm_by_regions`, using the regions supplied into `regions_bed` and `these_samples_metadata` if provided. Ensure your maf genome build matches the `projection` parameter.
+#' @param these_samples_metadata Required. A metadata data frame already subsetted and arranged in the order you want the samples vertically displayed.
+#' @param maf_data Required. A MAF data frame (e.g. from GAMBLR.results or GAMBLR.open `get_ssm_by_regions()`) covering the regions to plot. Its genome build must match the `projection` parameter. Calls with fewer than 3 alt reads (`t_alt_count`) are not plotted.
 #' @param regions_to_display Optional vector of regions in the format "gene-region" that match values of the gene and region columns in the `GAMBLR.data` ashm regions for the given projection, I.e gene and region columns of `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.
-#' @param this_seq_type The seq type you want results back for if `maf_data` is not provided. Default: genome.
+#' @param this_seq_type Samples in `these_samples_metadata` with this seq_type are plotted. Default: genome.
 #' @param classification_column The name of the metadata column to use for colouring samples. 
 #'  Default: lymphgen.
 #' @param exclude_classifications Optional argument for excluding specific classifications within
 #'  the `classification_column` values.
-#' @param sortByColumns A vector containing the column names you want to sort samples on. If `these_samples_metadata` is not provided, the default is to sort by pathology then `classification_column`.
+#' @param sortByColumns Ignored; kept for backward compatibility. Samples are plotted in the order of `these_samples_metadata`.
 #' @param projection Plot variants projected to this reference, one of grch37 (default) or hg38. Bonus regions are only available in grch37.
 #' @param custom_colours Provide named vector (or named list of vectors) containing custom annotation colours if you do not want to use standardized pallette.
 #' @param verbose  Set to TRUE to maximize the output to console. Default is FALSE.
@@ -45,8 +45,11 @@
 #'                               concat_cols = c("gene","region"),
 #'                               sep="-")
 #' regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
+#' region_maf = GAMBLR.open::get_ssm_by_regions(regions_bed = regions_bed,
+#'                                              these_samples_metadata = metadata)
 #' ashm_multi_rainbow_plot(regions_bed = regions_bed,
 #'                         these_samples_metadata = metadata,
+#'                         maf_data = region_maf,
 #'                         custom_colours = lymphgen_colours,
 #'                         verbose = TRUE)
 #' 
@@ -57,6 +60,7 @@
 #'                                                "SGK1-TSS",
 #'                                                "IGL"),
 #'                         these_samples_metadata = metadata,
+#'                         maf_data = genome_maf,
 #'                         custom_colours = lymphgen_colours,
 #'                         this_seq_type = "genome")
 #' }
@@ -76,25 +80,18 @@ ashm_multi_rainbow_plot = function(regions_bed,
   if(verbose){
     print("ashm_multi_rainbow_plot")
   }
-  if(missing(these_samples_metadata)){
-    if(verbose) {
-      print("these_samples_metadata was not provided. Using all of get_gambl_metadata().")
-    }
-    metadata = get_gambl_metadata() %>% 
-      dplyr::filter(seq_type %in% this_seq_type)
-    
-    sorting_columns = unique(c(sortByColumns, classification_column))
-    if(!all(sorting_columns %in% colnames(metadata))){
-      stop("classification_column or sortByColumns do not exist in the metadata")
-    }else{
-      meta_arranged = metadata %>% 
-        dplyr::arrange(pick(sorting_columns))
-    }
-  }else{
-    metadata = these_samples_metadata  %>% 
-      dplyr::filter(seq_type %in% this_seq_type)
-    meta_arranged = metadata #assume the user already arranged it the way they wanted
+  if(missing(these_samples_metadata) || is.null(these_samples_metadata)){
+    stop("these_samples_metadata is required (e.g. from get_gambl_metadata() in GAMBLR.results or GAMBLR.open).")
   }
+  if(is.null(maf_data)){
+    stop("maf_data is required (e.g. from get_ssm_by_regions() in GAMBLR.results or GAMBLR.open).")
+  }
+  if(!classification_column %in% colnames(these_samples_metadata)){
+    stop("classification_column is not present in these_samples_metadata")
+  }
+  metadata = these_samples_metadata  %>% 
+    dplyr::filter(seq_type %in% this_seq_type)
+  meta_arranged = metadata #assume the user already arranged it the way they wanted
 
   if(!missing(exclude_classifications)){ 
     meta_arranged = meta_arranged %>%
@@ -124,7 +121,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
         regions_bed <- head(regions_bed, 10)
       }
     }else if(projection == "hg38") {
-      regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
+      regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::hg38_ashm_regions,
        fix_names="concat",
        concat_cols=c("gene","region"),
        sep="-"
@@ -133,7 +130,7 @@ ashm_multi_rainbow_plot = function(regions_bed,
         regions_bed <- regions_bed %>%
           dplyr::filter(name %in% regions_to_display)
         if(nrow(regions_bed) == 0){
-        stop("regions_to_display do not appear in GAMBLR.data::grch37_ashm_regions")
+        stop("regions_to_display do not appear in GAMBLR.data::hg38_ashm_regions")
         }
       }else{
         # subset to the first 10 rows
@@ -152,24 +149,9 @@ ashm_multi_rainbow_plot = function(regions_bed,
   regions = pull(regions_bed, region_name)
   names = pull(regions_bed, name)
   
-  if(missing(maf_data)){
-    print("No maf_data provided, using get_ssm_by_regions")
-    region_mafs = get_ssm_by_regions(
-      regions_bed=regions_bed,
-      these_samples_metadata = metadata,
-      projection = projection,
-      use_name_column = T,
-      streamlined = T
-    )
-  }else{
-    region_mafs = get_ssm_by_regions(maf_data=maf_data,
-      regions_bed=regions_bed,
-      these_samples_metadata = metadata,
-      projection = projection,
-      use_name_column = T,
-      streamlined = T
-    )
-  }
+  region_mafs = .subset_maf_to_regions(maf_data,
+                                       regions_df = as.data.frame(regions_bed),
+                                       sample_ids = metadata$sample_id)
 
   if(verbose){
     print(head(region_mafs))

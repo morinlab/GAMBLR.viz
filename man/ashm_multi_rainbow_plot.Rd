@@ -21,13 +21,13 @@ ashm_multi_rainbow_plot(
 \arguments{
 \item{regions_bed}{A data frame in BED format with chromosome coordinates, must contain columns chr, start, end, name (with these exact names) with maximum 10 regions to plot. Not required if specifying `regions_to_display`. with values from the `GAMBLR.data` ashm regions for the given projection, I.e values in `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.}
 
-\item{these_samples_metadata}{A optional metadata file already subsetted and arranged on the order you want the samples vertically displayed.}
+\item{these_samples_metadata}{Required. A metadata data frame already subsetted and arranged in the order you want the samples vertically displayed.}
 
-\item{maf_data}{An optional MAF-data data frame. If not provided, this function will call `get_ssm_by_regions`, using the regions supplied into `regions_bed` and `these_samples_metadata` if provided. Ensure your maf genome build matches the `projection` parameter.}
+\item{maf_data}{Required. A MAF data frame (e.g. from GAMBLR.results or GAMBLR.open `get_ssm_by_regions()`) covering the regions to plot. Its genome build must match the `projection` parameter. Calls with fewer than 3 alt reads (`t_alt_count`) are not plotted.}
 
 \item{regions_to_display}{Optional vector of regions in the format "gene-region" that match values of the gene and region columns in the `GAMBLR.data` ashm regions for the given projection, I.e gene and region columns of `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`.}
 
-\item{this_seq_type}{The seq type you want results back for if `maf_data` is not provided. Default: genome.}
+\item{this_seq_type}{Samples in `these_samples_metadata` with this seq_type are plotted. Default: genome.}
 
 \item{classification_column}{The name of the metadata column to use for colouring samples. 
 Default: lymphgen.}
@@ -35,7 +35,7 @@ Default: lymphgen.}
 \item{exclude_classifications}{Optional argument for excluding specific classifications within
 the `classification_column` values.}
 
-\item{sortByColumns}{A vector containing the column names you want to sort samples on. If `these_samples_metadata` is not provided, the default is to sort by pathology then `classification_column`.}
+\item{sortByColumns}{Ignored; kept for backward compatibility. Samples are plotted in the order of `these_samples_metadata`.}
 
 \item{projection}{Plot variants projected to this reference, one of grch37 (default) or hg38. Bonus regions are only available in grch37.}
 
@@ -55,7 +55,7 @@ Note that for this function to work, the column names must be exactly this.
 The user can also to specify a vector of names (`regions_to_display`) to further control what regions are to be displayed on the returned plot.
 Mutations are coloured by `classification_column`, and certain classifications can be excluded with the parameter `exclude_classifications`.
 Samples will be plotted in the order they are arranged in `these_samples_metadata`. Otherwise they will be plotted by `classification_column` order.
-This function will try to obtain mutations internally if `maf_data` is not given.
+`these_samples_metadata` and `maf_data` are required; the function does not retrieve data itself.
 For more info, refer to the parameter descriptions of this function.
 }
 \examples{
@@ -74,8 +74,11 @@ regions_bed = GAMBLR.utils::create_bed_data(GAMBLR.data::grch37_ashm_regions,
                               concat_cols = c("gene","region"),
                               sep="-")
 regions_bed = dplyr::filter(regions_bed,grepl("BCL6",name))
+region_maf = GAMBLR.open::get_ssm_by_regions(regions_bed = regions_bed,
+                                             these_samples_metadata = metadata)
 ashm_multi_rainbow_plot(regions_bed = regions_bed,
                         these_samples_metadata = metadata,
+                        maf_data = region_maf,
                         custom_colours = lymphgen_colours,
                         verbose = TRUE)
 
@@ -86,6 +89,7 @@ ashm_multi_rainbow_plot(regions_to_display = c("BCL2-TSS",
                                                "SGK1-TSS",
                                                "IGL"),
                         these_samples_metadata = metadata,
+                        maf_data = genome_maf,
                         custom_colours = lymphgen_colours,
                         this_seq_type = "genome")
 }

@@ -3,18 +3,18 @@
 #' @description Make a rainbow plot of all mutations in a region, ordered and coloured by metadata.
 #'
 #' @details This function creates a rainbow plot for all mutations in a region specified with 
-#'  the `region` parameter for samples specified in `these_samples_metadata`. If 
-#'  `these_samples_metadata` is not specified, it will use the samples returned by 
-#'  `get_gambl_metadata()` of the appropriate seq types. To highlight and annotate specific 
+#'  the `region` parameter for samples specified in `these_samples_metadata`. Both
+#'  `maf_data` and `these_samples_metadata` are required; the function does not
+#'  retrieve data itself. To highlight and annotate specific
 #'  regions on the plot, an optional bed file of the regions can be specified with `bed`.
-#'  An optional MAF-data dataframe with mutations in the `region` can be supplied with
-#'  `maf_data`.
 #'
 #' @param region Genomic region for plotting as a string in the format "chr:start-end".
-#' @param maf_data A optional MAF-data data frame containing mutations within the region of 
-#'  interest for the samples in `these_samples_metadata`. Ensure it's genome build matches the `projection` parameter.If not supplied, mutations will be retrieved 
-#'  from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs. 
-#' @param these_samples_metadata A data frame with at least columns `sample_id` and the corresponding 
+#' @param maf_data Required. A MAF data frame (e.g. from GAMBLR.results or
+#'  GAMBLR.open `get_ssm_by_regions()`) containing mutations in the region of
+#'  interest for the samples in `these_samples_metadata`. Its genome build must
+#'  match the `projection` parameter. Calls with fewer than 3 alt reads
+#'  (`t_alt_count`) are not plotted.
+#' @param these_samples_metadata Required. A data frame with at least columns `sample_id`, `seq_type` and the corresponding
 #'  columns given with `classification_column` and `sortByColumns`.
 #' @param classification_column The name of the metadata column to use for colouring samples. 
 #'  Default: lymphgen.
@@ -46,8 +46,11 @@
 #' # Basic usage
 #' this_region = "chr6:90975034-91066134"
 #' this_metadata = get_gambl_metadata()
+#' this_maf = get_ssm_by_regions(regions_list = this_region,
+#'                               these_samples_metadata = this_metadata)
 #' ashm_rainbow_plot(region = this_region,
-#'                   these_samples_metadata = metadata, 
+#'                   maf_data = this_maf,
+#'                   these_samples_metadata = this_metadata, 
 #'                   custom_colours = lymphgen_colours)
 #' }
 #'
@@ -67,15 +70,14 @@ ashm_rainbow_plot = function(region,
     stop("projection must be either grch37 or hg38")
   }
 
-  if(missing(these_samples_metadata)){
-    # kept for legacy, assumes user provided these_sample_ids
-    message("CAUTION! these_samples_metadata was not provided. Using all of get_gambl_metadata().")
-    these_samples_metadata = get_gambl_metadata() %>%
-      dplyr::filter(seq_type!="mrna")
-  }else{
-    #drop unsupported seq_type and samples to exclude
-    these_samples_metadata = dplyr::filter(these_samples_metadata, seq_type!="mrna")
+  if(missing(these_samples_metadata) || is.null(these_samples_metadata)){
+    stop("these_samples_metadata is required (e.g. from get_gambl_metadata() in GAMBLR.results or GAMBLR.open).")
   }
+  if(is.null(maf_data)){
+    stop("maf_data is required (e.g. from get_ssm_by_regions() in GAMBLR.results or GAMBLR.open).")
+  }
+  #drop unsupported seq_type
+  these_samples_metadata = dplyr::filter(these_samples_metadata, seq_type!="mrna")
 
   # check that classification_column and sortByColumn are in the metadata
   if(!classification_column %in% colnames(these_samples_metadata)){
@@ -91,27 +93,19 @@ ashm_rainbow_plot = function(region,
     startend = unlist(strsplit(split_chunks[2], "-"))
     qstart = as.numeric(startend[1])
     qend = as.numeric(startend[2])
-    if(is.null(maf_data)){
-      maf_data = get_ssm_by_regions(regions_list = region,
-                                         these_samples_metadata=these_samples_metadata,
-                                         projection = projection,
-                                         streamlined = TRUE)
-    }else{
-      # Check that projection and maf_data have the same projection
-      if(is.null(get_genome_build(maf_data))){
-        stop("No genome_build found for maf_data! Is it a genomic_data or maf_data Object?")
-      }
-      if(!get_genome_build(maf_data)==projection){
-        stop(paste("requested projection:",projection,"and genome_build of maf_data:", 
-              get_genome_build(maf_data), "don't match"))
-      }
-      # Subset MAF data to only the region of interest
-      maf_data = get_ssm_by_regions(regions_list = region,
-                                        these_samples_metadata=these_samples_metadata,
-                                        projection = projection,
-                                        streamlined = TRUE, 
-                                        maf_data = maf_data)
+    # Check that projection and maf_data have the same projection
+    if(is.null(get_genome_build(maf_data))){
+      stop("No genome_build found for maf_data! Is it a genomic_data or maf_data Object?")
     }
+    if(!get_genome_build(maf_data)==projection){
+      stop(paste("requested projection:",projection,"and genome_build of maf_data:", 
+            get_genome_build(maf_data), "don't match"))
+    }
+    # Subset MAF data to only the region and samples of interest
+    maf_data = .subset_maf_to_regions(maf_data,
+                                      regions_df = data.frame(chrom = chromosome, start = qstart,
+                                                              end = qend, name = region),
+                                      sample_ids = these_samples_metadata$sample_id)
   }else if(class(region) == "list"| (sum((c("bed_data", "genomic_data", "data.frame") %in% class(region))) >= 1) | length(region)>1 | missing(region)){
     stop("You must supply a single region as a character string")
   }

@@ -2,19 +2,22 @@
 #'
 #' @description Create a genome-wide copy number plot for one sample and (optionally) display mutation VAF.
 #'
-#' @details This function takes a sample ID and internally calls [GAMBLR::assign_cn_to_ssm] to get copy number segments for plotting.
-#' This plot is visualizing mutation VAFs per default, this can be turned off with setting `just_segments` to TRUE.
-#' This only plots the segments. The user can also restrict the plotted segments to coding regions. To do so, set `coding_only= TRUE`,
-#' and then specify the genes of interest (coding regions) with the `genes_to_label` (vector of genes).
+#' @details This function plots copy number segments for one sample and, by default, the VAF of its
+#' mutations coloured by the copy number state they fall in. The data are not retrieved internally:
+#' supply `maf_data`, `seg_data` and `these_samples_metadata` (e.g. from the accessors in GAMBLR.results or
+#' GAMBLR.open). The copy number state of each mutation is assigned with `assign_cn_to_ssm()`.
+#' Set `just_segments` to TRUE to plot only the segments. To restrict to coding mutations set
+#' `coding_only = TRUE`, optionally with genes to label in `genes_to_label`.
 #'
 #' @param this_sample_id The sample_id for the sample to plot.
+#' @param maf_data Required. A maf_data object (e.g. from `get_ssm_by_samples()`) containing this sample's mutations.
+#' @param seg_data Required. A seg_data object (e.g. from `get_cn_segments()`) containing this sample's copy number segments,
+#'   in the same genome build as `maf_data`.
+#' @param these_samples_metadata Required. Metadata with a row for `this_sample_id`.
 #' @param just_segments Specify whether only the segments will be plotted (instead of mutation VAF). Default is FALSE.
 #' @param coding_only Optional. Set to TRUE to restrict to plotting only coding mutations.
 #' @param one_chrom Subset plot to one chromosome.
 #' @param genes_to_label Optional. Provide a vector of genes to label (if mutated). Can only be used with coding_only (see above).
-#' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
-#' @param from_flatfile If set to true the function will use flatfiles instead of the database.
-#' @param use_augmented_maf Boolean statement if to use augmented maf, default is TRUE.
 #' @param add_chr_prefix If TRUE, "chr" prefix will be added to chr column. Default is FALSE.
 #'
 #' @return Nothing
@@ -24,23 +27,49 @@
 #'
 #' @examples
 #' \dontrun{
+#' meta = get_gambl_metadata() %>% dplyr::filter(sample_id == "DOHH-2")
+#' maf = get_ssm_by_samples(these_samples_metadata = meta)
+#' seg = get_cn_segments(these_samples_metadata = meta)
 #' #build plot
-#' copy_number_vaf_plot(this_sample_id = "DOHH-2")
+#' copy_number_vaf_plot(this_sample_id = "DOHH-2",
+#'                      maf_data = maf,
+#'                      seg_data = seg,
+#'                      these_samples_metadata = meta)
 #'
 #' #coding only
 #' copy_number_vaf_plot(this_sample_id = "DOHH-2",
+#'                      maf_data = maf,
+#'                      seg_data = seg,
+#'                      these_samples_metadata = meta,
 #'                      coding_only = TRUE)
 #' }
 #'
 copy_number_vaf_plot = function(this_sample_id,
+                                maf_data,
+                                seg_data,
+                                these_samples_metadata,
                                 just_segments = FALSE,
                                 coding_only = FALSE,
                                 one_chrom,
                                 genes_to_label,
-                                this_seq_type = "genome",
-                                from_flatfile = TRUE,
-                                use_augmented_maf = TRUE,
                                 add_chr_prefix = FALSE){
+
+  if(missing(this_sample_id) || length(this_sample_id) != 1){
+    stop("Provide a single this_sample_id.")
+  }
+  if(missing(maf_data) || missing(seg_data) || missing(these_samples_metadata)){
+    stop("maf_data, seg_data and these_samples_metadata are all required ",
+         "(e.g. from get_ssm_by_samples(), get_cn_segments() and get_gambl_metadata() in GAMBLR.results or GAMBLR.open).")
+  }
+  sample_meta = dplyr::filter(these_samples_metadata, sample_id == this_sample_id)
+  if(nrow(sample_meta) == 0){
+    stop(this_sample_id, " is not in these_samples_metadata.")
+  }
+  maf_data = dplyr::filter(maf_data, Tumor_Sample_Barcode == this_sample_id)
+  seg_data = dplyr::filter(seg_data, ID == this_sample_id)
+  if(nrow(seg_data) == 0){
+    stop("seg_data has no segments for ", this_sample_id, ".")
+  }
 
   chrom_order = factor(c(1:22, "X"))
   if(add_chr_prefix){
@@ -49,11 +78,15 @@ copy_number_vaf_plot = function(this_sample_id,
   }
   cn_colours = GAMBLR.helpers::get_gambl_colours(classification = "copy_number")
   maf_and_seg = assign_cn_to_ssm(
-    this_sample_id = this_sample_id,
-    coding_only = coding_only,
-    this_seq_type = this_seq_type
+    these_samples_metadata = sample_meta,
+    maf_data = maf_data,
+    seg_data = seg_data,
+    coding_only = coding_only
   )
   vaf_cn_maf = maf_and_seg[["maf"]]
+  if(!just_segments && nrow(vaf_cn_maf) == 0){
+    stop("None of the mutations in maf_data for ", this_sample_id, " fall within a segment in seg_data.")
+  }
   vaf_cn_maf = mutate(vaf_cn_maf, CN = case_when(LOH == "1" & CN == 2 ~ "nLOH", TRUE ~ as.character(CN)))
   if(!missing(one_chrom)){
     vaf_cn_maf = dplyr::filter(vaf_cn_maf, Chromosome == one_chrom)
@@ -61,7 +94,6 @@ copy_number_vaf_plot = function(this_sample_id,
   if(just_segments){
     cn_seg = maf_and_seg[["seg"]]
     cn_seg = mutate(cn_seg, CN_segment = as.numeric(CN), CN = as.character(CN))
-    print(head(cn_seg))
     if(!missing(one_chrom)){
       cn_seg = dplyr::filter(cn_seg, Chromosome %in% one_chrom)
     }

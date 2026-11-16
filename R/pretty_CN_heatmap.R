@@ -467,11 +467,11 @@ pretty_CN_heatmap = function(cn_state_matrix,
     if(!missing(labelTheseCytobands)){
       message("mapping cytobands to bins")
       if(genome_build=="grch37"){
-        cytobands = cytobands_grch37 %>% 
+        cytobands = GAMBLR.data::cytobands_grch37 %>% 
           mutate(name=paste0(cb.chromosome,cb.name),
           region=paste0(cb.chromosome,":",cb.start,"-",cb.end))
       }else if(genome_build == "hg38"){
-        cytobands = cytobands_hg38 %>%
+        cytobands = GAMBLR.data::cytobands_hg38 %>%
           mutate(name=paste0(cb.chromosome,cb.name),
           region=paste0(cb.chromosome,":",cb.start,"-",cb.end))
       }
