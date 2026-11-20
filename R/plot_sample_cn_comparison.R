@@ -38,8 +38,8 @@
 #' black when called, grey when not, with an orange halo when the value is
 #' within 0.1 copies of a threshold on either side (a borderline call). Gene features limited to short events
 #' (e.g. LymphGen's 30 Mb) aren't called from longer events even when the bar
-#' passes. The calls are returned as the plot's `feature_calls` attribute
-#' (`attr(p, "feature_calls")`), with each feature's value, change (signed,
+#' passes. The calls are returned as `feature_calls` with `return_data = TRUE`
+#' (also the plot's `feature_calls` attribute), with each feature's value, change (signed,
 #' positive in the feature's direction), margin past the nearer threshold,
 #' borderline and status ("called", "below threshold", "event too long",
 #' "outweighed by opposite change" (LymphGen's gene rule: a larger or
@@ -93,10 +93,27 @@
 #' TRUE.
 #' @param base_size Base font size. Default 9.
 #'
-#' @return A ggplot object; each track's scale, baseline and thresholds are
-#' in `attr(p, "track_settings")`; with `selection`, the scores are in
-#' `attr(p, "selection")`, and with `cnv_features` the feature calls are in
-#' `attr(p, "feature_calls")`.
+#' @param return_data Set to TRUE to return a list with the plot and the data
+#' behind it (see Value) instead of the plot alone. Default FALSE.
+#' @return A ggplot object, or with `return_data = TRUE` a list:
+#' \itemize{
+#'   \item `plot`: the ggplot.
+#'   \item `feature_calls`: with `cnv_features`, one row per source (track)
+#'     and feature: the value the feature is judged on, level (0/1/2),
+#'     direction, change, margin past the nearer threshold, borderline,
+#'     status and the thresholds used (see Details); NULL without
+#'     `cnv_features`.
+#'   \item `track_settings`: each track's pipeline, copy number type, value
+#'     scale, centering, thresholds, display scale and baseline.
+#'   \item `segments`: the segments drawn (in the view): ID, track, chrom,
+#'     start, end, the input log.ratio (and CN, if present), `value` (on the
+#'     track's display scale: CN, or log ratio centred on the baseline when
+#'     `center = TRUE`; before `limit`) and `shown` (as drawn, after `limit`).
+#'   \item `selection`: with `selection`, the scores of this sample's
+#'     segmentations; otherwise NULL.
+#' }
+#' The plot also carries `track_settings`, `feature_calls` and `selection`
+#' as attributes (`attr(p, "feature_calls")`), as before.
 #'
 #' @import ggplot2 dplyr
 #' @export
@@ -113,8 +130,13 @@
 #' plot_sample_cn_comparison(segs, meta, highlight = av$combined_module)
 #'
 #' # which sources call the DLBClass copy number features
-#' p = plot_sample_cn_comparison(segs, meta, cnv_features = "DLBClass")
-#' attr(p, "feature_calls")
+#' res = plot_sample_cn_comparison(segs, meta, cnv_features = "DLBClass", return_data = TRUE)
+#' res$plot
+#' res$feature_calls
+#' # only the called features, one column per source
+#' res$feature_calls %>% dplyr::filter(status == "called") %>%
+#'   dplyr::select(label, source, level) %>%
+#'   tidyr::pivot_wider(names_from = source, values_from = level, values_fill = 0)
 #'
 #' # the best segmentation: score the whole cohort once, then show any sample
 #' cohort_meta = get_gambl_metadata() %>% dplyr::filter(cohort == "dlbcl_chapuy")
@@ -138,7 +160,8 @@ plot_sample_cn_comparison = function(seg_data,
                                      cnv_args = list(),
                                      thresholds = TRUE,
                                      selection = NULL,
-                                     base_size = 9){
+                                     base_size = 9,
+                                     return_data = FALSE){
   value = match.arg(value, c("auto", "log_ratio", "CN"))
   if(is.null(projection)){
     projection = tryCatch(GAMBLR.utils::get_genome_build(seg_data), error = function(e) NULL)
@@ -269,6 +292,7 @@ plot_sample_cn_comparison = function(seg_data,
                   scale_text, score_text)
   show_features = !is.null(calls) && any(calls$level > 0)
   panel_levels = if(show_features) c("features", labels) else labels
+  segs$source = as.character(segs$track)   # the track's name, for return_data
   segs$track = factor(segs$track, levels = tracks, labels = labels)
   segs$track = factor(as.character(segs$track), levels = panel_levels)
 
@@ -387,7 +411,17 @@ plot_sample_cn_comparison = function(seg_data,
                                            "single_thresh", "high_thresh", "display", "baseline")]
   if(!is.null(calls)) attr(p, "feature_calls") = calls[, setdiff(colnames(calls), c("x0", "x1")), drop = FALSE]
   if(!is.null(scores)) attr(p, "selection") = scores
-  p
+  if(!return_data) return(p)
+  seg_cols = intersect(c("ID", "source", "chrom", "start", "end", "log.ratio", "CN", "y", "shown"), colnames(segs))
+  segments = segs[, seg_cols, drop = FALSE]
+  colnames(segments)[colnames(segments) == "source"] = "track"
+  colnames(segments)[colnames(segments) == "y"] = "value"
+  rownames(segments) = NULL
+  list(plot = p,
+       feature_calls = attr(p, "feature_calls"),
+       track_settings = attr(p, "track_settings"),
+       segments = segments,
+       selection = attr(p, "selection"))
 }
 
 .null_if_empty = function(x) if(length(x) == 0 || identical(x, "")) NULL else x
