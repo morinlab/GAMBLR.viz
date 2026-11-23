@@ -390,7 +390,8 @@ class as the last, "inconsistent" when none does, "semi-consistent"
 otherwise. Default FALSE.}
 
 \item{alluvial_ribbon_colour}{Colour each ribbon by the class on the bar
-above it ("upper", default) or below it ("lower").}
+above it ("upper", default) or below it ("lower"), or give one of
+`alluvial_columns` to colour every ribbon by that column's class.}
 
 \item{alluvial_sort}{How samples are ordered by each column above the last,
 within the classes of the columns below it: "class" (default; samples whose

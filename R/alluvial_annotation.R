@@ -79,13 +79,16 @@
 # by class; the last axis follows the oncoplot's column order, and each axis above it orders its samples by its
 # own class, then by the class and position on the axis below (so ribbons from one class bundle together).
 # Ribbons join each sample's positions on neighbouring axes, coloured by the class on the upper axis
-# (ribbon_colour = "upper") or the lower one ("lower").
+# (ribbon_colour = "upper") or the lower one ("lower"), or, given one of the axis names, every ribbon by that axis's
+# class (so one classification's classes can be followed through all the axes).
 .alluvial_annotation = function(values, colours, class_order = NULL, equivalents = NULL, height = 4,
                                 bar_fraction = 0.1, ribbon_alpha = 0.45, ribbon_colour = "upper",
                                 axis_label_fontsize = 7, show_axis_names = TRUE){
-  ribbon_colour = match.arg(ribbon_colour, c("upper", "lower"))
   values = as.data.frame(values, stringsAsFactors = FALSE)
   axes = colnames(values)
+  if(length(ribbon_colour) != 1 || !ribbon_colour %in% c("upper", "lower", axes)){
+    stop("ribbon_colour must be \"upper\", \"lower\" or one of the alluvial columns: ", paste(axes, collapse = ", "))
+  }
   k = length(axes)
   n_all = nrow(values)
   colour_of = function(j, v){
@@ -118,7 +121,8 @@
       for(j in seq_len(k - 1)){
         y_top = yc[j] - bh / 2; y_bot = yc[j + 1] + bh / 2
         yy = y_top + (y_bot - y_top) * t
-        fill = if(ribbon_colour == "upper") colour_of(j, v[[axes[j]]]) else colour_of(j + 1, v[[axes[j + 1]]])
+        ja = if(ribbon_colour %in% axes) match(ribbon_colour, axes) else if(ribbon_colour == "upper") j else j + 1
+        fill = colour_of(ja, v[[axes[ja]]])
         # samples adjacent on both axes with the same colour form one ribbon (no seams between them)
         o = order(pos[[j]]); xt = pos[[j]][o]; xb = pos[[j + 1]][o]; fl = fill[o]
         brk = c(TRUE, diff(xt) != 1 | diff(xb) != 1 | fl[-1] != fl[-length(fl)])

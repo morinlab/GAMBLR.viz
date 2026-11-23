@@ -232,7 +232,8 @@
 #' class as the last, "inconsistent" when none does, "semi-consistent"
 #' otherwise. Default FALSE.
 #' @param alluvial_ribbon_colour Colour each ribbon by the class on the bar
-#' above it ("upper", default) or below it ("lower").
+#' above it ("upper", default) or below it ("lower"), or give one of
+#' `alluvial_columns` to colour every ribbon by that column's class.
 #' @return By default, nothing unless return_inputs is specified,
 #' in which case it returns a named list that contains different
 #' things depending on how the function was run
