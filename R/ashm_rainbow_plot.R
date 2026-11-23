@@ -180,7 +180,9 @@ ashm_rainbow_plot = function(region,
       guides(color = guide_legend(reverse = TRUE, override.aes = list(size = 3)))
   }
 
+  # show the requested region only: the placeholder points that give every sample a row sit at qstart - 1000
   p = p +
+    coord_cartesian(xlim = c(qstart, qend)) +
     labs(y = "Sample") +
     GAMBLR.helpers::theme_Morons() +
     theme(plot.margin = ggplot2::margin(1,1,1,1, "cm"), 
