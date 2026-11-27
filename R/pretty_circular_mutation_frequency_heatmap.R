@@ -3,7 +3,7 @@
 #' @param prettyOncoplot_output The output of the prettyOncoplot function
 #' @param cn_status_matrix The output of get_cn_states
 #' @param collated_results A list of data frames with sample_id as rownames and features as column names
-#' @param these_samples_metadata A data frame with metadata. Usually the output of [GAMBLR.results::get_gambl_metadata].
+#' @param these_samples_metadata A data frame with metadata (columns sample_id and pathology). Usually the output of [GAMBLR.results::get_gambl_metadata]. Required unless `prettyOncoplot_output` is given, in which case its metadata is used.
 #' @param genes A vector of genes to label
 #' @param cluster Whether to perform clustering. Default is TRUE (clustering is performed).
 #' @param keep_these_pathologies A vector of pathology values to show in the plot. All the remaining rows will be ignored.
@@ -43,7 +43,7 @@
 #' 
 #' all_coding <- get_coding_ssm(these_samples_metadata = metadata)
 #' 
-#' genes <- lymphoma_genes %>%
+#' genes <- GAMBLR.data::lymphoma_genes %>%
 #'     dplyr::filter(DLBCL|FL|BL) %>%
 #'     dplyr::pull(Gene) %>%
 #'     unique %>%
@@ -195,10 +195,7 @@ pretty_circular_mutation_frequency_heatmap = function(prettyOncoplot_output,
       mut_status_meta = left_join(select(these_samples_metadata,sample_id,pathology),
                                   mut_status)
     }else{
-      message("getting metadata for samples in the matrix provided. For more control over this, supply these_samples_metadata")
-      these_samples_metadata = get_gambl_metadata() %>%
-        filter(sample_id %in% mut_status_rn$sample_id)
-      mut_status_meta = select(these_samples_metadata,sample_id,pathology)
+      stop("these_samples_metadata is required when prettyOncoplot_output is not provided.")
     }
   }else{
     mut_status_meta = select(these_samples_metadata,sample_id,pathology)

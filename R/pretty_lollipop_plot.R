@@ -186,37 +186,44 @@ pretty_lollipop_plot <- function(
             separate_longer_delim(RefSeq, delim = ",") %>%
             mutate(
                 RefSeq = str_remove(RefSeq, "[.].*"),
-                aa.length = str_remove(Protein_position, ".*/")
+                aa.length = str_remove(Protein_position, ".*/"),
+                # Rows without a protein position (e.g. splice sites) carry no
+                # model information; they inherit the selected model's length
+                aa.length = ifelse(aa.length %in% c("", "-"), NA_character_, aa.length)
             )
 
-        # Verify that all variants belong to a single gene model
-        if (length(unique(maf_df$RefSeq)) > 1) {
-            maf_df %>%
-                count(Hugo_Symbol, Transcript_ID, RefSeq, aa.length) %>%
-                print()
-            warning("The provided maf_df has more than one gene model for the specified gene.
-            Selecting the RefSeqID that appears more frequently. Some variants may be dropped ")
-            most_common <- maf_df %>%
-                count(RefSeq, sort = TRUE) %>%
-                slice(1) %>%
-                pull(RefSeq)
-
-            maf_df <- maf_df %>%
-                filter(RefSeq == most_common)
+        # Verify that all variants belong to a single gene model. Models are
+        # counted from rows that have a protein length; the most frequent
+        # RefSeq/length combination is kept.
+        gene_models <- maf_df %>%
+            filter(!is.na(aa.length), !is.na(RefSeq)) %>%
+            count(RefSeq, aa.length, sort = TRUE)
+        if (nrow(gene_models) == 0) {
+            stop("No variant in maf_df has both a RefSeq and a Protein_position for ", gene,
+                 "; cannot determine the protein model.")
         }
+        if (nrow(gene_models) > 1) {
+            print(gene_models)
+            warning("The provided maf_df has more than one gene model for the specified gene. ",
+                    "Selecting the most frequent one (", gene_models$RefSeq[1], ", ",
+                    gene_models$aa.length[1], " aa). Variants on other models are dropped.")
+        }
+        maf_df <- maf_df %>%
+            filter(RefSeq %in% gene_models$RefSeq[1]) %>%
+            mutate(aa.length = gene_models$aa.length[1])
 
         ##### Load the protein domain table for the current gene #####
 
         if (!is.null(refseq_id)) {
             refseq_id <- str_remove(refseq_id, "[.].*")
-            protein_domain_subset <- protein_domains %>%
+            protein_domain_subset <- GAMBLR.data::protein_domains %>%
                 filter(HGNC == gene, refseq.ID == refseq_id)
             if (length(unique(protein_domain_subset$refseq.ID)) == 0) {
                 warning(paste("The provided refseq_id", refseq_id, "does not match any RefSeq IDs for the specified gene."))
                 protein_domain_subset <- data.frame()
             }
         } else {
-            protein_domain_subset <- protein_domains %>%
+            protein_domain_subset <- GAMBLR.data::protein_domains %>%
                 filter(HGNC == gene)
 
             # Ensure RefSeq ID matches; if not, warn and fall back to all
@@ -244,7 +251,7 @@ pretty_lollipop_plot <- function(
                     mutate(
                         difference = as.numeric(aa.length) - as.numeric(unique(maf_df$aa.length))
                     ) %>%
-                    filter(difference == min(abs(difference)))
+                    filter(abs(difference) == min(abs(difference)))
 
                 difference <- abs(protein_domain_subset$difference)
                 warning(
@@ -296,6 +303,10 @@ pretty_lollipop_plot <- function(
             )
         ) %>%
         mutate(AA_position = gsub("^p\\.", "", HGVSp_Short)) %>%
+        # Variants without a codon in HGVSp_Short (e.g. some Splice_Region
+        # calls) cannot be placed; left in, they pool into one undrawn NA
+        # position whose count would set the y-axis limit
+        filter(!is.na(AA)) %>%
         arrange(AA)
 
     if(by_allele){
@@ -699,7 +710,10 @@ draw_mutation_plot <- function(
             nudge_x = 0,
             direction = "y",
             size = aa_label_size,
-            family = font
+            family = font,
+            # requested labels must not be dropped in dense genes
+            # (ggrepel's default max.overlaps = 10 silently removes them)
+            max.overlaps = Inf
         ) +
         labs(
             x = "AA Position",

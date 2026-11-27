@@ -104,7 +104,10 @@ panels.}
 \item{...}{`pretty_lollipop_plot` arguments, see that function for more info on available parameters.}
 }
 \value{
-A mirrored lollipop plot.
+A list. `plot` holds the mirrored lollipop plot (combined with the
+  forest plot when `forestarg = TRUE`); the other elements are
+  `combined_gene_counts`, `lollipop1`, `lollipop2`, `domain_data`,
+  `domain_plot` and, with the forest plot, `forest_plot`.
 }
 \description{
 Generates a ggplot-compatible figure of 2 [GAMBLR.viz::pretty_lollipop_plot] mirrored.

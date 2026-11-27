@@ -151,7 +151,7 @@ prettyRainfallPlot = function(
                 )
             )
         } else if (projection == "hg38") {
-        ashm_regions <- hg38_ashm_regions %>%
+        ashm_regions <- GAMBLR.data::hg38_ashm_regions %>%
             dplyr::rename(
                 "start" = "hg38_start",
                 "end" = "hg38_end",

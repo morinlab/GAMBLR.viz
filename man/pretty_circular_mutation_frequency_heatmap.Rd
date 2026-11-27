@@ -38,7 +38,7 @@ pretty_circular_mutation_frequency_heatmap(
 
 \item{collated_results}{A list of data frames with sample_id as rownames and features as column names}
 
-\item{these_samples_metadata}{A data frame with metadata. Usually the output of [GAMBLR.results::get_gambl_metadata].}
+\item{these_samples_metadata}{A data frame with metadata (columns sample_id and pathology). Usually the output of [GAMBLR.results::get_gambl_metadata]. Required unless `prettyOncoplot_output` is given, in which case its metadata is used.}
 
 \item{genes}{A vector of genes to label}
 
@@ -100,7 +100,7 @@ metadata <- get_gambl_metadata() \%>\%
 
 all_coding <- get_coding_ssm(these_samples_metadata = metadata)
 
-genes <- lymphoma_genes \%>\%
+genes <- GAMBLR.data::lymphoma_genes \%>\%
     dplyr::filter(DLBCL|FL|BL) \%>\%
     dplyr::pull(Gene) \%>\%
     unique \%>\%

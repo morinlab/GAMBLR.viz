@@ -55,7 +55,10 @@
 #'   coefficients are directly comparable.
 #' @param ... `pretty_lollipop_plot` arguments, see that function for more info on available parameters.
 #'
-#' @return A mirrored lollipop plot.
+#' @return A list. `plot` holds the mirrored lollipop plot (combined with the
+#'   forest plot when `forestarg = TRUE`); the other elements are
+#'   `combined_gene_counts`, `lollipop1`, `lollipop2`, `domain_data`,
+#'   `domain_plot` and, with the forest plot, `forest_plot`.
 #'
 #' @import dplyr ggplot2
 #' @export
@@ -193,6 +196,36 @@ pretty_colollipop_plot <- function(
         ssm2 <- maf_df %>%
             dplyr::filter(Tumor_Sample_Barcode %in% meta2$Tumor_Sample_Barcode) %>%
             dplyr::filter(Hugo_Symbol == gene, Variant_Classification %in% variants)
+    }
+
+    ##### One gene model for both panels #####
+    # Each pretty_lollipop_plot() call would otherwise pick the most frequent
+    # model within its own group, so the panels could disagree. Use refseq_id
+    # when given, else the most frequent RefSeq (with a protein length) across
+    # both groups.
+    if (all(c("RefSeq", "Protein_position") %in% colnames(ssm1))) {
+        if (!missing(refseq_id) && !is.null(refseq_id)) {
+            shared_refseq <- stringr::str_remove(refseq_id, "[.].*")
+        } else {
+            shared_models <- dplyr::bind_rows(as.data.frame(ssm1), as.data.frame(ssm2)) %>%
+                tidyr::separate_longer_delim(RefSeq, delim = ",") %>%
+                dplyr::mutate(
+                    RefSeq = stringr::str_remove(RefSeq, "[.].*"),
+                    aa.length = stringr::str_remove(Protein_position, ".*/")
+                ) %>%
+                dplyr::filter(!is.na(RefSeq), !is.na(aa.length), !aa.length %in% c("", "-")) %>%
+                dplyr::count(RefSeq, sort = TRUE)
+            shared_refseq <- if (nrow(shared_models) > 0) shared_models$RefSeq[1] else NULL
+        }
+        if (!is.null(shared_refseq)) {
+            keep_model <- function(x) {
+                x %>% dplyr::filter(grepl(paste0("(^|,)", shared_refseq, "([.,]|$)"), RefSeq))
+            }
+            ssm1 <- keep_model(ssm1)
+            ssm2 <- keep_model(ssm2)
+        }
+    } else {
+        shared_refseq <- NULL
     }
 
     ##### Shared geometry from combined mutations (both groups) #####
@@ -353,7 +386,11 @@ pretty_colollipop_plot <- function(
             region_df            = region_df_top,
             driver_region_alpha  = driver_region_alpha,
             coef_limits          = shared_coef_lim,
-            protein_length_min   = protein_length_min
+            protein_length_min   = protein_length_min,
+            refseq_id            = shared_refseq,
+            include_silent       = include_silent,
+            label_threshold      = label_threshold,
+            font                 = font
         ),
         lollipopplot_args
     ))
@@ -371,7 +408,11 @@ pretty_colollipop_plot <- function(
             region_df            = region_df_bot,
             driver_region_alpha  = driver_region_alpha,
             coef_limits          = shared_coef_lim,
-            protein_length_min   = protein_length_min
+            protein_length_min   = protein_length_min,
+            refseq_id            = shared_refseq,
+            include_silent       = include_silent,
+            label_threshold      = label_threshold,
+            font                 = font
         ),
         lollipopplot_args
     ))

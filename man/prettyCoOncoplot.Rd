@@ -101,7 +101,7 @@ prettyCoOncoplot(
     maf = ssm,
     metadata = meta,
     comparison_column = "pathology",
-    genes=dplyr::filter(lymphoma_genes,
+    genes=dplyr::filter(GAMBLR.data::lymphoma_genes,
                         FL_Tier==1 | DLBCL_Tier==1) \%>\% 
                         dplyr::pull(Gene),
     metadataColumns = c(
@@ -130,7 +130,7 @@ ssm <- get_all_coding_ssm(
     these_samples_metadata = meta
 )
 
-lymphomagenes <- dplyr::filter(lymphoma_genes,
+lymphomagenes <- dplyr::filter(GAMBLR.data::lymphoma_genes,
                         FL_Tier==1 | DLBCL_Tier==1 | BL_Tier==1) \%>\%
                         dplyr::pull(Gene)
 

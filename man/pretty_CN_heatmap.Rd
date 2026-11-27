@@ -38,6 +38,7 @@ pretty_CN_heatmap(
   sortByPGA = FALSE,
   sortByMetadataColumns,
   labelTheseGenes,
+  gene_label_colours = NULL,
   labelTheseCytobands,
   labelTheseFeatures,
   feature_label = "gene",
@@ -109,7 +110,8 @@ order as in the metadata}
 display beside the heatmap}
 
 \item{numericMetadataColumns}{One or more columns from the metadata that
-should be considered numeric}
+should be considered numeric. They are shown beside the heatmap whether or
+not `metadataColumns` names them.}
 
 \item{expressionColumns}{Optional: One or more columns from the metadata that include gene expression values you want shown}
 
@@ -163,6 +165,10 @@ Any value in that gene's bin not passing its threshold is set to 2 (neutral) bef
 \item{sortByMetadataColumns}{A vector containing one or more names of columns from your metadata that will be used to order the rows overall or within slices (if combined with splitByBinState or geneBoxPlot)}
 
 \item{labelTheseGenes}{A vector of Hugo gene symbols whose location will be indicated on the top of the heatmap}
+
+\item{gene_label_colours}{Optional named vector of label colours for labelTheseGenes, with genes as names
+(e.g. each gene in the colour of the class it belongs to). Genes not named stay black; a bin whose label is
+shared with a feature label of another colour (labelTheseFeatures) is black.}
 
 \item{labelTheseFeatures}{Optional data frame of CNV features to label, in the format returned by [GAMBLR.utils::get_cnv_features] (subset it to the features you want). Each feature is labelled at the bin containing its midpoint; features sharing a bin are joined with "/". Can be combined with labelTheseGenes.}
 

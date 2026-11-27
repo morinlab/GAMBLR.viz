@@ -21,11 +21,13 @@ ashm_rainbow_plot(
 \arguments{
 \item{region}{Genomic region for plotting as a string in the format "chr:start-end".}
 
-\item{maf_data}{A optional MAF-data data frame containing mutations within the region of 
-interest for the samples in `these_samples_metadata`. Ensure it's genome build matches the `projection` parameter.If not supplied, mutations will be retrieved 
-from `get_ssm_by_regions` using `these_samples_metadata` and `region` as inputs.}
+\item{maf_data}{Required. A MAF data frame (e.g. from GAMBLR.results or
+GAMBLR.open `get_ssm_by_regions()`) containing mutations in the region of
+interest for the samples in `these_samples_metadata`. Its genome build must
+match the `projection` parameter. Calls with fewer than 3 alt reads
+(`t_alt_count`) are not plotted.}
 
-\item{these_samples_metadata}{A data frame with at least columns `sample_id` and the corresponding 
+\item{these_samples_metadata}{Required. A data frame with at least columns `sample_id`, `seq_type` and the corresponding
 columns given with `classification_column` and `sortByColumns`.}
 
 \item{classification_column}{The name of the metadata column to use for colouring samples. 
@@ -58,12 +60,10 @@ Make a rainbow plot of all mutations in a region, ordered and coloured by metada
 }
 \details{
 This function creates a rainbow plot for all mutations in a region specified with 
- the `region` parameter for samples specified in `these_samples_metadata`. If 
- `these_samples_metadata` is not specified, it will use the samples returned by 
- `get_gambl_metadata()` of the appropriate seq types. To highlight and annotate specific 
+ the `region` parameter for samples specified in `these_samples_metadata`. Both
+ `maf_data` and `these_samples_metadata` are required; the function does not
+ retrieve data itself. To highlight and annotate specific
  regions on the plot, an optional bed file of the regions can be specified with `bed`.
- An optional MAF-data dataframe with mutations in the `region` can be supplied with
- `maf_data`.
 }
 \examples{
 \dontrun{
@@ -75,8 +75,11 @@ lymphgen_colours = GAMBLR.helpers::get_gambl_colours("lymphgen")
 # Basic usage
 this_region = "chr6:90975034-91066134"
 this_metadata = get_gambl_metadata()
+this_maf = get_ssm_by_regions(regions_list = this_region,
+                              these_samples_metadata = this_metadata)
 ashm_rainbow_plot(region = this_region,
-                  these_samples_metadata = metadata, 
+                  maf_data = this_maf,
+                  these_samples_metadata = this_metadata, 
                   custom_colours = lymphgen_colours)
 }
 
