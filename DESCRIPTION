@@ -62,6 +62,7 @@ Imports:
     Rsamtools,
     S4Vectors,
     stringr,
+    survival,
     tibble,
     tidyr,
     wordcloud,
